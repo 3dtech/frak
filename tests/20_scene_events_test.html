@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<base href="../" >
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="border: none;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="external/jquery-1.8.2.min.js"></script>
+		<script src="external/gl-matrix.js"></script>								<!-- GL-matrix library -->
+		<script src="external/classExtend.js"></script>
+
+		<!-- API -->
+		<script src="js/FRAK.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var renderingContext=new RenderingContext($('#canvas'));
+					var scene=new Scene();
+					
+					var expectedCalls=12;
+					var calls=0;
+					var TestComponent=Component.extend({
+							init: function() {
+								this._super();
+								this.renderPasses=5;
+								this.updatePasses=2;
+							},
+							type: function() { return "TestComponent"; },
+							onStart: function(parent) {
+								console.log("onStart: ", parent);
+								calls++;
+							},
+							
+							onAdd: function(parent) {
+								console.log("onAdd: ", parent);
+								calls++;
+							},
+							
+							onRender: function(context, pass) {
+								console.log("onRender: ", pass);
+								calls++;
+							},
+							
+							onUpdate: function(pass) {	
+								console.log("onUpdate: ", pass);
+								calls++;
+							},
+							
+							onDisable: function() {
+								console.log("onDisable");
+								calls++;
+							},
+							
+							onEnable: function() {
+								console.log("onEnable");
+								calls++;
+							}
+						});
+					
+					var component=scene.root.addComponent(new TestComponent());
+					
+					scene.render(renderingContext);
+					scene.update();
+					
+					component.disable();
+					scene.render(renderingContext);
+					scene.update();
+					component.enable();
+					
+					if(calls==expectedCalls) console.log("Test successful");
+					else console.log("Test failed");
+			});
+		</script>
+	</body>
+</html>

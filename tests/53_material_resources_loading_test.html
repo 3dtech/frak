@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(function() {
+				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+				var material = engine.assetsManager.addMaterial('../assets/materials/DefaultMaterial.json');
+				engine.assetsManager.load(function() {
+					console.log('Material resource loaded: ', material);
+				});
+			});
+		</script>
+	</body>
+</html>

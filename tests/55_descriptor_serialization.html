@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<div>
+			Tests serialization capabilities of descriptors
+
+			<div id='results'>
+
+			</div>
+		</div>
+
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var descriptor=false;
+
+					function tryToSerialize(descriptor) {
+						try {
+							var serialized=(descriptor.serialize());
+							console.log('Serialized: ', serialized);
+							var result=$('<div class="success">Serialized "'+descriptor.type()+'" successfully</div>').appendTo($('#results'));
+						}
+						catch(e) {
+							var result=$('<div class="failure">Serializing "'+descriptor.type()+'" failed with exception (see error console)</div>').appendTo($('#results'));
+						}
+					}
+
+					tryToSerialize(new FontDescriptor(['textures/uuh1.png', 'textures/uuh2.png'], 'uuh.fnt', null) );
+					tryToSerialize(new FontDescriptor(['textures/uuh1.png', 'textures/uuh2.png'], 'uuh.fnt', new MaterialDescriptor()) );
+					tryToSerialize(new FontSource());
+					tryToSerialize(new FontSource(new FontSourceDescriptor()));
+					tryToSerialize(new FontSourceDescriptor());
+					tryToSerialize(new FontSourceDescriptor('booh'));
+
+					tryToSerialize(new MaterialDescriptor());
+					tryToSerialize(new MaterialDescriptor(new ShaderDescriptor()));
+					tryToSerialize(new MaterialDescriptor(new ShaderDescriptor('someshader')));
+					tryToSerialize(new MaterialDescriptor(new ShaderDescriptor('someshader')), {});
+					tryToSerialize(new MaterialDescriptor(new ShaderDescriptor('someshader')), {}, {});
+					tryToSerialize(new MaterialDescriptor(new ShaderDescriptor('someshader')), {}, {"diffuse0": new TextureDescriptor()});
+					tryToSerialize(new MaterialDescriptor(new ShaderDescriptor('someshader')), {}, {"diffuse0": new TextureDescriptor('sometexture.png')});
+
+					tryToSerialize(new MaterialSource());
+					tryToSerialize(new MaterialSource(new MaterialSourceDescriptor()));
+					tryToSerialize(new MaterialSource(new MaterialSourceDescriptor('somematerialresource.json')));
+
+					tryToSerialize(new ModelDescriptor());
+					tryToSerialize(new ModelDescriptor('somemodel.data'));
+
+					tryToSerialize(new ShaderDescriptor());
+					tryToSerialize(new ShaderDescriptor('someshader'));
+					tryToSerialize(new ShaderDescriptor('someshader.vert', 'someshader.frag'));
+
+					tryToSerialize(new TextDescriptor());
+					tryToSerialize(new TextDescriptor('sometext.txt'));
+
+					tryToSerialize(new TextureDescriptor());
+					tryToSerialize(new TextureDescriptor('sometexture.jpg'));
+					tryToSerialize(new TextureDescriptor('sometexture.jpg', 512));
+					tryToSerialize(new TextureDescriptor('sometexture.jpg', 512, 256));
+				}
+			);
+		</script>
+	</body>
+</html>

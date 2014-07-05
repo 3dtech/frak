@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<div>
+			<div>Renderers: <span id='renderers'></span></div>
+			<div>Visible renderers: <span id='visible-renderers'></span></div>
+			<div>Visible solid renderers: <span id='solid-renderers'></span></div>
+			<div>Visible transparent renderers: <span id='transparent-renderers'></span></div>
+			<div>Visible batches: <span id='batches'></span></div>
+		</div>
+
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(function() {
+				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+				var scene=engine.scene;
+				var root=scene.root;
+
+				var white = new Texture(engine.context);
+				white.clearImage(engine.context, [0xFF, 0xFF, 0xFF, 0xFF]);
+
+				materialA = new Material(
+					engine.assetsManager.addShaderSource("diffuse"),
+					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:1.0}) },
+					[ new Sampler("diffuse0", white) ]
+				);
+				materialB = new Material(
+					engine.assetsManager.addShaderSource("diffuse"),
+					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:1.0}) },
+					[ new Sampler("diffuse0", white) ]
+				);
+
+				var original = Primitives.box(vec3.create(), vec3.fromValues(0.1, 0.1, 0.1), materialA);
+
+				var orbitController=engine.scene.cameraNode.addComponent(new OrbitController());
+				orbitController.target.value=original.transform;
+
+				// scene.light.shadowCasting=true;
+
+				engine.run();
+
+				engine.assetsManager.load(function() {
+					root.addNode(original);
+					original.transform.setPosition([0.0, 0.0, 0.0]);
+
+					var count=5;
+					for(var x=-count/2; x<=count/2; x++) {
+						for(var y=-count/2; y<=count/2; y++) {
+							var inst=root.addNode(original.instantiate());
+							inst.transform.setPosition([x, 0, y]);
+							var meshComponent = inst.getComponent(MeshComponent);
+							var mr = inst.getComponent(MeshRendererComponent);
+							mr.meshRenderers[0].material=materialB;
+						}
+					}
+
+
+					var displayRenderers=null;
+					displayRenderers=function() {
+						$('#visible-renderers').html(engine.scene.camera.renderStage.visibleRenderers);
+						$('#solid-renderers').html(engine.scene.camera.renderStage.visibleSolidRenderers);
+						$('#transparent-renderers').html(engine.scene.camera.renderStage.visibleTransparentRenderers);
+						$('#batches').html(engine.scene.camera.renderStage.visibleSolidBatches);
+						setTimeout(displayRenderers, 200);
+					};
+					setTimeout(displayRenderers, 200);
+				});
+			});
+		</script>
+	</body>
+</html>

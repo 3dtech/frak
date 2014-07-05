@@ -1,0 +1,50 @@
+* {
+	margin: 0px;
+	padding: 0px;
+	font-family: monospace;
+}
+
+a {
+	padding: 4px;
+}
+
+div {
+	/*border: 1px solid #000;*/
+}
+
+label {
+	width: 200px;
+	display: inline-block;
+}
+
+input[type='text'] {
+	width: 100%;
+}
+
+canvas {
+	border: 1px solid black;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+	cursor: default;
+}
+
+.info {
+	z-index: 10;
+	position: absolute;
+	right: 0px;
+	width: 500px;
+	font-size: 12px;
+}
+
+.success {
+	background: #CCFFCC;
+}
+
+.failure {
+	background: #FFCCCC;
+}

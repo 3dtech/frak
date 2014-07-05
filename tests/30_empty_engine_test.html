@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<div class='info'>
+			<div>Updates: <span id='updates'></span></div>
+			<div>Renders: <span id='renders'></span></div>
+			<div>Average FPS: <span id='average-fps'></span></div>
+		</div>
+
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+
+					var renders=0;
+					var updates=0;
+					var TestComponent=Component.extend({
+							type: function() { return "TestComponent"; },
+							onPostRender: function(context, pass) {
+								$('#renders').html(renders);
+								$('#average-fps').html(engine.fps.getAverage());
+								renders++;
+							},
+
+							onUpdate: function(pass) {
+								console.log('onUpdate');
+								$('#updates').html(updates);
+								updates++;
+							}
+						});
+
+					var component=engine.scene.root.addComponent(new TestComponent());
+
+					engine.run();
+				});
+		</script>
+	</body>
+</html>

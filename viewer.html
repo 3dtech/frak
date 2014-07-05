@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Model viewer</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="Model viewer" />
+		<style type="text/css">
+			body {
+				margin: 0px;
+				padding: 0px;
+				font-family: monospace;
+			}
+
+			input, button {
+				border: 1px solid black;
+			}
+
+			i {
+				font-size: 9px;
+				color: #777;
+			}
+
+			canvas {
+				border: 1px solid black;
+				-webkit-touch-callout: none;
+				-webkit-user-select: none;
+				-khtml-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				-o-user-select: none;
+				user-select: none;
+			}
+
+			.left {
+				display: block;
+				float: left;
+			}
+
+			.row {
+				display: block;
+				margin-top: 2px;
+				padding-left: 10px;
+				padding-right: 10px;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				border: 1px solid #d3d3d3;
+			}
+
+			.controls {
+				margin-left: 10px;
+			}
+
+			#log {
+				display: block;
+				background-color: #dfdfdf;
+				padding-left: 4px;
+				width: 550px;
+				height: 410px;
+				overflow: scroll;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="left">
+			<canvas id="canvas" width="800" height="600"></canvas>
+		</div>
+		<div class="left controls">
+			<span class="row">
+				Model path: <input style="width: 300px;" id="model" type="text" value="" />&nbsp;
+				<button id="load">Load</button>&nbsp;
+				<button id="unload">Unload</button>
+			</span>
+			<span class="row">
+				<b>Print transforms:</b>
+				<button id="displayRelative">Relative</button>&nbsp;
+				<button id="displayAbsolute">Absolute</button>&nbsp;
+				<i>&nbsp;(output in the actual console)</i></span>
+			<span class="row" id="collisionControls">
+				<b>Display collision volumes:</b>
+				<button id="toggleCollisionTree">All</button>
+				<button id="toggleGeometryNodes">Geometry</button>
+			</span>
+			<span class="row">
+				<button id="clearlog">Clear log</button>
+			</span>
+			<pre id="log"></pre>
+		</div>
+
+		<script src="lib/jquery-1.11.1.min.js"></script>
+		<script src="builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var COLLISION_NODES = 0;
+			var GEOMETRY_NODES = 1;
+
+			var _log=console.log;
+			console.log=function() {
+				var line = '';
+				for (var i in arguments)
+					line+=arguments[i]+' ';
+				line+='\n';
+				$('#log').prepend(line);
+				_log.apply(console, arguments);
+			}
+
+			function enableCollisionControls() {
+				$('#collisionControls button').each(function(button) {
+					$(this).removeAttr('disabled');
+				})
+			}
+
+			function disableCollisionControls() {
+				$('#collisionControls button').each(function(button) {
+					$(this).attr('disabled', 'disabled');
+				})
+			}
+
+			function visualizeCollisionTree(model, modelsRoot) {
+				var lmc = model.getComponent(LargeMeshCollider);
+				if (!lmc) {
+					console.log('Model has no pre-built collision tree.');
+					disableCollisionControls();
+					return;
+				}
+				var nodesRenderer=new LineRendererComponent(new Color(0.5, 0.3, 0.0, 1.0));
+				nodesRenderer.disable();
+				nodesRenderer.name=COLLISION_NODES;
+				var geomNodesRenderer=new LineRendererComponent(new Color(0.0, 0.8, 0.0, 1.0));
+				geomNodesRenderer.disable();
+				geomNodesRenderer.name=GEOMETRY_NODES;
+
+				enableCollisionControls();
+
+				function addNode(node) {
+					nodesRenderer.addBox(node.bounds);
+					if (node.hasGeometry()) {
+						geomNodesRenderer.addBox(node.bounds);
+					}
+
+					if (!node.isLeaf()) {
+						for (var i in node.subnodes) {
+							addNode(node.subnodes[i]);
+						}
+					}
+				}
+
+				if (lmc.isComplete()) {
+					console.log('tree.center=', vec3.str(lmc.tree.bounds.center));
+					console.log(lmc.tree.bounds);
+					addNode(lmc.tree);
+					modelsRoot.addComponent(nodesRenderer);
+					modelsRoot.addComponent(geomNodesRenderer);
+				} else {
+					console.log('WARNING: LargeMeshCollider is present, but not complete.');
+				}
+			}
+
+			function setupUI(engine) {
+				function unloadModel() {
+					var node=engine.scene.root.findChildWithName("Models");
+					if (node)
+						engine.scene.root.removeNode(node);
+					node=engine.scene.root.addNode(new Node("Models"));
+					disableCollisionControls();
+					return node;
+				}
+
+				function loadModel() {
+					engine.assetsManager.modelsManager.cleanCache();
+					engine.assetsManager.texturesManager.cleanCache();
+					var path=$('#model').val();
+					if (path.length>0) {
+						var node = unloadModel();
+						var model = engine.assetsManager.addModel(path);
+						node.addNode(model);
+						engine.assetsManager.load(function() {
+							console.log("Loading complete: "+path, model);
+							engine.scene.cameraComponent.fitNodeToView(engine.scene.root);
+							visualizeCollisionTree(model, node);
+						});
+					}
+				}
+
+				$('#load').click(loadModel);
+				$('#unload').click(unloadModel);
+				$('#model').keypress(function(e) {
+					if (e.which==13)
+						loadModel();
+				}).focus();
+				$('#clearlog').click(function() {
+					$('#log').empty();
+				});
+
+				$('#displayRelative').click(function() {
+					displayTransformTree(engine.scene, false);
+				});
+				$('#displayAbsolute').click(function() {
+					displayTransformTree(engine.scene, true);
+				});
+
+				function toggleCollisionVolumes(event) {
+					var node=engine.scene.root.findChildWithName("Models");
+					if (!node || node.subnodes.length==0)
+						return;
+					var renderers = node.getComponents(LineRendererComponent);
+					for (var i in renderers) {
+						if (renderers[i].name==event.data) {
+							if (renderers[i].enabled)
+								renderers[i].disable();
+							else
+								renderers[i].enable();
+						}
+					}
+				}
+
+				$('#toggleCollisionTree').click(COLLISION_NODES, toggleCollisionVolumes);
+				$('#toggleGeometryNodes').click(GEOMETRY_NODES, toggleCollisionVolumes);
+			}
+
+			function logMatrix(m, pad) {
+				pad=pad||"";
+				_log(pad + m[0].toFixed(4) + ', ' + m[4].toFixed(4) + ', ' + m[8].toFixed(4) + ', ' + m[12].toFixed(4));
+				_log(pad + m[1].toFixed(4) + ', ' + m[5].toFixed(4) + ', ' + m[9].toFixed(4) + ', ' + m[13].toFixed(4));
+				_log(pad + m[2].toFixed(4) + ', ' + m[6].toFixed(4) + ', ' + m[10].toFixed(4)+ ', ' + m[14].toFixed(4));
+				_log(pad + m[3].toFixed(4) + ', ' + m[7].toFixed(4) + ', ' + m[11].toFixed(4)+ ', ' + m[15].toFixed(4));
+			}
+
+			function displayTransformTree(scene, absolute) {
+				function logTransform(node, depth) {
+					var pad = "";
+					for (var i=0; i<depth; i++)
+						pad+='  ';
+					_log(pad+'Node: '+node.name);
+					var t = node.getComponent(Transform);
+					if (t) {
+						if (absolute) logMatrix(t.absolute, pad);
+						else logMatrix(t.relative, pad);
+					}
+					for (var i in node.subnodes) {
+						logTransform(node.subnodes[i], depth+1);
+					}
+				}
+				logTransform(scene.root, 0);
+			}
+
+			var frak=new FRAK(
+				function() {
+					console.log('FRAK '+frakVersion+' loaded.');
+					var engine=new Engine($('#canvas'), {
+						'shadersPath': 'assets/'
+					});
+					var scene=engine.scene;
+					scene.camera.backgroundColor=new Color(0.9, 0.2, 0.2, 1.0);
+					var orbitController=scene.cameraNode.addComponent(new OrbitController());
+					orbitController.target.value=scene.root.transform;
+					orbitController.distance=20.0;
+					orbitController.minimumDistance=0.5;
+					orbitController.maximumDistance=1000.0;
+					setupUI(engine);
+
+					// TODO: flipx checkbox
+					// engine.assetsManager.modelsManager.createParser=function(data, cbOnComplete, cbOnError, cbOnProgress, userdata) {
+					// 	var parser = new ThreadedDataParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata);
+					// 	parser.flipX=true;
+					// 	return parser;
+					// };
+
+					engine.assetsManager.load(function() {
+						console.log('Engine assets loaded.');
+						scene.cameraComponent.fitNodeToView(scene.root);
+						engine.run();
+					});
+				});
+			console.log('Loading FRAK...');
+			console.log(' ');
+			disableCollisionControls();
+		</script>
+	</body>
+</html>

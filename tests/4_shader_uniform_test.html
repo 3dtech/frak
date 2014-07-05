@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="border: none;" width="200" height="200"></canvas>
+
+		<div id="info">
+		</div>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script id='vertex-shader' type="x-shader/x-vertex">
+			attribute vec3 position;
+
+			uniform vec3 color;
+			uniform mat4 transform;
+			uniform float frequency;
+
+			varying vec3 fragColor;
+			varying vec3 fragPos;
+			varying float fragFrequency;
+
+			void main(void) {
+				gl_Position = vec4(position, 1.0)*transform;
+				fragColor=color;
+				fragPos=position;
+				fragFrequency=frequency;
+			}
+		</script>
+
+		<script id='fragment-shader' type="x-shader/x-fragment">
+			precision mediump float;
+
+			varying vec3 fragColor;
+			varying vec3 fragPos;
+			varying float fragFrequency;
+
+			void main(void) {
+				gl_FragColor = vec4(fragColor*(sin(fragPos.x*fragFrequency)+1.0)/2.0, 1.0);
+			}
+		</script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var transform=new Transform();
+					var radians=2.0*Math.PI*Math.random();
+					mat4.rotate(transform.relative, transform.relative, radians, [0, 0, 1]);
+
+					// Fetch rendering context
+					var renderingContext=new RenderingContext($('#canvas'));
+					// Create shader program
+					var shader=new Shader(renderingContext);
+
+					// Add shaders
+					shader.addVertexShader($('#vertex-shader').text());
+					shader.addFragmentShader($('#fragment-shader').text());
+
+					// Start using the program (it's linked automatically)
+					var uniforms={
+							"color": new UniformVec3([Math.random(), Math.random(), Math.random()]),
+							"transform": new UniformMat4(transform.relative),
+							"frequency": new UniformFloat(Math.random()*200.0)
+						};
+					shader.use(uniforms);
+
+					// Create vertices and faces
+					var vertices=[
+												0.5, 0, 0,
+												0.1, 0.1, 0,
+												0.1, 0.5, 0,
+												0.3, 0.7, 0
+												];
+					var faces=[0, 1, 2, 3];
+
+					// Assign to render buffer and boom!
+					var quadsRenderBuffer=new QuadsRenderBuffer(renderingContext, faces);
+					quadsRenderBuffer.add("position", vertices, 3);
+					quadsRenderBuffer.render(shader);
+
+					for(var uniformName in uniforms) {
+						$('#info').append("<div>"+uniformName+": "+JSON.stringify(uniforms[uniformName])+"</div>");
+					}
+				});
+		</script>
+	</body>
+</html>

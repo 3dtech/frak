@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			function overrideBuildingMaterials(engine, namedMaterials) {
+				engine.scene.root.onEachChildComponent(function(c) {
+					if(c instanceof MeshRendererComponent) {
+						for(var r in c.meshRenderers) {
+							var meshRenderer=c.meshRenderers[r];
+							var material=meshRenderer.material;
+							if(namedMaterials[material.name]) {
+								var replacementMaterial=namedMaterials[material.name];
+								material.uniforms["diffuse"]=new UniformColor((new Color()).fromHex(replacementMaterial.color));
+								if(replacementMaterial.shader=="transparent" || replacementMaterial.color[3]<1.0) {
+									meshRenderer.transparent=true;
+									material.shader=engine.assetsManager.addShaderSource("transparent");
+								}
+								if(replacementMaterial.textures instanceof Array) {
+									for(var t in replacementMaterial.textures) {
+										var texture=replacementMaterial.textures[t];
+										if(texture.type=='diffuse') {
+											for(var s in material.samplers) {
+												if(material.samplers[s].name=='diffuse0' && material.samplers[s].texture.name!=texture.name) {
+													material.samplers[s]=new Sampler('diffuse0', engine.assetsManager.addTexture(texture.name));
+													break;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				});
+				engine.assetsManager.load();
+			}
+
+			var frak=new FRAK(function() {
+				var engine=new Engine($('#canvas'));
+				var scene=engine.scene;
+				scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
+				scene.cameraComponent.setAspectRatio(1.0);
+
+
+				engine.assetsManager.texturesManager.sourceCallback=function(source) {
+					console.log('* texture: ', source);
+					return 'http://localhost/api/?class=PublicBuilding&method=getTextureSessionless&parameters=[%22demo%22,%22'+source+'%22]&json_out=0&result_out=0';
+				};
+				var model=engine.assetsManager.addModel("http://localhost/api/?class=PublicBuilding&method=getModelSessionless&parameters=[%22demo%22,%229%22]&json_out=0&result_out=0", true);
+
+				var lights = scene.root.addNode(new Node("Lights"));
+				var light = lights.addNode(new Node("DirectionalLight")).addComponent(new Light());
+				light.intensity=1.2;
+				light.color.set(1.0, 1.0, 1.0);
+				light.shadowCasting=true;
+				vec3.set(light.direction, 1.0, 1.0, 1.0);
+				//vec3.set(light.direction, 0.0, 1.0, 1.0);
+				vec3.normalize(light.direction, light.direction);
+
+				var orbitController=scene.cameraNode.addComponent(new OrbitController());
+				orbitController.distance=20.0;
+				orbitController.minimumDistance=0.5;
+				orbitController.maximumDistance=100.0;
+				orbitController.target.value=scene.root.transform;
+
+				var LineRenderer=Component.extend({
+					init: function(color) {
+						this._super();
+						this.shader=false;
+						if (color instanceof Color)
+							this.color=new UniformColor(color);
+						else
+							this.color=new UniformColor(new Color(1.0, 1.0, 0.0, 1.0));
+						this.matrix=mat4.identity(mat4.create());
+						this.faces=[];
+						this.vertices=[];
+						this.buffer=false;
+					},
+
+					type: function() { return "LineRenderer"; },
+
+					initialize: function(context) {
+						this.shader=this.node.scene.engine.assetsManager.addShaderSource("Transparent");
+						this.node.scene.engine.assetsManager.load();
+
+						var white=new Texture(context);
+						white.clearImage(context, [0xFF, 0xFF, 0xFF, 0xFF]);
+						this.samplers=[new Sampler("diffuse0", white)];
+					},
+
+					build: function(context) {
+						if (this.vertices.length==0 || this.faces.length==0)
+							return false;
+						this.buffer=new RenderBuffer(context, this.faces);
+						this.buffer.add('position', this.vertices, 3);
+					},
+
+					addLine: function(a, b) {
+						var base = this.vertices.length/3;
+						this.vertices.push(a[0], a[1], a[2], b[0], b[1], b[2]);
+						this.faces.push(base, base+1);
+					},
+
+					addBox: function(box, color) {
+						if (!(box instanceof BoundingBox))
+							return;
+						this.addLine(box.min, [box.min[0], box.min[1], box.max[2]]);
+						this.addLine(box.min, [box.min[0], box.max[1], box.min[2]]);
+						this.addLine(box.min, [box.max[0], box.min[1], box.min[2]]);
+						this.addLine(box.max, [box.max[0], box.min[1], box.max[2]]);
+						this.addLine(box.max, [box.max[0], box.max[1], box.min[2]]);
+						this.addLine(box.max, [box.min[0], box.max[1], box.max[2]]);
+						this.addLine([box.min[0], box.max[1], box.min[2]], [box.min[0], box.max[1], box.max[2]]);
+						this.addLine([box.min[0], box.max[1], box.max[2]], [box.min[0], box.min[1], box.max[2]]);
+						this.addLine([box.min[0], box.min[1], box.max[2]], [box.max[0], box.min[1], box.max[2]]);
+						this.addLine([box.max[0], box.min[1], box.max[2]], [box.max[0], box.min[1], box.min[2]]);
+						this.addLine([box.max[0], box.min[1], box.min[2]], [box.max[0], box.max[1], box.min[2]]);
+						this.addLine([box.max[0], box.max[1], box.min[2]], [box.min[0], box.max[1], box.min[2]]);
+					},
+
+					onPostRender: function(context, camera) {
+						if (!this.shader)
+							this.initialize(context);
+
+						if (this.buffer===false)
+							return;
+
+						context.modelview.push();
+						context.modelview.multiply(this.matrix);
+
+						var uniforms={
+							"modelview": new UniformMat4(context.modelview.top()),
+							"projection": new UniformMat4(context.projection.top()),
+							"diffuse": this.color
+						};
+						this.shader.use(uniforms);
+						this.shader.bindSamplers(this.samplers);
+						this.shader.requirements.apply(this.buffer);
+
+						var gl=context.gl;
+						var locations=[];
+						for(var bufferName in this.buffer.buffers) {
+							gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer.buffers[bufferName]);
+							var bufferLocation=gl.getAttribLocation(this.shader.program, bufferName);
+							if(bufferLocation==-1) continue;
+							gl.enableVertexAttribArray(bufferLocation);
+							locations.push(bufferLocation);
+							gl.vertexAttribPointer(bufferLocation, this.buffer.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
+						}
+						gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffer.facesBuffer);
+						gl.drawElements(gl.LINES, this.buffer.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+						for (var i in locations)
+							gl.disableVertexAttribArray(locations[i]);
+
+						context.modelview.pop();
+					}
+				});
+
+				var redLines = scene.root.addComponent(new LineRenderer(new Color(0.5, 0.0, 0.0, 1.0)));
+				var greenLines = scene.root.addComponent(new LineRenderer(new Color(0.0, 0.5, 0.0, 1.0)));
+				var yellowLines = scene.root.addComponent(new LineRenderer(new Color(0.9, 0.9, 0.0, 1.0)));
+				var hits = scene.root.addComponent(new LineRenderer(new Color(0.0, 0.80, 0.98, 1.0)));
+
+				var OctreeVisualizer=Component.extend({
+					init: function() {
+						this._super();
+						this.done=false;
+					},
+
+					type: function() { return "OctreeVisualizer"; },
+
+					onUpdate: function() {
+						if (this.done) return;
+
+						var lmc = this.node.getComponent(LargeMeshCollider);
+						if (lmc && lmc.isComplete()) {
+							console.log('collider: ', lmc);
+							var ray = new Ray([-2.0, 8.0, 0.1], [4.0, -8.0, 0.1]);
+
+							var localRay = ray.clone();
+							var invMat = mat4.invert(mat4.create(), model.transform.relative);
+							localRay.transform(invMat);
+							yellowLines.addLine(localRay.origin, localRay.destination);
+
+							var debugLevel = lmc.tree.maxDepth;
+							var rayNodes = [];
+							lmc.tree.getNodesWithGeometry(localRay, rayNodes);
+							console.log('=== NODES === ', rayNodes.length);
+							for (var i in rayNodes) {
+								console.log(rayNodes[i].t);
+								hits.addBox(rayNodes[i].octreeNode.bounds);
+							}
+
+							/*var collision=lmc.tree.getNearestRayCollision(localRay);
+							console.log('collision: ', collision);
+							if (collision.octreeNode!==false)
+								hits.addBox(collision.octreeNode.bounds);*/
+							var result=new RayTestResult(ray);
+							console.time('raytest');
+							var b = lmc.rayTest(ray, result);
+							console.timeEnd('raytest');
+							console.log('rayTest: ', b, result);
+
+							if (result.hits.length>0) {
+								var white=new Texture(engine.context);
+								white.clearImage(engine.context, [0xFF, 0xFF, 0xFF, 0xFF]);
+								var material=new Material(
+									engine.assetsManager.addShaderSource("shaders/default/diffuse"),
+									{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:1.0}) },
+									[ new Sampler("diffuse0", white) ]
+								);
+								var box = Primitives.box([0,0,0], [0.3,0.3,0.3], material);
+								mat4.fromRotationTranslation(box.transform.relative, quat.euler(quat.create(), 0, 45, 0), result.hits[0].point);
+								scene.root.addNode(box);
+							}
+
+							function visualizeOctree(node) {
+								if (node.depth<=debugLevel) {
+								//if (node.depth==debugLevel) {
+									if (node.hasGeometry())
+										greenLines.addBox(node.bounds);
+									else
+										redLines.addBox(node.bounds);
+								}
+								if (node.subnodes) {
+									for (var i in node.subnodes) {
+										visualizeOctree(node.subnodes[i]);
+									}
+								}
+							}
+							// visualizeOctree(lmc.tree);
+
+							redLines.matrix=model.transform.relative;
+							greenLines.matrix=model.transform.relative;
+							yellowLines.matrix=model.transform.relative;
+							hits.matrix=model.transform.relative;
+							redLines.build(engine.context);
+							greenLines.build(engine.context);
+							yellowLines.build(engine.context);
+							hits.build(engine.context);
+							this.done=true;
+						} else {
+							this.done=true;
+						}
+					}
+				});
+
+				engine.assetsManager.load(function() {
+					//mat4.fromRotationTranslation(model.transform.relative, quat.euler(quat.create(), 45, 45, 45), [0.5, 0.5, -0.5]);
+					//mat4.fromRotationTranslation(model.transform.relative, quat.create(), [0.5, 0.5, -0.5]);
+
+					model.addComponent(new OctreeVisualizer());
+
+					// model.onEachChild(function(node) {
+					// 	if (node.getComponent(MeshComponent)) {
+					// 		//node.removeComponentsByType(Collider);
+					// 		//node.addComponent(new LargeMeshCollider());
+					// 		node.addComponent(new OctreeVisualizer());
+					// 	}
+					// });
+
+					scene.root.addNode(model);
+
+					scene.start(engine.context);
+					scene.cameraComponent.fitNodeToView(scene.root);
+
+					var material=new Material(
+						engine.assetsManager.addShaderSource("shaders/default/DebugPackedDepthTexture"),
+						{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+						[ new Sampler("diffuse0", scene.camera.renderStage.shadowMapStage.target.texture) ]
+					);
+					material.name="DepthMap";
+					material.shader.transparent=true;
+					var debugPlane = Primitives.plane(4.0, 4.0, material);
+					mat4.fromRotationTranslation(debugPlane.transform.relative, quat.create(), [-2, 5, -3]);
+					scene.root.addNode(debugPlane);
+
+					$.getJSON('http://localhost/api/?class=PublicEntry&method=open&parameters=["demo"]', function() {
+						$.getJSON('http://localhost/api/?class=PublicBuilding&method=getMaterials&project=demo&parameters=[]', function(result) {
+							var materials=result['data'];
+							var namedMaterials={};
+							for(var i in materials)
+								namedMaterials[materials[i].name]=materials[i];
+							overrideBuildingMaterials(engine, namedMaterials);
+						});
+					});
+
+					engine.run();
+				});
+			});
+		</script>
+	</body>
+</html>

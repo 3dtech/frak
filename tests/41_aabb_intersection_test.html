@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+		<style>
+			.status-indicator {
+				text-align: center;
+				width: 30px;
+				padding: 4px;
+				margin-left: 10px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class='info'>
+			<div>Infinite plane vs AABB collision: <div id='planeCollision' class="status-indicator">N/A</div></div>
+			<div>Triangle vs AABB collision: <div id='triCollision' class="status-indicator">N/A</div></div>
+		</div>
+
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var Triangle = function(a, b, c) {
+				this.a=a;
+				this.b=b;
+				this.c=c;
+
+				this.transform=function(mat) {
+					vec3.transformMat4(this.a, this.a, mat);
+					vec3.transformMat4(this.b, this.b, mat);
+					vec3.transformMat4(this.c, this.c, mat);
+				}
+
+				this.toString=function() {
+					return "Triangle["+vec3.str(this.a)+", "+vec3.str(this.b)+", "+vec3.str(this.c)+"]";
+				}
+			};
+
+			function makeTriangle(assetsManager, texture) {
+				var material=new Material(
+					assetsManager.addShaderSource("Transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[ new Sampler("diffuse0", texture) ]
+				);
+				material.name="PlaneMaterial";
+				material.shader.transparent=true;
+				var plane = Primitives.plane(2.0, 2.0, material);
+				var submesh = plane.getComponent(MeshComponent).mesh.submeshes[0];
+				submesh.faces=[0, 1, 2];
+				return plane;
+			}
+
+			function getPlane(planeObject) {
+				var submesh = planeObject.getComponent(MeshComponent).mesh.submeshes[0];
+				var plane = new Plane();
+				var a = vec3.fromValues(submesh.positions[0], submesh.positions[1], submesh.positions[2]);
+				var b = vec3.fromValues(submesh.positions[3], submesh.positions[4], submesh.positions[5]);
+				var c = vec3.fromValues(submesh.positions[6], submesh.positions[7], submesh.positions[8]);
+				vec3.transformMat4(a, a, planeObject.transform.absolute);
+				vec3.transformMat4(b, b, planeObject.transform.absolute);
+				vec3.transformMat4(c, c, planeObject.transform.absolute);
+				plane.setByPoints(a, b, c);
+				return plane;
+			}
+
+			function getTriangle(planeObject) {
+				var submesh = planeObject.getComponent(MeshComponent).mesh.submeshes[0];
+				var triangle = new Triangle(
+					vec3.fromValues(submesh.positions[0], submesh.positions[1], submesh.positions[2]),
+					vec3.fromValues(submesh.positions[3], submesh.positions[4], submesh.positions[5]),
+					vec3.fromValues(submesh.positions[6], submesh.positions[7], submesh.positions[8])
+				);
+				triangle.transform(planeObject.transform.absolute);
+				return triangle;
+			}
+
+			function getBox(boxObject) {
+				var bounds = new BoundingBox();
+				boxObject.onEachChildComponent(function(component) {
+					if (component instanceof MeshRendererComponent)
+						bounds.encapsulateBox(component.getBoundingBox());
+				});
+				return bounds;
+			}
+
+			var frak=new FRAK(
+				function() {
+					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var scene=engine.scene;
+					scene.cameraComponent.setAspectRatio(1.0);
+
+					var RotatePlane=Component.extend({
+						type: function() { return "RotatePlane"; },
+						init: function(target) {
+							this._super();
+							this.target=target;
+							this.speed=0.001;
+							this.planeCollision = $("#planeCollision");
+							this.triCollision = $("#triCollision");
+						},
+
+						onUpdate: function(engine, pass) {
+							var boundingBox = getBox(this.target);
+							var plane = getPlane(this.node);
+							var triangle = getTriangle(this.node);
+
+							var planeBoxTest = boundingBox.intersectsPlane(plane);
+							this.planeCollision.text(planeBoxTest?'true':'false');
+							this.planeCollision.css('background-color', planeBoxTest?'green':'red');
+
+							var triBoxTest = boundingBox.intersectsTriangle(triangle.a, triangle.b, triangle.c);
+							this.triCollision.text(triBoxTest?'true':'false');
+							this.triCollision.css('background-color', triBoxTest?'green':'red');
+
+							var localPosition = mat4.translation(vec3.create(), this.node.transform.relative);
+							var localScale = mat4.getScale(vec3.create(), this.node.transform.relative);
+							var localRotation = quat.fromMat4(quat.create(), this.node.transform.relative);
+							quat.rotateY(localRotation, localRotation, this.speed*engine.fps.getDelta());
+							mat4.fromRotationTranslationScale(this.node.transform.relative, localRotation, localPosition, localScale);
+						}
+					});
+
+					var box = engine.assetsManager.addModel("data/test.data");
+
+					var planeObject = makeTriangle(engine.assetsManager, engine.assetsManager.texturesManager.add("data/lena.jpg"));
+					planeObject.addComponent(new MeshCollider());
+					planeObject.addComponent(new RotatePlane(box));
+
+					/*
+					var marker1 = engine.assetsManager.addModel("test.data");
+					var marker2 = engine.assetsManager.addModel("test.data");
+					var hit1 = engine.assetsManager.addModel("test.data");
+					var hit2 = engine.assetsManager.addModel("test.data");
+					/**/
+
+
+					var orbitController=scene.cameraNode.addComponent(new OrbitController());
+					orbitController.target.value=scene.root.transform;
+
+					engine.assetsManager.load(function() {
+
+						scene.root.addNode(planeObject);
+						mat4.fromRotationTranslation(planeObject.transform.relative, quat.euler(quat.create(), 45, 45, 45), [0.55, 0.55, -0.5]);
+
+						scene.root.addNode(box);
+						mat4.fromRotationTranslation(box.transform.relative, quat.create(), [0.5, 0.0, 0.0]);
+
+						/*
+						var ray = new Ray([0.5,0.01,0.0], [0.5,-0.01,0.0]);
+						//var ray = new Ray([1.0,1.0,0.0], [1.0,-1.0,0.0]);
+						//var ray = new Ray([-1.0,0.0,0.0], [2.0,0.0,0.0]);
+						//var ray = new Ray([1.0,0.0,-1.0], [1.0,0.0,1.0]);
+						mat4.fromRotationTranslationScale(marker1.transform.relative, quat.create(), ray.origin, [0.1, 0.1, 0.1]);
+						mat4.fromRotationTranslationScale(marker2.transform.relative, quat.create(), ray.destination, [0.1, 0.1, 0.1]);
+						scene.root.addNode(marker1);
+						scene.root.addNode(marker2);
+						/**/
+
+						scene.start(engine.context);
+						scene.cameraComponent.fitNodeToView(scene.root);
+
+						/*
+						var bounds = getBox(box);
+						var result = new RayTestResult(ray);
+						console.log('ray.intersectBoundingVolume: ', ray.intersectBoundingVolume(bounds, result));
+						console.log('Result: ', result);
+						if (result.hits.length>0) {
+							mat4.fromRotationTranslationScale(hit1.transform.relative, quat.create(), result.hits[0].point, [0.2, 0.2, 0.2]);
+							scene.root.addNode(hit1);
+						}
+						if (result.hits.length>1) {
+							mat4.fromRotationTranslationScale(hit2.transform.relative, quat.create(), result.hits[1].point, [0.2, 0.2, 0.2]);
+							scene.root.addNode(hit2);
+						}
+						/**/
+
+						engine.run();
+					});
+				});
+		</script>
+	</body>
+</html>

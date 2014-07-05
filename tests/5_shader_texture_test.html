@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="border: none;" width="200" height="200"></canvas>
+
+		<div id="info">
+		</div>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script id='vertex-shader' type="x-shader/x-vertex">
+			attribute vec3 position;
+			attribute vec2 texcoord;
+
+			varying vec2 fragTexcoord;
+
+			void main(void) {
+				gl_Position = vec4(position, 1.0);
+				fragTexcoord=texcoord;
+			}
+		</script>
+
+		<script id='fragment-shader' type="x-shader/x-fragment">
+			precision mediump float;
+
+			uniform sampler2D texture;
+			uniform sampler2D texture1;
+
+			varying vec2 fragTexcoord;
+
+			void main(void) {
+				gl_FragColor = texture2D(texture, fragTexcoord)*0.5+texture2D(texture, fragTexcoord)*0.5;
+			}
+		</script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					// Fetch rendering context
+					var renderingContext=new RenderingContext($('#canvas'));
+
+					var texturesManager=new TexturesManager(renderingContext);
+					var texture=texturesManager.add("data/barbara.png");
+					texturesManager.load(function() {
+						// Create shader program
+						var shader=new Shader(renderingContext);
+
+						// Add shaders
+						shader.addVertexShader($('#vertex-shader').text());
+						shader.addFragmentShader($('#fragment-shader').text());
+
+						// Start using the program (it's linked automatically)
+						var samplers=[new Sampler("texture", texture)];
+						shader.use();
+						shader.bindSamplers(samplers);
+
+						// Create vertices and faces
+						var vertices=[
+													0.0, 0.0, 0.0,
+													0.0, 1.0, 0.0,
+													1.0, 1.0, 0.0,
+													1.0, 0.0, 0.0
+													];
+						var texcoords=[
+								0.0, 0.0,
+								0.0, 1.0,
+								1.0, 1.0,
+								1.0, 0.0
+							]
+						var faces=[0, 1, 2, 3];
+
+						// Assign to render buffer and boom!
+						var quadsRenderBuffer=new QuadsRenderBuffer(renderingContext, faces);
+						quadsRenderBuffer.add("position", vertices, 3);
+						quadsRenderBuffer.add("texcoord", texcoords, 2);
+						quadsRenderBuffer.render(shader);
+
+						shader.unbindSamplers(samplers);
+					});
+				});
+		</script>
+	</body>
+</html>

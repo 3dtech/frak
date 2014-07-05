@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<div>
+			<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+		</div>
+		<div id='font-debug-canvas-container' style="z-index: 1; border: none; position: absolute; top: 500px;">
+		</div>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script>
+			function setup(scene) {
+				var node=scene.root.addNode(new Node());
+				var text=node.addComponent(new TextComponent("Hello world!", new FontSourceDescriptor("../assets/fonts/default.json")));
+				var renderer=node.addComponent(new TextRendererComponent());
+				node.transform.scale([0.01, 0.01, 0.01]);
+			}
+
+			var frak=new FRAK(function() {
+				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+				var scene=engine.scene;
+
+				scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
+				setup(scene);
+
+				var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.distance=2.0;
+				orbitController.minimumDistance=0.5;
+				orbitController.maximumDistance=100.0;
+				orbitController.target.value=scene.root.transform;
+
+				engine.assetsManager.load(function() {
+					engine.run();
+				});
+			});
+		</script>
+	</body>
+</html>

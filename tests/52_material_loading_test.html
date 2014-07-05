@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(function() {
+				var context=new RenderingContext($('#canvas'));
+
+				var materialsManager=new MaterialsManager(context);
+				var material=materialsManager.addDescriptor(
+						new MaterialDescriptor(
+							new ShaderDescriptor('../assets/shaders/default/test'),
+							{"diffuse": new UniformFloat(0.5)},
+							[new TextureDescriptor('data/lena.jpg')])
+					);
+
+				materialsManager.load(function() {
+					var uniforms = {
+						"view": new UniformMat4(mat4.identity(mat4.create())),
+						"modelview": new UniformMat4(mat4.identity(mat4.create())),
+						"projection": new UniformMat4(mat4.identity(mat4.create()))
+					};
+
+
+					material.bind(uniforms);
+
+					// Create vertices and faces
+					var vertices=[
+												0.0, 0.0, 0.0,
+												0.0, 1.0, 0.0,
+												1.0, 1.0, 0.0,
+												1.0, 0.0, 0.0
+												];
+					var texcoords=[
+							0.0, 0.0,
+							0.0, 1.0,
+							1.0, 1.0,
+							1.0, 0.0
+						]
+					var faces=[0, 1, 2, 3];
+
+					// Assign to render buffer and boom!
+					var quadsRenderBuffer=new QuadsRenderBuffer(context, faces);
+					quadsRenderBuffer.add("position", vertices, 3);
+					quadsRenderBuffer.add("texcoord", texcoords, 2);
+					quadsRenderBuffer.render(material.shader);
+
+					material.unbind();
+					console.log('Material resource loaded: ', material);
+				});
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<div class='info'>
+			<div>Updates: <span id='updates'></span></div>
+			<div>Average FPS: <span id='average-fps'></span></div>
+			<br />
+			<div>Position: <span id='position'></span></div>
+			<div>Rotation: <span id='rotation'></span></div>
+			<div>Velocity: <span id='velocity'></span></div>
+			<div>Angular velocity: <span id='angular-velocity'></span></div>
+			<br />
+			<div>Renderers: <span id='renderers'></span></div>
+			<div>Visible renderers: <span id='visible-renderers'></span></div>
+			<div>V. solid renderers: <span id='solid-renderers'></span></div>
+			<div>V. transparent renderers: <span id='transparent-renderers'></span></div>
+		</div>
+
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var scene=engine.scene;
+					var node=engine.assetsManager.addModel("data/test.data");
+					var flightController=scene.cameraNode.addComponent(new FlightController());
+
+					scene.cameraComponent.camera.layerMask=0x01;
+
+					var orthoCameraNode=scene.root.addNode(new Node("Ortho"));
+					var orthoCamera=scene.root.addComponent(new OrthoCamera());
+					orthoCamera.camera.clearMask=engine.context.gl.DEPTH_BUFFER_BIT;
+					orthoCamera.camera.layerMask=0x02;
+
+					var updates=0;
+
+					var lineRenderer=new LineRendererComponent();
+					lineRenderer.addGrid([0, 0, 0], [16, 16], [10, 10]);
+					var directionLine=lineRenderer.addLine([0, 0, 0], [50, 0, 50]);
+
+					var lineRendererNode=new Node("LineRendererNode");
+					lineRendererNode.transform.rotate(Math.PI/2.0, [1, 0, 0]); // Rotate to suit ortho camera
+					lineRendererNode.transform.translate([100, 0, -100]);
+					scene.root.addNode(lineRendererNode);
+					lineRendererNode.layer=2;
+					lineRendererNode.addComponent(lineRenderer);
+
+					var lineRenderer2=new LineRendererComponent(new Color(1.0, 0.0, 0.0, 1.0));
+					var velocityLine=lineRenderer2.addLine([0, 0, 0], [50, 0, 50]);
+					var lineRendererNode2=new Node("LineRendererNode2");
+					lineRendererNode2.transform.rotate(Math.PI/2.0, [1, 0, 0]); // Rotate to suit ortho camera
+					lineRendererNode2.transform.translate([100, 0, -100]);
+					lineRendererNode2.layer=2;
+					scene.root.addNode(lineRendererNode2);
+					lineRendererNode2.addComponent(lineRenderer2);
+
+					var TestComponent=Component.extend({
+							type: function() { return "TestComponent"; },
+							onUpdate: function(pass) {
+								var roundVec3=function(v) {
+									return vec3.fromValues(Math.round(v[0]*100.0)/100.0, Math.round(v[1]*100.0)/100.0, Math.round(v[2]*100.0)/100.0);
+								};
+
+								$('#position').html(JSON.stringify(mat4.translation(vec3.create(), scene.cameraNode.transform.relative)));
+								$('#rotation').html(JSON.stringify(mat4.rotation(mat4.create(), scene.cameraNode.transform.relative)));
+								$('#velocity').html(JSON.stringify(roundVec3(flightController.velocity)));
+								$('#angular-velocity').html(JSON.stringify(roundVec3(flightController.angularVelocity)));
+
+								$('#renderers').html(scene.dynamicSpace.renderers.length);
+								$('#visible-renderers').html(scene.camera.renderStage.visibleRenderers);
+								$('#solid-renderers').html(scene.camera.renderStage.visibleSolidRenderers);
+								$('#transparent-renderers').html(scene.camera.renderStage.visibleTransparentRenderers);
+
+								lineRenderer.updateLine(directionLine, scene.cameraNode.transform.getPosition(),
+								                        vec3.add(vec3.create(), [Math.sin(flightController.rotation[1]-Math.PI)*100, 0, Math.cos(flightController.rotation[1]-Math.PI)*100], scene.cameraNode.transform.getPosition()));
+								lineRenderer2.updateLine(velocityLine, scene.cameraNode.transform.getPosition(),
+								                        vec3.add(vec3.create(), vec3.scale(vec3.create(), flightController.velocity, 1000), scene.cameraNode.transform.getPosition()));
+
+								$('#updates').html(updates);
+								$('#average-fps').html(engine.fps.getAverage());
+								updates++;
+							}
+						});
+
+					var component=scene.root.addComponent(new TestComponent());
+					scene.cameraComponent.setAspectRatio(1.0);
+
+					engine.assetsManager.load(function() {
+							scene.root.addNode(node);
+							scene.cameraComponent.fitNodeToView(node);
+
+							node.setAbsolutePosition([0, 0, -10]);
+
+							engine.run();
+						});
+				});
+		</script>
+	</body>
+</html>

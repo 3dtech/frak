@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<div>
+			<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="1000" height="1000"></canvas>
+		</div>
+		<div id='font-debug-canvas-container' style="z-index: 1; border: none; position: absolute; top: 1000px;">
+		</div>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+
+					// Add required resources
+					var assetsManager=engine.assetsManager;
+					assetsManager.load(function() {
+						var scene=engine.scene;
+						var textNode=new Node();
+						textNode.addComponent(new TextComponent('a quick brown fox jumps over a lazy dog!', new FontSourceDescriptor("../assets/fonts/default.json")));
+						textNode.addComponent(new TextRendererComponent());
+						textNode.transform.rotate(3.14, [0.0, 1.0, 0.0]);
+						textNode.transform.translate([0.0, 0.0, 0.0]);
+						textNode.transform.scale([0.1, 0.1, 0.1]);
+						scene.root.addNode(textNode);
+						scene.cameraComponent.fitNodeToView(scene.root);
+
+						engine.run();
+					});
+				});
+		</script>
+	</body>
+</html>

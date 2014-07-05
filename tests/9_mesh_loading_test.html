@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="border: none;" width="800" height="800"></canvas>
+
+		<div id="info">
+		</div>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var scene=engine.scene;
+					var assetsManager=engine.assetsManager;
+					var node=assetsManager.addModel("data/axis_test.data");
+
+					assetsManager.load(function() {
+						scene.root.addNode(node);
+						scene.cameraComponent.fitNodeToView(node);
+
+						engine.run();
+					});
+				});
+		</script>
+	</body>
+</html>

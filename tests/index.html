@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>FRAK tests/examples</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="FRAK tests/examples" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<div id='list' style='float: left'></div>
+
+		<!-- Canvas -->
+		<div style='float: left;'>
+			<iframe id='frame' style="border: 1px solid grey;" width='1024' height='1024'></iframe>
+		</div>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var testsPath = './';
+
+			function link(name) {
+				var path = testsPath + name + '.html';
+				var div=$('<div>');
+				var link=$('<a>')
+					.attr('href', path)
+					.click(function() {
+						$('#frame').attr('src', $(this).attr('href'));
+						return false;
+					})
+					.text(name);
+				div.append(link);
+				link=$('<a target="_blank">N</a>').attr('href', path);
+				div.append(link);
+				$('#list').append(div);
+			}
+
+			link('1_triangles_render_test');
+			link('2_quads_render_test');
+			link('3_cube_render_test');
+			link('4_shader_uniform_test');
+			link('5_shader_texture_test');
+			link('5a_shader_texture_caching_test');
+			link('6_shader_multitexture_test');
+			// link('7_mesh_render_test'); // FIXME
+			link('8_shader_loading_test');
+			link('9_mesh_loading_test');
+			link('9a_mesh_loading_test');
+
+			// link('11_camera_test'); // FIXME
+			link('12_quaternion_euler_test');
+
+			// link('20_scene_events_test'); // FIXME: event model has changed a bit since the test was made
+
+			link('30_empty_engine_test');
+			link('31_engine_model_render_test');
+			link('32_engine_flight_test');
+			link('33_engine_orbit_test');
+			link('34_transparency_test');
+			link('35_billboard_test');
+			link('36_ray_test');
+			link('37_font_test');
+			link('38_fbo_test');
+			link('39_text_component_test');
+			link('40_octree_test');
+			link('41_aabb_intersection_test');
+			link('42_depth_texture_test');
+			link('43_shadowmapping_test');
+
+			link('51_text_loading_test');
+			link('52_material_loading_test');
+			link('53_material_resources_loading_test'); // FIXME
+			link('54_instancing');
+			link('55_descriptor_serialization');
+			link('56_line_renderer_test');
+			link('57_cyclic_serialization');
+		</script>
+	</body>
+</html>
+
+

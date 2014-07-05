@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+		<style>
+			th {
+				font-family: Arial;
+				font-size: 14px;
+				color: #fafafa;
+				background-color: #515f00;
+				padding: 4px;
+			}
+
+			td {
+				font-family: monospace;
+				font-weight: bold;
+				color: #ccc;
+				min-width: 20px;
+				padding: 4px;
+			}
+
+			.spacer {
+				min-width: 2px;
+				width: 2px;
+				padding: 0px;
+				background-color: #fff;
+			}
+		</style>
+	</head>
+	<body>
+		<pre>
+
+	<div style="display: inline; background-color: green;">&nbsp;&nbsp;</div> <b>rotation_difference(Q.Euler(Input), Q.Euler(Output)) == Q(0,0,0,1)</b>
+
+	<div style="display: inline; background-color: #a06400;">&nbsp;&nbsp;</div> <b>rotation_difference(Q.Euler(Input), Q.Euler(Output)) == Q(0,0,0,-1)</b>
+
+	<div style="display: inline; background-color: red;">&nbsp;&nbsp;</div> <b>*everything else*</b>
+
+	Success: <span id="successCount"></span>
+	Fail:    <span id="failCount"></span>
+
+		</pre>
+		<table>
+			<thead>
+				<th>Index</th>
+				<th class="spacer"></th>
+				<th colspan="3">Input</th>
+				<th></th>
+				<th colspan="3">Output</th>
+				<th class="spacer"></th>
+				<th colspan="4">Q.Euler(Input)</th>
+				<th class="spacer"></th>
+				<th colspan="4">Q.Euler(Output)</th>
+				<th class="spacer"></th>
+				<th colspan="4">rotation_difference(Q.Euler(Input), Q.Euler(Output))</th>
+				<th>angle(Q.Euler(Input), Q.Euler(Output))</th>
+			</thead>
+			<tbody id='results'>
+			</tbody>
+		</table>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../lib/gl-matrix.js"></script>
+		<script src="../lib/gl-matrix-3dtech-ext.js"></script>
+
+		<script type="text/javascript">
+			var Deg2Rad = (Math.PI*2.0)/360.0;
+			var Rad2Deg = 360.0/(Math.PI*2.0);
+			var EPSILON = 0.1;
+			var tests = [];
+
+			function cmp(a, b) {
+				return Math.abs(a-b)<EPSILON;
+			}
+
+			function cmpAngle(a, b) {
+				if (a<0.0) a+=360.0;
+				if (b<0.0) b+=360.0;
+				if (a>=360.0) a-=360.0;
+				if (b>=360.0) b-=360.0;
+				return cmp(a,b);
+			}
+
+			function runTest(index) {
+				var a = tests[index];
+				var q = quat.euler(quat.create(), a[0], a[1], a[2]);
+				var alt = vec3.create();
+				var e = quat.getEuler(vec3.create(), q);
+				var check = quat.euler(quat.create(), e[0], e[1], e[2]);
+				var valid = quat.rotationDifference(quat.create(), q, check);
+				var color = 'red';
+				if (cmp(valid[0], 0.0) && cmp(valid[1], 0.0) && cmp(valid[2], 0.0) && cmp(valid[3], 1.0))
+					color='green';
+				if (cmp(valid[3], -1.0)) {
+					var v=quat.rotationDifference(quat.create(), q, quat.scale(quat.create(), check, -1.0));
+					if (cmp(v[0], 0.0) && cmp(v[1], 0.0) && cmp(v[2], 0.0) && cmp(v[3], 1.0))
+						color='#a06400';
+				}
+
+				var row=$('<tr style="background-color: '+color+';"></tr>');
+				row.append('<td>#'+index+'</td>');
+				row.append('<td class="spacer"></td>');
+				row.append('<td>'+a[0].toFixed(2)+'</td>');
+				row.append('<td>'+a[1].toFixed(2)+'</td>');
+				row.append('<td>'+a[2].toFixed(2)+'</td>');
+				row.append('<td style="text-align: center;">==</td>');
+				row.append('<td>'+e[0].toFixed(2)+'</td>');
+				row.append('<td>'+e[1].toFixed(2)+'</td>');
+				row.append('<td>'+e[2].toFixed(2)+'</td>');
+				row.append('<td class="spacer"></td>');
+				row.append('<td>'+q[0].toFixed(2)+'</td>');
+				row.append('<td>'+q[1].toFixed(2)+'</td>');
+				row.append('<td>'+q[2].toFixed(2)+'</td>');
+				row.append('<td>'+q[3].toFixed(2)+'</td>');
+				row.append('<td class="spacer"></td>');
+				row.append('<td>'+check[0].toFixed(2)+'</td>');
+				row.append('<td>'+check[1].toFixed(2)+'</td>');
+				row.append('<td>'+check[2].toFixed(2)+'</td>');
+				row.append('<td>'+check[3].toFixed(2)+'</td>');
+				row.append('<td class="spacer"></td>');
+				row.append('<td>'+valid[0].toFixed(2)+'</td>');
+				row.append('<td>'+valid[1].toFixed(2)+'</td>');
+				row.append('<td>'+valid[2].toFixed(2)+'</td>');
+				row.append('<td>'+valid[3].toFixed(2)+'</td>');
+				row.append('<td>'+(quat.angle(q, check)*Rad2Deg)+'</td>');
+				$('#results').append(row);
+				return (color=='green');
+			}
+
+			$(function() {
+				var step = 45;
+				for (var x=0; x<360; x+=step) {
+					for (var y=0; y<360; y+=step) {
+						for (var z=0; z<360; z+=step) {
+							tests.push([x, y, z]);
+						}
+					}
+				}
+
+				var success=0;
+				var fail=0;
+				for (var i=0; i<tests.length; i++) {
+					if (runTest(i)) success++;
+					else fail++;
+				}
+				$('#successCount').text(success);
+				$('#failCount').text(fail);
+			});
+		</script>
+	</body>
+</html>

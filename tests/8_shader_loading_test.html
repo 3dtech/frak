@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="border: none;" width="500" height="500"></canvas>
+
+		<div id="info">
+		</div>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					// Fetch rendering context
+					var renderingContext=new RenderingContext($('#canvas'));
+
+					var shadersManager=new ShadersManager(renderingContext);
+					shadersManager.shadersPath = '../assets/';
+
+					var shader=shadersManager.addSource('shaders/default/test');
+					console.log('Loading shader');
+					shadersManager.load(function() {
+						console.log('Loaded shader');
+						// Start using the program (it's linked automatically)
+						shader.use({"modelview": new UniformMat4(mat4.create()), "projection": new UniformMat4(mat4.create())});
+
+						// Create vertices and faces
+						var vertices=[
+													0.5, 0, 0,
+													0.1, 0.1, 0,
+													0.1, 0.5, 0,
+													0.3, 0.7, 0
+													];
+						var faces=[0, 1, 2, 3];
+
+						// Assign to render buffer and boom!
+						var quadsRenderBuffer=new QuadsRenderBuffer(renderingContext, faces);
+						quadsRenderBuffer.add("position", vertices, 3);
+						quadsRenderBuffer.render(shader);
+					});
+				});
+		</script>
+	</body>
+</html>

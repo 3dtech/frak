@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<div>
+			Tests serialization capabilities of descriptors
+
+			<div id='results'>
+
+			</div>
+		</div>
+
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak = new FRAK(function() {
+				function tryToSerialize(object) {
+					try {
+						var serialized=(object.serializeCyclic());
+						console.log('Serializing: ', object);
+						console.log('Serialized: ', serialized);
+						var result=$('<div class="success">Serialized "'+object.type()+'" successfully</div>').appendTo($('#results'));
+
+						try {
+							var unserialized=(object.unserializeCyclic(serialized));
+							console.log('Unserialized: ', unserialized);
+							var result=$('<div class="success">Unserialized "'+object.type()+'" successfully</div>').appendTo($('#results'));
+						}
+						catch(e) {
+							var result=$('<div class="failure">Unserializing "'+object.type()+'" failed with exception (see error console)</div>').appendTo($('#results'));
+						}
+					}
+					catch(e) {
+						var result=$('<div class="failure">Serializing "'+object.type()+'" failed with exception (see error console)</div>').appendTo($('#results'));
+					}
+				}
+
+				function getLoadedComponents() {
+					var result=[];
+					var keys=Object.keys(window);
+
+					for( var i = 0; i < keys.length; ++i ) {
+						var value=window[keys[i]];
+						if(typeof value == 'function') {
+							if(value.prototype instanceof Component) {
+								console.log(keys[i]);
+								result.push(keys[i]);
+							}
+						}
+					}
+
+					return result;
+				}
+
+				tryToSerialize(new Node());
+
+				// Try serialization of components
+				var components=getLoadedComponents();
+				for(var c in components) {
+					var component=components[c];
+					try {
+						var o=new window[component]();
+						if(o) tryToSerialize(o);
+					}
+					catch(e) {
+						$('<div class="failure">Failed to construct "'+component+'" (see error console)</div>').appendTo($('#results'));
+						console.log(e);
+					}
+				}
+
+			});
+		</script>
+	</body>
+</html>

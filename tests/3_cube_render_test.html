@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="border: none;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var matrix=mat4.identity(mat4.create());
+
+					// Fetch rendering context
+					var renderingContext=new RenderingContext($('#canvas'));
+					// Create shader
+					var shader=new Shader(renderingContext);
+
+					// Add shaders
+					shader.addVertexShader("attribute vec3 position; void main(void) { gl_Position = vec4(position, 1.0); }");
+					shader.addFragmentShader("precision mediump float; void main(void) { gl_FragColor = vec4(0.1, 0.5, 0.8, 1.0); }");
+
+					var material=new Material(shader);
+
+					var cubeRenderer=new CubeRenderer(renderingContext, matrix, 1.0, material);
+					cubeRenderer.render(renderingContext);
+				});
+		</script>
+	</body>
+</html>

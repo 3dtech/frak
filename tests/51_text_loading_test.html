@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(function() {
+				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+
+				var text = engine.assetsManager.addText('51_text_loading_test.html');
+				engine.assetsManager.load(function() {
+					console.log('Text resource loaded:');
+					console.log(text.data);
+				});
+			});
+		</script>
+	</body>
+</html>

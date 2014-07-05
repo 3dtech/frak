@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			function makePlane(assetsManager, texture) {
+				var material=new Material(
+					assetsManager.addShaderSource("Transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[ new Sampler("diffuse0", texture) ]
+				);
+				material.name="PlaneMaterial";
+				material.shader.transparent=true;
+				var plane = Primitives.plane(2.0, 2.0, material);
+				plane.addComponent(new MeshCollider());
+				return plane;
+			}
+
+			var frak=new FRAK(
+				function() {
+					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var scene=engine.scene;
+					scene.cameraComponent.setAspectRatio(1.0);
+
+					var plane = makePlane(engine.assetsManager, engine.assetsManager.texturesManager.add("data/barbara.png"));
+					var model = engine.assetsManager.addModel("data/test.data");
+
+					var ray = new Ray([0.01,0.01,-1.0], [0.01,0.01,1.0]);
+
+					var orbitController=scene.cameraNode.addComponent(new OrbitController());
+					orbitController.target.value=scene.root.transform;
+
+					engine.assetsManager.load(function() {
+						function disableColliders(subnode) {
+							if (subnode.getComponent(MeshCollider))
+								subnode.getComponent(MeshCollider).disable();
+						}
+
+						var marker1 = model;
+						var marker2 = model.instantiate();
+						var hit1 = model.instantiate();
+						var hit2 = model.instantiate();
+
+						marker1.onEachChild(disableColliders);
+						marker2.onEachChild(disableColliders);
+						mat4.fromRotationTranslationScale(marker1.transform.relative, quat.create(), ray.origin, [0.2, 0.2, 0.2]);
+						mat4.fromRotationTranslationScale(marker2.transform.relative, quat.create(), ray.destination, [0.2, 0.2, 0.2]);
+						scene.root.addNode(marker1);
+						scene.root.addNode(marker2);
+						scene.root.addNode(plane);
+
+						scene.start(engine.context);
+						scene.cameraComponent.fitNodeToView(scene.root);
+
+						/**/
+						var result = scene.dynamicSpace.rayCast(ray, 0xFFFFFFFF);
+						/**/
+
+						/**
+						// AABB-ray test only
+						var mrc = plane.getComponent(MeshRendererComponent);
+						var bounds = new BoundingBox();
+						for (var i in mrc.meshRenderers) {
+							bounds.encapsulateBox(mrc.meshRenderers[i].globalBoundingBox);
+						}
+						var result = new RayTestResult(ray);
+						console.log('intersectBoundingVolume: ', ray.intersectBoundingVolume(bounds, result));
+						/**/
+
+						console.log('Result: ', result);
+						if (result.hits.length>0) {
+							mat4.fromRotationTranslationScale(hit1.transform.relative, quat.create(), result.hits[0].point, [0.2, 0.2, 0.2]);
+							scene.root.addNode(hit1);
+						}
+						if (result.hits.length>1) {
+							mat4.fromRotationTranslationScale(hit2.transform.relative, quat.create(), result.hits[1].point, [0.2, 0.2, 0.2]);
+							scene.root.addNode(hit2);
+						}
+
+						engine.run();
+					});
+				});
+		</script>
+	</body>
+</html>

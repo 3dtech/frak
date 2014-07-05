@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<base href="../" >
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas id="canvas" style="border: none;" width="800" height="800"></canvas>
+	
+		<div id="info">
+		</div>
+			
+		<!-- Libraries -->
+		<script src="external/jquery-1.8.2.min.js"></script>
+		<script src="external/jdataview.js"></script>
+		<script src="external/gl-matrix.js"></script>				<!-- GL-matrix library -->
+		<script src="external/gl-matrix-3dtech-ext.js"></script>	<!-- GL-matrix library 3DTech extension -->
+		<script src="external/classExtend.js"></script>
+		
+		<!-- API -->
+		<script src="js/FRAK.js"></script>
+		
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					// Fetch rendering context
+					var renderingContext=new RenderingContext($('#canvas'));
+
+					// Create vertices and faces
+					var scene=new DefaultScene();
+					var assetsManager=new AssetsManager(renderingContext);
+					var node=assetsManager.addModel("tests/data/axis_test.data");
+					var shader=assetsManager.addShaderSource('shaders/default/fallback');
+					
+					assetsManager.load(
+						function() {
+							mat4.fromRotationTranslation(node.transform.relative, quat.euler(quat.create(), 0, 180, 0), [20.0,0.0,0.0]);
+							scene.root.addNode(node);
+							scene.camera.renderStage=new ShaderRenderStage(shader);
+							scene.start(renderingContext);
+							scene.cameraComponent.fitNodeToView(scene.root);
+							scene.render(renderingContext);
+						}
+					);
+				}
+			);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<div class='info'>
+			<div>Updates: <span id='updates'></span></div>
+			<div>Average FPS: <span id='average-fps'></span></div>
+			<br/>
+			<div>Scale: <span id='scale'></span></div>
+		</div>
+
+		<!-- Canvas -->
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			var frak=new FRAK(
+				function() {
+					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var scene=engine.scene;
+					var node=engine.assetsManager.addModel("data/test.data");
+
+					var updates=0;
+					var TestComponent=Component.extend({
+							type: function() { return "TestComponent"; },
+							onUpdate: function(pass) {
+								mat4.identity(node.transform.relative);
+								var scale=Math.sin(updates/10.0)*20.0+25.0;
+								var angle=Math.sin(updates/10.0);
+								mat4.scale(node.transform.relative, node.transform.relative, [scale, scale, scale]);
+								mat4.rotate(node.transform.relative, node.transform.relative, angle, [0, 1, 0]);
+
+								scene.cameraComponent.fitNodeToView(node);
+
+								$('#scale').html(scale);
+
+								$('#updates').html(updates);
+								$('#average-fps').html(engine.fps.getAverage());
+								updates++;
+							}
+						});
+
+					var component=scene.root.addComponent(new TestComponent());
+					scene.cameraComponent.setAspectRatio(1.0);
+
+					engine.assetsManager.load(function() {
+							scene.root.addNode(node);
+
+							console.log(scene.root);
+							engine.run();
+						});
+				});
+		</script>
+	</body>
+</html>

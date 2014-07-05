@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+		<style>
+			.info {
+				padding: 4px;
+				font-family: monospace;
+			}
+
+			.separator {
+				background-color: #ccc;
+				height: 8px;
+			}
+
+			.value {
+				display: inline;
+				border: 0px;
+				font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="info" class='info'>
+		</div>
+
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-1.0.14.min.js"></script>
+
+		<script type="text/javascript">
+			function updateInfo(gl) {
+				var info = $('#info');
+				info.empty();
+				info.append('<div>Renderer: <div class="value">'+gl.getParameter(gl.RENDERER)+'</div></div>');
+				info.append('<div>Vendor: <div class="value">'+gl.getParameter(gl.VENDOR)+'</div></div>');
+				info.append('<div>WebGL version: <div class="value">'+gl.getParameter(gl.VERSION)+'</div></div>');
+				info.append('<div>GLSL version: <div class="value">'+gl.getParameter(gl.SHADING_LANGUAGE_VERSION)+'</div></div>');
+				info.append('<div>Max vertex attributes: <div class="value">'+gl.getParameter(gl.MAX_VERTEX_ATTRIBS)+'</div></div>');
+				info.append('<div>Max vertex shader uniforms: <div class="value">'+gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS)+'</div></div>');
+				info.append('<div>Max fragment shader uniforms: <div class="value">'+gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS)+'</div></div>');
+				info.append('<div>Max varying vectors: <div class="value">'+gl.getParameter(gl.MAX_VARYING_VECTORS)+'</div></div>');
+				info.append('<div class="separator"></div>');
+
+				var extensions = gl.getSupportedExtensions();
+				info.append('<div>Extensions:</div>');
+				for (var i in extensions) {
+					info.append('<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<div class="value">'+extensions[i]+'</div></div>');
+				}
+			}
+
+			function makePlane(assetsManager, texture) {
+				var material=new Material(
+					assetsManager.addShaderSource("Transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[ new Sampler("diffuse0", texture) ]
+				);
+				material.name="PlaneMaterial";
+				material.shader.transparent=true;
+				var plane = Primitives.plane(2.0, 2.0, material);
+				return plane;
+			}
+
+			var frak=new FRAK(function() {
+				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+				updateInfo(engine.context.gl);
+				var scene=engine.scene;
+				scene.camera.layerMask=1;
+				scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
+				scene.cameraComponent.setAspectRatio(1.0);
+
+				var model = engine.assetsManager.addModel("data/test.data");
+
+				var RotateCube=Component.extend({
+					type: function() { return "RotateCube"; },
+					onUpdate: function(engine, pass) {
+						var speed = 0.001*engine.fps.getDelta();
+						var localRotation = quat.fromMat4(quat.create(), this.node.transform.relative);
+						var targetRotation = quat.multiply(quat.create(), localRotation, quat.euler(quat.create(), 45.0, 45.0, 45.0));
+						quat.slerp(localRotation, localRotation, targetRotation, speed);
+						quat.normalize(localRotation, localRotation);
+						var localPosition = mat4.translation(vec3.create(), this.node.transform.relative);
+						var localScale = mat4.getScale(vec3.create(), this.node.transform.relative);
+						mat4.fromRotationTranslationScale(this.node.transform.relative, localRotation, localPosition, localScale);
+					}
+				});
+				model.addComponent(new RotateCube());
+
+				engine.assetsManager.load(function() {
+					var cam=new Node("TextureCamera");
+					var cameraComponent=cam.addComponent(new PerspectiveCamera());
+					cameraComponent.camera.order=-1;
+					cameraComponent.camera.layerMask=2;
+					cameraComponent.camera.backgroundColor=new Color(0.7, 0.7, 0.0, 1.0);
+					cameraComponent.camera.target=new TargetTexture([512, 512], engine.context, true);
+					cameraComponent.setAspectRatio(1.0);
+					scene.root.addNode(cam);
+
+					// Depth image
+					if (cameraComponent.camera.target.depth instanceof Texture) {
+						var plane = makePlane(engine.assetsManager, cameraComponent.camera.target.depth);
+						scene.root.addNode(plane);
+						plane.transform.setPosition([-1.5, 0.0, 0.0]);
+					} else {
+						$('#info').append('<div class="separator"></div><div>Sorry, this browser does not support depth textures.</div>');
+					}
+
+					// Color image
+					var plane = makePlane(engine.assetsManager, cameraComponent.camera.target.texture);
+					scene.root.addNode(plane);
+					plane.transform.setPosition([1.5, 0.0, 0.0]);
+
+					var orbitController=scene.cameraNode.addComponent(new OrbitController());
+					orbitController.target.value=scene.root.transform;
+					orbitController.distance=7.0;
+
+					model.onEachChild(function(subnode){subnode.layer=2;});
+					scene.root.addNode(model);
+
+					scene.cameraComponent.fitNodeToView(scene.root);
+					cameraComponent.fitNodeToView(model);
+
+					engine.run();
+				});
+			});
+		</script>
+	</body>
+</html>
