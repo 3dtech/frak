@@ -1,0 +1,8 @@
+{
+	"name": "Default Material",
+	"shader": "../shaders/default/diffuse",
+	"uniforms": {
+		"ambient": {"r": 0.0, "g": 0.0, "b": 0.0},
+		"diffuse": {"r": 0.2, "g": 0.5, "b": 1.0}
+	}
+}

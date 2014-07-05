@@ -1,0 +1,10 @@
+{
+	"name": "Default Font",
+	"textures": [
+		"default_0.png",
+		"default_1.png",
+		"default_2.png"
+	],
+	"data": "default.fnt",
+	"material": "../materials/FontMaterial.json"
+}

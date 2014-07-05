@@ -1,0 +1,11 @@
+{
+	"name": "Font Material",
+	"shader": "../shaders/default/font",
+	"uniforms": {
+		"ambient": {"r": 0.0, "g": 0.0, "b": 0.0},
+		"diffuse": {"r": 1.0, "g": 1.0, "b": 1.0}
+	},
+	"requirements": {
+		"transparent": true
+	}
+}
