@@ -5,18 +5,18 @@ var CameraComponent=Component.extend({
 			throw "CameraComponent can be initialized only with given viewMatrix and projectionMatrix. Normally one should create OrthoCamera or PerspectiveCamera instead";
 		}
 		this._super();
-		this.camera=new Camera(viewMatrix, projectionMatrix, new MaterialRenderStage());
+		this.camera=new Camera(viewMatrix, projectionMatrix, new PostProcessRenderStage());
 	},
-	
+
 	excluded: function() {
 		return this._super().concat(["camera"]);
 	},
-	
+
 	type: function() {
 		return "CameraComponent";
 	},
-	
-	/** Called when component is added to a node that is in the scene or 
+
+	/** Called when component is added to a node that is in the scene or
 		if node is added to the scene
 		@param node Parent {Node} */
 	onAddScene: function(node) {
@@ -24,8 +24,8 @@ var CameraComponent=Component.extend({
 		node.scene.cameras.sort(function(a,b) { return a.order-b.order; });
 		this.useCameraViewMatrix();
 	},
-	
-	/** Called when component is removed from a node that is in the scene or 
+
+	/** Called when component is removed from a node that is in the scene or
 		if parent node is removed to the scene
 		@param node Parent {Node} */
 	onRemoveScene: function(node) {
@@ -37,49 +37,54 @@ var CameraComponent=Component.extend({
 			}
 		}
 	},
-	
+
 	onStart: function(context, engine) {
 		if (this.camera.target instanceof TargetScreen) {
 			var pos = context.canvas.parent().position();
 			this.camera.target.setPosition(pos.left, pos.top);
 			this.camera.target.setSize(context.canvas.width(), context.canvas.height());
 		}
+
+		if (engine.options.antialias === true) {
+			this.camera.renderStage.addStage(new AntiAliasPostProcess())
+		}
+
 		this.camera.renderStage.start(context, engine);
 	},
-	
-	/** Set actual camera matrix 
+
+	/** Set actual camera matrix
 		@param absolute Absolute matrix used next frame. Instance of {mat4}. */
 	onUpdateTransform: function(absolute) {
 		if(!this.node.transform) return;
 		mat4.invert(this.camera.viewMatrix, this.node.transform.absolute);
 	},
-	
+
 	/** Sets camera transform to look at given target position
 		@param target Instance of {vec3}
 		@param up Up vector for camera [optional]. Instance of {vec3}. */
 	lookAt: function(target, up) {
 		if(!up) up=[0.0, 1.0, 0.0];
-		
+
 		// Set camera viewmatrix to look at given target
 		mat4.lookAt(this.camera.viewMatrix, this.camera.getPosition(), target, up);
 		this.useCameraViewMatrix();
 	},
-	
+
 	/** Sets camera transform to position camera at the given point
 		@param position Instance of {vec3} */
 	setPosition: function(position) {
 		this.camera.setPosition(position);
 		this.useCameraViewMatrix();
 	},
-	
-	/** Pans the camera on the current view plane so that 
+
+	/** Pans the camera on the current view plane so that
 		the given point is at the center of the camera's view.
 		@param point Instance of {vec3} */
 	center: function(point) {
 		this.camera.center(point);
 		this.useCameraViewMatrix();
 	},
-	
+
 	/** Fits a BoundingBox or a BoundingSphere to view.
 		@param boundingVolume Instance of {BoundingBox} or {BoundingSphere}
 	 */
@@ -87,8 +92,8 @@ var CameraComponent=Component.extend({
 		this.camera.fitToView(boundingVolume);
 		this.useCameraViewMatrix();
 	},
-	
-	/** Fits node bounding-box (merged bounding box of all 
+
+	/** Fits node bounding-box (merged bounding box of all
 		MeshComponent boundig-boxes) to view
 		@param node Instance of {Node} */
 	fitNodeToView: function(node) {
@@ -101,7 +106,7 @@ var CameraComponent=Component.extend({
 		});
 		this.fitToView(bounds);
 	},
-	
+
 	/** Transforms the screen position into a viewport position.
 		@param point Instance of {vec2} in screen coordinates
 		@return Instance of {vec2} in normalized viewport coordinates */
@@ -117,8 +122,8 @@ var CameraComponent=Component.extend({
 		p[1]=(point[1]-pos[1])/size[1];
 		return p;
 	},
-	
-	/** Transforms the screen position into a 3D position. 
+
+	/** Transforms the screen position into a 3D position.
 		The z parameter of the given point:
 			0.0 - point on the near plane
 			1.0 - point on the far plane
@@ -146,7 +151,7 @@ var CameraComponent=Component.extend({
 		}
 		return false;
 	},
-	
+
 	/** Creates a {Ray} from the near plane to the far plane from a point on the screen.
 		@param point Instance of {vec2}
 		*/
@@ -157,13 +162,13 @@ var CameraComponent=Component.extend({
 			return new Ray(near, far);
 		return false;
 	},
-	
+
 	/** Uses camera view matrix for absolute transform matrix and calculates relative transform, if parent node is available */
 	useCameraViewMatrix: function() {
 		if(!this.node.transform) return;
 		// Construct new absolute position from inverse camera viewmatrix
 		this.node.transform.absolute=mat4.invert(mat4.create(), this.camera.viewMatrix);
-		
+
 		// Calculate new relative transform matrix based on parent absolute and this node absolute matrix
 		this.node.calculateRelativeFromAbsolute();
 	}

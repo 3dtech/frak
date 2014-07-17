@@ -16,6 +16,7 @@
 	"src/rendering/Color.js",
 	"src/rendering/MatrixStack.js",
 	"src/rendering/RenderingContext.js",
+
 	"src/rendering/shaders/Subshader.js",
 	"src/rendering/shaders/VertexShader.js",
 	"src/rendering/shaders/FragmentShader.js",
@@ -24,33 +25,43 @@
 	"src/rendering/shaders/Uniform.js",
 	"src/rendering/shaders/UniformInt.js",
 	"src/rendering/shaders/UniformFloat.js",
+	"src/rendering/shaders/UniformVec2.js",
 	"src/rendering/shaders/UniformVec3.js",
 	"src/rendering/shaders/UniformVec4.js",
 	"src/rendering/shaders/UniformColor.js",
 	"src/rendering/shaders/UniformMat4.js",
 	"src/rendering/shaders/Sampler.js",
+
 	"src/rendering/camera/Camera.js",
 	"src/rendering/camera/RenderStage.js",
 	"src/rendering/camera/MaterialRenderStage.js",
 	"src/rendering/camera/ShaderRenderStage.js",
 	"src/rendering/camera/DebugRenderStage.js",
 	"src/rendering/camera/ShadowMapRenderStage.js",
+	"src/rendering/camera/PostProcessRenderStage.js",
+	"src/rendering/camera/PostProcess.js",
+	"src/rendering/camera/AntiAliasPostProcess.js",
 	"src/rendering/camera/RenderTarget.js",
 	"src/rendering/camera/TargetScreen.js",
 	"src/rendering/camera/TargetTexture.js",
+
 	"src/rendering/buffers/RenderBuffer.js",
 	"src/rendering/buffers/TrianglesRenderBuffer.js",
 	"src/rendering/buffers/QuadsRenderBuffer.js",
+
 	"src/rendering/materials/Texture.js",
 	"src/rendering/materials/Material.js",
+
 	"src/rendering/spaces/Space.js",
 	"src/rendering/spaces/DynamicSpace.js",
+
 	"src/rendering/renderers/Renderer.js",
 	"src/rendering/renderers/PrimitiveRenderer.js",
 	"src/rendering/renderers/MeshRenderer.js",
 	"src/rendering/renderers/SubmeshRenderer.js",
 	"src/rendering/renderers/FontRenderer.js",
 	"src/rendering/renderers/CubeRenderer.js",
+
 	"src/rendering/text/FontData.js",
 	"src/rendering/text/Font.js",
 

@@ -26,7 +26,6 @@
 
 		<script type="text/javascript">
 			function makeObjectTransparent(meshRendererComponent, engine) {
-				console.log('renderer count: ', meshRendererComponent.meshRenderers.length);
 				for (var i in meshRendererComponent.meshRenderers) {
 					meshRendererComponent.meshRenderers[i].transparent=true;
 					var material = meshRendererComponent.meshRenderers[i].material;

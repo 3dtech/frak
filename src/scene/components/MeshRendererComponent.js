@@ -4,7 +4,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		this._super();
 		this.meshRenderers=[];
 	},
-	
+
 	type: function() {
 		return "MeshRendererComponent";
 	},
@@ -12,15 +12,15 @@ var MeshRendererComponent=RendererComponent.extend({
 	excluded: function() {
 		return this._super().concat(["meshRenderers"]);
 	},
-	
+
 	createRenderer: function(context, matrix, submesh, material) {
 		return new SubmeshRenderer(context, matrix, submesh, material);
 	},
-	
+
 	onStart: function(context, engine) {
 		this.updateRenderers(context, engine);
 	},
-	
+
 	addRenderers:function(context, engine) {
 		var me=this;
 		this.node.onEachComponent(function(component) {
@@ -41,40 +41,40 @@ var MeshRendererComponent=RendererComponent.extend({
 			}
 		});
 	},
-	
+
 	removeRenderers: function() {
 		for(var r in this.meshRenderers) {
 			this.getScene().dynamicSpace.removeRenderer(this.meshRenderers[r]);
 		}
 	},
-	
+
 	updateRenderers: function(context, engine) {
 		this.removeRenderers();
 		this.addRenderers(context, engine);
 	},
-	
+
 	onEnd: function(context) {
 		this.removeRenderers();
 	},
-	
-	onUpdateTransform: function(absolute) {		
+
+	onUpdateTransform: function(absolute) {
 		for(var renderer in this.meshRenderers) {
 			this.meshRenderers[renderer].layer=this.node.layer;
 			this.meshRenderers[renderer].castShadows=this.castShadows;
 			this.meshRenderers[renderer].setMatrix(absolute);
 		}
 	},
-	
+
 	onEnable: function() {
 		for (var i in this.meshRenderers)
 			this.meshRenderers[i].visible=true;
 	},
-	
+
 	onDisable: function() {
 		for (var i in this.meshRenderers)
 			this.meshRenderers[i].visible=false;
 	},
-	
+
 	/** Returns the bounding box of all the Renderers in attached to this component
 		The bounding box is in world space.
 		@return The {BoundingBox} of all Renderers */
@@ -87,7 +87,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		}
 		return bounds;
 	},
-	
+
 	/** Returns the bounding sphere of all the Renderers in attached to this component
 		The bounding sphere is in world space.
 		@return The {BoundingSphere} of all Renderers */

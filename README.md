@@ -1,4 +1,4 @@
-frak
+FRAK
 ====
 
 FRAK WebGL Engine

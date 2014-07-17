@@ -10,39 +10,39 @@ var Scene=Serializable.extend({
 		this.starting=false;									///< If scene is being started, it is set to true
 		this.started=false;										///< If scene has started, it's set to true
 		this.startingQueue=[];								///< Starting queue where the components that are still starting can be pushed
-		
+
 		this.components=[];										///< List of all components
 		this.preRenderedComponents=[];				///< List of components that have defined onPreRender method
 		this.postRenderedComponents=[];				///< List of components that have defined onPostRender method
 		this.updatedComponents=[];				///< List of components that have defined onPostRender method
 	},
-	
+
 	fields: function() {
 		return ["root"];
 	},
-	
+
 	/** Called to start the scene */
 	start: function(context) {
 		if(this.started || this.starting) return;
 		this.starting=true;
-		
+
 		var me=this;
-		
+
 		this.root.onEachChildComponent(function(component) {
 				if(!component.enabled) return;
 				if(component.started) return;
 				component.onLoad(me.engine.assetsManager, me.engine);
 			});
-		
+
 		var internalStart = function() {
 			me.root.updateChildTransforms();
-			
+
 			me.root.onEachChildComponent(function(component) {
 					if(!component.enabled) return;
 					if(component.started) return;
 					me.startingQueue.push(component);
 				});
-			
+
 			var timer=null;
 			timer=function() {
 				var delay=50.0;	// Delay 50 milliseconds
@@ -57,24 +57,26 @@ var Scene=Serializable.extend({
 						return;
 					}
 					var c=me.startingQueue.shift();
+					if (c.started)
+						continue;
 					c.start(context, me.engine);
 					c.started=true;
 				}
-				
+
 				setTimeout(timer, 10);
 			};
 			timer();
 		};
-		
+
 		internalStart();
 	},
-	
+
 	/** Calls Component.onEnd(context,engine) for all components. */
 	end: function(context, engine) {
 		if(!this.started) return;
-		
+
 		this.root.updateChildTransforms();
-		
+
 		this.root.onEachChildComponent(function(component) {
 				if(!component.enabled) return;
 				if(!component.started) return;
@@ -84,16 +86,16 @@ var Scene=Serializable.extend({
 
 		this.started=false;
 	},
-	
+
 	/** Called to render all scene cameras. */
 	render: function(context) {
 		if (!this.started) return; // Make sure we don't render before starting the scene
 		var camera = false;
-		
+
 		for (var cameraIndex in this.cameras) {
 			camera = this.cameras[cameraIndex];
 			camera.startRender(context);
-			
+
 			// Pre-render components
 			for(var i=0; i<this.preRenderedComponents.length; i++) {
 				var component=this.preRenderedComponents[i];
@@ -104,33 +106,33 @@ var Scene=Serializable.extend({
 					context.modelview.pop();
 				}
 			}
-			
+
 			// Render camera
 			camera.render(context, this);
-			
+
 			// Post-render components
 			for(i=0; i<this.postRenderedComponents.length; i++) {
 				var component=this.postRenderedComponents[i];
 				if (component.node.layer & camera.layerMask) {
-					
+
 					context.modelview.push();
 					context.modelview.multiply(component.node.transform.absolute);
 					component.onPostRender(context, camera);
 					context.modelview.pop();
 				}
 			}
-			
+
 			camera.endRender(context);
 		}
 	},
-	
+
 	/** Called when updating */
 	update: function(engine) {
 		if(!this.started) return; // Not started yet
 
 		var passes=1;	// Number of update passes
-		
-		
+
+
 		// TODO: Store components with more than 1 update pass and call onUpdate for these separately
 		for(var pass=0; pass<passes; pass++) {
 			for(var i=0; i<this.updatedComponents.length; ++i) {
@@ -145,11 +147,11 @@ var Scene=Serializable.extend({
 
 		this.root.updateChildTransforms();
 	},
-	
+
 	/** @return All materials used in the scene */
 	getMaterials: function() {
 		var result=[];
-		
+
 		this.root.onEachChildComponent(
 			function(c) {
 				if(c instanceof MeshComponent) {
@@ -158,7 +160,7 @@ var Scene=Serializable.extend({
 				}
 			}
 		);
-	
+
 		return result;
 	}
 });

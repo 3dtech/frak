@@ -32,6 +32,7 @@ var Engine=Class.extend({
 			'shadersPath': '',
 			'requestedFPS': 30.0,
 			'debug': false,
+			'antialias': false,
 			'context': new RenderingContext(canvas)
 		}, options);
 
@@ -100,6 +101,8 @@ var Engine=Class.extend({
 	/**
 		This is called when scene has finished starting up.
 		Overide to get this call from outside.
+
+		XXX: It would probably make more sense to have this callback in the Scene class.
 	*/
 	sceneStarted: function(){
 
