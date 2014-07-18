@@ -5,10 +5,10 @@ var TargetTexture=RenderTarget.extend({
 			size=sizeOrTexture.size;
 			this.texture=sizeOrTexture;
 		}
-		
+
 		this._super(size);
 		var gl = context.gl;
-		
+
 		if (useDepthTexture) {
 			var depthTextureExt = (gl.getExtension('WEBGL_depth_texture') || gl.getExtension('WEBKIT_WEBGL_depth_texture'));
 			if (!depthTextureExt) {
@@ -16,9 +16,9 @@ var TargetTexture=RenderTarget.extend({
 				useDepthTexture=false;
 			}
 		}
-		
+
 		this.frameBuffer=gl.createFramebuffer();
-		
+
 		// Setup primary color buffer, if not provided
 		if(!this.texture) {
 			this.texture=new Texture(context);
@@ -30,7 +30,7 @@ var TargetTexture=RenderTarget.extend({
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.size[0], this.size[1], 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 			gl.bindTexture(gl.TEXTURE_2D, null);
 		}
-		
+
 		// Setup buffer for depth
 		if (useDepthTexture) {
 			this.depth=new Texture(context);
@@ -48,7 +48,7 @@ var TargetTexture=RenderTarget.extend({
 			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
 			gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 		}
-		
+
 		// Attach targets to framebuffer
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture.glTexture, 0);
@@ -56,7 +56,7 @@ var TargetTexture=RenderTarget.extend({
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depth.glTexture, 0);
 		else
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
-		
+
 		var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
 		switch (status) {
 			case gl.FRAMEBUFFER_COMPLETE:
@@ -72,21 +72,23 @@ var TargetTexture=RenderTarget.extend({
 			default:
 				throw("Incomplete framebuffer: " + status);
 		}
-		
+
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		this.texture.loaded=true;
 	},
-	
-	bind: function(context) {
+
+	bind: function(context, doNotClear) {
+		doNotClear = (doNotClear === true);
+
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this.frameBuffer);
 		this._super(context);
-		if (context.camera) {
+		if (!doNotClear && context.camera) {
 			context.gl.clearColor(context.camera.backgroundColor.r, context.camera.backgroundColor.g, context.camera.backgroundColor.b, context.camera.backgroundColor.a);
 			context.gl.clearDepth(1.0);
 			context.gl.clear(context.gl.COLOR_BUFFER_BIT | context.gl.DEPTH_BUFFER_BIT);
 		}
 	},
-	
+
 	unbind: function(context) {
 		this._super(context);
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
