@@ -84,7 +84,7 @@
 				$('#aa-toggle').click(function() {
 					var stage = engine.scene.camera.renderStage;
 					if (stage.substages.length>0) {
-						stage.clearStages();
+						stage.removeStagesByType(AntiAliasPostProcess);
 						$('#aa-status').text('Anti-aliasing DISABLED');
 					}
 					else {

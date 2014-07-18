@@ -31,6 +31,21 @@ var RenderStage=Class.extend({
 		return false;
 	},
 
+	removeStagesByType: function(stageType) {
+		var removed=[];
+		for (var i=0; i<this.substages.length; i++) {
+			if (this.substages[i] instanceof stageType) {
+				removed.push(this.substages[i]);
+				this.substages.splice(i, 1);
+				i--;
+			}
+		}
+		for (var i in removed) {
+			removed[i].parent = false;
+		}
+		return removed;
+	},
+
 	clearStages: function() {
 		this.substages = [];
 	},
