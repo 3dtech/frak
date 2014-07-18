@@ -231,18 +231,15 @@ var MaterialRenderStage=RenderStage.extend({
 		}
 	},
 
-	onPostRender: function(context, scene, camera) {
-		var gl = context.gl;
+	renderSolid: function(context, scene, camera) {
+		camera.target.bind(context);
 
+		var gl = context.gl;
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
 		gl.depthMask(true);
 
-		this.prepareShadowContext(context, scene);
-
-		camera.target.bind(context);
-
-		// Render solid renderers with the first light and store transparent renderers in separate array
+		// Render solid renderers with the first light
 		if (scene.lights.length>0)
 			context.light=scene.lights[0];
 
@@ -276,7 +273,13 @@ var MaterialRenderStage=RenderStage.extend({
 			gl.depthFunc(gl.LESS);
 		}
 
-		// Render transparency
+		camera.target.unbind(context);
+	},
+
+	renderTransparent: function(context, scene, camera) {
+		camera.target.bind(context, true);
+
+		var gl = context.gl;
 		gl.depthMask(false);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		gl.enable(gl.BLEND);
@@ -288,6 +291,12 @@ var MaterialRenderStage=RenderStage.extend({
 		gl.depthMask(true);
 
 		camera.target.unbind(context);
+	},
+
+	onPostRender: function(context, scene, camera) {
+		this.prepareShadowContext(context, scene);
+		this.renderSolid(context, scene, camera);
+		this.renderTransparent(context, scene, camera);
 		context.shadow=false;
 	}
 });
