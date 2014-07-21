@@ -45,5 +45,6 @@ var RenderingContext=Class.extend({
 		this.light=false; ///< Current light used for rendering (forward rendering only)
 		this.shadow=false; ///< Current shadow map (forward rendering only)
 		this.camera=false; ///< Current camera used for rendering (used to populate camera uniforms for shaders)
+		this.engine=false; ///< Current engine used for rendering
 	}
 });

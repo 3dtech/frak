@@ -49,6 +49,7 @@ var Engine=Class.extend({
 		this.WhiteTexture.name = "WhiteTexture";
 		this.WhiteTexture.mipmapped = false;
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
+		this.WhiteTextureSampler =  new Sampler('tex0', this.WhiteTexture);
 
 		if (this.options.debug) {
 			var me=this;
@@ -129,6 +130,7 @@ var Engine=Class.extend({
 
 	/** Runs engine to render a single frame and do an update */
 	frame: function() {
+		this.context.engine = this;
 		this.scene.update(this);
 		this.scene.render(this.context);
 		this.fps.measure();
