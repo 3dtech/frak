@@ -15,8 +15,8 @@ var AntiAliasPostProcess = PostProcess.extend({
 				"reduce_mul": new UniformFloat(1.0 / 8.0),
 				"span_max": new UniformFloat(8.0)
 			},
-			[]
-		);
+			[]);
+		this.material.name = 'AntiAlias';
 
 		engine.assetsManager.load();
 	}

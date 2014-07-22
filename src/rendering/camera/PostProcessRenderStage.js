@@ -15,6 +15,7 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.material = false; ///< Material used to render the final image
 
 		this.generator = this.getGeneratorStage();
+		this.generator.parent = this;
 	},
 
 	getGeneratorStage: function() {
@@ -32,9 +33,11 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.material = new Material(engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"), {}, []);
 
 		var vertices = [-1,-1,0, -1,1,0, 1,1,0, 1,-1,0];
+		var uv = [0,0, 0,1, 1,1, 1,0];
 		var faces = [0, 1, 2, 0, 2, 3];
 		this.quad = new TrianglesRenderBuffer(context, faces);
 		this.quad.add('position', vertices, 3);
+		this.quad.add("uv0", uv, 2);
 
 		engine.assetsManager.load();
 
