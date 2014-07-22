@@ -47,8 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 precision highp float;
 
-varying vec2 uv;
-
 uniform sampler2D tex0;
 
 uniform vec2 ViewportSize;
