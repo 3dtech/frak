@@ -77,13 +77,22 @@ var TargetTexture=RenderTarget.extend({
 		this.texture.loaded=true;
 	},
 
-	bind: function(context, doNotClear) {
+	bind: function(context, doNotClear, clearColor) {
 		doNotClear = (doNotClear === true);
+		clearColor = (clearColor instanceof Color) ? clearColor : false;
+		if (!clearColor) {
+			if (context.camera)
+				clearColor = context.camera.backgroundColor;
+			else
+				doNotClear = true;
+		}
 
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this.frameBuffer);
+
 		this._super(context);
-		if (!doNotClear && context.camera) {
-			context.gl.clearColor(context.camera.backgroundColor.r, context.camera.backgroundColor.g, context.camera.backgroundColor.b, context.camera.backgroundColor.a);
+
+		if (!doNotClear) {
+			context.gl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 			context.gl.clearDepth(1.0);
 			context.gl.clear(context.gl.COLOR_BUFFER_BIT | context.gl.DEPTH_BUFFER_BIT);
 		}
