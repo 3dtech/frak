@@ -45,8 +45,12 @@ var CameraComponent=Component.extend({
 			this.camera.target.setSize(context.canvas.width(), context.canvas.height());
 		}
 
+		if (engine.options.correctTransparency === true) {
+			this.camera.renderStage.addStage(new OITPostProcess());
+		}
+
 		if (engine.options.antialias === true) {
-			this.camera.renderStage.addStage(new AntiAliasPostProcess())
+			this.camera.renderStage.addStage(new AntiAliasPostProcess());
 		}
 
 		this.camera.renderStage.start(context, engine);

@@ -17,6 +17,14 @@ var MaterialRenderStage=RenderStage.extend({
 		this.shadowMapStage=this.addStage(new ShadowMapRenderStage());
 		this.shadowMapFallbackSampler = false;
 
+		// order independent transparency
+		this.transparencyTarget = false;
+		this.transparencySampler = false;
+		this.transparencyWeight = false;
+		this.transparencyWeightSampler = false;
+		this.transparencyAccum = false;
+		this.oitClearColor = new Color(0.0, 0.0, 0.0, 1.0);
+
 		// internal cache
 		this.eyePosition=vec3.create();
 		this.invModelview=mat4.create();
@@ -52,6 +60,27 @@ var MaterialRenderStage=RenderStage.extend({
 		};
 
 		this.enableDynamicBatching=true;
+
+		this._addUniforms = function(uniforms, other) {
+			if (!other) return;
+			for (var key in other)
+				uniforms[key] = other[key];
+		};
+	},
+
+	onStart: function(context, engine) {
+		var size = engine.scene.camera.target.size;
+		this.transparencyTarget = new TargetTexture(size, context, false);
+		this.transparencySampler = new Sampler('oitAccum', this.transparencyTarget.texture);
+		this.transparencyWeight = new TargetTexture(size, context, false);
+		this.transparencyWeightSampler = new Sampler('oitWeight', this.transparencyWeight.texture);
+		this.transparencyAccum = new Material(
+			engine.assetsManager.addShaderSource("shaders/default/OITAccum"),
+			{
+				'render_mode': new UniformInt(0)
+			},
+			[]);
+		engine.assetsManager.load();
 	},
 
 	prepareShadowContext: function(context, scene) {
@@ -109,16 +138,18 @@ var MaterialRenderStage=RenderStage.extend({
 		this.visibleTransparentRenderers=this.transparentRenderers.length;
 
 		// Sort transparent renderers
-		mat4.invert(this.invModelview, context.modelview.top());
-		mat4.translation(this.eyePosition, this.invModelview);
-		var eyePosition = this.eyePosition;
-		this.transparentRenderers.sort(function(a, b) {
-			var d1 = vec3.squaredDistance(eyePosition, a.globalBoundingSphere.center);
-			var d2 = vec3.squaredDistance(eyePosition, b.globalBoundingSphere.center);
-			if (d1>d2) return -1;
-			if (d1<d2) return 1;
-			return 0;
-		});
+		if (!scene.engine.options.correctTransparency) {
+			mat4.invert(this.invModelview, context.modelview.top());
+			mat4.translation(this.eyePosition, this.invModelview);
+			var eyePosition = this.eyePosition;
+			this.transparentRenderers.sort(function(a, b) {
+				var d1 = vec3.squaredDistance(eyePosition, a.globalBoundingSphere.center);
+				var d2 = vec3.squaredDistance(eyePosition, b.globalBoundingSphere.center);
+				if (d1>d2) return -1;
+				if (d1<d2) return 1;
+				return 0;
+			});
+		}
 	},
 
 	/** Renders solid renderers in batches */
@@ -232,8 +263,6 @@ var MaterialRenderStage=RenderStage.extend({
 	},
 
 	renderSolid: function(context, scene, camera) {
-		camera.target.bind(context);
-
 		var gl = context.gl;
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
@@ -272,13 +301,9 @@ var MaterialRenderStage=RenderStage.extend({
 			gl.depthMask(true);
 			gl.depthFunc(gl.LESS);
 		}
-
-		camera.target.unbind(context);
 	},
 
 	renderTransparent: function(context, scene, camera) {
-		camera.target.bind(context, true);
-
 		var gl = context.gl;
 		gl.depthMask(false);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -289,14 +314,84 @@ var MaterialRenderStage=RenderStage.extend({
 		gl.disable(gl.BLEND);
 		gl.disable(gl.DEPTH_TEST);
 		gl.depthMask(true);
+	},
 
-		camera.target.unbind(context);
+	_renderOITPass: function(context, scene, camera, renderWeights) {
+		var gl = context.gl;
+
+		// Depth only pass for solid geometry
+		gl.depthMask(true);
+		gl.colorMask(false, false, false, false);
+		this.renderSolid(context, scene, camera);
+		gl.colorMask(true, true, true, true);
+
+		// Transparency accumulation pass
+		gl.depthMask(false);
+		gl.depthFunc(gl.LESS);
+		gl.enable(gl.DEPTH_TEST);
+
+		if (!renderWeights) {
+			gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+			// gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+			gl.enable(gl.BLEND);
+		}
+
+		this.transparencyAccum.uniforms['render_mode'].value = renderWeights === true ? 1 : 0;
+		for (var i in this.transparentRenderers) {
+			var renderer = this.transparentRenderers[i];
+			context.modelview.push();
+			context.modelview.multiply(renderer.matrix);
+
+			var uniforms = {};
+			this._addUniforms(uniforms, renderer.material.uniforms);
+			this._addUniforms(uniforms, renderer.getDefaultUniforms(context));
+
+			this.transparencyAccum.bind(uniforms, renderer.material.samplers);
+			renderer.renderGeometry(context, this.transparencyAccum.shader);
+			this.transparencyAccum.unbind();
+
+			context.modelview.pop();
+		}
+
+		gl.disable(gl.BLEND);
+		gl.disable(gl.DEPTH_TEST);
+		gl.depthMask(true);
+	},
+
+	renderTransparentOIT: function(context, scene, camera) {
+		this.transparencyTarget.bind(context, false, this.oitClearColor);
+		this._renderOITPass(context, scene, camera, false);
+		this.transparencyTarget.unbind(context);
+
+		this.transparencyWeight.bind(context, false, this.oitClearColor);
+		this._renderOITPass(context, scene, camera, true);
+		this.transparencyWeight.unbind(context);
+
+		/**
+		 * TODO: the accumulation pass can be rolled into a single pass shader,
+		 *       but it requires a floating point render target and/or MRT.
+		 */
 	},
 
 	onPostRender: function(context, scene, camera) {
 		this.prepareShadowContext(context, scene);
-		this.renderSolid(context, scene, camera);
-		this.renderTransparent(context, scene, camera);
+
+		if (scene.engine.options.correctTransparency === true) {
+			// Render solid geometry as normal
+			camera.target.bind(context);
+			this.renderSolid(context, scene, camera);
+			camera.target.unbind(context);
+
+			// Render transparency to texture
+			this.renderTransparentOIT(context, scene, camera);
+			/** Note: transparent geometry is composited to the final image in a post-process shader */
+		}
+		else {
+			camera.target.bind(context);
+			this.renderSolid(context, scene, camera);
+			this.renderTransparent(context, scene, camera);
+			camera.target.unbind(context);
+		}
 		context.shadow=false;
 	}
 });

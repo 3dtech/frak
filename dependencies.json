@@ -41,6 +41,7 @@
 	"src/rendering/camera/PostProcessRenderStage.js",
 	"src/rendering/camera/PostProcess.js",
 	"src/rendering/camera/AntiAliasPostProcess.js",
+	"src/rendering/camera/OITPostProcess.js",
 	"src/rendering/camera/RenderTarget.js",
 	"src/rendering/camera/TargetScreen.js",
 	"src/rendering/camera/TargetTexture.js",
