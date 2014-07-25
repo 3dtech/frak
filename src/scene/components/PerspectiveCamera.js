@@ -5,26 +5,37 @@ var PerspectiveCamera=CameraComponent.extend({
 		if(!near) near=0.3;
 		if(!far) far=1000.0;
 		if(!aspect) aspect=4/3;
-		
+
 		this.fov=fov;
 		this.aspect=aspect;
 		this.near=near;
 		this.far=far;
-		
+
 		var lookAt=mat4.create();
 		mat4.lookAt(lookAt, [0.0, 0.0, -100.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 		this._super(lookAt, this.calculatePerspective());
+		this.camera.near = this.near;
+		this.camera.far = this.far;
 	},
-	
+
 	type: function() {
 		return "PerspectiveCamera";
 	},
-	
+
 	onStart: function(context, engine) {
 		if(!this.aspect) {
 			this.setAspectRatio(context.canvas.width()/context.canvas.height());
 		}
 		this._super(context, engine);
+	},
+
+	/** Sets the camera's near and far clipping planes. */
+	setClipPlanes: function(near, far) {
+		this.near = near;
+		this.far = far;
+		this.camera.near = this.near;
+		this.camera.far = this.far;
+		this.camera.projectionMatrix = this.calculatePerspective();
 	},
 
 	/** Sets the camera aspect ration and updates the perspective projection matrix.
@@ -63,7 +74,7 @@ var PerspectiveCamera=CameraComponent.extend({
 		var fovx = Math.atan(hpx) * 2.0;
 		return fovx * 180.0/Math.PI;
 	},
-	
+
 	/** Calculates projection matrix based on fov, aspect ratio and near/far clipping planes */
 	calculatePerspective: function() {
 		var perspective=mat4.create();
