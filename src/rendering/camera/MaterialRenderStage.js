@@ -68,8 +68,8 @@ var MaterialRenderStage=RenderStage.extend({
 		};
 	},
 
-	onStart: function(context, engine) {
-		var size = engine.scene.camera.target.size;
+	onStart: function(context, engine, camera) {
+		var size = camera.target.size;
 		this.transparencyTarget = new TargetTexture(size, context, false);
 		this.transparencySampler = new Sampler('oitAccum', this.transparencyTarget.texture);
 		this.transparencyWeight = new TargetTexture(size, context, false);

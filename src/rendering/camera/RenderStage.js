@@ -53,10 +53,10 @@ var RenderStage=Class.extend({
 	// Methods
 	/** Performs initialization tasks on this render stage and its substages that
 		require rendering context or engine (for loading additional assets). */
-	start: function(context, engine) {
+	start: function(context, engine, camera) {
 		this.started = true;
-		this.onStart(context, engine);
-		for(var stage in this.substages) this.substages[stage].start(context, engine);
+		this.onStart(context, engine, camera);
+		for(var stage in this.substages) this.substages[stage].start(context, engine, camera);
 	},
 
 	/** Renders this stage and substages */
@@ -64,7 +64,7 @@ var RenderStage=Class.extend({
 		this.onPreRender(context,  scene, camera);
 		for(var stage in this.substages) {
 			if (!this.substages[stage].started)
-				this.substages[stage].start(context, scene.engine);
+				this.substages[stage].start(context, scene.engine, camera);
 			this.substages[stage].render(context, scene, camera);
 		}
 		this.onPostRender(context, scene, camera);
@@ -73,7 +73,7 @@ var RenderStage=Class.extend({
 	// Events
 	/** Called immediately after engine has been started.
 		Loading of render stage specific shaders and other precomputations can be done during this call. */
-	onStart: function(context, engine) {},
+	onStart: function(context, engine, camera) {},
 
 	/** Called before rendering substages of this render-stage.
 		The target of this render-stage is bound. */

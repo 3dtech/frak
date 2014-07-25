@@ -6,7 +6,7 @@
 var PostProcessRenderStage = RenderStage.extend({
 	init: function() {
 		this._super();
-		this.size = vec2.fromValues(1024, 1024);
+		this.size = false;
 		this.src = false; ///< TargetTexture, once we receive context
 		this.dst = false; ///< TargetTexture, once we receive context
 		this.srcSampler = false; ///< Sampler for src
@@ -18,12 +18,22 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.generator.parent = this;
 	},
 
+	setSize: function(width, height) {
+		if (this.size === false)
+			this.size = vec2.create();
+		this.size[0]=width;
+		this.size[1]=height;
+	},
+
 	getGeneratorStage: function() {
 		return new MaterialRenderStage();
 	},
 
-	onStart: function(context, engine) {
-		vec2.copy(this.size, engine.scene.camera.target.size);
+	onStart: function(context, engine, camera) {
+		if (!this.size) {
+			this.size = vec2.clone(camera.target.size);
+		}
+
 		this.src = new TargetTexture(this.size, context, false);
 		this.srcSampler = new Sampler('src', this.src.texture);
 
@@ -41,7 +51,7 @@ var PostProcessRenderStage = RenderStage.extend({
 
 		engine.assetsManager.load();
 
-		this.generator.start(context, engine);
+		this.generator.start(context, engine, camera);
 	},
 
 	onPreRender: function(context, scene, camera) {

@@ -5,7 +5,7 @@ var CameraComponent=Component.extend({
 			throw "CameraComponent can be initialized only with given viewMatrix and projectionMatrix. Normally one should create OrthoCamera or PerspectiveCamera instead";
 		}
 		this._super();
-		this.camera=new Camera(viewMatrix, projectionMatrix, new PostProcessRenderStage());
+		this.camera = new Camera(viewMatrix, projectionMatrix, new PostProcessRenderStage());
 	},
 
 	excluded: function() {
@@ -53,7 +53,7 @@ var CameraComponent=Component.extend({
 			this.camera.renderStage.addStage(new AntiAliasPostProcess());
 		}
 
-		this.camera.renderStage.start(context, engine);
+		this.camera.renderStage.start(context, engine, this.camera);
 	},
 
 	/** Set actual camera matrix
