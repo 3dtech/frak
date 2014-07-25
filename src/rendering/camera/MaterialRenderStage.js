@@ -70,9 +70,9 @@ var MaterialRenderStage=RenderStage.extend({
 
 	onStart: function(context, engine, camera) {
 		var size = camera.target.size;
-		this.transparencyTarget = new TargetTexture(size, context, false);
+		this.transparencyTarget = new TargetTextureFloat(size, context, false);
 		this.transparencySampler = new Sampler('oitAccum', this.transparencyTarget.texture);
-		this.transparencyWeight = new TargetTexture(size, context, false);
+		this.transparencyWeight = new TargetTextureFloat(size, context, false);
 		this.transparencyWeightSampler = new Sampler('oitWeight', this.transparencyWeight.texture);
 		this.transparencyAccum = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/OITAccum"),
@@ -323,17 +323,20 @@ var MaterialRenderStage=RenderStage.extend({
 		gl.depthMask(true);
 		gl.colorMask(false, false, false, false);
 		this.renderSolid(context, scene, camera);
-		gl.colorMask(true, true, true, true);
 
 		// Transparency accumulation pass
-		gl.depthMask(false);
+		gl.colorMask(true, true, true, true);
 		gl.depthFunc(gl.LESS);
 		gl.enable(gl.DEPTH_TEST);
 
 		if (!renderWeights) {
-			gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-			// gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+			gl.depthMask(false);
+			// gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+			gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
 			gl.enable(gl.BLEND);
+		}
+		else {
+			gl.depthMask(true);
 		}
 
 		this.transparencyAccum.uniforms['render_mode'].value = renderWeights === true ? 1 : 0;
