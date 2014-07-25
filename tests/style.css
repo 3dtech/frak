@@ -1,4 +1,4 @@
-* {
+body {
 	margin: 0px;
 	padding: 0px;
 	font-family: monospace;
@@ -9,6 +9,7 @@ a {
 }
 
 div {
+	padding: 4px;
 	/*border: 1px solid #000;*/
 }
 

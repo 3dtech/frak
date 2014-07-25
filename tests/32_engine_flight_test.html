@@ -27,7 +27,7 @@
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
-		<script src="../builds/frak-1.0.14.min.js"></script>
+		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
 			var frak=new FRAK(
@@ -98,13 +98,13 @@
 					scene.cameraComponent.setAspectRatio(1.0);
 
 					engine.assetsManager.load(function() {
-							scene.root.addNode(node);
-							scene.cameraComponent.fitNodeToView(node);
+						scene.root.addNode(node);
+						scene.cameraComponent.fitNodeToView(node);
 
-							node.setAbsolutePosition([0, 0, -10]);
+						node.setAbsolutePosition([0, 0, -10]);
 
-							engine.run();
-						});
+						engine.run();
+					});
 				});
 		</script>
 	</body>

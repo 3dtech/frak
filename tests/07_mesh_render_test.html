@@ -10,42 +10,42 @@
 	<body>
 		<!-- Canvas -->
 		<canvas id="canvas" style="border: none;" width="200" height="200"></canvas>
-	
+
 		<div id="info">
 		</div>
-		
+
 		<!-- Libraries -->
 		<script src="external/jquery-1.8.2.min.js"></script>
 		<script src="external/gl-matrix.js"></script>								<!-- GL-matrix library -->
 		<script src="external/classExtend.js"></script>
-		
+
 		<!-- API -->
 		<script id='vertex-shader' type="x-shader/x-vertex">
 			attribute vec3 position;
 			attribute vec2 texcoord2d0;
 
 			uniform mat4 modelview;
-			
+
 			varying vec2 fragTexcoord;
-			
+
 			void main(void) {
 				gl_Position = vec4(position, 1.0)*modelview;
 				fragTexcoord=texcoord2d0;
 			}
 		</script>
-		
+
 		<script id='fragment-shader' type="x-shader/x-fragment">
-			precision mediump float; 
+			precision mediump float;
 
 			uniform sampler2D texture0;
-			
+
 			varying vec2 fragTexcoord;
-			
-			void main(void) { 
+
+			void main(void) {
 				gl_FragColor = texture2D(texture0, fragTexcoord);
 			}
 		</script>
-		
+
 		<script src="js/FRAK.js"></script>
 
 		<script type="text/javascript">
@@ -53,20 +53,20 @@
 				function() {
 					// Fetch rendering context
 					var renderingContext=new RenderingContext($('#canvas'));
-			
+
 					var texturesManager=new TexturesManager(renderingContext);
 					var texture0=texturesManager.add("tests/data/lena.jpg");
 
 					texturesManager.load(function() {
 						// Create shader program
 						var shader=new Shader(renderingContext);
-						
+
 						// Add shaders
 						shader.addVertexShader($('#vertex-shader').text());
 						shader.addFragmentShader($('#fragment-shader').text());
-						
+
 						var material=new Material(shader, false, [new Sampler("texture0", texture0)]);
-						
+
 						// Start using the program (it's linked automatically)
 						// Create vertex positions and faces
 						var mesh=new Mesh();
@@ -85,7 +85,7 @@
 							]];
 						submesh.faces=[0, 1, 2, 0, 2, 3];
 						mesh.submeshes.push(submesh);
-						
+
 						var modelview=mat4.identity(mat4.create());
 						mat4.rotate(modelview, modelview, 1, [0, 0, 1]);
 						var meshRenderer=new MeshRenderer(renderingContext, modelview, mesh);

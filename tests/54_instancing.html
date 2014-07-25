@@ -20,7 +20,7 @@
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
-		<script src="../builds/frak-1.0.14.min.js"></script>
+		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
 			var frak=new FRAK(function() {
@@ -37,7 +37,7 @@
 					[ new Sampler("diffuse0", white) ]
 				);
 				materialB = new Material(
-					engine.assetsManager.addShaderSource("diffuse"),
+					engine.assetsManager.addShaderSource("diffuse"),2
 					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:1.0}) },
 					[ new Sampler("diffuse0", white) ]
 				);
@@ -66,13 +66,23 @@
 						}
 					}
 
+					function getMaterialRenderStage(camera) {
+						if (camera.renderStage instanceof MaterialRenderStage) {
+							return camera.renderStage;
+						}
+						if (camera.renderStage instanceof PostProcessRenderStage) {
+							return camera.renderStage.generator;
+						}
+						throw('Unhandled RenderStage used in Camera');
+					}
 
 					var displayRenderers=null;
 					displayRenderers=function() {
-						$('#visible-renderers').html(engine.scene.camera.renderStage.visibleRenderers);
-						$('#solid-renderers').html(engine.scene.camera.renderStage.visibleSolidRenderers);
-						$('#transparent-renderers').html(engine.scene.camera.renderStage.visibleTransparentRenderers);
-						$('#batches').html(engine.scene.camera.renderStage.visibleSolidBatches);
+						var renderStage = getMaterialRenderStage(engine.scene.camera);
+						$('#visible-renderers').html(renderStage.visibleRenderers);
+						$('#solid-renderers').html(renderStage.visibleSolidRenderers);
+						$('#transparent-renderers').html(renderStage.visibleTransparentRenderers);
+						$('#batches').html(renderStage.visibleSolidBatches);
 						setTimeout(displayRenderers, 200);
 					};
 					setTimeout(displayRenderers, 200);

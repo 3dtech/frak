@@ -18,6 +18,10 @@ function success(error, stdout, stderr){
 	if (error) {
 		console.log(error, stderr);
 	}
+	else {
+		console.log('Copying %s to builds/frak-latest.min.js', outputFile);
+		fs.createReadStream(outputFile).pipe(fs.createWriteStream('builds/frak-latest.min.js'));
+	}
 }
 
 var command = "uglifyjs -m -c -o "+outputFile+" --stats ";

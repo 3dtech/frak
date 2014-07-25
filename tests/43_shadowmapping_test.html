@@ -12,7 +12,7 @@
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
-		<script src="../builds/frak-1.0.14.min.js"></script>
+		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
 			function setupScene(scene) {
@@ -47,12 +47,22 @@
 				vec3.normalize(light.direction, light.direction);
 			}
 
+			function getShadowMapStage(camera) {
+				if (camera.renderStage instanceof MaterialRenderStage) {
+					return camera.renderStage.shadowMapStage;
+				}
+				if (camera.renderStage instanceof PostProcessRenderStage) {
+					return camera.renderStage.generator.shadowMapStage;
+				}
+				throw('Unhandled RenderStage used in Camera');
+			}
+
 			var frak=new FRAK(function() {
 				var DepthDebugCamera=PerspectiveCamera.extend({
 					type: function() { return "DepthDebugCamera"; },
 					onStart: function(context, engine) {
 						this._super(context, engine);
-						var shadowMapStage = this.node.scene.camera.renderStage.shadowMapStage;
+						var shadowMapStage = getShadowMapStage(this.node.scene.camera);
 						var debugMaterial=new Material(
 							engine.assetsManager.addShaderSource("shaders/default/DebugPackedDepthTexture"),
 							{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },

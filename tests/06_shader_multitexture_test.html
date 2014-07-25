@@ -15,7 +15,7 @@
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
-		<script src="../builds/frak-1.0.14.min.js"></script>
+		<script src="../builds/frak-latest.min.js"></script>
 
 		<script id='vertex-shader' type="x-shader/x-vertex">
 			attribute vec3 position;
@@ -32,13 +32,13 @@
 		<script id='fragment-shader' type="x-shader/x-fragment">
 			precision mediump float;
 
-			uniform sampler2D texture;
+			uniform sampler2D texture0;
 			uniform sampler2D texture1;
 
 			varying vec2 fragTexcoord;
 
 			void main(void) {
-				gl_FragColor = texture2D(texture, fragTexcoord)*0.5+texture2D(texture, fragTexcoord)*0.5;
+				gl_FragColor = texture2D(texture0, fragTexcoord)*0.5+texture2D(texture1, fragTexcoord)*0.5;
 			}
 		</script>
 
@@ -49,7 +49,9 @@
 					var renderingContext=new RenderingContext($('#canvas'));
 
 					var texturesManager=new TexturesManager(renderingContext);
-					var texture=texturesManager.add("data/barbara.png");
+					var texture0=texturesManager.add("data/lena.jpg");
+					var texture1=texturesManager.add("data/barbara.png");
+
 					texturesManager.load(function() {
 						// Create shader program
 						var shader=new Shader(renderingContext);
@@ -59,16 +61,16 @@
 						shader.addFragmentShader($('#fragment-shader').text());
 
 						// Start using the program (it's linked automatically)
-						var samplers=[new Sampler("texture", texture)];
+						var samplers=[new Sampler("texture0", texture0), new Sampler("texture1", texture1)];
 						shader.use();
 						shader.bindSamplers(samplers);
 
 						// Create vertices and faces
 						var vertices=[
-													0.0, 0.0, 0.0,
-													0.0, 1.0, 0.0,
+													-1.0, -1.0, 0.0,
+													-1.0, 1.0, 0.0,
 													1.0, 1.0, 0.0,
-													1.0, 0.0, 0.0
+													1.0, -1.0, 0.0
 													];
 						var texcoords=[
 								0.0, 0.0,

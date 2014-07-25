@@ -12,26 +12,37 @@
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
-		<script src="../builds/frak-1.0.14.min.js"></script>
+		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
 			var frak=new FRAK(
 				function() {
-					var matrix=mat4.identity(mat4.create());
+					var transform=new Transform();
 
 					// Fetch rendering context
 					var renderingContext=new RenderingContext($('#canvas'));
 					// Create shader
 					var shader=new Shader(renderingContext);
 
-					// Add shaders
+					// Add subshaders
 					shader.addVertexShader("attribute vec3 position; void main(void) { gl_Position = vec4(position, 1.0); }");
 					shader.addFragmentShader("precision mediump float; void main(void) { gl_FragColor = vec4(0.1, 0.5, 0.8, 1.0); }");
 
-					var material=new Material(shader);
+					// Start using the shader (it's linked automatically)
+					shader.use();
 
-					var cubeRenderer=new CubeRenderer(renderingContext, matrix, 1.0, material);
-					cubeRenderer.render(renderingContext);
+					// Create vertices and faces
+					var vertices=[
+							0.5, 0, 0,
+							0.1, 0.1, 0,
+							0.1, 0.5, 0
+						];
+					var faces=[0, 1, 2];
+
+					// Assign to render buffer and boom!
+					var trianglesRenderBuffer=new TrianglesRenderBuffer(renderingContext, faces);
+					trianglesRenderBuffer.add("position", vertices, 3);
+					trianglesRenderBuffer.render(shader);
 				});
 		</script>
 	</body>
