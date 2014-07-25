@@ -7,11 +7,11 @@ var Material=Serializable.extend({
 		@param descriptor MaterialDescriptor instance [optional] */
 	init: function(shader, uniforms, samplers, descriptor) {
 		this._super();
-		this.name='Unnamed';
-		this.descriptor=descriptor;
-		this.shader=shader; // Instance of Shader
-		this.uniforms=uniforms; // Shader uniforms as described by Shader
-		this.samplers=samplers; // Shader samplers
+		this.name = 'Unnamed';
+		this.shader = shader; ///< Instance of Shader
+		this.uniforms = uniforms; ///< Shader uniforms as described by Shader
+		this.samplers = samplers; ///< Shader samplers list
+		this.descriptor = descriptor;
 	},
 
 	type: function() {
@@ -29,7 +29,8 @@ var Material=Serializable.extend({
 			this.shader.bindUniforms(uniforms);
 
 		if ((!this.samplers || this.samplers.length == 0) && (!samplers || samplers.length == 0)) {
-			this.shader.bindSamplers([this.shader.context.engine.WhiteTextureSampler]);
+			if (this.shader.context.engine)
+				this.shader.bindSamplers([this.shader.context.engine.WhiteTextureSampler]);
 		}
 		else {
 			if (samplers)
@@ -45,7 +46,8 @@ var Material=Serializable.extend({
 		if(!this.shader) return;
 
 		if ((!this.samplers || this.samplers.length == 0) && (!samplers || samplers.length == 0)) {
-			this.shader.unbindSamplers([this.shader.context.engine.WhiteTextureSampler]);
+			if (this.shader.context.engine)
+				this.shader.unbindSamplers([this.shader.context.engine.WhiteTextureSampler]);
 		}
 		else {
 			if (samplers)
