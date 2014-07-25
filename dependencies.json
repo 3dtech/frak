@@ -45,6 +45,7 @@
 	"src/rendering/camera/RenderTarget.js",
 	"src/rendering/camera/TargetScreen.js",
 	"src/rendering/camera/TargetTexture.js",
+	"src/rendering/camera/TargetTextureFloat.js",
 
 	"src/rendering/buffers/RenderBuffer.js",
 	"src/rendering/buffers/TrianglesRenderBuffer.js",

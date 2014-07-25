@@ -1,23 +1,29 @@
-var TargetTexture=RenderTarget.extend({
+var TargetTexture = RenderTarget.extend({
 	init: function(sizeOrTexture, context, useDepthTexture) {
-		var size=sizeOrTexture;
-		if(sizeOrTexture instanceof Texture) {
-			size=sizeOrTexture.size;
-			this.texture=sizeOrTexture;
+		var size = sizeOrTexture;
+		if (sizeOrTexture instanceof Texture) {
+			size = sizeOrTexture.size;
+			this.texture = sizeOrTexture;
 		}
+		this.useDepthTexture = (useDepthTexture === true);
 
 		this._super(size);
-		var gl = context.gl;
 
-		if (useDepthTexture) {
-			var depthTextureExt = (gl.getExtension('WEBGL_depth_texture') || gl.getExtension('WEBKIT_WEBGL_depth_texture'));
-			if (!depthTextureExt) {
-				console.log('TargetTexture: Depth texture reqeusted, but not available. Falling back to using a render buffer for depth.');
-				useDepthTexture=false;
-			}
+		if (this.useDepthTexture) {
+			var depthTextureExt = (
+				context.gl.getExtension('WEBGL_depth_texture') ||
+				context.gl.getExtension('WEBKIT_WEBGL_depth_texture')
+			);
+			if (!depthTextureExt)
+				throw('TargetTexture: Depth texture reqeusted, but not available.');
 		}
 
-		this.frameBuffer=gl.createFramebuffer();
+		this.build(context);
+	},
+
+	build: function(context) {
+		var gl = context.gl;
+		this.frameBuffer = gl.createFramebuffer();
 
 		// Setup primary color buffer, if not provided
 		if(!this.texture) {
@@ -32,7 +38,7 @@ var TargetTexture=RenderTarget.extend({
 		}
 
 		// Setup buffer for depth
-		if (useDepthTexture) {
+		if (this.useDepthTexture) {
 			this.depth=new Texture(context);
 			gl.bindTexture(gl.TEXTURE_2D, this.depth.glTexture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -52,15 +58,25 @@ var TargetTexture=RenderTarget.extend({
 		// Attach targets to framebuffer
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture.glTexture, 0);
-		if (useDepthTexture)
+		if (this.useDepthTexture) {
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depth.glTexture, 0);
-		else
+		}
+		else {
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
+		}
 
+		this.checkStatus(context);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+		this.texture.loaded=true;
+	},
+
+	checkStatus: function(context) {
+		var gl = context.gl;
 		var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
 		switch (status) {
 			case gl.FRAMEBUFFER_COMPLETE:
-				break;
+				return true;
 			case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
 				throw("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
 			case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
@@ -72,9 +88,6 @@ var TargetTexture=RenderTarget.extend({
 			default:
 				throw("Incomplete framebuffer: " + status);
 		}
-
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		this.texture.loaded=true;
 	},
 
 	bind: function(context, doNotClear, clearColor) {
