@@ -93,6 +93,9 @@ var PostProcessRenderStage = RenderStage.extend({
 	},
 
 	renderQuad: function(context, shader) {
+		if (!shader.linked)
+			return;
+
 		var gl = context.gl;
 		var locations=[];
 		for(var bufferName in this.quad.buffers) {

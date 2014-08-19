@@ -110,6 +110,9 @@ var ShadowMapRenderStage=RenderStage.extend({
 	},
 
 	blurShadows: function(context, target, source, orientation, kernelSize) {
+		if (!this.gaussianBlurMaterial.shader.linked)
+			return;
+
 		var gl = context.gl;
 		var size = target.getSize();
 		mat4.ortho(this.blurProj, 0, size[0], size[1], 0, -10, 10);
