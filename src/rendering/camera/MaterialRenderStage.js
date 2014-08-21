@@ -23,7 +23,7 @@ var MaterialRenderStage=RenderStage.extend({
 		this.transparencyWeight = false;
 		this.transparencyWeightSampler = false;
 		this.transparencyAccum = false;
-		this.oitClearColor = new Color(0.0, 0.0, 0.0, 1.0);
+		this.oitClearColor = new Color(0.0, 0.0, 0.0, 0.0);
 
 		// internal cache
 		this.eyePosition=vec3.create();
@@ -138,7 +138,7 @@ var MaterialRenderStage=RenderStage.extend({
 		this.visibleTransparentRenderers=this.transparentRenderers.length;
 
 		// Sort transparent renderers
-		if (!scene.engine.options.correctTransparency) {
+		if (scene.engine.options.transparencyMode == 'sorted') {
 			mat4.invert(this.invModelview, context.modelview.top());
 			mat4.translation(this.eyePosition, this.invModelview);
 			var eyePosition = this.eyePosition;
@@ -301,13 +301,44 @@ var MaterialRenderStage=RenderStage.extend({
 			gl.depthMask(true);
 			gl.depthFunc(gl.LESS);
 		}
+
+		gl.disable(gl.DEPTH_TEST);
+	},
+
+	/** Renders all alpha-mapped geometry to current buffer */
+	renderAlphaMapped: function(context, scene, camera) {
+		var gl = context.gl;
+		gl.depthMask(true);
+		gl.depthFunc(gl.LESS);
+		gl.enable(gl.DEPTH_TEST);
+
+		this.transparencyAccum.uniforms['render_mode'].value = 2;
+		for (var i in this.transparentRenderers) {
+			var renderer = this.transparentRenderers[i];
+			context.modelview.push();
+			context.modelview.multiply(renderer.matrix);
+
+			var uniforms = {};
+			this._addUniforms(uniforms, renderer.material.uniforms);
+			this._addUniforms(uniforms, renderer.getDefaultUniforms(context));
+
+			this.transparencyAccum.bind(uniforms, renderer.material.samplers);
+			renderer.renderGeometry(context, this.transparencyAccum.shader);
+			this.transparencyAccum.unbind();
+
+			context.modelview.pop();
+		}
+
+		gl.disable(gl.DEPTH_TEST);
 	},
 
 	renderTransparent: function(context, scene, camera) {
 		var gl = context.gl;
-		gl.depthMask(false);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		gl.enable(gl.BLEND);
+		gl.depthMask(false);
+		gl.depthFunc(gl.LESS);
+		gl.enable(gl.DEPTH_TEST);
 
 		this.renderBruteForce(context, this.transparentRenderers);
 
@@ -316,30 +347,55 @@ var MaterialRenderStage=RenderStage.extend({
 		gl.depthMask(true);
 	},
 
-	_renderOITPass: function(context, scene, camera, renderWeights) {
+	_renderOITPass: function(context, scene, camera, renderColor) {
 		var gl = context.gl;
 
 		// Depth only pass for solid geometry
 		gl.depthMask(true);
 		gl.colorMask(false, false, false, false);
 		this.renderSolid(context, scene, camera);
+		this.renderAlphaMapped(context, scene, camera);
 
 		// Transparency accumulation pass
 		gl.colorMask(true, true, true, true);
 		gl.depthFunc(gl.LESS);
 		gl.enable(gl.DEPTH_TEST);
 
-		if (!renderWeights) {
-			gl.depthMask(false);
-			// gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-			gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
-			gl.enable(gl.BLEND);
-		}
-		else {
-			gl.depthMask(true);
+		if (scene.engine.options.transparencyMode == 'blended') {
+			// Color mode
+			if (renderColor) {
+				gl.depthMask(false);
+				gl.blendEquation(gl.FUNC_ADD);
+				gl.blendFunc(gl.ONE, gl.ONE);
+				gl.enable(gl.BLEND);
+				this.transparencyAccum.uniforms['render_mode'].value = 0;
+			}
+
+			// Reveal amount mode
+			else {
+				gl.depthMask(false);
+				gl.blendEquation(gl.FUNC_ADD);
+				gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+				gl.enable(gl.BLEND);
+				this.transparencyAccum.uniforms['render_mode'].value = 1;
+			}
 		}
 
-		this.transparencyAccum.uniforms['render_mode'].value = renderWeights === true ? 1 : 0;
+		if (scene.engine.options.transparencyMode == 'stochastic') {
+			if (renderColor) {
+				gl.depthMask(true);
+				this.transparencyAccum.uniforms['render_mode'].value = 3;
+			}
+			else {
+				gl.depthMask(false);
+				gl.blendEquation(gl.FUNC_ADD);
+				gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+				gl.enable(gl.BLEND);
+				this.transparencyAccum.uniforms['render_mode'].value = 1;
+			}
+
+		}
+
 		for (var i in this.transparentRenderers) {
 			var renderer = this.transparentRenderers[i];
 			context.modelview.push();
@@ -361,40 +417,52 @@ var MaterialRenderStage=RenderStage.extend({
 		gl.depthMask(true);
 	},
 
-	renderTransparentOIT: function(context, scene, camera) {
+	renderOIT: function(context, scene, camera) {
+		// Transparent color texture
+		this.oitClearColor.set(0.0, 0.0, 0.0, 0.0);
 		this.transparencyTarget.bind(context, false, this.oitClearColor);
-		this._renderOITPass(context, scene, camera, false);
+		this._renderOITPass(context, scene, camera, true);
 		this.transparencyTarget.unbind(context);
 
+		// Transparent alpha amount texture
+		this.oitClearColor.set(1.0, 1.0, 1.0, 1.0);
 		this.transparencyWeight.bind(context, false, this.oitClearColor);
-		this._renderOITPass(context, scene, camera, true);
+		this._renderOITPass(context, scene, camera, false);
 		this.transparencyWeight.unbind(context);
 
 		/**
 		 * TODO: the accumulation pass can be rolled into a single pass shader,
-		 *       but it requires a floating point render target and/or MRT.
+		 *       but it requires MRT.
 		 */
 	},
 
 	onPostRender: function(context, scene, camera) {
 		this.prepareShadowContext(context, scene);
 
-		if (scene.engine.options.correctTransparency === true) {
-			// Render solid geometry as normal
-			camera.target.bind(context);
-			this.renderSolid(context, scene, camera);
-			camera.target.unbind(context);
-
-			// Render transparency to texture
-			this.renderTransparentOIT(context, scene, camera);
-			/** Note: transparent geometry is composited to the final image in a post-process shader */
-		}
-		else {
+		if (scene.engine.options.transparencyMode == 'sorted') {
 			camera.target.bind(context);
 			this.renderSolid(context, scene, camera);
 			this.renderTransparent(context, scene, camera);
 			camera.target.unbind(context);
 		}
+
+		else if (scene.engine.options.transparencyMode == 'blended' ||
+		         scene.engine.options.transparencyMode == 'stochastic')
+		{
+			camera.target.bind(context);
+
+			// Render solid geometry as normal
+			this.renderSolid(context, scene, camera);
+
+			// Render alpha mapped geometry
+			this.renderAlphaMapped(context, scene, camera);
+
+			camera.target.unbind(context);
+
+			// Render transparency info that will be composited in OITPostProcess
+			this.renderOIT(context, scene, camera);
+		}
+
 		context.shadow=false;
 	}
 });

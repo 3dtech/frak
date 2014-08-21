@@ -45,7 +45,7 @@ var CameraComponent=Component.extend({
 			this.camera.target.setSize(context.canvas.width(), context.canvas.height());
 		}
 
-		if (engine.options.correctTransparency === true) {
+		if (engine.options.transparencyMode == 'blended' || engine.options.transparencyMode == 'stochastic') {
 			this.camera.renderStage.addStage(new OITPostProcess());
 		}
 

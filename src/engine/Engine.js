@@ -33,9 +33,10 @@ var Engine=Class.extend({
 			'requestedFPS': 30.0,
 			'debug': false,
 			'antialias': false,
-			'correctTransparency': false,
+			'transparencyMode': 'default',
 			'context': new RenderingContext(canvas)
 		}, options);
+		this.validateOptions();
 
 		this.context = this.options.context;
 		if(!scene) scene=new DefaultScene();
@@ -135,6 +136,20 @@ var Engine=Class.extend({
 		this.scene.update(this);
 		this.scene.render(this.context);
 		this.fps.measure();
+	},
+
+	validateOptions: function() {
+		// Transparency mode validation
+		switch (this.options.transparencyMode) {
+			case 'sorted':
+			case 'blended':
+			case 'stochastic':
+				break;
+			case 'default':
+			default:
+				this.options.transparencyMode = 'blended';
+				break;
+		}
 	},
 
 	/** Outputs all scene materials and shaders */
