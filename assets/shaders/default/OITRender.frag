@@ -77,12 +77,5 @@ void main(void) {
 	else if (render_mode == 1) {
 		transparentColor = avgColor(oitAccum, coords);
 		gl_FragColor = (1.0 - reveal) * transparentColor + reveal * solidColor;
-
-		// if (transparentColor.a < 0.001)
-		// gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-		// else
-		// gl_FragColor = vec4(transparentColor.a, transparentColor.a, 0.0, 1.0);
 	}
-
-	// gl_FragColor = vec4(reveal, reveal, reveal, 1.0);
 }
