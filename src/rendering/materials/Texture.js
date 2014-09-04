@@ -7,6 +7,7 @@ var Texture=Serializable.extend({
 		this.name=false;		///< Texture name assigned by manager
 		this.size=false;		///< Texture size
 		this.mipmapped=true;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
+		this.clampToEdge = true;
 		this.loaded=false;
 
 		if (context)
@@ -76,14 +77,23 @@ var Texture=Serializable.extend({
 
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+		// Apply clamp to edge settings
+		if (this.clampToEdge) {
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		}
 
 		// Apply mipmapping settings
 		if(this.mipmapped) {
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
 			gl.generateMipmap(gl.TEXTURE_2D);
 		}
-		else gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		else {
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		}
 
 		context.gl.bindTexture(context.gl.TEXTURE_2D, null);
 		if(image!=inputImage) delete image;
