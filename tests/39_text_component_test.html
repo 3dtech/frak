@@ -9,7 +9,7 @@
 	<body>
 		<!-- Canvas -->
 		<div>
-			<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+			<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="800" height="600"></canvas>
 		</div>
 		<div id='font-debug-canvas-container' style="z-index: 1; border: none; position: absolute; top: 500px;">
 		</div>
@@ -19,24 +19,50 @@
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script>
+			var debug;
+
 			function setup(scene) {
-				var node=scene.root.addNode(new Node());
-				var text=node.addComponent(new TextComponent("Hello world!", new FontSourceDescriptor("../assets/fonts/default.json")));
-				var renderer=node.addComponent(new TextRendererComponent());
-				node.transform.scale([0.01, 0.01, 0.01]);
+				scene.root.addNode(Primitives.text("Hello World")).transform.scale([1.5, 1.5, 1.5]);
+				var t1 = scene.root.addNode(Primitives.text("やった ね！")).getComponent(TextComponent);
+				t1.node.transform.setPosition([0, 0.2, 0]);
+				t1.outlineColor.set(1.0, 0.0, 1.0, 1.0);
+				t1.color.set(1.0, 0.0, 0.0, 1.0);
+
+				var t2 = scene.root.addNode(Primitives.text("N/A")).getComponent(TextComponent);
+				t2.node.transform.setPosition([0.6, 0.3, -0.5]);
+				t2.backgroundColor.set(0.0, 0.0, 0.0, 0.5);
+				t2.color.set(0.2, 1.0, 0.0, 0.8);
+				t2.outline = false;
+				t2.weight = 'bold';
+				t2.family = 'Tahoma, Geneva, sans-serif';
+				t2.node.addComponent(new FPSComponent())
+				debug = t2;
 			}
 
+			var FPSComponent = Component.extend({
+				type: function() { return "FPSComponent"; },
+
+				onUpdate: function(pass) {
+					var avg = parseFloat(Math.round(this.node.scene.engine.fps.getAverage() * 100) / 100).toFixed(2);
+					this.node.getComponent(TextComponent).setText(avg);
+				}
+			});
+
 			var frak=new FRAK(function() {
-				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+				var engine=new Engine($('#canvas'), {
+					'shadersPath': '../assets/',
+					'transparencyMode': 'blended',
+					'antialias': true
+				});
 				var scene=engine.scene;
 
 				scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
 				setup(scene);
 
 				var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
-				orbitController.distance=2.0;
+				orbitController.distance=1.5;
 				orbitController.minimumDistance=0.5;
-				orbitController.maximumDistance=100.0;
+				orbitController.maximumDistance=10.0;
 				orbitController.target.value=scene.root.transform;
 
 				engine.assetsManager.load(function() {
