@@ -19,8 +19,6 @@
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script>
-			var debug;
-
 			function setup(scene) {
 				scene.root.addNode(Primitives.text("Hello World")).transform.scale([1.5, 1.5, 1.5]);
 				var t1 = scene.root.addNode(Primitives.text("やった ね！")).getComponent(TextComponent);
@@ -36,7 +34,6 @@
 				t2.weight = 'bold';
 				t2.family = 'Tahoma, Geneva, sans-serif';
 				t2.node.addComponent(new FPSComponent())
-				debug = t2;
 			}
 
 			var FPSComponent = Component.extend({
