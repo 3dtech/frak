@@ -105,5 +105,15 @@ var Primitives = {
 		box.addComponent(new MeshComponent(mesh));
 		box.addComponent(new MeshRendererComponent());
 		return box;
+	},
+
+	/** Generates a text object (planar mesh in XY-axis with the text texture)
+		@param s {String} The initial text to display. Can be zero length.
+		@return {Node} that has the generated geometry attached to it */
+	text: function(s) {
+		var node = new Node('Text');
+		node.addComponent(new TextComponent(s));
+		node.addComponent(new TextRendererComponent());
+		return node;
 	}
 };
