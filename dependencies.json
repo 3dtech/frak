@@ -3,6 +3,7 @@
 	"lib/gl-matrix-3dtech-ext.js",
 	"lib/jdataview.js",
 	"lib/classExtend.js",
+	"lib/polyfills.js",
 	"lib/Logistics.js",
 
 	"src/Version.js",
