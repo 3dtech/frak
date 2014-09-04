@@ -10,11 +10,11 @@ var Color = function(r, g, b, a) {
 	this.g=1.0;
 	this.b=1.0;
 	this.a=1.0;
-	
+
 	this.clone=function() {
 		return new Color(this.r, this.g, this.b, this.a);
 	}
-	
+
 	this.fromHex=function(hex) {
 		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i.exec(hex);
 		if (result) {
@@ -25,7 +25,7 @@ var Color = function(r, g, b, a) {
 		}
 		return this;
 	}
-	
+
 	this.toHex=function() {
 		var componentToHex = function(v) {
 			var h = v.toString(16);
@@ -33,22 +33,22 @@ var Color = function(r, g, b, a) {
 		}
 		return "#" + componentToHex(this.r*255) + componentToHex(this.g*255) + componentToHex(this.b*255) + componentToHex(this.a*255);
 	}
-	
+
 	/** Returns CSS rgba representation of the color */
 	this.toString=function() {
-		return "rgba("+(this.r*255.0)+", "+(this.g*255.0)+", "+(this.b*255.0)+", "+this.a+")";
+		return "rgba("+Math.floor(this.r*255.0)+", "+Math.floor(this.g*255.0)+", "+Math.floor(this.b*255.0)+", "+this.a+")";
 	}
 
 	this.toVector=function() {
 		return vec4.fromValues(this.r, this.g, this.b, this.a);
 	}
-	
+
 	this.set=function(r, g, b, a) {
 		if (typeof(r)=='number') this.r=r;
 		if (typeof(g)=='number') this.g=g;
 		if (typeof(b)=='number') this.b=b;
 		if (typeof(a)=='number') this.a=a;
 	}
-	
+
 	this.set(r, g, b, a);
 }
