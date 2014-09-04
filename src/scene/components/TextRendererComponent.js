@@ -2,9 +2,5 @@
 var TextRendererComponent=MeshRendererComponent.extend({
 	type: function() {
 		return "TextRendererComponent";
-	},
-	
-	createRenderer: function(context, matrix, submesh, material) {
-		return new FontRenderer(context, matrix, submesh, material);
 	}
 });

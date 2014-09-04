@@ -21,7 +21,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		this.updateRenderers(context, engine);
 	},
 
-	addRenderers:function(context, engine) {
+	addRenderers: function(context, engine) {
 		var me=this;
 		this.node.onEachComponent(function(component) {
 			if(component instanceof MeshComponent) {

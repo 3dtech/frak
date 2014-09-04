@@ -1,204 +1,146 @@
 /** Text component is used to render text at given node */
 var TextComponent=MeshComponent.extend({
 	/** Constructor
-		@param text Default text to display
-		@param fontSourceDescriptor Descriptor describing font source location */
-	init: function(text, fontSourceDescriptor) {
-		if(!fontSourceDescriptor) {
-			fontSourceDescriptor=new FontSourceDescriptor("fonts/default.json");
-		}
-		this.fontSourceDescriptor=fontSourceDescriptor;
-		this.fontSource=false;
-		this.alignment='center';
+		@param text Default text to display */
+	init: function(text) {
 		this._super(new Mesh());
-		this.engine=false;
-		this.context=false;
-		this.submeshes={};					// Map of page submeshes
-		this.loaded=false;
+		this.context = false;
+		this.material = false;
+		this.texture = false;
+		this.sampler = new Sampler('diffuse0', null);
+
+		// Text properties
+		this.color = new Color(0.0, 0.0, 0.0, 1.0); ///< Color of the text
+		this.fontSize = 56; ///< Font pixel size
+		this.style = 'normal'; ///< Font style (italic, normal, oblique)
+		this.variant = 'normal'; ///< Font variant (normal, small-caps)
+		this.weight = 'normal'; ///< Font weight (normal, bold, bolder, lighter, 100..900)
+		this.family = 'monospace'; ///< Font family
+		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< Background color
+		this.outline = true; ///< Set to true if text outline is desired
+		this.outlineColor = new Color(1.0, 1.0, 1.0, 1.0); ///< Color of the text outline
+		this.outlineWidth = 5; ///< Outline width
+
 		this.setText(text);
 	},
 
 	excluded: function() {
-		return this._super().concat(["material", "engine", "context", "fontSource"]);
+		return this._super().concat(["material", "texture", "sampler", "context"]);
 	},
 
 	type: function() {
 		return "TextComponent";
 	},
 
-	onStart: function(context, engine) {
-		this.context=context;
-		this.engine=engine;
-		if(!this.fontSource) {
-			this.fontSource=engine.assetsManager.fontSourcesManager.addDescriptor(this.fontSourceDescriptor);
-			var me=this;
-			engine.assetsManager.load(function() {
-				me.loaded=true;
-				me.generateTextMesh();
-				me.updateTextRenderer();
-			});
+	/** Private. Applies text styles to 2D context. */
+	applyTextStyles: function(ctx2d) {
+		if (this.outline) {
+			ctx2d.strokeStyle = this.outlineColor.toString();
+			ctx2d.lineWidth = this.outlineWidth;
+		}
+		ctx2d.fillStyle = this.color.toString();
+		ctx2d.textBaseline = 'middle';
+		ctx2d.textAlign = 'center';
+		ctx2d.font = this.font;
+	},
+
+	updateFont: function() {
+		this.font = '';
+		if (this.style != 'normal') this.font += this.style + ' ';
+		if (this.variant != 'normal') this.font += this.variant + ' ';
+		if (this.weight != 'normal') this.font += this.weight + ' ';
+		this.font += this.fontSize + 'px ' + this.family;
+	},
+
+	updateText: function() {
+		if (!this.context || this.text.length == 0)
+			return;
+
+		var rendererComponent = this.node.getComponent(TextRendererComponent);
+		if (!rendererComponent)
+			return;
+
+		this.updateFont();
+		var canvas = document.createElement("canvas");
+		var ctx = canvas.getContext("2d");
+		this.applyTextStyles(ctx);
+		canvas.width = nextHighestPowerOfTwo(ctx.measureText(this.text).width);
+		canvas.height = nextHighestPowerOfTwo(2.0 * this.fontSize);
+
+		// Draw background
+		ctx.fillStyle = this.backgroundColor.toString();
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		this.applyTextStyles(ctx);
+
+		// Draw text outline
+		if (this.outline)
+			ctx.strokeText(this.text, canvas.width/2, canvas.height/2);
+
+		// Draw text
+		ctx.fillText(this.text, canvas.width/2, canvas.height/2);
+
+		this.texture.setImage(this.context, canvas);
+
+		var width = 1.0;
+		var height = width / (canvas.width/canvas.height);
+		var submesh = this.mesh.submeshes[0];
+		submesh.positions[0] = -0.5*width;
+		submesh.positions[1] = -0.5*height;
+		submesh.positions[3] = -0.5*width;
+		submesh.positions[4] =  0.5*height;
+		submesh.positions[6] =  0.5*width;
+		submesh.positions[7] =  0.5*height;
+		submesh.positions[9] =  0.5*width;
+		submesh.positions[10]= -0.5*height;
+		submesh.recalculateBounds();
+
+		if (rendererComponent.meshRenderers.length>0) {
+			var renderer = rendererComponent.meshRenderers[0];
+			renderer.buffer.update('position', submesh.positions);
 		}
 	},
 
-	updateTextRenderer: function() {
-		var me=this;
-		this.node.onEachComponent(function(c) {
-			if(c instanceof TextRendererComponent) c.updateRenderers(me.context, me.engine);
-		});
+	onStart: function(context, engine) {
+		this.context = context;
+		this.material = new Material(
+			engine.assetsManager.addShaderSource("transparent"),
+			{
+				"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0})
+			},
+			[ this.sampler ]
+		);
+		this.material.shader.requirements.transparent = true;
+		this.material.name = 'TextComponentMaterial';
+		this.texture = new Texture(context);
+		this.texture.mipmapped = true;
+		this.texture.clampToEdge = true;
+		this.sampler.texture = this.texture;
+
+		var submesh = new Submesh();
+		submesh.positions = new Float32Array(12);
+		submesh.normals = [
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0
+		];
+		submesh.texCoords2D = [[
+			0.0, 0.0,
+			0.0, 1.0,
+			1.0, 1.0,
+			1.0, 0.0
+		]];
+		submesh.faces = [0, 1, 2, 0, 2, 3];
+		submesh.recalculateBounds();
+		this.mesh.addSubmesh(submesh, this.material);
+
+		this.updateText();
 	},
 
 	/** Sets text and generates text mesh */
 	setText: function(text) {
 		this.text = String(text);
-		this.generateTextMesh();
-	},
-
-	/** Generates text mesh */
-	generateTextMesh: function() {
-		if(!this.loaded) return;
-
-		var fontData=this.fontSource.font.data;
-		if (!fontData) {
-			console.log('Warning: font data not available!', this.fontSource);
-		}
-
-		var text=this.text;
-		var submeshPositions={};	// Positions in page submeshes
-		var position = vec2.create();
-		var size = vec2.create();
-
-		// For entire text
-		for(var i in text) {
-			// Fetch character and character data
-			var c=text.charCodeAt(i);
-			if(!fontData.characters[c]) continue;	// Skip unknown character
-
-			var cData=fontData.characters[c];
-			size=cData.size;
-			var offset=vec2.fromValues(0, -cData.offset[1]+fontData.baseline-size[1]);
-			//console.log(offset, cData.offset[1], fontData.lineHeight, fontData.baseline);
-
-			// Character rectangle on texture
-			//var rectangle=[cData.normalizedPosition, vec2.add(vec2.create(), cData.normalizedPosition, cData.normalizedSize)];
-			var rectangle=[cData.normalizedPosition, vec2.subtract(vec2.create(), cData.normalizedPosition, cData.normalizedSize)];
-
-			var kerning=0;
-			if(i<text.length-1) {
-				var nc=text.charCodeAt(i);
-				if(fontData.kernings[c] && fontData.kernings[c][nc]) kerning=fontData.kernings[c][nc];
-			}
-
-			// Create character submesh, if it does not exist for the page
-
-			var submesh=this.getPageSubmesh(cData.page);
-			if(!submeshPositions[cData.page]) submeshPositions[cData.page]=0;								// Current position in page submesh is 0
-			var p=submeshPositions[cData.page];		// Text cursor position in current page submesh
-			submeshPositions[cData.page]++;
-
-			// Positions
-			submesh.positions[(p*4+0)*3]=offset[0]+position[0];
-			submesh.positions[(p*4+0)*3+1]=offset[1];
-			submesh.positions[(p*4+0)*3+2]=0;
-
-			submesh.positions[(p*4+1)*3]=offset[0]+position[0]+size[0];
-			submesh.positions[(p*4+1)*3+1]=offset[1];
-			submesh.positions[(p*4+1)*3+2]=0;
-
-			submesh.positions[(p*4+2)*3]=offset[0]+position[0]+size[0];
-			submesh.positions[(p*4+2)*3+1]=offset[1]+size[1];
-			submesh.positions[(p*4+2)*3+2]=0;
-
-			submesh.positions[(p*4+3)*3]=offset[0]+position[0];
-			submesh.positions[(p*4+3)*3+1]=offset[1]+size[1];
-			submesh.positions[(p*4+3)*3+2]=0;
-
-			// Normals
-			for(var j=0; j<4; j++) {
-				submesh.normals[(p*4+j)*3+0]=0;
-				submesh.normals[(p*4+j)*3+1]=0;
-				submesh.normals[(p*4+j)*3+2]=1;
-			}
-
-			// Texture coordinates
-
-			submesh.texCoords2D[0][(p*4+0)*2+0]=rectangle[0][0];
-			submesh.texCoords2D[0][(p*4+0)*2+1]=rectangle[0][1];
-
-			submesh.texCoords2D[0][(p*4+1)*2+0]=rectangle[1][0];
-			submesh.texCoords2D[0][(p*4+1)*2+1]=rectangle[0][1];
-
-			submesh.texCoords2D[0][(p*4+2)*2+0]=rectangle[1][0];
-			submesh.texCoords2D[0][(p*4+2)*2+1]=rectangle[1][1];
-
-			submesh.texCoords2D[0][(p*4+3)*2+0]=rectangle[0][0];
-			submesh.texCoords2D[0][(p*4+3)*2+1]=rectangle[1][1];
-
-			submesh.faces[p*6+0]=p*4+0;
-			submesh.faces[p*6+1]=p*4+1;
-			submesh.faces[p*6+2]=p*4+3;
-			submesh.faces[p*6+3]=p*4+1;
-			submesh.faces[p*6+4]=p*4+2;
-			submesh.faces[p*6+5]=p*4+3;
-
-			position[0]+=size[0]+kerning;
-		}
-
-		for(var s in this.submeshes) {
-			var submesh=this.submeshes[s];
-
-			if(this.alignment) {
-				var offset=0.0;
-				if(this.alignment=='center') offset=-position[0]/2;
-				if(this.alignment=='right') offset=-position[0];
-
-				for(var i=0; i<submesh.positions.length; i+=3) {
-					submesh.positions[i]+=offset;
-				}
-			}
-
-			submesh.recalculateBounds();
-			submesh.materialIndex=0;
-			this.mesh.addSubmesh(submesh);
-		}
-
-		this.mesh.materials=[this.fontSource.font.materialSource.material];
-
-		this.onTextSet();
-	},
-
-	/** Called after text has been set and bounding boxes calculated for text mesh */
-	onTextSet: function() {},
-
-	// Private
-	/** Calculates characters count on page
-		@param page Currently accessed page */
-	calculateCharactersOnPage: function(page) {
-		var count=0;
-		var fontData=this.fontSource.font.data;
-		for(var i in fontData.characters) {
-			var cData=fontData.characters[i];
-			if(cData.page==page) count++;
-		}
-		return count;
-	},
-
-	/** Gets cached submesh or creates submesh for characters on given page */
-	getPageSubmesh: function(page) {
-		if(this.submeshes[page]) return this.submeshes[page];
-
-		var submesh=new Submesh();
-
-		// Calculate characters count per page for calculating submesh normals, faces and positions count
-		var characterCount=this.calculateCharactersOnPage(page);
-
-		submesh.page=new UniformInt(page);			// Special character page variable for submesh. It'll be used to switch samplers
-		submesh.faces=new Array(2*3*characterCount);
-		submesh.positions=new Array(3*4*characterCount);
-		submesh.normals=new Array(3*4*characterCount);
-		submesh.texCoords2D=[new Array(2*4*characterCount)];
-
-		this.submeshes[page]=submesh;
-
-		return submesh;
+		this.updateText();
 	}
 });
