@@ -7,7 +7,7 @@ var Texture=Serializable.extend({
 		this.name=false;		///< Texture name assigned by manager
 		this.size=false;		///< Texture size
 		this.mipmapped=true;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
-		this.clampToEdge = true;
+		this.clampToEdge = false;
 		this.loaded=false;
 
 		if (context)
