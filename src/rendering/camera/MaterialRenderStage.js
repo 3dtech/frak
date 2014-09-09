@@ -261,6 +261,34 @@ var MaterialRenderStage=RenderStage.extend({
 			context.modelview.pop();
 		}
 	},
+	
+	renderSkybox: function(context, scene, camera) {
+		var skybox = scene.cameraNode.getComponent(SkyboxComponent);
+		if (!skybox) {
+			return;
+		}
+		
+		var globalSamplers = [this.shadowMapFallbackSampler];
+		
+		var renderComponent = skybox.meshNode.getComponent(MeshRendererComponent);
+		var renderers = renderComponent.meshRenderers;
+		for (var i=0; i < renderers.length; i++) {
+			var renderer = renderers[i];
+			
+			var defaultUniforms = renderer.getDefaultUniforms(context);
+			var modelMatrix = mat4.create();
+			mat4.translate(modelMatrix, modelMatrix, camera.getPosition());
+			defaultUniforms.model = new UniformMat4(modelMatrix);
+			defaultUniforms.lightDirection=new UniformVec3(vec3.create());
+			defaultUniforms.lightColor=new UniformColor(new Color());
+			defaultUniforms.lightIntensity=new UniformFloat(1.0);
+			defaultUniforms.ambient=new UniformColor(new Color());
+
+			renderer.material.bind(defaultUniforms, globalSamplers);
+			renderer.render(context);
+			renderer.material.unbind(globalSamplers);
+		}
+	},
 
 	renderSolid: function(context, scene, camera) {
 		var gl = context.gl;
@@ -441,6 +469,7 @@ var MaterialRenderStage=RenderStage.extend({
 
 		if (scene.engine.options.transparencyMode == 'sorted') {
 			camera.target.bind(context);
+			this.renderSkybox(context, scene, camera);
 			this.renderSolid(context, scene, camera);
 			this.renderTransparent(context, scene, camera);
 			camera.target.unbind(context);
@@ -450,6 +479,8 @@ var MaterialRenderStage=RenderStage.extend({
 		         scene.engine.options.transparencyMode == 'stochastic')
 		{
 			camera.target.bind(context);
+			
+			this.renderSkybox(context, scene, camera);
 
 			// Render solid geometry as normal
 			this.renderSolid(context, scene, camera);
