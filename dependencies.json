@@ -104,6 +104,7 @@
 	"src/scene/components/MeshComponent.js",
 	"src/scene/components/RendererComponent.js",
 	"src/scene/components/MeshRendererComponent.js",
+	"src/scene/components/SkyboxComponent.js",
 	"src/scene/components/TextRendererComponent.js",
 	"src/scene/components/TextComponent.js",
 	"src/scene/components/Controller.js",

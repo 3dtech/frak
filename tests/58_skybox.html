@@ -32,6 +32,12 @@
 					var scene=engine.scene;
 					var node=engine.assetsManager.addModel("data/test.data");
 					var orbitController=scene.cameraNode.addComponent(new OrbitController());
+					var lena = new TextureDescriptor("data/lena.jpg");
+					var barb = new TextureDescriptor("data/barbara.png");
+					var skyboxImages = [lena, barb, barb, 
+										lena, lena, barb];
+					var skyboxComponent=scene.cameraNode.addComponent(new SkyboxComponent());
+					skyboxComponent.setup(engine.assetsManager, engine, skyboxImages, 0.5);
 					orbitController.target.value=node.transform;
 					orbitController.rotation[0]=1.5;
 

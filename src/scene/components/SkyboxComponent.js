@@ -3,10 +3,12 @@ var SkyboxComponent = Component.extend({
 		this._super();
 	},
 	
-	setup: function(assetsManager, engine, images) {
+	setup: function(assetsManager, engine, images, offsetY) {
 		this.meshNode = new Node("Skybox");
 		
 		var center=[0.0, 0.0, 0.0];
+		if (offsetY)
+			center[1] += offsetY;
 		var extents=[1.0, 1.0, 1.0];
 		
 		var mesh = new Mesh();
