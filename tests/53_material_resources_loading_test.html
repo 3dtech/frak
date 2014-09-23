@@ -16,7 +16,10 @@
 
 		<script type="text/javascript">
 			var frak=new FRAK(function() {
-				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+				var engine = new Engine($('#canvas'), {
+					'assetsPath': '../assets/'
+				});
+
 				var material = engine.assetsManager.addMaterial('../assets/materials/DefaultMaterial.json');
 				engine.assetsManager.load(function() {
 					console.log('Material resource loaded: ', material);

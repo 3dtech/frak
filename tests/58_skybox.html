@@ -28,13 +28,18 @@
 			var frak=new FRAK(
 				function() {
 					$('#canvas').bind('contextmenu', function(e) { return false; });
-					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var engine = new Engine($('#canvas'), {
+						'assetsPath': '../assets/'
+					});
+					engine.assetsManager.modelsManager.path = './'; // Load test models locally
+					engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
 					var scene=engine.scene;
 					var node=engine.assetsManager.addModel("data/test.data");
 					var orbitController=scene.cameraNode.addComponent(new OrbitController());
 					var lena = new TextureDescriptor("data/lena.jpg");
 					var barb = new TextureDescriptor("data/barbara.png");
-					var skyboxImages = [lena, barb, barb, 
+					var skyboxImages = [lena, barb, barb,
 										lena, lena, barb];
 					var skyboxComponent=scene.cameraNode.addComponent(new SkyboxComponent());
 					skyboxComponent.setup(engine.assetsManager, engine, skyboxImages, 0.5);

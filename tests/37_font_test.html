@@ -21,7 +21,10 @@
 		<script type="text/javascript">
 			var frak=new FRAK(
 				function() {
-					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var engine = new Engine($('#canvas'), {
+						'assetsPath': '../assets/'
+					});
+					engine.assetsManager.modelsManager.path = './'; // Load test models locally
 
 					// Add required resources
 					var assetsManager=engine.assetsManager;

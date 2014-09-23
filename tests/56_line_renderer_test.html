@@ -17,7 +17,10 @@
 		<script type="text/javascript">
 			var frak=new FRAK(function() {
 				$('#canvas').bind('contextmenu', function(e) { return false; });
-				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+				var engine = new Engine($('#canvas'), {
+					'assetsPath': '../assets/'
+				});
+
 				var scene=engine.scene;
 				var root=scene.root;
 

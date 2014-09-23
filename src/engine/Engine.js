@@ -29,7 +29,7 @@ var Engine=Class.extend({
 		}
 		if (!options) options={};
 		this.options = extend({
-			'shadersPath': '',
+			'assetsPath': '',
 			'requestedFPS': 30.0,
 			'debug': false,
 			'antialias': false,
@@ -44,7 +44,7 @@ var Engine=Class.extend({
 		this.scene.engine=this;
 		this.fps=new FPS();
 		this.running=false;
-		this.assetsManager=new AssetsManager(this.context, this.options.shadersPath);
+		this.assetsManager=new AssetsManager(this.context, this.options.assetsPath);
 
 		// Universal 1x1 opaque white texture
 		this.WhiteTexture = new Texture(this.context);
@@ -149,32 +149,6 @@ var Engine=Class.extend({
 			default:
 				this.options.transparencyMode = 'blended';
 				break;
-		}
-	},
-
-	/** Outputs all scene materials and shaders */
-	debug: function() {
-		// Output all scene materials
-		var materials={};
-		var shaders={};
-		this.scene.root.onEachChildComponent(
-			function(c) {
-				if(c instanceof MeshComponent) {
-					for(var i in c.mesh.submeshes) {
-						var material = c.mesh.getMaterial(c.mesh.submeshes[i].materialIndex);
-						if (!material)
-							continue;
-						if(!materials[material.name]) materials[material.name]={'count': 0};
-						materials[material.name]['material']=material;
-						materials[material.name]['count']++;
-					}
-				}
-			}
-		);
-
-		console.log('Materials: ');
-		for(var m in materials) {
-			console.log(materials[m].material.name, materials[m]);
 		}
 	}
 });

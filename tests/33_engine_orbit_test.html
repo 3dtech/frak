@@ -28,7 +28,11 @@
 			var frak=new FRAK(
 				function() {
 					$('#canvas').bind('contextmenu', function(e) { return false; });
-					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var engine = new Engine($('#canvas'), {
+						'assetsPath': '../assets/'
+					});
+					engine.assetsManager.modelsManager.path = './'; // Load test models locally
+
 					var scene=engine.scene;
 					var node=engine.assetsManager.addModel("data/test.data");
 					var orbitController=scene.cameraNode.addComponent(new OrbitController());

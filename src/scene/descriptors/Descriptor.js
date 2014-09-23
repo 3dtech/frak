@@ -3,7 +3,7 @@ var Descriptor=Serializable.extend({
 	init: function() {
 		this._super();
 		this.source = '';
-		this.parentDescriptor=false; //< Parent resource descriptor, if any
+		this.parentDescriptor = false; //< Parent resource descriptor, if any
 	},
 
 	/** Descriptors should include all fields */

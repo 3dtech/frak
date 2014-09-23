@@ -11,12 +11,14 @@
 	</pre>
 	*/
 var ShadersManager=Manager.extend({
-	/** Constructor
-		@param context Instance of RenderingContext */
-	init: function(context) {
-		this._super();
+	/**
+	 * Constructor
+	 * @param renderingContext Instance of RenderingContext
+	 * @param assetsPath Default search path for any assets requested
+	 */
+	init: function(context, assetsPath) {
+		this._super(assetsPath);
 		this.context = context;
-		this.shadersPath = '';
 
 		this.aliases = {
 			'diffuse': 'shaders/default/diffuse',
@@ -36,8 +38,10 @@ var ShadersManager=Manager.extend({
 
 	/** Adds both vertex and fragment shader by appending .vert and .frag to source */
 	addSource: function(source) {
-		if(this.aliases[source.toLowerCase()]) source=this.aliases[source.toLowerCase()];
-		source = this.shadersPath + source;
+		var alias = source.toLowerCase();
+		if (alias in this.aliases)
+			source = this.aliases[alias];
+		source = this.sourceCallback(source);
 		return this.addDescriptor(new ShaderDescriptor(source+'.vert', source+'.frag'));
 	},
 
@@ -47,20 +51,21 @@ var ShadersManager=Manager.extend({
 	},
 
 	loadResource: function(shaderDescriptor, shaderResource, loadedCallback, failedCallback) {
-		var vertexShader=this.textManager.add(shaderDescriptor.getVertexShaderPath());
-		var fragmentShader=this.textManager.add(shaderDescriptor.getFragmentShaderPath());
+		var descriptor = this.descriptorCallback(shaderDescriptor);
+		var vertexShader = this.textManager.add(descriptor.getVertexShaderPath());
+		var fragmentShader = this.textManager.add(descriptor.getFragmentShaderPath());
 		this.textManager.load(function() {
 			if(!vertexShader.data) {
-				failedCallback(shaderDescriptor);
+				failedCallback(descriptor);
 				return;
 			}
 			if(!fragmentShader.data) {
-				failedCallback(shaderDescriptor);
+				failedCallback(descriptor);
 				return;
 			}
 			shaderResource.addVertexShader(vertexShader.data);
 			shaderResource.addFragmentShader(fragmentShader.data);
-			loadedCallback(shaderDescriptor, shaderResource);
+			loadedCallback(descriptor, shaderResource);
 		});
 	}
 });

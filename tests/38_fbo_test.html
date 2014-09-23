@@ -29,7 +29,11 @@
 
 			var frak=new FRAK(
 				function() {
-					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var engine = new Engine($('#canvas'), {
+						'assetsPath': '../assets/'
+					});
+					engine.assetsManager.modelsManager.path = './'; // Load test models locally
+
 					var scene=engine.scene;
 					scene.camera.layerMask=1;
 					scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);

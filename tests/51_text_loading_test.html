@@ -16,7 +16,9 @@
 
 		<script type="text/javascript">
 			var frak=new FRAK(function() {
-				var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+				var engine = new Engine($('#canvas'), {
+					'assetsPath': '../assets/'
+				});
 
 				var text = engine.assetsManager.addText('51_text_loading_test.html');
 				engine.assetsManager.load(function() {

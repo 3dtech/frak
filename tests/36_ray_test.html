@@ -30,7 +30,12 @@
 
 			var frak=new FRAK(
 				function() {
-					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
+					var engine = new Engine($('#canvas'), {
+						'assetsPath': '../assets/'
+					});
+					engine.assetsManager.modelsManager.path = './'; // Load test models locally
+					engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
 					var scene=engine.scene;
 					scene.cameraComponent.setAspectRatio(1.0);
 

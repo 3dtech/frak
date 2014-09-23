@@ -35,57 +35,115 @@
 				}
 			}
 
-			var frak=new FRAK(
-				function() {
-					var engine=new Engine($('#canvas'), { 'shadersPath': '../assets/' });
-					var scene=engine.scene;
-					var model=engine.assetsManager.addModel("data/test.data");
-
-					var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
-					orbitController.target.value=scene.root.transform;
-
-					scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
-
-					var updates=0;
-					var TestComponent=Component.extend({
-							type: function() { return "TestComponent"; },
-							onUpdate: function(pass) {
-								var translation = vec3.create();
-								var rotation = quat.create();
-								var scale = vec3.create();
-								mat4.decompose(translation, rotation, scale, scene.cameraNode.transform.relative);
-								$('#position').html(vec3.str(translation));
-								$('#rotation').html(vec3.str(quat.getEuler(vec3.create(), rotation)));
-								$('#velocity').html(vec3.str(orbitController.velocity));
-								$('#angular-velocity').html(vec3.str(orbitController.angularVelocity));
-
-								$('#updates').html(updates);
-								$('#average-fps').html(engine.fps.getAverage());
-								updates++;
-							}
-						});
-
-					scene.root.addComponent(new TestComponent());
-
-					engine.assetsManager.load(function() {
-						var A = model;
-						var B = model.instantiate();
-						mat4.fromRotationTranslation(A.transform.relative, quat.create(), [0.5,0.0,0.0]);
-						mat4.fromRotationTranslation(B.transform.relative, quat.create(), [-0.5,0.0,0.0]);
-						scene.root.addNode(A);
-						scene.root.addNode(B);
-						scene.cameraComponent.fitNodeToView(scene.root);
-
-						var makeTransparent=function(subnode) {
-							if (subnode.getComponent(MeshRendererComponent))
-								makeObjectTransparent(subnode.getComponent(MeshRendererComponent), engine);
-						};
-						A.onEachChild(makeTransparent);
-						B.onEachChild(makeTransparent);
-						engine.assetsManager.load();
-					});
-					engine.run();
+			$(function() {
+				var engine = new Engine($('#canvas'), {
+					'assetsPath': '../assets/'
 				});
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+
+				var scene = engine.scene;
+				var model = engine.assetsManager.addModel("data/test.data");
+
+				var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.target.value=scene.root.transform;
+
+				scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
+
+				var updates=0;
+				var TestComponent=Component.extend({
+						type: function() { return "TestComponent"; },
+						onUpdate: function(pass) {
+							var translation = vec3.create();
+							var rotation = quat.create();
+							var scale = vec3.create();
+							mat4.decompose(translation, rotation, scale, scene.cameraNode.transform.relative);
+							$('#position').html(vec3.str(translation));
+							$('#rotation').html(vec3.str(quat.getEuler(vec3.create(), rotation)));
+							$('#velocity').html(vec3.str(orbitController.velocity));
+							$('#angular-velocity').html(vec3.str(orbitController.angularVelocity));
+
+							$('#updates').html(updates);
+							$('#average-fps').html(engine.fps.getAverage());
+							updates++;
+						}
+					});
+
+				scene.root.addComponent(new TestComponent());
+
+				engine.assetsManager.load(function() {
+					var A = model;
+					var B = model.instantiate();
+					mat4.fromRotationTranslation(A.transform.relative, quat.create(), [0.5,0.0,0.0]);
+					mat4.fromRotationTranslation(B.transform.relative, quat.create(), [-0.5,0.0,0.0]);
+					scene.root.addNode(A);
+					scene.root.addNode(B);
+					scene.cameraComponent.fitNodeToView(scene.root);
+
+					var makeTransparent=function(subnode) {
+						if (subnode.getComponent(MeshRendererComponent))
+							makeObjectTransparent(subnode.getComponent(MeshRendererComponent), engine);
+					};
+					A.onEachChild(makeTransparent);
+					B.onEachChild(makeTransparent);
+					engine.assetsManager.load();
+				});
+				engine.run();
+			});
+
+			// var frak=new FRAK(
+			// 	function() {
+			// 		var engine = new Engine($('#canvas'), {
+			// 			'shadersPath': '../assets/'
+			// 		});
+
+			// 		var scene=engine.scene;
+			// 		var model=engine.assetsManager.addModel("data/test.data");
+
+			// 		var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
+			// 		orbitController.target.value=scene.root.transform;
+
+			// 		scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
+
+			// 		var updates=0;
+			// 		var TestComponent=Component.extend({
+			// 				type: function() { return "TestComponent"; },
+			// 				onUpdate: function(pass) {
+			// 					var translation = vec3.create();
+			// 					var rotation = quat.create();
+			// 					var scale = vec3.create();
+			// 					mat4.decompose(translation, rotation, scale, scene.cameraNode.transform.relative);
+			// 					$('#position').html(vec3.str(translation));
+			// 					$('#rotation').html(vec3.str(quat.getEuler(vec3.create(), rotation)));
+			// 					$('#velocity').html(vec3.str(orbitController.velocity));
+			// 					$('#angular-velocity').html(vec3.str(orbitController.angularVelocity));
+
+			// 					$('#updates').html(updates);
+			// 					$('#average-fps').html(engine.fps.getAverage());
+			// 					updates++;
+			// 				}
+			// 			});
+
+			// 		scene.root.addComponent(new TestComponent());
+
+			// 		engine.assetsManager.load(function() {
+			// 			var A = model;
+			// 			var B = model.instantiate();
+			// 			mat4.fromRotationTranslation(A.transform.relative, quat.create(), [0.5,0.0,0.0]);
+			// 			mat4.fromRotationTranslation(B.transform.relative, quat.create(), [-0.5,0.0,0.0]);
+			// 			scene.root.addNode(A);
+			// 			scene.root.addNode(B);
+			// 			scene.cameraComponent.fitNodeToView(scene.root);
+
+			// 			var makeTransparent=function(subnode) {
+			// 				if (subnode.getComponent(MeshRendererComponent))
+			// 					makeObjectTransparent(subnode.getComponent(MeshRendererComponent), engine);
+			// 			};
+			// 			A.onEachChild(makeTransparent);
+			// 			B.onEachChild(makeTransparent);
+			// 			engine.assetsManager.load();
+			// 		});
+			// 		engine.run();
+			// 	});
 		</script>
 	</body>
 </html>

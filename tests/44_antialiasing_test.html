@@ -95,9 +95,12 @@
 				});
 
 				engine=new Engine($('#canvas'), {
-					'shadersPath': '../assets/',
+					'assetsPath': '../assets/',
 					'antialias': true
 				});
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test models locally
+
 				setupScene(engine.scene);
 				engine.assetsManager.load(function() {
 					engine.run();

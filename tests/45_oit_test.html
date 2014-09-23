@@ -119,12 +119,16 @@
 			var engine;
 			var frak = new FRAK(function() {
 				engine=new Engine($('#canvas'), {
-					'shadersPath': '../assets/',
+					'assetsPath': '../assets/',
 					// 'transparencyMode': 'sorted',
 					'transparencyMode': 'blended',
 					// 'transparencyMode': 'stochastic',
 					'antialias': true
 				});
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+
 				setupScene(engine.scene);
 				engine.assetsManager.load(function() {
 					engine.run();

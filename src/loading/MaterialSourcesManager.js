@@ -7,14 +7,15 @@
 	// material becomes available for rendering
 	var material=materialSourcesManager.add('material.json');
 	materialSourcesManager.load(function() {
-		console.log(material);
+		// Do something with material
 	});
 	</pre>
 	*/
 var MaterialSourcesManager=Manager.extend({
 	/** Constructor */
-	init: function(context, materialsManager, textManager) {
-		this._super();
+	init: function(context, assetsPath, materialsManager, textManager) {
+		this._super(assetsPath);
+
 		if(materialsManager && !(materialsManager instanceof MaterialsManager)) throw "materialsManager is not instance of MaterialsManager";
 		if(textManager && !(textManager instanceof TextManager)) throw "textManager is not instance of TextManager";
 
@@ -31,6 +32,7 @@ var MaterialSourcesManager=Manager.extend({
 		@param source Path to source
 		@return New text source object (until not loaded: {'data': false, 'descriptor': new TextDescriptor(source)}) */
 	add: function(source) {
+		source = this.sourceCallback(source);
 		return this.addDescriptor(new MaterialSourceDescriptor(source));
 	},
 
@@ -39,14 +41,16 @@ var MaterialSourcesManager=Manager.extend({
 	},
 
 	loadResource: function(materialSourceDescriptor, materialSource, loadedCallback, failedCallback) {
-		var text=this.textManager.add(materialSourceDescriptor.getFullPath());
-		var me=this;
+		var descriptor = this.descriptorCallback(materialSourceDescriptor);
+
+		var text = this.textManager.add(descriptor.getFullPath());
+		var scope = this;
 		this.textManager.load(function() {
-			var result=$.parseJSON(text.data);
+			var result = $.parseJSON(text.data);
 
 			// Create new material descriptor that will be used to load the actual material
-			var md=new MaterialDescriptor();
-			md.parentDescriptor = materialSourceDescriptor;
+			var md = new MaterialDescriptor();
+			md.parentDescriptor = descriptor;
 
 			// Load uniforms
 			if(result.uniforms) {
@@ -104,10 +108,10 @@ var MaterialSourcesManager=Manager.extend({
 				md.requirements = result.requirements;
 			}
 
-			materialSource.material=me.materialsManager.addDescriptor(md);
+			materialSource.material = scope.materialsManager.addDescriptor(md);
 
-			me.materialsManager.load(function() {
-				loadedCallback(materialSourceDescriptor, materialSource);
+			scope.materialsManager.load(function() {
+				loadedCallback(descriptor, materialSource);
 			});
 		});
 	}

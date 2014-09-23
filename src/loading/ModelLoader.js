@@ -1,13 +1,11 @@
 /** Loads models to scene hierarchy from given parsed data */
 var ModelLoader=Class.extend({
-	init: function(context, descriptor, prefix, shadersManager, texturesManager, noCollisionTree) {
+	init: function(context, descriptor, shadersManager, texturesManager) {
 		this.descriptor=descriptor;
 		this.shadersManager=shadersManager;
 		this.texturesManager=texturesManager;
-		this.prefix=prefix;
 		this.defaultTexture=false;
 		this.defaultSampler=false;
-		this.noCollisionTree=noCollisionTree;
 		this.nodesByID={};
 		this.submeshesByID={};
 		this.submeshes=[];
