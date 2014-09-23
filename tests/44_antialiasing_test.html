@@ -83,12 +83,13 @@
 			var frak = new FRAK(function() {
 				$('#aa-toggle').click(function() {
 					var stage = engine.scene.camera.renderStage;
-					if (stage.substages.length>0) {
-						stage.removeStagesByType(AntiAliasPostProcess);
+					var aa = stage.getStageByType(AntiAliasPostProcess);
+					if (aa.enabled) {
+						aa.disable();
 						$('#aa-status').text('Anti-aliasing DISABLED');
 					}
 					else {
-						stage.addStage(new AntiAliasPostProcess());
+						aa.enable();
 						$('#aa-status').text('Anti-aliasing ENABLED');
 					}
 				});

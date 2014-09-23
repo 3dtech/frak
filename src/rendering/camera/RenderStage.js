@@ -8,6 +8,7 @@ var RenderStage=Class.extend({
 		this.parent = false; ///< Parent RenderStage
 		this.substages = [];
 		this.started = false;
+		this.enabled = true;
 	},
 
 	/** Adds a substage to this RenderStage.
@@ -31,6 +32,7 @@ var RenderStage=Class.extend({
 		return false;
 	},
 
+	/** Removes all sub-stages of type stageType. */
 	removeStagesByType: function(stageType) {
 		var removed=[];
 		for (var i=0; i<this.substages.length; i++) {
@@ -46,8 +48,21 @@ var RenderStage=Class.extend({
 		return removed;
 	},
 
+	/** Removes all sub-stages. */
 	clearStages: function() {
+		for (var i in this.substages) {
+			this.substages[i].parent = false;
+		}
 		this.substages = [];
+	},
+
+	/** Returns the first sub-stage of type stageType. */
+	getStageByType: function(stageType) {
+		for (var i=0; i<this.substages.length; i++) {
+			if (this.substages[i] instanceof stageType)
+				return this.substages[i];
+		}
+		return false;
 	},
 
 	// Methods
@@ -56,11 +71,15 @@ var RenderStage=Class.extend({
 	start: function(context, engine, camera) {
 		this.started = true;
 		this.onStart(context, engine, camera);
-		for(var stage in this.substages) this.substages[stage].start(context, engine, camera);
+		for (var stage in this.substages)
+			this.substages[stage].start(context, engine, camera);
 	},
 
 	/** Renders this stage and substages */
 	render: function(context, scene, camera) {
+		if (!this.enabled)
+			return;
+
 		this.onPreRender(context,  scene, camera);
 		for(var stage in this.substages) {
 			if (!this.substages[stage].started)
@@ -68,6 +87,18 @@ var RenderStage=Class.extend({
 			this.substages[stage].render(context, scene, camera);
 		}
 		this.onPostRender(context, scene, camera);
+	},
+
+	/** Enables this render stage. */
+	enable: function() {
+		this.enabled = true;
+		this.onEnable();
+	},
+
+	/** Disables this render stage. */
+	disable: function() {
+		this.enabled = false;
+		this.onDisable();
 	},
 
 	// Events
@@ -81,5 +112,11 @@ var RenderStage=Class.extend({
 
 	/** Called after rendering substages of this render-stage.
 		The target of this render-stage is bound. */
-	onPostRender: function(context, scene, camera) {}
+	onPostRender: function(context, scene, camera) {},
+
+	/** Called when the render stage is enabled. */
+	onEnable: function() {},
+
+	/** Called when the render stage is disabled. */
+	onDisable: function() {}
 });
