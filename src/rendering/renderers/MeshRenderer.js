@@ -20,17 +20,17 @@ var MeshRenderer=Renderer.extend({
 			if(submesh.normals) renderBuffer.add("normal", submesh.normals, 3);
 			if(submesh.tangents) renderBuffer.add("tangent", submesh.tangents, 3);
 			if(submesh.bitangents) renderBuffer.add("bitangent", submesh.bitangents, 3);
-			
+
 			this.buffers.push(renderBuffer);
 		}
 	},
 
 	/** Renders mesh geometry with materials */
+
 	onRender: function(context) {
 		var uniforms = this.getDefaultUniforms(context);
 		for(var submeshIndex in this.mesh.submeshes) {
 			var submesh=this.mesh.submeshes[submeshIndex];
-					console.log('rendering submesh: ', submesh);
 			var material = this.mesh.getMaterial(submesh.materialIndex);
 			if (!material)
 				continue;
@@ -39,7 +39,7 @@ var MeshRenderer=Renderer.extend({
 			material.unbind();
 		}
 	},
-	
+
 	/** Renders only mesh geometry without material switches with given shader */
 	onRenderGeometry: function(context, shader) {
 		shader.bindUniforms(this.getDefaultUniforms(context));

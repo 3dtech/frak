@@ -58,7 +58,7 @@ var FRAK=Class.extend({
 				me.load();
 			})
 		.fail(function(jqxhr, settings, exception) {
-			console.log("Failed to load '"+script+"' at "+exception.lineNumber+": "+exception);
+			console.warn("Failed to load '"+script+"' at "+exception.lineNumber+": "+exception);
 			console.trace();
 		});
 	}

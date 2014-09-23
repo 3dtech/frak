@@ -7,7 +7,6 @@ var CubeRenderer=PrimitiveRenderer.extend({
 		@param size Size of the cube
 		*/
 	init: function(context, matrix, size, material) {
-		console.log("Cube renderer: ", matrix);
 		this._super(matrix, material);
 		this.size=size;
 

@@ -37,12 +37,10 @@ var FontDescriptor=Descriptor.extend({
 
 	getFullTexturePaths: function() {
 		var parentDirectory = this.getParentDirectory();
-		console.log('TEXTURE PARENT: ', parentDirectory);
 		var texturePaths=[];
 		for(var i in this.fontTexturePaths) {
 			texturePaths.push(parentDirectory + this.fontTexturePaths[i]);
 		}
-		console.log(texturePaths);
 		return texturePaths;
 	},
 

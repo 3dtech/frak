@@ -24,7 +24,7 @@ var DataParser=Class.extend({
 		this.flipX=false;
 		this.warnOnUnknownChunks=true;
 	},
-	
+
 	parse: function() {
 		this.push(false, this.parseHeader);
 		while(!this.completed()) {
@@ -40,22 +40,22 @@ var DataParser=Class.extend({
 			this.onComplete(this.result.getData(), this.userdata);
 		return true;
 	},
-	
+
 	error: function(msg) {
 		this.errors.push(msg);
 		return false;
 	},
-	
+
 	errorExpect: function(bytes, parameter) {
 		return this.error('Expected at least '+bytes+' byte'+(bytes>1?'s':'')+' for "'+parameter+'"');
 	},
-		
+
 	completed: function() {
 		if (this.view.tell()==this.view.byteLength)
 			return true;
 		return false;
 	},
-	
+
 	step: function() {
 		var call = this.getCurrentCall();
 		if (call) {
@@ -66,47 +66,47 @@ var DataParser=Class.extend({
 		}
 		return false;
 	},
-	
+
 	push: function(node, call) {
 		this.stack.push({'node':node, 'call': ClassCallback(this, call)});
 	},
-	
+
 	pop: function() {
 		this.stack.pop();
 	},
-	
+
 	getCurrentNode: function() {
 		if (this.stack.length>0)
 			return this.stack[this.stack.length-1].node;
 		return false;
 	},
-	
+
 	getCurrentCall: function() {
 		if (this.stack.length>0)
 			return this.stack[this.stack.length-1].call;
 		return false;
 	},
-	
+
 	hasDataFor: function(numBytes) {
 		if (this.view.byteLength<this.view.tell()+numBytes)
 			return false;
 		return true;
 	},
-	
+
 	hasDataForNode: function(node) {
 		if (this.view.byteLength<node.position+node.length+8)
 			return false;
 		return true;
 	},
-	
+
 	getUint32: function() {
 		return this.view.getUint32(this.view.tell(), true);
 	},
-	
+
 	getFloat32: function() {
 		return this.view.getFloat32(this.view.tell(), true);
 	},
-	
+
 	getMatrix4x4: function() {
 		var mat = [];
 		for (var i=0; i<4; i++) {
@@ -119,7 +119,7 @@ var DataParser=Class.extend({
 		}
 		return mat;
 	},
-	
+
 	getColor: function() {
 		return {
 			'r': this.view.getFloat32(this.view.tell(), true),
@@ -128,7 +128,7 @@ var DataParser=Class.extend({
 			'a': this.view.getFloat32(this.view.tell(), true)
 		};
 	},
-	
+
 	parseHeader: function() {
 		if (!this.view)	return this.error('No data to parse');
 		if (!this.parseSignature())	return false;
@@ -139,7 +139,7 @@ var DataParser=Class.extend({
 		this.push(rootNode, this.parseRoot);
 		return true;
 	},
-	
+
 	parseSignature: function() {
 		if (!this.hasDataFor(12))
 			return this.error('Not enough data for 3DTech DATA format header');
@@ -153,7 +153,7 @@ var DataParser=Class.extend({
 			return this.error('Could not find root node');
 		return true;
 	},
-	
+
 	parseNodeHeader: function() {
 		if (!this.hasDataFor(8))
 			return this.error('Not enough data for parsing node header');
@@ -162,14 +162,14 @@ var DataParser=Class.extend({
 		var length = this.getUint32();
 		return new DataParserNode(id, length, position);
 	},
-	
+
 	/** Assumes that the reading pointer is right past the node header. */
 	skipNode: function(node) {
 		if (this.warnOnUnknownChunks)
-			console.log('DataParser: skipping node ', DataParserTypes.getName(node.id));
+			console.warn('DataParser: skipping node ', DataParserTypes.getName(node.id));
 		this.view.seek(this.view.tell()+node.length);
 	},
-	
+
 	/** Parses a single material */
 	parseMaterial: function(materialNode) {
 		var material = this.result.createMaterial();
@@ -252,7 +252,7 @@ var DataParser=Class.extend({
 		this.result.addMaterial(material);
 		return true;
 	},
-	
+
 	/** Parses material textures */
 	parseMaterialTextures: function(texturesNode, list) {
 		while (this.view.tell()<texturesNode.end()) {
@@ -284,13 +284,13 @@ var DataParser=Class.extend({
 		}
 		return true;
 	},
-	
+
 	/** Parses the materials section of the data */
 	parseMaterials: function(materialsNode) {
 		if (!this.hasDataForNode(materialsNode)) {
 			return this.error("Not enough data for node '"+DataParserTypes.getName(materialsNode.id)+"'");
 		}
-		
+
 		while (this.view.tell()<materialsNode.end()) {
 			var node = this.parseNodeHeader();
 			if (node.id==DataParserTypes.NODE_MATERIAL) {
@@ -302,7 +302,7 @@ var DataParser=Class.extend({
 		this.pop();
 		return true;
 	},
-	
+
 	/** Parses the geometry section of the data */
 	parseGeometry: function(geometryNode) {
 		if (!this.hasDataForNode(geometryNode))
@@ -311,7 +311,7 @@ var DataParser=Class.extend({
 			this.pop();
 			return true;
 		}
-		
+
 		var meshNode = this.parseNodeHeader();
 		if (meshNode.id==DataParserTypes.NODE_MESH) {
 			if (!this.hasDataForNode(meshNode))
@@ -321,7 +321,7 @@ var DataParser=Class.extend({
 		else this.skipNode(meshNode);
 		return true;
 	},
-	
+
 	/** Parses mesh nodes */
 	parseMesh: function(meshNode) {
 		var numPoints = this.getUint32();
@@ -385,7 +385,7 @@ var DataParser=Class.extend({
 		this.pop();
 		return true;
 	},
-	
+
 	/** Parses vertices components */
 	parseVertices: function(node, count, buffer, component, staticScale) {
 		if (node.length!=count*12)
@@ -397,7 +397,7 @@ var DataParser=Class.extend({
 		}
 		return true;
 	},
-	
+
 	/** Parses face indices nodes */
 	parseFaces: function(facesNode, buffer) {
 		if (facesNode.length<4) return this.errorExpect(4, 'faces.num_triangles');
@@ -411,7 +411,7 @@ var DataParser=Class.extend({
 		}
 		return true;
 	},
-	
+
 	/** Parses the scene hierarchy section of the data */
 	parseScene: function(sceneNode) {
 		if (!this.hasDataForNode(sceneNode))
@@ -427,7 +427,7 @@ var DataParser=Class.extend({
 		this.pop();
 		return true;
 	},
-	
+
 	/** Parses group nodes */
 	parseGroup: function(groupNode, parent) {
 		if (!this.hasDataForNode(groupNode))
@@ -488,7 +488,7 @@ var DataParser=Class.extend({
 		}
 		return true;
 	},
-	
+
 	/** Parses the (optional) collision tree hierarchy */
 	parseCollision: function(collisionNode) {
 		if (!this.hasDataForNode(collisionNode))
@@ -504,7 +504,7 @@ var DataParser=Class.extend({
 		this.pop();
 		return true;
 	},
-	
+
 	/** Parses an individual collision tree node */
 	parseCollisionNode: function(node, parent) {
 		if (!this.hasDataForNode(node))
@@ -545,15 +545,15 @@ var DataParser=Class.extend({
 		}
 		return true;
 	},
-	
+
 	parseCollisionFaceList: function(node, collisionTreeNode) {
 		if (!this.hasDataForNode(node))
 			return this.error("Not enough data for node '"+DataParserTypes.getName(node.id)+"'");
-		
+
 		var nodeID=-1;
 		var meshID=-1;
 		var indices=[];
-		
+
 		while (this.view.tell()<node.end()) {
 			var child = this.parseNodeHeader();
 			if (!this.hasDataForNode(child))
@@ -577,7 +577,7 @@ var DataParser=Class.extend({
 		}
 		return this.result.addFaceList(collisionTreeNode, nodeID, meshID, indices);
 	},
-	
+
 	parseRoot: function(root) {
 		if (!this.hasDataForNode(root))
 			return this.error("Not enough data for node '"+DataParserTypes.getName(root.id)+"'");

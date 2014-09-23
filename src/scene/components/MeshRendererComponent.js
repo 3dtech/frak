@@ -29,7 +29,7 @@ var MeshRendererComponent=RendererComponent.extend({
 					var submesh=component.mesh.submeshes[submeshIndex];
 					var material = component.mesh.getMaterial(submesh.materialIndex);
 					if (!material) {
-						console.log(' *** Failed to to find submesh material in node: ', component.node.name, component.node);
+						console.warn(' *** Failed to to find submesh material in node: ', component.node.name, component.node);
 						continue;
 					}
 					var submeshRenderer=me.createRenderer(context, me.node.transform.absolute, submesh, material);

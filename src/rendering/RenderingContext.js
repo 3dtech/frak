@@ -32,7 +32,7 @@ var RenderingContext=Class.extend({
 			}
 
 			this.gl=WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError);
-			console.log("Using WebGLDebugUtils");
+			console.warn("Using WebGLDebugUtils");
 		}
 
 		this.gl.enable(this.gl.DEPTH_TEST);

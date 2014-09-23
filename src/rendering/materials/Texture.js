@@ -116,7 +116,7 @@ var Texture=Serializable.extend({
 		if(!this.loaded) return;
 		if((this.size[0] & (this.size[0] - 1)) != 0 || (this.size[1] & (this.size[1] - 1)) != 0) {
 			// NOT power of two!
-			console.log('Not power of 2 texture: ', this.name, " (", this.size[0], "x", this.size[1]);
+			console.warn('Binding not power of 2 texture: {0} ({1}x{2})'.format(this.name, this.size[0], this.size[1]));
 		}
 		context.gl.bindTexture(context.gl.TEXTURE_2D, this.glTexture);
 	},

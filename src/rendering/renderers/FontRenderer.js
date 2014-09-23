@@ -4,7 +4,7 @@ var FontRenderer=SubmeshRenderer.extend({
 		this._super(context, matrix, submesh, material);
 		this.fontData=false;
 	},
-	
+
 	/** Renders mesh geometry with material */
 	onRender: function(context) {
 		var globalSamplers = this.getGlobalSamplers(context);
@@ -17,13 +17,13 @@ var FontRenderer=SubmeshRenderer.extend({
 		catch(e) {
 			if(this.failed) return;
 			this.failed=true;
-			console.log("Failed to render buffer: ", this.buffer);
-			console.log('material: ', this.material.name, this.material);
-			console.log('positions: ', this.submesh.positions.length);
-			console.log('normals: ', this.submesh.normals.length);
-			console.log('texcoords: ', this.submesh.texCoords2D);
-			console.log('faces: ', this.submesh.faces.length);
-			console.log(e);
+			console.warn("Failed to render buffer: ", this.buffer);
+			console.warn('material: ', this.material.name, this.material);
+			console.warn('positions: ', this.submesh.positions.length);
+			console.warn('normals: ', this.submesh.normals.length);
+			console.warn('texcoords: ', this.submesh.texCoords2D);
+			console.warn('faces: ', this.submesh.faces.length);
+			console.warn(e);
 		}
 		this.material.unbind(globalSamplers);
 	}
