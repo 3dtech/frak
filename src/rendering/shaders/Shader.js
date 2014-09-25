@@ -89,8 +89,8 @@ var Shader=Serializable.extend({
 	},
 
 	getUniformLocation: function(uniformName) {
-		if(!this.uniformLocations[uniformName]) {
-			this.uniformLocations[uniformName]=this.context.gl.getUniformLocation(this.program, uniformName);
+		if (!(uniformName in this.uniformLocations)) {
+			this.uniformLocations[uniformName] = this.context.gl.getUniformLocation(this.program, uniformName);
 		}
 		return this.uniformLocations[uniformName];
 	},
