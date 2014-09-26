@@ -23,9 +23,19 @@ var ModelLoader=Class.extend({
 	/** Loads parsed data to scene hierarchy at given node */
 	load: function(node, parsedData) {
 		node.name=parsedData.hierarchy.name;
+		this.loadMaterials(parsedData.materials);
 		this.loadSubmeshes(parsedData.meshes);
 		this.loadNode(node, parsedData.hierarchy);
 		this.loadCollision(node, parsedData);
+	},
+
+	/** Loads all material instances. */
+	loadMaterials: function(parsedMaterials) {
+		for (var i=0; i<parsedMaterials.length; i++) {
+			var material = parsedMaterials[i];
+			material.instance = new Material();
+			this.loadMaterial(material.instance, material);
+		}
 	},
 
 	/** Loads submeshes */
@@ -33,9 +43,7 @@ var ModelLoader=Class.extend({
 		for (var i=0; i<parsedMeshes.length; i++) {
 			var submesh = new Submesh();
 			this.loadSubmesh(submesh, parsedMeshes[i]);
-			var material = new Material();
-			this.loadMaterial(material, parsedMeshes[i].material)
-			this.submeshesByID[parsedMeshes[i].index]={'submesh': submesh, 'material': material};
+			this.submeshesByID[parsedMeshes[i].index]={'submesh': submesh, 'material': parsedMeshes[i].material.instance};
 		}
 	},
 
