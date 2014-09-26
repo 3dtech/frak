@@ -81,11 +81,13 @@ var RenderStage=Class.extend({
 			return;
 
 		this.onPreRender(context,  scene, camera);
-		for(var stage in this.substages) {
-			if (!this.substages[stage].started)
-				this.substages[stage].start(context, scene.engine, camera);
-			this.substages[stage].render(context, scene, camera);
+
+		for (var i=0; i<this.substages.length; i++) {
+			if (!this.substages[i].started)
+				this.substages[i].start(context, scene.engine, camera);
+			this.substages[i].render(context, scene, camera);
 		}
+
 		this.onPostRender(context, scene, camera);
 	},
 
