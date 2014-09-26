@@ -34,39 +34,56 @@ var Renderer=Class.extend({
 		this.onRenderGeometry(context, shader);
 	},
 
-	/** Returns default uniforms used commonly for everything */
-	getDefaultUniforms: function(context) {
-		var date=new Date();
-		var time=date.getTime(); // Pass time for time-requiring shaders
+	/**
+	 * Returns default uniforms used commonly for everything.
+	 * @param context Instance of RenderingContext
+	 * @param uniforms Optional previously allocated uniforms object that the values will be written to.
+	 */
+	getDefaultUniforms: function(context, uniforms) {
+		if (!uniforms)
+			uniforms = {};
 
-		var uniforms = {
-			"time": new UniformFloat(time),
-			"model": new UniformMat4(this.matrix),
-			"modelview": new UniformMat4(context.modelview.top()),
-			"modelviewInverse": new UniformMat4(mat4.invert(mat4.create(), context.modelview.top())),
-			"projection": new UniformMat4(context.projection.top())
-		};
+		if ('model' in uniforms) mat4.copy(uniforms.model.value, this.matrix);
+		else uniforms.model = new UniformMat4(this.matrix);
+
+		if ('modelview' in uniforms) mat4.copy(uniforms.modelview.value, context.modelview.top());
+		else uniforms.modelview = new UniformMat4(context.modelview.top());
+
+		if ('modelviewInverse' in uniforms) mat4.invert(uniforms.modelviewInverse.value, context.modelview.top());
+		else uniforms.modelviewInverse = new UniformMat4(mat4.invert(mat4.create(), context.modelview.top()));
+
+		if ('projection' in uniforms) mat4.copy(uniforms.projection.value, context.projection.top());
+		else uniforms.projection = new UniformMat4(context.projection.top());
 
 		if (context.camera) {
-			uniforms.view = new UniformMat4(context.camera.viewMatrix);
-			uniforms.viewInverse = new UniformMat4(context.camera.viewInverseMatrix);
-			if (context.camera.near)
-				uniforms.zNear = new UniformFloat(context.camera.near);
-			if (context.camera.far)
-				uniforms.zFar = new UniformFloat(context.camera.far);
+			if ('view' in uniforms) mat4.copy(uniforms.view.value, context.camera.viewMatrix);
+			else uniforms.view = new UniformMat4(context.camera.viewMatrix);
+
+			if ('viewInverse' in uniforms) mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix);
+			else uniforms.viewInverse = new UniformMat4(context.camera.viewInverseMatrix);
+
+			if (context.camera.near) {
+				if ('zNear' in uniforms) uniforms.zNear.value = context.camera.near;
+				else uniforms.zNear = new UniformFloat(context.camera.near);
+
+				if ('zFar' in uniforms) uniforms.zFar.value = context.camera.far;
+				else uniforms.zFar = new UniformFloat(context.camera.far);
+			}
 		}
 
-		if (context.light) {
-			uniforms.lightDirection=new UniformVec3(context.light.direction);
-			uniforms.lightColor=new UniformColor(context.light.color);
-			uniforms.lightIntensity=new UniformFloat(context.light.intensity);
+		// Light uniforms
+		if (context.light && context.light.uniforms) {
+			uniforms.lightDirection = context.light.uniforms.lightDirection;
+			uniforms.lightColor = context.light.uniforms.lightColor;
+			uniforms.lightIntensity = context.light.uniforms.lightIntensity;
 		}
 
+		// Shadow uniforms
 		if (context.shadow) {
-			uniforms.linearDepthConstant=context.shadow.linearDepthConstant;
-			uniforms.lightView=context.shadow.lightView;
-			uniforms.lightProjection=context.shadow.lightProjection;
-			uniforms.shadowIntensity=context.shadow.shadowIntensity;
+			uniforms.linearDepthConstant = context.shadow.linearDepthConstant;
+			uniforms.lightView = context.shadow.lightView;
+			uniforms.lightProjection = context.shadow.lightProjection;
+			uniforms.shadowIntensity = context.shadow.shadowIntensity;
 		}
 
 		return uniforms;

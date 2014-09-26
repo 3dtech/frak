@@ -104,6 +104,27 @@ var MaterialRenderStage=RenderStage.extend({
 		};
 	},
 
+	prepareLightContext: function(context, scene) {
+		for (var i=0; i<scene.lights.length; i++) {
+			var light = scene.lights[i];
+			if (light.uniforms) {
+				vec3.copy(light.uniforms.lightDirection.value, light.direction);
+				light.uniforms.lightIntensity.value = light.intensity;
+				light.uniforms.lightColor.value[0] = light.color.r;
+				light.uniforms.lightColor.value[1] = light.color.g;
+				light.uniforms.lightColor.value[2] = light.color.b;
+				light.uniforms.lightColor.value[3] = light.color.a;
+			}
+			else {
+				light.uniforms = {
+					'lightDirection': new UniformVec3(light.direction),
+					'lightColor': new UniformColor(light.color),
+					'lightIntensity': new UniformFloat(light.intensity)
+				};
+			}
+		}
+	},
+
 	onPreRender: function(context, scene, camera) {
 		// Acquire and organize the visible renderers
 		this.solidRendererBatches={};
@@ -150,6 +171,40 @@ var MaterialRenderStage=RenderStage.extend({
 				return 0;
 			});
 		}
+	},
+
+	onPostRender: function(context, scene, camera) {
+		this.prepareShadowContext(context, scene);
+		this.prepareLightContext(context, scene);
+
+		if (scene.engine.options.transparencyMode == 'sorted') {
+			camera.target.bind(context);
+			this.renderSkybox(context, scene, camera);
+			this.renderSolid(context, scene, camera);
+			this.renderTransparent(context, scene, camera);
+			camera.target.unbind(context);
+		}
+
+		else if (scene.engine.options.transparencyMode == 'blended' ||
+		         scene.engine.options.transparencyMode == 'stochastic')
+		{
+			camera.target.bind(context);
+
+			this.renderSkybox(context, scene, camera);
+
+			// Render solid geometry as normal
+			this.renderSolid(context, scene, camera);
+
+			// Render alpha mapped geometry
+			this.renderAlphaMapped(context, scene, camera);
+
+			camera.target.unbind(context);
+
+			// Render transparency info that will be composited in OITPostProcess
+			this.renderOIT(context, scene, camera);
+		}
+
+		context.shadow=false;
 	},
 
 	/** Renders solid renderers in batches */
@@ -261,20 +316,20 @@ var MaterialRenderStage=RenderStage.extend({
 			context.modelview.pop();
 		}
 	},
-	
+
 	renderSkybox: function(context, scene, camera) {
 		var skybox = scene.cameraNode.getComponent(SkyboxComponent);
 		if (!skybox) {
 			return;
 		}
-		
+
 		var globalSamplers = [this.shadowMapFallbackSampler];
-		
+
 		var renderComponent = skybox.meshNode.getComponent(MeshRendererComponent);
 		var renderers = renderComponent.meshRenderers;
 		for (var i=0; i < renderers.length; i++) {
 			var renderer = renderers[i];
-			
+
 			var defaultUniforms = renderer.getDefaultUniforms(context);
 			var modelMatrix = mat4.create();
 			mat4.translate(modelMatrix, modelMatrix, camera.getPosition());
@@ -462,38 +517,5 @@ var MaterialRenderStage=RenderStage.extend({
 		 * TODO: the accumulation pass can be rolled into a single pass shader,
 		 *       but it requires MRT.
 		 */
-	},
-
-	onPostRender: function(context, scene, camera) {
-		this.prepareShadowContext(context, scene);
-
-		if (scene.engine.options.transparencyMode == 'sorted') {
-			camera.target.bind(context);
-			this.renderSkybox(context, scene, camera);
-			this.renderSolid(context, scene, camera);
-			this.renderTransparent(context, scene, camera);
-			camera.target.unbind(context);
-		}
-
-		else if (scene.engine.options.transparencyMode == 'blended' ||
-		         scene.engine.options.transparencyMode == 'stochastic')
-		{
-			camera.target.bind(context);
-			
-			this.renderSkybox(context, scene, camera);
-
-			// Render solid geometry as normal
-			this.renderSolid(context, scene, camera);
-
-			// Render alpha mapped geometry
-			this.renderAlphaMapped(context, scene, camera);
-
-			camera.target.unbind(context);
-
-			// Render transparency info that will be composited in OITPostProcess
-			this.renderOIT(context, scene, camera);
-		}
-
-		context.shadow=false;
 	}
 });
