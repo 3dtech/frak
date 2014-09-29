@@ -7,6 +7,10 @@ var TargetTextureFloat = TargetTexture.extend({
 		this._super(sizeOrTexture, context, useDepthTexture);
 	},
 
+	type: function() {
+		return 'TargetTextureFloat';
+	},
+
 	build: function(context) {
 		var gl = context.gl;
 		this.frameBuffer = gl.createFramebuffer();

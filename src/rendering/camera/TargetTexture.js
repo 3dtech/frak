@@ -21,6 +21,10 @@ var TargetTexture = RenderTarget.extend({
 		this.build(context);
 	},
 
+	type: function() {
+		return 'TargetTexture';
+	},
+
 	build: function(context) {
 		var gl = context.gl;
 		this.frameBuffer = gl.createFramebuffer();

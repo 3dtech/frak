@@ -4,6 +4,10 @@ var TargetScreen=RenderTarget.extend({
 		this.position=vec2.create();
 	},
 
+	type: function() {
+		return 'TargetScreen';
+	},
+
 	setPosition: function(x, y) {
 		this.position[0]=x;
 		this.position[1]=y;

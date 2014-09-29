@@ -5,6 +5,10 @@ var RenderTarget=Class.extend({
 		if (size) vec2.copy(this.size, size);
 	},
 
+	type: function() {
+		return 'RenderTarget';
+	},
+
 	/** Binds this rendertarget. All subsequent draw calls go to this render-target */
 	bind: function(context) {
 		context.gl.viewport(0, 0, this.size[0], this.size[1]);
