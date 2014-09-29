@@ -2,20 +2,81 @@
 var ShadowMapRenderStage=RenderStage.extend({
 	init: function(size) {
 		this._super();
-		this.target=false; // Will be replaced by TargetTexture once we receive context
+
+		this.size = 2048;
+		if (size)
+			this.size = size;
+
+		this.target = false; // Will be replaced by TargetTexture once we receive context
 		this.shadowSampler=false; // Will be replaced by Sampler once we receive context
 		this.material=false; // Will be replaced by Shader once we receive context
 		this.lightView = mat4.create();
 		this.lightProj = mat4.create();
-		this.size=2048;
 		this.active=false;
-		if (size)
-			this.size=size;
 
 		// internal cache
 		this.lightPosition=vec3.create();
 		this.blurProj=mat4.create();
 		this.blurView=mat4.identity(mat4.create());
+	},
+
+	onStart: function(context, engine) {
+		this.target=new TargetTexture([this.size, this.size], context, false);
+		this.shadowSampler=new Sampler('shadow0', this.target.texture);
+		this.blurSampler=new Sampler('tex0', this.target.texture);
+
+		this.helperTarget=new TargetTexture([this.size, this.size], context, false);
+		this.helperTargetSampler=new Sampler('tex0', this.helperTarget.texture);
+
+		this.material=new Material(
+			engine.assetsManager.addShaderSource("DepthRGBA"),
+			{
+				"linearDepthConstant": new UniformFloat(1.0),
+				// "packingType": new UniformInt(1)
+				"packingType": new UniformInt(2)
+			},
+			[]
+		);
+
+		this.gaussianBlurMaterial=new Material(
+			engine.assetsManager.addShaderSource("GaussianBlur"),
+			{
+				"screenWidth": new UniformFloat(1.0),
+				"screenHeight": new UniformFloat(1.0),
+				"orientation": new UniformInt(0),
+				"kernelSize": new UniformInt(5),
+				"modelview": new UniformMat4(false),
+				"projection": new UniformMat4(false)
+			}, []
+		);
+
+		var vertices = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
+		var uvs = [0,1, 0,0, 1,0, 1,1];
+		var faces = [0, 1, 2, 0, 2, 3];
+		this.quad=new TrianglesRenderBuffer(context, faces);
+		this.quad.add('position', vertices, 3);
+		this.quad.add('texcoord2d0', uvs, 2);
+
+		engine.assetsManager.load(function(){}); // Start loading, if not already loading
+	},
+
+	onPostRender: function(context, scene, camera) {
+		this.active=false;
+
+		if (!this.parent || !(this.parent instanceof MaterialRenderStage))
+			return;
+
+		if (!this.target || !this.material)
+			return;
+
+		var light = this.getFirstShadowCastingLight(scene);
+		if (!light)
+			return;
+
+		this.renderShadows(context, scene, light);
+		this.blurShadows(context, this.helperTarget, this.blurSampler, 0, light.shadowBlurKernelSize);
+		this.blurShadows(context, this.target, this.helperTargetSampler, 1, light.shadowBlurKernelSize);
+		this.active=true;
 	},
 
 	getFirstShadowCastingLight: function(scene) {
@@ -80,9 +141,6 @@ var ShadowMapRenderStage=RenderStage.extend({
 		}
 		// gl.disable(gl.CULL_FACE);
 
-		// gl.depthMask(false);
-		// gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-		// gl.enable(gl.BLEND);
 		for (var i in this.parent.transparentRenderers) {
 			if ((this.parent.transparentRenderers[i].layer & light.shadowMask) &&
 				this.parent.transparentRenderers[i].visible &&
@@ -96,7 +154,6 @@ var ShadowMapRenderStage=RenderStage.extend({
 				context.modelview.pop();
 			}
 		}
-		// gl.disable(gl.BLEND);
 
 		this.material.unbind();
 
@@ -154,64 +211,5 @@ var ShadowMapRenderStage=RenderStage.extend({
 
 		context.modelview.pop();
 		context.projection.pop();
-	},
-
-	onStart: function(context, engine) {
-		this.target=new TargetTexture([this.size, this.size], context, false);
-		this.shadowSampler=new Sampler('shadow0', this.target.texture);
-		this.blurSampler=new Sampler('tex0', this.target.texture);
-
-		this.helperTarget=new TargetTexture([this.size, this.size], context, false);
-		this.helperTargetSampler=new Sampler('tex0', this.helperTarget.texture);
-
-		this.material=new Material(
-			engine.assetsManager.addShaderSource("DepthRGBA"),
-			{
-				"linearDepthConstant": new UniformFloat(1.0),
-				// "packingType": new UniformInt(1)
-				"packingType": new UniformInt(2)
-			},
-			[]
-		);
-
-		this.gaussianBlurMaterial=new Material(
-			engine.assetsManager.addShaderSource("GaussianBlur"),
-			{
-				"screenWidth": new UniformFloat(1.0),
-				"screenHeight": new UniformFloat(1.0),
-				"orientation": new UniformInt(0),
-				"kernelSize": new UniformInt(5),
-				"modelview": new UniformMat4(false),
-				"projection": new UniformMat4(false)
-			}, []
-		);
-
-		var vertices = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
-		var uvs = [0,1, 0,0, 1,0, 1,1];
-		var faces = [0, 1, 2, 0, 2, 3];
-		this.quad=new TrianglesRenderBuffer(context, faces);
-		this.quad.add('position', vertices, 3);
-		this.quad.add('texcoord2d0', uvs, 2);
-
-		engine.assetsManager.load(function(){}); // Start loading, if not already loading
-	},
-
-	onPostRender: function(context, scene, camera) {
-		this.active=false;
-
-		if (!this.parent || !(this.parent instanceof MaterialRenderStage))
-			return;
-
-		if (!this.target || !this.material)
-			return;
-
-		var light = this.getFirstShadowCastingLight(scene);
-		if (!light)
-			return;
-
-		this.renderShadows(context, scene, light);
-		this.blurShadows(context, this.helperTarget, this.blurSampler, 0, light.shadowBlurKernelSize);
-		this.blurShadows(context, this.target, this.helperTargetSampler, 1, light.shadowBlurKernelSize);
-		this.active=true;
 	}
 });

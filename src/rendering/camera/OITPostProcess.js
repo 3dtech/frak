@@ -13,7 +13,7 @@ var OITPostProcess = PostProcess.extend({
 				'ViewportSize': new UniformVec2(vec2.clone(this.parent.size)),
 				'render_mode': new UniformInt(0)
 			},
-			[ this.parent.generator.transparencySampler, this.parent.generator.transparencyWeightSampler ]);
+			[ this.parent.generator.oitStage.transparencySampler, this.parent.generator.oitStage.transparencyWeightSampler ]);
 		this.material.name = 'OIT';
 
 		engine.assetsManager.load();
