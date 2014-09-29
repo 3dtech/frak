@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>3DWayfinder WebGL</title>
+		<title>BillboardComponent test</title>
 		<meta charset="utf-8" />
 		<meta name="description" content="3DWayfinder WebGL" />
 		<link rel="stylesheet" href="style.css" >
@@ -25,72 +25,74 @@
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
-			var frak=new FRAK(
-				function() {
-					var engine = new Engine($('#canvas'), {
-						'assetsPath': '../assets/'
-					});
-					engine.assetsManager.modelsManager.path = './'; // Load test models locally
+			var engine;
 
-					var scene=engine.scene;
-					var billboardObject=engine.assetsManager.addModel("data/test.data");
-					var orbitController=scene.cameraNode.addComponent(new OrbitController());
-					orbitController.target.value=scene.root.transform;
-
-					var texture = scene.engine.assetsManager.texturesManager.add("data/lena.jpg");
-					var material=new Material(
-						scene.engine.assetsManager.addShaderSource("diffuse"),
-						{ "diffuse": new UniformColor({r:1.0, g:1.0, b:0.0, a:1.0}) },
-						[ new Sampler("diffuse0", texture) ]
-					);
-					material.name="DefaultMaterial";
-
-					var ground = Primitives.plane(10.0, 10.0, material);
-					mat4.fromRotationTranslation(ground.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0,-0.5,0]);
-					scene.root.addNode(ground);
-
-					var updates=0;
-					var TestComponent=Component.extend({
-							type: function() { return "TestComponent"; },
-
-							init: function() {
-								this._super();
-								this.translation=vec3.create();
-								this.rotation = quat.create();
-								this.scale = vec3.create();
-								this.euler = vec3.create();
-							},
-
-							onUpdate: function(pass) {
-								mat4.decompose(this.translation, this.rotation, this.scale, scene.cameraNode.transform.relative);
-								$('#position').html(vec3.str(this.translation));
-								$('#rotation').html(vec3.str(quat.getEuler(this.euler, this.rotation)));
-								$('#velocity').html(vec3.str(orbitController.velocity));
-								$('#angular-velocity').html(vec3.str(orbitController.angularVelocity));
-								$('#updates').html(updates);
-								$('#average-fps').html(engine.fps.getAverage());
-								updates++;
-							}
-						});
-					scene.root.addComponent(new TestComponent());
-
-					var node = new Node("POI");
-					node.addNode(billboardObject);
-					node.addComponent(new Billboard(scene.camera, true));
-					// node.addComponent(new VerticalBillboard(scene.camera, true));
-					scene.root.addNode(node);
-					scene.cameraComponent.setAspectRatio(1.0);
-
-					engine.assetsManager.load(function() {
-						mat4.fromRotationTranslationScale(
-							billboardObject.transform.relative,
-							quat.euler(quat.create(), -90.0, 0.0, 0.0),
-							[0.0,0.5,0.0],
-							[2.0, 0.05, 2.0]);
-						scene.cameraComponent.fitNodeToView(scene.root);
-						engine.run();
-					});
+			$(function() {
+				engine = new Engine($('#canvas'), {
+					'assetsPath': '../assets/'
 				});
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+				var scene=engine.scene;
+				var billboardObject=engine.assetsManager.addModel("data/test.data");
+				var orbitController=scene.cameraNode.addComponent(new OrbitController());
+				orbitController.target.value=scene.root.transform;
+
+				var texture = scene.engine.assetsManager.texturesManager.add("data/lena.jpg");
+				var material=new Material(
+					scene.engine.assetsManager.addShaderSource("diffuse"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:0.0, a:1.0}) },
+					[ new Sampler("diffuse0", texture) ]
+				);
+				material.name="DefaultMaterial";
+
+				var ground = Primitives.plane(10.0, 10.0, material);
+				mat4.fromRotationTranslation(ground.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0,-0.5,0]);
+				scene.root.addNode(ground);
+
+				var updates=0;
+				var TestComponent=Component.extend({
+						type: function() { return "TestComponent"; },
+
+						init: function() {
+							this._super();
+							this.translation=vec3.create();
+							this.rotation = quat.create();
+							this.scale = vec3.create();
+							this.euler = vec3.create();
+						},
+
+						onUpdate: function(pass) {
+							mat4.decompose(this.translation, this.rotation, this.scale, scene.cameraNode.transform.relative);
+							$('#position').html(vec3.str(this.translation));
+							$('#rotation').html(vec3.str(quat.getEuler(this.euler, this.rotation)));
+							$('#velocity').html(vec3.str(orbitController.velocity));
+							$('#angular-velocity').html(vec3.str(orbitController.angularVelocity));
+							$('#updates').html(updates);
+							$('#average-fps').html(engine.fps.getAverage());
+							updates++;
+						}
+					});
+				scene.root.addComponent(new TestComponent());
+
+				var node = new Node("POI");
+				node.addNode(billboardObject);
+				node.addComponent(new Billboard(scene.camera, true));
+				// node.addComponent(new VerticalBillboard(scene.camera, true));
+				scene.root.addNode(node);
+				scene.cameraComponent.setAspectRatio(1.0);
+
+				engine.assetsManager.load(function() {
+					mat4.fromRotationTranslationScale(
+						billboardObject.transform.relative,
+						quat.euler(quat.create(), -90.0, 0.0, 0.0),
+						[0.0,0.5,0.0],
+						[2.0, 0.05, 2.0]);
+					scene.cameraComponent.fitNodeToView(scene.root);
+					engine.run();
+				});
+			});
 		</script>
 	</body>
 </html>
