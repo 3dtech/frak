@@ -58,18 +58,18 @@ var Material=Serializable.extend({
 	},
 
 	instantiate: function() {
-		var uniforms={};
-		for(var u in this.uniforms) {
-			uniforms[u]=this.uniforms[i].clone();
+		var uniforms = {};
+		for (var i in this.uniforms) {
+			uniforms[i] = this.uniforms[i].clone();
 		}
 
-		var samplers=[];
-		for(var s in this.samplers) {
-			samplers.push(this.samplers[s].clone());
+		var samplers = [];
+		for (var i in this.samplers) {
+			samplers.push(this.samplers[i].clone());
 		}
 
-		var copy=new Material(this.shader, uniforms, samplers, this.descriptor);
-		copy.name=this.name+" (instance)";
+		var copy = new Material(this.shader, uniforms, samplers, this.descriptor);
+		copy.name = this.name+" (instance)";
 		return copy;
 	}
 });
