@@ -22,21 +22,21 @@ var MeshRendererComponent=RendererComponent.extend({
 	},
 
 	addRenderers: function(context, engine) {
-		var me=this;
+		var scope = this;
 		this.node.onEachComponent(function(component) {
-			if(component instanceof MeshComponent) {
-				for(var submeshIndex in component.mesh.submeshes) {
-					var submesh=component.mesh.submeshes[submeshIndex];
+			if (component instanceof MeshComponent) {
+				for (var submeshIndex in component.mesh.submeshes) {
+					var submesh = component.mesh.submeshes[submeshIndex];
 					var material = component.mesh.getMaterial(submesh.materialIndex);
 					if (!material) {
 						console.warn(' *** Failed to to find submesh material in node: ', component.node.name, component.node);
 						continue;
 					}
-					var submeshRenderer=me.createRenderer(context, me.node.transform.absolute, submesh, material);
-					me.getScene().dynamicSpace.addRenderer(submeshRenderer);
-					me.meshRenderers.push(submeshRenderer);
-					if (!me.enabled)
-						submeshRenderer.visible=false;
+					var submeshRenderer = scope.createRenderer(context, scope.node.transform.absolute, submesh, material);
+					scope.getScene().dynamicSpace.addRenderer(submeshRenderer);
+					scope.meshRenderers.push(submeshRenderer);
+					if (!scope.enabled)
+						submeshRenderer.visible = false;
 				}
 			}
 		});
@@ -107,5 +107,14 @@ var MeshRendererComponent=RendererComponent.extend({
 		for (var i in this.meshRenderers) {
 			this.meshRenderers[i].transparent=value;
 		}
+	},
+
+	/** Returns the SubmeshRenderer attached to the given submesh, if it exists. */
+	getSubmeshRenderer: function(submesh) {
+		for (var i=0; i<this.meshRenderers.length; i++) {
+			if (this.meshRenderers[i].submesh === submesh)
+				return this.meshRenderers[i];
+		}
+		return false;
 	}
 });
