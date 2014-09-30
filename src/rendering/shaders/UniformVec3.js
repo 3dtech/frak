@@ -1,5 +1,4 @@
-/** Uniforms are used as parameters for shaders. 
-*/
+/** vec3(x, y, z) uniform */
 var UniformVec3=Uniform.extend({
 	init: function(value) {
 		if(value instanceof Float32Array) {
@@ -7,7 +6,7 @@ var UniformVec3=Uniform.extend({
 		}
 		else this._super(new Float32Array(value));
 	},
-	
+
 	type: function() {
 		return "UniformVec3";
 	},
@@ -15,10 +14,10 @@ var UniformVec3=Uniform.extend({
 	bind: function(context, uniformLocation) {
 		context.gl.uniform3fv(uniformLocation, this.value);
 	},
-	
+
 	clone: function() {
-		var c=this._super();
-		c.value=vec3.clone(value);
+		var c = this._super();
+		c.value = vec3.clone(this.value);
 		return c;
 	}
 });
