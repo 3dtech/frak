@@ -28,6 +28,29 @@ var OITRenderStage = RenderStage.extend({
 		engine.assetsManager.load();
 	},
 
+	onPostRender: function(context, scene, camera) {
+		if (camera.target.size[0] != this.transparencyTarget.size[0] || camera.target.size[1] != this.transparencyTarget.size[1]) {
+			this.transparencyTarget.setSize(camera.target.size[0], camera.target.size[1]);
+			this.transparencyWeight.setSize(camera.target.size[0], camera.target.size[1]);
+		}
+
+		// Transparent color texture
+		this.oitClearColor.set(0.0, 0.0, 0.0, 0.0);
+		this.transparencyTarget.bind(context, false, this.oitClearColor);
+		this.renderPass(context, scene, camera, true);
+		this.transparencyTarget.unbind(context);
+
+		// Transparent alpha amount texture
+		this.oitClearColor.set(1.0, 1.0, 1.0, 1.0);
+		this.transparencyWeight.bind(context, false, this.oitClearColor);
+		this.renderPass(context, scene, camera, false);
+		this.transparencyWeight.unbind(context);
+
+		/**
+		 * TODO: the accumulation pass can be rolled into a single pass shader, but it requires MRT.
+		 */
+	},
+
 	renderTransparentBatches: function(context, scene, camera, material) {
 		var batches = this.parent.transparentRendererBatches;
 		var shader = material.shader;
@@ -143,23 +166,5 @@ var OITRenderStage = RenderStage.extend({
 		gl.disable(gl.BLEND);
 		gl.disable(gl.DEPTH_TEST);
 		gl.depthMask(true);
-	},
-
-	onPostRender: function(context, scene, camera) {
-		// Transparent color texture
-		this.oitClearColor.set(0.0, 0.0, 0.0, 0.0);
-		this.transparencyTarget.bind(context, false, this.oitClearColor);
-		this.renderPass(context, scene, camera, true);
-		this.transparencyTarget.unbind(context);
-
-		// Transparent alpha amount texture
-		this.oitClearColor.set(1.0, 1.0, 1.0, 1.0);
-		this.transparencyWeight.bind(context, false, this.oitClearColor);
-		this.renderPass(context, scene, camera, false);
-		this.transparencyWeight.unbind(context);
-
-		/**
-		 * TODO: the accumulation pass can be rolled into a single pass shader, but it requires MRT.
-		 */
 	}
 });

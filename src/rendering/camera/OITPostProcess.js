@@ -22,6 +22,7 @@ var OITPostProcess = PostProcess.extend({
 	onPreRender: function(context, scene, camera) {
 		this._super(context, scene, camera);
 
+		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.size[0], this.parent.size[1]);
 		switch (scene.engine.options.transparencyMode) {
 			case 'blended':
 				this.material.uniforms['render_mode'].value = 0;

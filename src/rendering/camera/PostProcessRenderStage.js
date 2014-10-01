@@ -56,6 +56,13 @@ var PostProcessRenderStage = RenderStage.extend({
 
 	onPreRender: function(context, scene, camera) {
 		var cameraTarget = camera.target;
+
+		if (cameraTarget.size[0] != this.src.size[0] || cameraTarget.size[1] != this.src.size[1]) {
+			this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+			this.src.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+			this.dst.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+		}
+
 		if (this.substages.length>0) {
 			camera.target = this.src;
 		}
