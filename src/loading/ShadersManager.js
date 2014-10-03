@@ -26,7 +26,8 @@ var ShadersManager=Manager.extend({
 			'test': 'shaders/default/test',
 			'fallback': 'shaders/default/fallback',
 			'depthrgba': 'shaders/default/DepthRGBA',
-			'gaussianblur': 'shaders/default/GaussianBlur'
+			'gaussianblur': 'shaders/default/GaussianBlur',
+			'specular': 'shaders/default/specular'
 		};
 
 		this.textManager = new TextManager();
