@@ -64,6 +64,7 @@ var TextComponent=MeshComponent.extend({
 		var canvas = document.createElement("canvas");
 		var ctx = canvas.getContext("2d");
 		this.applyTextStyles(ctx);
+
 		canvas.width = nextHighestPowerOfTwo(ctx.measureText(this.text).width);
 		canvas.height = nextHighestPowerOfTwo(2.0 * this.fontSize);
 
@@ -82,8 +83,8 @@ var TextComponent=MeshComponent.extend({
 
 		this.texture.setImage(this.context, canvas);
 
-		var width = 1.0;
-		var height = width / (canvas.width/canvas.height);
+		var height = 1.0;
+		var width = canvas.width / canvas.height;
 		var submesh = this.mesh.submeshes[0];
 		submesh.positions[0] = -0.5*width;
 		submesh.positions[1] = -0.5*height;
