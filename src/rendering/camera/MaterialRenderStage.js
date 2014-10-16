@@ -71,12 +71,6 @@ var MaterialRenderStage=RenderStage.extend({
 			"lightProjection": new UniformMat4(mat4.create()),
 			"shadowIntensity": new UniformFloat(0.0)
 		};
-
-		this._addUniforms = function(uniforms, other) {
-			if (!other) return;
-			for (var key in other)
-				uniforms[key] = other[key];
-		};
 	},
 
 	/** Prepares shadow-mapping uniforms that are shared between all materials. */

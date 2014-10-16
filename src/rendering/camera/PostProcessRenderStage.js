@@ -74,7 +74,14 @@ var PostProcessRenderStage = RenderStage.extend({
 		if (this.substages.length == 0)
 			return;
 
-		this.renderEffect(context, this.material, this.srcSampler);
+		if (camera.target instanceof TargetTexture) {
+			camera.target.bind(context);
+			this.renderEffect(context, this.material, this.srcSampler);
+			camera.target.unbind(context);
+		}
+		else {
+			this.renderEffect(context, this.material, this.srcSampler);
+		}
 		this.swapBuffers();
 	},
 

@@ -114,7 +114,6 @@ var Scene=Serializable.extend({
 			for(i=0; i<this.postRenderedComponents.length; i++) {
 				var component=this.postRenderedComponents[i];
 				if (component.node.layer & camera.layerMask) {
-
 					context.modelview.push();
 					context.modelview.multiply(component.node.transform.absolute);
 					component.onPostRender(context, camera);

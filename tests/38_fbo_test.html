@@ -15,9 +15,11 @@
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
+			var engine;
+
 			function makePlane(assetsManager, texture) {
 				var material=new Material(
-					assetsManager.addShaderSource("Transparent"),
+					assetsManager.addShaderSource("transparent"),
 					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
 					[ new Sampler("diffuse0", texture) ]
 				);
@@ -27,60 +29,60 @@
 				return plane;
 			}
 
-			var frak=new FRAK(
-				function() {
-					var engine = new Engine($('#canvas'), {
-						'assetsPath': '../assets/'
-					});
-					engine.assetsManager.modelsManager.path = './'; // Load test models locally
-
-					var scene=engine.scene;
-					scene.camera.layerMask=1;
-					scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
-					scene.cameraComponent.setAspectRatio(1.0);
-
-					var model = engine.assetsManager.addModel("data/test.data");
-
-					var RotateCube=Component.extend({
-						type: function() { return "RotateCube"; },
-						onUpdate: function(engine, pass) {
-							var speed = 0.001*engine.fps.getDelta();
-							var localRotation = quat.fromMat4(quat.create(), this.node.transform.relative);
-							var targetRotation = quat.multiply(quat.create(), localRotation, quat.euler(quat.create(), 45.0, 45.0, 45.0));
-							quat.slerp(localRotation, localRotation, targetRotation, speed);
-							quat.normalize(localRotation, localRotation);
-							var localPosition = mat4.translation(vec3.create(), this.node.transform.relative);
-							var localScale = mat4.getScale(vec3.create(), this.node.transform.relative);
-							mat4.fromRotationTranslationScale(this.node.transform.relative, localRotation, localPosition, localScale);
-						}
-					});
-					model.addComponent(new RotateCube());
-
-					engine.assetsManager.load(function() {
-						var cam=new Node("TextureCamera");
-						var cameraComponent=cam.addComponent(new PerspectiveCamera());
-						cameraComponent.camera.order=-1;
-						cameraComponent.camera.layerMask=2;
-						cameraComponent.camera.backgroundColor=new Color(0.7, 0.7, 0.0, 1.0);
-						cameraComponent.camera.target=new TargetTexture([512, 512], engine.context);
-						cameraComponent.setAspectRatio(1.0);
-						scene.root.addNode(cam);
-
-						var plane = makePlane(engine.assetsManager, cameraComponent.camera.target.texture);
-
-						var orbitController=scene.cameraNode.addComponent(new OrbitController());
-						orbitController.target.value=scene.root.transform;
-
-						model.onEachChild(function(subnode){subnode.layer=2;});
-						scene.root.addNode(model);
-						scene.root.addNode(plane);
-
-						scene.cameraComponent.fitNodeToView(scene.root);
-						cameraComponent.fitNodeToView(model);
-
-						engine.run();
-					});
+			$(function() {
+				engine = new Engine($('#canvas'), {
+					'assetsPath': '../assets/'
 				});
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+
+				var scene=engine.scene;
+				scene.camera.layerMask = 1;
+				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
+				scene.cameraComponent.setAspectRatio(1.0);
+
+				var model = engine.assetsManager.addModel("data/test.data");
+
+				var RotateCube=Component.extend({
+					type: function() { return "RotateCube"; },
+					onUpdate: function(engine, pass) {
+						var speed = 0.001*engine.fps.getDelta();
+						var localRotation = quat.fromMat4(quat.create(), this.node.transform.relative);
+						var targetRotation = quat.multiply(quat.create(), localRotation, quat.euler(quat.create(), 45.0, 45.0, 45.0));
+						quat.slerp(localRotation, localRotation, targetRotation, speed);
+						quat.normalize(localRotation, localRotation);
+						var localPosition = mat4.translation(vec3.create(), this.node.transform.relative);
+						var localScale = mat4.getScale(vec3.create(), this.node.transform.relative);
+						mat4.fromRotationTranslationScale(this.node.transform.relative, localRotation, localPosition, localScale);
+					}
+				});
+				model.addComponent(new RotateCube());
+
+				engine.assetsManager.load(function() {
+					var cam = new Node("TextureCamera");
+					var cameraComponent = cam.addComponent(new PerspectiveCamera());
+					cameraComponent.camera.order = -1;
+					cameraComponent.camera.layerMask = 2;
+					cameraComponent.camera.backgroundColor = new Color(0.7, 0.7, 0.0, 1.0);
+					cameraComponent.camera.target = new TargetTexture([512, 512], engine.context);
+					// cameraComponent.camera.renderStage = new MaterialRenderStage();
+					cameraComponent.setAspectRatio(1.0);
+					scene.root.addNode(cam);
+
+					var plane = makePlane(engine.assetsManager, cameraComponent.camera.target.texture);
+
+					var orbitController=scene.cameraNode.addComponent(new OrbitController());
+					orbitController.target.value=scene.root.transform;
+
+					model.onEachChild(function(subnode){subnode.layer=2;});
+					scene.root.addNode(model);
+					scene.root.addNode(plane);
+
+					scene.cameraComponent.fitNodeToView(scene.root);
+					cameraComponent.fitNodeToView(model);
+
+					engine.run();
+				});
+			});
 		</script>
 	</body>
 </html>
