@@ -20,32 +20,65 @@
 
 		<script>
 			function setup(scene) {
-				scene.root.addNode(Primitives.text("Hello World")).transform.scale([1.5, 1.5, 1.5]);
-				var t1 = scene.root.addNode(Primitives.text("やった ね！")).getComponent(TextComponent);
-				t1.node.transform.setPosition([0, 0.2, 0]);
-				t1.outlineColor.set(1.0, 0.0, 1.0, 1.0);
-				t1.color.set(1.0, 0.0, 0.0, 1.0);
+				var t0 = scene.root.addNode(Primitives.text("Hello World")).getComponent(TextComponent);
+				t0.node.transform.setPosition([0, -0.2, 0]);
+				t0.node.transform.scale([1.5, 1.5, 1.5]);
+				t0.node.addComponent(new SwitchComponent());
+				t0.outlineColor.set(1.0, 0.0, 1.0, 1.0);
+				t0.color.set(1.0, 0.0, 0.0, 1.0);
+				t0.outlineWidth = 3.0;
 
-				var t2 = scene.root.addNode(Primitives.text("N/A")).getComponent(TextComponent);
-				t2.node.transform.setPosition([0.6, 0.3, -0.5]);
-				t2.backgroundColor.set(0.0, 0.0, 0.0, 0.5);
-				t2.color.set(0.2, 1.0, 0.0, 0.8);
-				t2.outline = false;
-				t2.weight = 'bold';
-				t2.family = 'Tahoma, Geneva, sans-serif';
-				t2.node.addComponent(new FPSComponent())
+				var t1 = scene.root.addNode(Primitives.text("N/A")).getComponent(TextComponent);
+				t1.node.transform.setPosition([0.6, 0.3, -0.5]);
+				t1.backgroundColor.set(0.0, 0.0, 0.0, 0.5);
+				t1.color.set(0.2, 1.0, 0.0, 0.8);
+				t1.outline = false;
+				t1.weight = 'bold';
+				t1.family = 'Tahoma, Geneva, sans-serif';
+				t1.node.addComponent(new FPSComponent())
 			}
 
 			var FPSComponent = Component.extend({
 				type: function() { return "FPSComponent"; },
 
-				onUpdate: function(pass) {
-					var avg = parseFloat(Math.round(this.node.scene.engine.fps.getAverage() * 100) / 100).toFixed(2);
+				onUpdate: function(engine) {
+					var avg = parseFloat(Math.round(engine.fps.getAverage() * 100) / 100).toFixed(2);
 					this.node.getComponent(TextComponent).setText(avg);
 				}
 			});
 
-			var frak=new FRAK(function() {
+			var SwitchComponent = Component.extend({
+				init: function() {
+					this._super();
+					this.t = 0;
+					this.selected = 0;
+					this.delay = 2.0;
+					this.texts = [
+						'Hello World',
+						'こんにちは世界',
+						'你好世界',
+						'안녕하세요',
+						'Bonjour tout le monde',
+						'привет мир'
+					];
+				},
+
+				type: function() { return "SwitchComponent"; },
+
+				onUpdate: function(engine) {
+					var delta = engine.fps.getDelta()/1000.0;
+					this.t += delta;
+					if (this.t>=this.delay) {
+						this.t=0;
+						this.selected++;
+						if (this.selected>=this.texts.length)
+							this.selected=0;
+						this.node.getComponent(TextComponent).setText(this.texts[this.selected]);
+					}
+				}
+			});
+
+			$(function() {
 				var engine=new Engine($('#canvas'), {
 					'assetsPath': '../assets/',
 					'transparencyMode': 'blended',
@@ -57,7 +90,7 @@
 				setup(scene);
 
 				var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
-				orbitController.distance=1.5;
+				orbitController.distance=8.0;
 				orbitController.minimumDistance=0.5;
 				orbitController.maximumDistance=10.0;
 				orbitController.target.value=scene.root.transform;
