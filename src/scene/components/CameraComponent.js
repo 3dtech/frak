@@ -52,6 +52,10 @@ var CameraComponent=Component.extend({
 		if (engine.options.antialias === true) {
 			this.camera.renderStage.addStage(new AntiAliasPostProcess());
 		}
+        
+        if (engine.options.ssao === true) {
+            this.camera.renderStage.addStage(new SSAOPostProcess());
+        }
 
 		this.camera.renderStage.start(context, engine, this.camera);
 	},
