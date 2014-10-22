@@ -8,6 +8,9 @@ uniform float zNear;
 uniform float zFar;
 uniform vec2 ViewportSize;
 
+uniform float ssaoRadius;
+uniform int ssaoPasses;
+
 float random(vec2 co) {
     //co = mod(co, 128.0);
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -33,31 +36,35 @@ float doAmbientOcclusion(vec2 coord, vec2 coord2, vec3 pos) {
 void main() {
     vec2 inverseVP = vec2(1.0 / ViewportSize.x, 1.0 / ViewportSize.y);
     
-    vec2 c = gl_FragCoord.xy * inverseVP/* * 2.0 - 1.0*/;
+    vec2 c = gl_FragCoord.xy * inverseVP;
+    const int MAXIMUM_PASSES = 64;
     
     vec3 pos = getPosition(c);
-    float seed = gl_FragCoord.x + gl_FragCoord.y * inverseVP.y;
-    vec2 rand = vec2(random(vec2(seed, 0.0)), random(vec2(seed, 0.4)));
-    rand = normalize(rand);
     
     float vecs[8];
     vecs[0] = vecs[5] = 1.0;
     vecs[1] = vecs[3] = vecs[4] = vecs[6] = 0.0;
     vecs[2] = vecs[7] = -1.0;
-    
+    float seed = gl_FragCoord.x + gl_FragCoord.y * inverseVP.y;
     float ao = 0.0;
-    float rad = 50.0 * inverseVP.x * random(vec2(seed, -0.7)) * (1.0 - pos.z);
-    const int iterations = 16;
-    for (int i = 0; i < iterations; i++) {
-        vec2 coord1 = reflect(vec2(vecs[int(mod(float(i), 4.0)) * 2], vecs[int(mod(float(i), 4.0)) * 2 + 1]), rand) * rad;
-        vec2 coord2 = vec2(coord1.x*0.707 - coord1.y*0.707, coord1.x*0.707 + coord1.y*0.707);
+    for (int j = 0; j < MAXIMUM_PASSES; j++) {
+        if (j >= ssaoPasses)
+            break;
+        vec2 rand = vec2(random(vec2(seed, 0.0 + float(j))), random(vec2(seed, 0.4 + float(j))));
+        rand = normalize(rand);
         
-        ao += doAmbientOcclusion(c, coord1 * 0.25, pos);
-        ao += doAmbientOcclusion(c, coord2 * 0.5, pos);
-        ao += doAmbientOcclusion(c, coord1 * 0.75, pos);
-        ao += doAmbientOcclusion(c, coord2, pos);
+        float rad = ssaoRadius * inverseVP.x * (1.0 - pos.z);
+        for (int i = 0; i < 4; i++) {
+            vec2 coord1 = reflect(vec2(vecs[int(mod(float(i), 4.0)) * 2], vecs[int(mod(float(i), 4.0)) * 2 + 1]), rand) * rad;
+            vec2 coord2 = vec2(coord1.x*0.707 - coord1.y*0.707, coord1.x*0.707 + coord1.y*0.707);
+            
+            ao += doAmbientOcclusion(c, coord1 * 0.25, pos);
+            ao += doAmbientOcclusion(c, coord2 * 0.5, pos);
+            ao += doAmbientOcclusion(c, coord1 * 0.75, pos);
+            ao += doAmbientOcclusion(c, coord2, pos);
+        }
     }
-    ao /= float(iterations) * 4.0;
+    ao /= float(4 * ssaoPasses) * 4.0;
     
     //ao = 1.0 - ao;
     ao = max(0.0, ao * 2.0 - 1.0);
