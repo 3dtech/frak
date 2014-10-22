@@ -40,6 +40,7 @@
 	"src/rendering/camera/DebugRenderStage.js",
 	"src/rendering/camera/ShadowMapRenderStage.js",
     "src/rendering/camera/PositionBufferRenderStage.js",
+    "src/rendering/camera/SSAOBufferRenderStage.js",
 	"src/rendering/camera/SkyboxRenderStage.js",
 	"src/rendering/camera/OpaqueGeometryRenderStage.js",
 	"src/rendering/camera/TransparentGeometryRenderStage.js",

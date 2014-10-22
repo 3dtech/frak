@@ -1,7 +1,6 @@
 precision highp float;
 
 uniform sampler2D position0;
-uniform sampler2D src;
 
 uniform mat4 projection;
 
@@ -34,7 +33,9 @@ float doAmbientOcclusion(vec2 coord, vec2 coord2, vec3 pos) {
 void main() {
     vec2 inverseVP = vec2(1.0 / ViewportSize.x, 1.0 / ViewportSize.y);
     
-    vec3 pos = getPosition(gl_FragCoord.xy * inverseVP);
+    vec2 c = gl_FragCoord.xy * inverseVP/* * 2.0 - 1.0*/;
+    
+    vec3 pos = getPosition(c);
     float seed = gl_FragCoord.x + gl_FragCoord.y * inverseVP.y;
     vec2 rand = vec2(random(vec2(seed, 0.0)), random(vec2(seed, 0.4)));
     rand = normalize(rand);
@@ -51,19 +52,20 @@ void main() {
         vec2 coord1 = reflect(vec2(vecs[int(mod(float(i), 4.0)) * 2], vecs[int(mod(float(i), 4.0)) * 2 + 1]), rand) * rad;
         vec2 coord2 = vec2(coord1.x*0.707 - coord1.y*0.707, coord1.x*0.707 + coord1.y*0.707);
         
-        ao += doAmbientOcclusion(gl_FragCoord.xy * inverseVP, coord1 * 0.25, pos);
-        ao += doAmbientOcclusion(gl_FragCoord.xy * inverseVP, coord2 * 0.5, pos);
-        ao += doAmbientOcclusion(gl_FragCoord.xy * inverseVP, coord1 * 0.75, pos);
-        ao += doAmbientOcclusion(gl_FragCoord.xy * inverseVP, coord2, pos);
+        ao += doAmbientOcclusion(c, coord1 * 0.25, pos);
+        ao += doAmbientOcclusion(c, coord2 * 0.5, pos);
+        ao += doAmbientOcclusion(c, coord1 * 0.75, pos);
+        ao += doAmbientOcclusion(c, coord2, pos);
     }
     ao /= float(iterations) * 4.0;
     
     //ao = 1.0 - ao;
     ao = max(0.0, ao * 2.0 - 1.0);
     ao = 1.0 - ao;
-    //gl_FragColor = vec4(ao, ao, ao, 1.0);
+    gl_FragColor = vec4(ao, ao, ao, 1.0);
     //gl_FragColor = vec4(gl_FragCoord.xy * inverseVP, 1.0, 1.0);
     //gl_FragColor = vec4(getPosition(gl_FragCoord.xy * inverseVP), 1.0);
+    //gl_FragColor = vec4(gl_FragCoord.xy * inverseVP * 2.0 - 1.0, 0.0, 1.0);
     //gl_FragColor = vec4(getNormal(gl_FragCoord.xy * inverseVP), 1.0);
-    gl_FragColor = vec4(texture2D(src, gl_FragCoord.xy * inverseVP).xyz * vec3(ao, ao, ao), 1.0);
+    //gl_FragColor = vec4(texture2D(src, gl_FragCoord.xy * inverseVP).xyz * vec3(ao, ao, ao), 1.0);
 }
