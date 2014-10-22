@@ -21,8 +21,6 @@ var RenderBuffer=Class.extend({
 		for (var i in faces)
 			this.maxFaceIndex=faces[i]>this.maxFaceIndex?faces[i]:this.maxFaceIndex;
 		this.createFacesBuffer(faces);
-
-		this._cache = {};
 	},
 
 	/** Adds a named vertex attribute buffer that will be
@@ -47,8 +45,6 @@ var RenderBuffer=Class.extend({
 		this.buffers[name].itemSize = itemSize;
 		this.buffers[name].numItems = items.length/this.buffers[name].itemSize;
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-		this._cache = {};
 	},
 
 	update: function(name, items) {
@@ -61,7 +57,7 @@ var RenderBuffer=Class.extend({
 			throw "Buffer too small.";
 
 		if (items.length/buf.itemSize !== buf.numItems)
-			throw "Passed buffer does not match the size of the exising buffer.";
+			throw "Passed buffer does not match the size of the existing buffer.";
 
 		var gl = this.context.gl;
 
@@ -69,8 +65,6 @@ var RenderBuffer=Class.extend({
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(items), this.type);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-		this._cache = {};
 	},
 
 	/** Renders all elements using given shader and binds all attributes */
@@ -82,15 +76,11 @@ var RenderBuffer=Class.extend({
 		for(var bufferName in this.buffers) {
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[bufferName]);
 
-			if (!(bufferName in this._cache)) {
-				this._cache[bufferName] = gl.getAttribLocation(shader.program, bufferName);
-			}
-			if (this._cache[bufferName]==-1)
-				continue;
-
-			gl.enableVertexAttribArray(this._cache[bufferName]);
-			locations.push(this._cache[bufferName]);
-			gl.vertexAttribPointer(this._cache[bufferName], this.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
+			var bufferLocation = gl.getAttribLocation(shader.program, bufferName);
+            if (bufferLocation == -1) continue;
+            gl.enableVertexAttribArray(bufferLocation);
+            locations.push(bufferLocation);
+            gl.vertexAttribPointer(bufferLocation, this.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
 		}
 		this.drawElements();
 		for (var i = 0, l = locations.length; i < l; i++){
