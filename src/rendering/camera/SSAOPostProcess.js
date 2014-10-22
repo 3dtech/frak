@@ -8,7 +8,7 @@ var SSAOPostProcess = PostProcess.extend({
 			engine.assetsManager.addShaderSource("shaders/default/ssaoblur"),
 			{
                 "ViewportSize": new UniformVec2(vec2.clone(this.parent.size)),
-                "ssaoBlurSize": new UniformInt(2)
+                "ssaoBlurSize": new UniformInt((engine.options.ssaoBlurSize) ? engine.options.ssaoBlurSize : 1)
             },
 			[ new Sampler( "ao0", this.parent.generator.ssaoBufferStage.target.texture )]);
         this.material.name = "SSAO";
