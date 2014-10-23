@@ -114,8 +114,10 @@ var PostProcessRenderStage = RenderStage.extend({
 		var locations=[];
 		for(var bufferName in this.quad.buffers) {
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.quad.buffers[bufferName]);
-			var bufferLocation=gl.getAttribLocation(shader.program, bufferName);
-			if(bufferLocation==-1) continue;
+			var bufferLocation = shader.getAttribLocation(bufferName);
+			if (bufferLocation==-1)
+				continue;
+
 			gl.enableVertexAttribArray(bufferLocation);
 			locations.push(bufferLocation);
 			gl.vertexAttribPointer(bufferLocation, this.quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);

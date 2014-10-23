@@ -13,6 +13,7 @@ var ShadowMapRenderStage=RenderStage.extend({
 		this.lightView = mat4.create();
 		this.lightProj = mat4.create();
 		this.active=false;
+		this.blurEnabled = false;
 
 		// internal cache
 		this.lightPosition=vec3.create();
@@ -74,8 +75,11 @@ var ShadowMapRenderStage=RenderStage.extend({
 			return;
 
 		this.renderShadows(context, scene, light);
-		this.blurShadows(context, this.helperTarget, this.blurSampler, 0, light.shadowBlurKernelSize);
-		this.blurShadows(context, this.target, this.helperTargetSampler, 1, light.shadowBlurKernelSize);
+		if (this.blurEnabled) {
+			this.blurShadows(context, this.helperTarget, this.blurSampler, 0, light.shadowBlurKernelSize);
+			this.blurShadows(context, this.target, this.helperTargetSampler, 1, light.shadowBlurKernelSize);
+
+		}
 		this.active=true;
 	},
 
@@ -167,6 +171,7 @@ var ShadowMapRenderStage=RenderStage.extend({
 	},
 
 	blurShadows: function(context, target, source, orientation, kernelSize) {
+		this.gaussianBlurMaterial.shader.use();
 		if (!this.gaussianBlurMaterial.shader.linked)
 			return;
 
@@ -196,8 +201,10 @@ var ShadowMapRenderStage=RenderStage.extend({
 		var locations=[];
 		for(var bufferName in this.quad.buffers) {
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.quad.buffers[bufferName]);
-			var bufferLocation=gl.getAttribLocation(shader.program, bufferName);
-			if(bufferLocation==-1) continue;
+			var bufferLocation = shader.getAttribLocation(bufferName);
+			if (bufferLocation==-1)
+				continue;
+
 			gl.enableVertexAttribArray(bufferLocation);
 			locations.push(bufferLocation);
 			gl.vertexAttribPointer(bufferLocation, this.quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
