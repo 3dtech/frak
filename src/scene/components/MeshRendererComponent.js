@@ -1,8 +1,8 @@
 /** MeshRendererComponent is used to add meshes to scene rendering spaces */
 var MeshRendererComponent=RendererComponent.extend({
 	init: function() {
+		this.meshRenderers = [];
 		this._super();
-		this.meshRenderers=[];
 	},
 
 	type: function() {
@@ -43,8 +43,8 @@ var MeshRendererComponent=RendererComponent.extend({
 	},
 
 	removeRenderers: function() {
-		for(var r in this.meshRenderers) {
-			this.getScene().dynamicSpace.removeRenderer(this.meshRenderers[r]);
+		for (var i=0; i<this.meshRenderers.length; i++) {
+			this.getScene().dynamicSpace.removeRenderer(this.meshRenderers[i]);
 		}
 	},
 
@@ -58,21 +58,21 @@ var MeshRendererComponent=RendererComponent.extend({
 	},
 
 	onUpdateTransform: function(absolute) {
-		for(var renderer in this.meshRenderers) {
-			this.meshRenderers[renderer].layer=this.node.layer;
-			this.meshRenderers[renderer].castShadows=this.castShadows;
-			this.meshRenderers[renderer].setMatrix(absolute);
+		for (var i=0; i<this.meshRenderers.length; i++) {
+			this.meshRenderers[i].layer = this.node.layer;
+			this.meshRenderers[i].castShadows = this.castShadows;
+			this.meshRenderers[i].setMatrix(absolute);
 		}
 	},
 
 	onEnable: function() {
-		for (var i in this.meshRenderers)
-			this.meshRenderers[i].visible=true;
+		for (var i=0; i<this.meshRenderers.length; i++)
+			this.meshRenderers[i].visible = true;
 	},
 
 	onDisable: function() {
-		for (var i in this.meshRenderers)
-			this.meshRenderers[i].visible=false;
+		for (var i=0; i<this.meshRenderers.length; i++)
+			this.meshRenderers[i].visible = false;
 	},
 
 	/** Returns the bounding box of all the Renderers in attached to this component
@@ -80,7 +80,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		@return The {BoundingBox} of all Renderers */
 	getBoundingBox: function(excludeInvisible) {
 		var bounds = new BoundingBox();
-		for (var i in this.meshRenderers) {
+		for (var i=0; i<this.meshRenderers.length; i++) {
 			if (excludeInvisible && !this.meshRenderers[i].visible)
 				continue;
 			bounds.encapsulateBox(this.meshRenderers[i].globalBoundingBox);
@@ -93,7 +93,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		@return The {BoundingSphere} of all Renderers */
 	getBoundingSphere: function(excludeInvisible) {
 		var bounds = new BoundingSphere();
-		for (var i in this.meshRenderers) {
+		for (var i=0; i<this.meshRenderers.length; i++) {
 			if (excludeInvisible && !this.meshRenderers[i].visible)
 				continue;
 			bounds.encapsulateSphere(this.meshRenderers[i].globalBoundingSphere);
@@ -104,7 +104,7 @@ var MeshRendererComponent=RendererComponent.extend({
 	/** Sets all Renderer.transparent to value for all Renderers attached to this component. */
 	setTransparency: function(value) {
 		value = !!value;
-		for (var i in this.meshRenderers) {
+		for (var i=0; i<this.meshRenderers.length; i++) {
 			this.meshRenderers[i].transparent=value;
 		}
 	},

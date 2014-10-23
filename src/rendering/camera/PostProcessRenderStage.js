@@ -123,7 +123,8 @@ var PostProcessRenderStage = RenderStage.extend({
 			gl.vertexAttribPointer(bufferLocation, this.quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
 		}
 		this.quad.drawElements();
-		for (var i in locations)
+		for (var i=0; i<locations.length; i++) {
 			gl.disableVertexAttribArray(locations[i]);
+		}
 	}
 });
