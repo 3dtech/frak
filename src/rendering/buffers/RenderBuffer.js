@@ -69,19 +69,24 @@ var RenderBuffer=Class.extend({
 
 	/** Renders all elements using given shader and binds all attributes */
 	render: function(shader) {
-		if(!shader.linked) return;
-		var gl=this.context.gl;
+		if (!shader.linked)
+			return;
+
+		var gl = this.context.gl;
+		var locations = [];
 		shader.requirements.apply(this);
-		var locations=[];
-		for(var bufferName in this.buffers) {
+		for (var bufferName in this.buffers) {
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[bufferName]);
 
-			var bufferLocation = gl.getAttribLocation(shader.program, bufferName);
-            if (bufferLocation == -1) continue;
-            gl.enableVertexAttribArray(bufferLocation);
-            locations.push(bufferLocation);
-            gl.vertexAttribPointer(bufferLocation, this.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
+			var bufferLocation = shader.getAttribLocation(bufferName);
+			if (bufferLocation == -1)
+				continue;
+
+			gl.enableVertexAttribArray(bufferLocation);
+			locations.push(bufferLocation);
+			gl.vertexAttribPointer(bufferLocation, this.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
 		}
+
 		this.drawElements();
 		for (var i = 0, l = locations.length; i < l; i++){
 			gl.disableVertexAttribArray(locations[i]);

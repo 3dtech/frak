@@ -1,1 +1,1 @@
-frakVersion='1.0.22';
+frakVersion='1.0.23';
