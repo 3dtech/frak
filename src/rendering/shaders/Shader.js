@@ -33,7 +33,9 @@ var Shader=Serializable.extend({
 		this.explicitLocations = {
 			'position': 0,
 			'normal': 1,
-			'texcoord2d0': 2
+			'texcoord2d0': 2,
+			'tangent': 3,
+			'bitangent': 4
 		};
 	},
 
