@@ -41,14 +41,14 @@ var Serializable=Cloneable.extend({
 			}
 			if(excluded instanceof Array) {
 				excluded=excluded.concat(extraExcluded);
-				for(var e in excluded) {
+				for(var e=0; e<excluded.length; e++) {
 					if(fields[excluded[e]]) delete fields[excluded[e]];
 				}
 			}
 		}
 		if(excluded===true) {
 			fields=[];
-			for(var i in included) {
+			for(var i=0; i<included.length; i++) {
 				var t=included[i];
 				var getType = {};
 				if(this[t] && getType.toString.call(this[t])=='[object Function]' || t=="serializable" || t=='_super') continue;

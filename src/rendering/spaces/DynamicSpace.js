@@ -48,7 +48,7 @@ var DynamicSpace=Space.extend({
 		@return An array of geometry inside the frustum or intersecting it (elements of array are of type Renderer) */
 	frustumCast: function(frustum, layerMask) {
 		var ret = [];
-		for (var i in this.renderers) {
+		for (var i=0; i<this.renderers.length; i++) {
 			if (this.renderers[i].visible && (this.renderers[i].layer & layerMask))
 				ret.push(this.renderers[i]);
 		}
@@ -64,7 +64,7 @@ var DynamicSpace=Space.extend({
 		var result = new RayTestResult(ray);
 		if (!layerMask)
 			return result;
-		for (var i in this.colliders) {
+		for (var i=0; i<this.colliders.length; i++) {
 			if (!this.colliders[i].enabled)
 				continue;
 			if (this.colliders[i].node.layer & layerMask) {

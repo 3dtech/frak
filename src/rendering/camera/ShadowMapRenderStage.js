@@ -78,7 +78,6 @@ var ShadowMapRenderStage=RenderStage.extend({
 		if (this.blurEnabled) {
 			this.blurShadows(context, this.helperTarget, this.blurSampler, 0, light.shadowBlurKernelSize);
 			this.blurShadows(context, this.target, this.helperTargetSampler, 1, light.shadowBlurKernelSize);
-
 		}
 		this.active=true;
 	},

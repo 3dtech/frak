@@ -77,20 +77,7 @@ var SubmeshRenderer=Renderer.extend({
 
 	/** Renders mesh geometry with material */
 	onRender: function(context) {
-		try {
-			this.buffer.render(this.material.shader);
-		}
-		catch(e) {
-			if(this.failed) return;
-			this.failed=true;
-			console.warn("Failed to render buffer: ", this.buffer);
-			console.warn('material: ', this.material.name, this.material);
-			console.warn('positions: ', this.submesh.positions.length);
-			console.warn('normals: ', this.submesh.normals.length);
-			console.warn('texcoords: ', this.submesh.texCoords2D);
-			console.warn('faces: ', this.submesh.faces.length);
-			console.warn(e);
-		}
+		this.buffer.render(this.material.shader);
 	},
 
 	/** Renders only mesh geometry without material switches with given shader */
