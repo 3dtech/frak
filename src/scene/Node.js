@@ -6,15 +6,15 @@ var Node = EmptyNode.extend({
 		this.name=name?name:"Node";
 		this.transform=this.addComponent(new Transform());
 	},
-	
+
 	excluded: function() {
 		return this._super().concat(["transform"]);
 	},
-	
+
 	type: function() {
 		return "Node";
 	},
-	
+
 	// --------- Methods ---------
 	/** Calculates axis-aligned bounding-box of this node and all its subnodes */
 	getBoundingBox: function(excludeInvisible) {
@@ -24,7 +24,7 @@ var Node = EmptyNode.extend({
 		});
 		return bb;
 	},
-	
+
 	/** Calculates bounding-sphere of this node and all its subnodes */
 	getBoundingSphere: function(excludeInvisible) {
 		var bb=new BoundingSphere();
@@ -33,7 +33,7 @@ var Node = EmptyNode.extend({
 		});
 		return bb;
 	},
-	
+
 	instantiate: function() {
 		var instance=new Node(this.name+' (instance)');
 		instance.removeComponentsByType(Transform);
@@ -48,27 +48,27 @@ var Node = EmptyNode.extend({
 		instance.transform=instance.getComponent(Transform);
 		return instance;
 	},
-	
-	
+
+
 	/** Updates absolute transforms of all child-nodes */
 	updateChildTransforms: function() {
 		var index, c;
 		var absolute = this.transform.absolute;
 		var subnodes = this.subnodes;
-		for(index in subnodes) {
+		for (index=0; index<subnodes.length; index++) {
 			var subnode=subnodes[index];
 			if(!subnode.transform) continue;
-			
+
 			mat4.multiply(subnode.transform.absolute, absolute, subnode.transform.relative);
 			subnode.updateChildTransforms();
 		}
-		
-		for(c in this.components) {
+
+		for (c=0; c<this.components.length; c++) {
 			this.components[c].onUpdateTransform(absolute);
 		}
 	},
-	
-	/** Sets absolute position of attached transform component 
+
+	/** Sets absolute position of attached transform component
 		@param position Absolute position as vec3 */
 	setAbsolutePosition: function(position) {
 		if(!this.parent || !this.parent.transform) {	// No parent given
