@@ -25,8 +25,15 @@ function success(error, stdout, stderr){
 }
 
 var command = "uglifyjs -m -c -o "+outputFile+" --stats ";
-if (process.argv.length>=3 && process.argv[2]=='debug') {
-	command = "uglifyjs -b -o "+outputFile+" --stats ";
-	console.log('WARNING: Building DEBUG build of FRAK library.');
+if (process.argv.length>=3) {
+	if (process.argv[2] == 'debug') {
+		command = "uglifyjs -b -o "+outputFile+" --stats ";
+		console.log('WARNING: Building DEBUG build of FRAK library.');
+	}
+
+	else if (process.argv[2] == "mapped") {
+		command += "--source-map frak.map --source-map-url 'http://localhost:8001/frak.map' ";
+		console.log('WARNING: Building SOURCE MAPPED build of FRAK library.');
+	}
 }
 exec(command + files.join(' '), {"maxBuffer": 1024*1024}, success);
