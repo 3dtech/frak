@@ -8,104 +8,178 @@
 	</head>
 	<body>
 		<!-- Canvas -->
-		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="800" height="800"></canvas>
+		<canvas id="canvas" style="z-index: 1; border: none;" width="1200" height="800"></canvas>
+
+		<div style="position: absolute; right: 10px; top: 10px;">
+			<div id="fps"></div>
+			<div>SSAO</div>
+			<button id="ssao-toggle">Enabled</button>
+			<div>Only</div>
+			<button id="only-toggle">Disabled</button>
+			<div>Position Buffer</div>
+			<button id="pb-toggle">Enabled</button>
+			<div>SSAO Buffer</div>
+			<button id="sb-toggle">Enabled</button>
+			<div>SSAO Blur</div>
+			<button id="ss-toggle">Enabled</button>
+		</div>
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
+			function makeTransparent(subnode) {
+				if (subnode.getComponent(MeshRendererComponent)) {
+					var meshRendererComponent = subnode.getComponent(MeshRendererComponent);
+					for (var i in meshRendererComponent.meshRenderers) {
+						meshRendererComponent.meshRenderers[i].transparent=true;
+						var material = meshRendererComponent.meshRenderers[i].material;
+						material.shader = engine.assetsManager.addShaderSource("Transparent");
+						material.shader.requirements.transparent = true;
+					}
+				}
+			};
+
 			function setupScene(scene) {
+				scene.light.shadowCasting = true;
+				scene.light.intensity = 1.5;
+
+				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
+
 				var texture = scene.engine.assetsManager.texturesManager.add("data/lena.jpg");
-				var material=new Material(
+				var material = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/diffuse"),
-					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:0.0, a:1.0}) },
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
 					[ new Sampler("diffuse0", texture) ]
 				);
-				material.name="DefaultMaterial";
 
 				var ground = Primitives.plane(10.0, 10.0, material);
-				mat4.fromRotationTranslation(ground.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0,-1,0]);
+				mat4.fromRotationTranslation(ground.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, -1, 0]);
 				scene.root.addNode(ground);
 
-				var wall = Primitives.box([0,0,0], [4.0,4.0,0.1], material);
-				mat4.fromRotationTranslation(wall.transform.relative, quat.create(), [0,3,-4]);
-				scene.root.addNode(wall);
+				var box = Primitives.box([0,0,0], [1.0, 1.0, 0.5], material);
+				var rotation0 = quat.euler(quat.create(), 0, 90, 0);
+				var rotation1 = quat.euler(quat.create(), 0, 70, 20);
+				mat4.fromRotationTranslation(scene.root.addNode(box).transform.relative, rotation0, [0,0,2]);
+				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, rotation0, [0,0,-2]);
+				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, rotation1, [2,0, 2]);
+				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, rotation1, [0,0, 0]);
+				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, rotation1, [-2,0,-2]);
 
-				var chestHighWall = Primitives.box([0,0,0], [1.0,1.0,0.1], material);
-				mat4.fromRotationTranslation(chestHighWall.transform.relative, quat.euler(quat.create(), 0, 90, 0), [0,0,2]);
-				scene.root.addNode(chestHighWall);
-			}
+				var transparentMaterial = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[ new Sampler("diffuse0", scene.engine.assetsManager.texturesManager.add("data/branch.png")) ]
+				);
 
-			function setupLights(scene) {
-				var lights = scene.root.addNode(new Node("Lights"));
-				var light = lights.addNode(new Node("DirectionalLight")).addComponent(new Light());
-				light.intensity=1.2;
-				light.color.set(1.0, 1.0, 1.0);
-				light.shadowCasting=true;
-				vec3.set(light.direction, 1.0, 1.0, 1.0);
-				vec3.normalize(light.direction, light.direction);
-			}
+				var plane = Primitives.plane(2.0, 2.0, transparentMaterial);
+				mat4.fromRotationTranslation(plane.transform.relative, quat.euler(quat.create(), 0, 90, 0), [3, 0, 0]);
+				scene.root.addNode(plane);
 
-			function getShadowMapStage(camera) {
-				if (camera.renderStage instanceof MaterialRenderStage) {
-					return camera.renderStage.normalBufferStage;
+				scene.engine.sceneStarted = function() {
+					plane.onEachChild(makeTransparent);
 				}
-				if (camera.renderStage instanceof PostProcessRenderStage) {
-					//return camera.renderStage.generator.shadowMapStage;
-                    return camera.renderStage.generator.positionBufferStage;
-				}
-				throw('Unhandled RenderStage used in Camera');
-			}
-
-			var frak=new FRAK(function() {
-				var DepthDebugCamera=PerspectiveCamera.extend({
-					type: function() { return "DepthDebugCamera"; },
-					onStart: function(context, engine) {
-						this._super(context, engine);
-						var shadowMapStage = getShadowMapStage(this.node.scene.camera);
-						var debugMaterial=new Material(
-							engine.assetsManager.addShaderSource("diffuse"),
-							{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
-							[ new Sampler("diffuse0", shadowMapStage.target.texture) ]
-						);
-						debugMaterial.name="DebugDepthMap";
-						debugMaterial.shader.transparent=true;
-						var debugPlane = Primitives.plane(8.0, 8.0, debugMaterial);
-						mat4.fromRotationTranslation(debugPlane.transform.relative, quat.create(), [9, 0, 0]);
-						this.node.scene.root.addNode(debugPlane);
-
-						engine.assetsManager.load();
-						this.node.scene.cameraComponent.fitNodeToView(scene.root);
-					}
-				});
-
-				var engine = new Engine($('#canvas'), {
-					'assetsPath': '../assets/',
-                    'ssao': true
-				});
-				engine.assetsManager.modelsManager.path = './'; // Load test models locally
-				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
-
-				var scene=engine.scene;
-
-				scene.cameraNode.removeComponentsByType(PerspectiveCamera);
-				var debugCamera = new DepthDebugCamera();
-				debugCamera.setAspectRatio(1.0);
-				scene.camera=debugCamera.camera;
-				scene.cameraComponent=scene.cameraNode.addComponent(debugCamera);
-
-				scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
-				setupLights(scene);
-				setupScene(scene);
 
 				var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
 				orbitController.distance=20.0;
 				orbitController.minimumDistance=0.5;
 				orbitController.maximumDistance=100.0;
 				orbitController.target.value=scene.root.transform;
-				// orbitController.target=scene.root.findChildWithName('Plane').transform;
+			}
 
+			var engine;
+			var frak = new FRAK(function() {
+				$('#ssao-toggle').click(function() {
+					var stage = engine.scene.camera.renderStage;
+					var ss = stage.getStageByType(SSAOPostProcess);
+					var pb = ss.parent.generator.positionBufferStage;
+					var sb = ss.parent.generator.ssaoBufferStage;
+					if (ss.enabled) {
+						ss.disable();
+						pb.disable();
+						sb.disable();
+						$('#ssao-toggle').text('Disabled');
+						$('#pb-toggle').text('Disabled');
+						$('#sb-toggle').text('Disabled');
+						$('#ss-toggle').text('Disabled');
+					}
+					else {
+						ss.enable();
+						pb.enable();
+						sb.enable();
+						$('#ssao-toggle').text('Enabled');
+						$('#pb-toggle').text('Enabled');
+						$('#sb-toggle').text('Enabled');
+						$('#ss-toggle').text('Enabled');
+					}
+				});
+
+				$('#only-toggle').click(function() {
+					var stage = engine.scene.camera.renderStage;
+					var ss = stage.getStageByType(SSAOPostProcess);
+					if (ss.ssaoOnly === true) {
+						ss.ssaoOnly = false;
+						$('#only-toggle').text('Disabled');
+					}
+					else {
+						ss.ssaoOnly = true;
+						$('#only-toggle').text('Enabled');
+					}
+				});
+
+				$('#pb-toggle').click(function() {
+					var pb = engine.scene.camera.renderStage.generator.positionBufferStage;
+					if (pb.enabled) {
+						pb.disable();
+						$('#pb-toggle').text('Disabled');
+					}
+					else {
+						pb.enable();
+						$('#pb-toggle').text('Enabled');
+					}
+				});
+
+				$('#sb-toggle').click(function() {
+					var sb = engine.scene.camera.renderStage.generator.ssaoBufferStage;
+					if (sb.enabled) {
+						sb.disable();
+						$('#sb-toggle').text('Disabled');
+					}
+					else {
+						sb.enable();
+						$('#sb-toggle').text('Enabled');
+					}
+				});
+
+				$('#ss-toggle').click(function() {
+					var ss = engine.scene.camera.renderStage.getStageByType(SSAOPostProcess);
+					if (ss.enabled) {
+						ss.disable();
+						$('#ss-toggle').text('Disabled');
+					}
+					else {
+						ss.enable();
+						$('#ss-toggle').text('Enabled');
+					}
+				});
+
+				engine=new Engine($('#canvas'), {
+					'assetsPath': '../assets/',
+					'ssao': true
+				});
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test models locally
+
+				var TestComponent = Component.extend({
+					type: function() { return "TestComponent"; },
+					onUpdate: function(pass) {
+						$('#fps').text((engine.fps.getAverage()).toFixed(3));
+					}
+				});
+				engine.scene.root.addComponent(new TestComponent());
+
+				setupScene(engine.scene);
 				engine.assetsManager.load(function() {
 					engine.run();
 				});

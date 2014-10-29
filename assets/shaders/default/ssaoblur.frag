@@ -10,6 +10,7 @@ uniform float zFar;
 uniform vec2 ViewportSize;
 
 uniform int ssaoBlurSize;
+uniform int ssaoOnly;
 
 float random(vec2 co) {
     //co = mod(co, 128.0);
@@ -33,7 +34,12 @@ void main() {
         }
     }
     result = result / float(ssaoBlurSize * ssaoBlurSize);
-    
-    gl_FragColor = vec4(texture2D(src, gl_FragCoord.xy * inverseVP).xyz * result, 1.0);
+
+    if (ssaoOnly == 1) {
+        gl_FragColor = vec4(vec3(result), 1.0);
+    }
+    else {
+        gl_FragColor = vec4(texture2D(src, gl_FragCoord.xy * inverseVP).xyz * result, 1.0);
+    }
     //gl_FragColor = vec4(texture2D(src, gl_FragCoord.xy * inverseVP).xyz * texture2D(ao0, gl_FragCoord.xy * inverseVP/* / 2.0 + 0.5*/).xyz, 1.0);
 }
