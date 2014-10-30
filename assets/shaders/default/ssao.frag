@@ -8,13 +8,16 @@ uniform float zNear;
 uniform float zFar;
 uniform vec2 ViewportSize;
 
+uniform float ssaoGDisplace;
+uniform float ssaoRadius;
+uniform float ssaoDivider;
+
+#define DL 2.399963229728653
+#define EULER 2.718281828459045
+
 float unpack(vec4 c) {
     const vec4 bitShifts = vec4(1.0 / (255.0 * 255.0 * 255.0), 1.0 / (255.0 * 255.0), 1.0 / 255.0, 1.0);
     return dot(c, bitShifts);
-}
-
-float random(vec2 co) {
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
 float getDepth(vec2 coord) {
@@ -26,7 +29,9 @@ float getDepth(vec2 coord) {
 
 float doAmbientOcclusion(vec2 coord, vec2 coord2, float d) {
     float diff = getDepth(coord + coord2) - d;
-    return (diff < 0.0) ? 1.0 / (1.0 + abs(diff * 100.0)) : 0.0;
+    float gDisplace = -0.0002 - (0.00002 * max(min(ssaoGDisplace, 10.0), 0.0));
+    //float gDisplace = -0.00032;
+    return (diff < gDisplace) ? pow(EULER, -2.0 * (diff - gDisplace) * (diff - gDisplace) * 10000.0 / 0.16) : 0.0;
 }
 
 void main() {
@@ -34,34 +39,29 @@ void main() {
     
     vec2 c = gl_FragCoord.xy * inverseVP;
     
-    float depth = getDepth(c);
-    
-    float vecs[8];
-    vecs[0] = vecs[5] = 1.0;
-    vecs[1] = vecs[3] = vecs[4] = vecs[6] = 0.0;
-    vecs[2] = vecs[7] = -1.0;
-
-    float seed = gl_FragCoord.x + gl_FragCoord.y * inverseVP.y;
-
     float ao = 0.0;
-    for (int j = 0; j < 4; j++) {
-        vec2 rand = vec2(random(vec2(seed, 0.0 + float(j))), random(vec2(seed, 0.4 + float(j))));
-        rand = normalize(rand);
-        
-        float rad = 15.0 * inverseVP.x * (1.0 - depth);
-        for (int i = 0; i < 4; i++) {
-            vec2 coord1 = reflect(vec2(vecs[int(mod(float(i), 4.0)) * 2], vecs[int(mod(float(i), 4.0)) * 2 + 1]), rand) * rad;
-            vec2 coord2 = vec2(coord1.x*0.707 - coord1.y*0.707, coord1.x*0.707 + coord1.y*0.707);
-            
-            ao += doAmbientOcclusion(c, coord1 * 0.25, depth);
-            ao += doAmbientOcclusion(c, coord2 * 0.5, depth);
-            ao += doAmbientOcclusion(c, coord1 * 0.75, depth);
-            ao += doAmbientOcclusion(c, coord2, depth);
-        }
+
+    float dz = 1.0 / 8.0;
+    float z = 1.0 - dz / 2.0;
+    float l = 0.0;
+
+    float depth = getDepth(c);
+
+    for (int i = 0; i <= 8; i++) {
+        float r = sqrt(1.0 - z);
+
+        vec2 p = vec2(cos(l) * r, sin(l) * r);
+        ao += doAmbientOcclusion(c, p * ssaoRadius * inverseVP.x * (1.0 - depth), depth);
+        z = z - dz;
+        l = l + DL;
     }
-    ao /= 64.0;
+
+    ao /= 8.0 + max(min(ssaoDivider, 1.0), -1.0);
+    //ao /= 8.5;
     
     ao = max(0.0, ao * 2.0 - 1.0);
     ao = 1.0 - ao;
     gl_FragColor = vec4(ao, ao, ao, 1.0);
+    //gl_FragColor = vec4(depth, depth, depth, 1.0);
+    //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }

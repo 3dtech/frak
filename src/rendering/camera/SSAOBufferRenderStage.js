@@ -25,7 +25,10 @@ var SSAOBufferRenderStage = RenderStage.extend({
         this.material = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/ssao"),
 			{
-                "ViewportSize": new UniformVec2(vec2.clone(engine.scene.camera.target.size))
+                "ViewportSize": new UniformVec2(vec2.clone(engine.scene.camera.target.size)),
+                "ssaoGDisplace": new UniformFloat((engine.options.ssaoGDisplace) ? engine.options.ssaoGDisplace : 6.0),
+                "ssaoRadius": new UniformFloat((engine.options.ssaoRadius) ? engine.options.ssaoRadius : 8.0),
+                "ssaoDivider": new UniformFloat((engine.options.ssaoDivider) ? engine.options.ssaoDivider : 0.5)
             },
 			[ new Sampler( "position0", this.parent.positionBufferStage.target.texture )]);
         this.material.name = "SSAO";
