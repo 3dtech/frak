@@ -14,7 +14,7 @@ var BoundingBox=BoundingVolume.extend({
 	},
 
 	type: function() {
-		return "BoundingSphere";
+		return "BoundingBox";
 	},
 
 	/** Recalculates the extents, min and max variables for this bounding-box */
