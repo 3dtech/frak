@@ -240,7 +240,6 @@ var EmptyNode=Serializable.extend({
 	/** Calls callback method on all child nodes, but not on this node */
 	onEachChildExclusive: function(callback) {
 		for(var node in this.subnodes) {
-			callback(this.subnodes[node]);
 			this.subnodes[node].onEachChild(callback);
 		}
 	},
