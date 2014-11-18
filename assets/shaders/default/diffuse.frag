@@ -6,6 +6,7 @@ uniform mat4 view;
 
 uniform vec4 ambient;
 uniform vec4 diffuse;
+uniform float specularStrength;
 
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
@@ -26,6 +27,8 @@ varying vec3 viewNormal;
 varying vec4 shadowPosition;
 varying vec2 uv0;
 
+#define MAXIMUM_HARDNESS 256
+
 float unpack(vec4 c) {
 	const vec4 bitShifts = vec4(1.0 / (255.0 * 255.0 * 255.0), 1.0 / (255.0 * 255.0), 1.0 / 255.0, 1.0);
 	return dot(c, bitShifts);
@@ -35,13 +38,26 @@ float unpackHalf(vec2 c) {
 	return c.x + (c.y / 255.0);
 }
 
+float pow(float v, int n) {
+	for (int i = 1; i < MAXIMUM_HARDNESS; i++) {
+		if (i >= n)
+			break;
+		v *= v;
+	}
+	return v;
+}
+
 /** Computes color and directional lighting */
 vec4 lighting() {
 	vec4 textureColor = texture2D(diffuse0, uv0);
 	vec3 N = normalize(viewNormal);
 	vec3 L = normalize(mat3(view)*lightDirection);
+	vec3 V = normalize(-viewPosition.xyz);
+	vec3 H = normalize(L + V);
 	float diffuseLight = max(dot(N, L), 0.0) * lightIntensity;
-	return ((ambient * textureColor) + (diffuse * textureColor * lightColor * diffuseLight));
+	float specularLight = min(max(dot(N, H), 0.0), 1.0) * lightIntensity;
+	specularLight = pow(specularLight, 4);
+	return ((ambient * textureColor) + (diffuse * textureColor * lightColor * diffuseLight) + (lightColor * specularLight * specularStrength));
 }
 
 float ChebychevInequality(vec2 moments, float t) {

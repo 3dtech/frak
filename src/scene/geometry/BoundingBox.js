@@ -14,7 +14,7 @@ var BoundingBox=BoundingVolume.extend({
 	},
 
 	type: function() {
-		return "BoundingSphere";
+		return "BoundingBox";
 	},
 
 	/** Recalculates the extents, min and max variables for this bounding-box */
@@ -98,7 +98,7 @@ var BoundingBox=BoundingVolume.extend({
 		return (this.max[0] > box.min[0] &&
 				this.min[0] < box.max[0] &&
 				this.max[1] > box.min[1] &&
-				this.min[0] < box.max[1] &&
+				this.min[1] < box.max[1] &&
 				this.max[2] > box.min[2] &&
 				this.min[2] < box.max[2]);
 	},

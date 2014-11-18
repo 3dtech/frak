@@ -38,6 +38,30 @@ var Plane=Class.extend({
 		return vec3.dot(this.normal, point) + this.distance;
 	},
 	
+	/** Returns the distance of a point from the plane along a given line
+		@param point Instance of {vec3}
+		@param direction Instance of {vec3}. Direction of the line
+		@return {number} The distance */
+	getDistanceOnLine: function(point, direction) {
+		var p0 = vec3.scale(vec3.create(), this.normal, -this.distance);
+		var dot = vec3.dot(direction, this.normal);
+		if (Math.abs(dot) < EPSILON)
+			return Infinity;
+		return vec3.dot(vec3.sub(p0, p0, point), this.normal) / dot;
+	},
+	
+	/** Returns an intersection of the plane and a line, defined by a point and a direction
+		@param point Instance of {vec3}. A point on the line
+		@param direction Instance of {vec3}. Direction of the line
+		@param out Instance of {vec3}. If present the output is written to out instead. [optional]
+		@return {vec3} The intersection point */
+	getLineIntersection: function(point, direction, out) {
+		if (!out) out=vec3.create();
+		var d = getDistanceOnLine(point, direction);
+		vec3.scaleAndAdd(out, point, direction, d);
+		return out;
+	},
+	
 	/** Projects the given point onto this plane.
 		@param point Instance of {vec3}
 		@param out Instance of {vec3}. If present the output is written to out instead. [optional]

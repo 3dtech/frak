@@ -66,6 +66,8 @@ var SubmeshRenderer=Renderer.extend({
 			material.uniforms.diffuse = new UniformColor(new Color(1.0, 1.0, 1.0, 1.0));
 		if (!material.uniforms.ambient)
 			material.uniforms.ambient = new UniformColor(new Color(0.2, 0.2, 0.2, 1.0));
+		if (!material.uniforms.specularStrength)
+			material.uniforms.specularStrength = new UniformFloat(0.0);
 
 		// Set this renderer to transparent, if its material is transparent or if diffuse color or ambient color has alpha less than 1
 		this.transparent=material.shader.requirements.transparent ||

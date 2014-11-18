@@ -175,7 +175,7 @@ var MaterialRenderStage=RenderStage.extend({
 					}
 				}
 				this.transparentRenderers.push(renderers[i]);
-				this.visibleTransparentFaces += renderers[i].submesh.faces.length;
+				this.visibleTransparentFaces += renderers[i].submesh.faces.length / 3;
 			}
 			else {
 				if (this.enableDynamicBatching) {
@@ -187,7 +187,7 @@ var MaterialRenderStage=RenderStage.extend({
 						this.visibleSolidBatches++;
 					}
 				}
-				this.visibleSolidFaces += renderers[i].submesh.faces.length;
+				this.visibleSolidFaces += renderers[i].submesh.faces.length / 3;
 				this.solidRenderers.push(renderers[i]);
 			}
 		}
