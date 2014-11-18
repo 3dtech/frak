@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>3DWayfinder WebGL</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body style="position: relative;">
+		<div class='info'>
+			<div>Updates: <span id='updates'></span></div>
+			<div>Average FPS: <span id='average-fps'></span></div>
+			<br />
+			<div>Position: <span id='position'></span></div>
+			<div>Rotation: <span id='rotation'></span></div>
+			<div>Velocity: <span id='velocity'></span></div>
+			<div>Angular velocity: <span id='angular-velocity'></span></div>
+		</div>
+
+		<!-- Canvas -->
+		<canvas id="canvas" style="top: 100px; left: 100px; z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-latest.min.js"></script>
+
+		<script type="text/javascript">
+			var engine;
+			var frak=new FRAK(
+				function() {
+					$('#canvas').bind('contextmenu', function(e) { return false; });
+					engine = new Engine($('#canvas'), {
+						'assetsPath': '../assets/'
+					});
+					engine.assetsManager.modelsManager.path = './'; // Load test models locally
+
+					var scene=engine.scene;
+					var node=engine.assetsManager.addModel("data/test.data");
+					var orbitController=scene.cameraNode.addComponent(new OrbitController());
+					orbitController.target.value=node.transform;
+					orbitController.rotation[0]=1.5;
+
+					orbitController.onMouseMove = function(delta){
+						vec3.add(node.transform.relative, node.transform.relative, vec3.fromValues(delta[0], delta[1], 0));
+					};
+
+					var updates=0;
+					var TestComponent=Component.extend({
+							type: function() { return "TestComponent"; },
+							onUpdate: function(pass) {
+								$('#position').html(JSON.stringify(mat4.translation(vec3.create(), scene.cameraNode.transform.relative)));
+								$('#rotation').html(JSON.stringify(mat4.rotation(mat4.create(), scene.cameraNode.transform.relative)));
+								$('#velocity').html(JSON.stringify(orbitController.velocity));
+								$('#angular-velocity').html(JSON.stringify(orbitController.angularVelocity));
+
+								$('#updates').html(updates);
+								$('#average-fps').html(engine.fps.getAverage());
+								updates++;
+							}
+						});
+
+					var component=scene.root.addComponent(new TestComponent());
+					scene.cameraComponent.setAspectRatio(1.0);
+
+					engine.assetsManager.load(function() {
+							scene.root.addNode(node);
+							scene.cameraComponent.fitNodeToView(node);
+
+							engine.run();
+						});
+				});
+		</script>
+	</body>
+</html>
