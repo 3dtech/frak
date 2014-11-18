@@ -5,6 +5,7 @@
 	"lib/classExtend.js",
 	"lib/polyfills.js",
 	"lib/Logistics.js",
+	"lib/hammer.min.js",
 
 	"src/Version.js",
 	"src/FRAK-minified.js",
@@ -149,5 +150,6 @@
 	"src/scene/DefaultScene.js",
 
 	"src/engine/FPS.js",
-	"src/engine/Engine.js"
+	"src/engine/Engine.js",
+	"src/engine/Input.js"
 ]

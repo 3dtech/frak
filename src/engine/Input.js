@@ -149,14 +149,18 @@ var Input = Class.extend({
 			this.hammertime.on("touch", ClassCallback(this, this.onTouch));
 		}
 
-		window.addEventListener("mousewheel", ClassCallback(this, this.onMouseWheel));
+		this.canvas.addEventListener("mousewheel", ClassCallback(this, this.onMouseWheel));
+
+		this.canvas.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        }, false);
 	},
 
 	registerKeyboardEvents: function(){
 		var me=this;
 		if(this.canvas){
-			this.canvas.addEventListener("keydown", function(event) { me.onKeyDown(event); });
-			this.canvas.addEventListener("keyup", function(event) { me.onKeyUp(event); });
+			this.canvas.addEventListener("keydown", ClassCallback(this, this.onKeyDown));
+			this.canvas.addEventListener("keyup", ClassCallback(this, this.onKeyUp));
 		}
 	},
 
@@ -289,7 +293,6 @@ var Input = Class.extend({
 
 	onKeyUp: function(event) {
 		if(event){
-
 			this.sendEvent("onKeyUp", event.which, "keyboard", event);
 			this.sendEvent("onKeyStateChange", event.which, false, "keyboard", event);
 			delete this.keyStates[event.which];

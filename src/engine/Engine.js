@@ -44,6 +44,8 @@ var Engine=Class.extend({
 		this.scene.engine=this;
 		this.fps=new FPS();
 		this.running=false;
+		this.input = false;
+
 		this.assetsManager=new AssetsManager(this.context, this.options.assetsPath);
 
 		// Universal 1x1 opaque white texture
@@ -61,6 +63,12 @@ var Engine=Class.extend({
 					if(e.which=='M'.charCodeAt(0)) me.debugScene();
 				});
 		}
+
+		this.setupInput();
+	},
+
+	setupInput: function(){
+		this.input = new Input(this, this.context.canvas[0]);
 	},
 
 	/** Starts the engine. The engine will try to draw frames at the "requestedFPS" specified
