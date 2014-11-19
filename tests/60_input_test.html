@@ -40,10 +40,6 @@
 					orbitController.target.value=node.transform;
 					orbitController.rotation[0]=1.5;
 
-					orbitController.onMouseMove = function(delta){
-						vec3.add(node.transform.relative, node.transform.relative, vec3.fromValues(delta[0], delta[1], 0));
-					};
-
 					var updates=0;
 					var TestComponent=Component.extend({
 							type: function() { return "TestComponent"; },

@@ -70,5 +70,13 @@ var Controller=Component.extend({
 		@param position Position of mouse as vec2
 		@param buttons Buttons as array
 		@param delta Mouse movement delta as vec2 */
-	onMouseMove: function(position, buttons, delta) {}
+	onMouseMove: function(position, buttons, delta) {},
+
+	onMouseDown: function(position, button, delta){
+		this.buttons[button] = true;
+	},
+
+	onMouseUp: function(position, button, delta){
+		this.buttons[button] = false;
+	}
 });

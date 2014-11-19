@@ -171,9 +171,9 @@ var OrbitController=FlightController.extend({
 		@param position Position of mouse as vec2
 		@param buttons Buttons as array
 		@param delta Mouse movement delta as vec2 */
-	onMouseMove: function(position, buttons, delta) {
-		if(this.rotateButton!==false && buttons[this.rotateButton]) this.rotate(delta[1], delta[0]);
-		if(this.panButton!==false && buttons[this.panButton]) this.move(delta[0], delta[1]);
+	onMouseMove: function(position, button, delta) {
+		if(this.rotateButton!==false && button == this.rotateButton) this.rotate(delta[1], delta[0]);
+		if(this.panButton!==false && button == this.panButton) this.move(delta[0], delta[1]);
 	},
 
 	rotate: function(xDelta, yDelta) {

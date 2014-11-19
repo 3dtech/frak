@@ -165,12 +165,10 @@ var Input = Class.extend({
 	},
 
 	unregisterController: function(controller){
-		if(controller in this.controllers){
-			var index = this.controllers.indexOf(controller);
-			if(index > -1){
-				this.controllers.splice(index, 1);
-				return true;
-			}
+		var index = this.controllers.indexOf(controller);
+		if(index > -1){
+			this.controllers.splice(index, 1);
+			return true;
 		}
 		return false;
 	},
@@ -326,10 +324,11 @@ HammerWF.MouseInput.prototype.handler = function(ev) {
 
 		var eventType = MOUSE_INPUT_MAP[ev.type];
 
+		//fix other mouse buttons
         if (eventType == INPUT_START && ev.button > -1) {
             this.pressed = true;
         }
-
+        //fix other mouse buttons
         if (eventType & INPUT_MOVE && ev.which !== 1) {
             //eventType = INPUT_END;
         }
