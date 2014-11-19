@@ -106,8 +106,8 @@ var FlightController=Controller.extend({
 	},
 
 	/** Called each time mouse is moved */
-	onMouseMove: function(position, buttons, delta) {
-		if(!buttons[0]) return;
+	onMouseMove: function(position, button, delta) {
+		if(button !== 0) return;
 		var impulse=vec3.create();
 		var ra=this.rotationAcceleration;
 		vec3.scale(impulse, [-delta[1], -delta[0], 0.0], ra);
