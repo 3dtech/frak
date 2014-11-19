@@ -20,6 +20,7 @@ var Input = Class.extend({
 		this.hammertime = HammerWF(this.canvas);
 		this.hammertime.get('pinch').set({ enable: true });
 		this.hammertime.get('rotate').set({ enable: true });
+		this.hammertime.get('pan').set({ threshold: 5 });
 
 		this.bindings = {};
 		this.keyStates = {};
@@ -141,11 +142,13 @@ var Input = Class.extend({
 	registerPointerEvents: function(){
 		if(this.hammertime){
 			this.hammertime.on("pinch", ClassCallback(this, this.onPinch));
+			this.hammertime.on("pinchend", ClassCallback(this, this.onPinchEnd));
 			this.hammertime.on("tap", ClassCallback(this, this.onTap));
 			this.hammertime.on("transformstart", ClassCallback(this, this.onTransformStart));
 			this.hammertime.on("pan", ClassCallback(this, this.onPan));
 			this.hammertime.on("panend", ClassCallback(this, this.onPanEnd));
 			this.hammertime.on("rotate", ClassCallback(this, this.onRotate));
+			this.hammertime.on("rotateend", ClassCallback(this, this.onRotateEnd));
 			this.hammertime.on("touch", ClassCallback(this, this.onTouch));
 		}
 
@@ -189,7 +192,7 @@ var Input = Class.extend({
 	sendEvent: function(funcName){
 		var args = Array.prototype.slice.call(arguments, 0);
 		args = args.slice(1, args.length); //remove funcName
-		console.info("sendEvent", funcName, args);
+		//console.info("sendEvent", funcName, args);
 		for(var i=0; i < this.controllers.length; i++){
 			if(this.controllers[i][funcName]){
 				this.controllers[i][funcName].apply(this.controllers[i], args);
@@ -219,6 +222,7 @@ var Input = Class.extend({
 	onPan: function(event){
 		if(event){
 			event.preventDefault();
+
 			vec2.set(this.deltaChange, event.deltaX, event.deltaY);
 			vec2.sub(this.deltaChange, this.deltaChange, this.lastDelta);
 			vec2.set(this.lastDelta, event.deltaX, event.deltaY);
@@ -228,7 +232,9 @@ var Input = Class.extend({
 				this.button = event.srcEvent.button;
 
 			this.translateCoordinates(this.position, event.center.x, event.center.y);
-			this.sendEvent("onMouseMove", this.position, this.button, this.deltaChange, event.pointerType, event);
+			if(Math.max(vec2.len(this.deltaChange)) < 100){
+				this.sendEvent("onMouseMove", this.position, this.button, this.deltaChange, event.pointerType, event);
+			}
 		}
 	},
 
@@ -252,15 +258,30 @@ var Input = Class.extend({
 		//Skip if it is still redrawing
 		if(event){
 			this.translateCoordinates(this.position, event.clientX, event.clientY);
+			var scale = event.scale - this.lastPinch;
+			this.lastPinch = event.scale;
 			this.sendEvent("onPinch", this.position, event.scale, "touch", event);
 		}
+	},
+
+	onPinchEnd: function(){
+		this.lastPinch = 0;
 	},
 
 	onRotate: function(event){
 		if(event){
 			this.translateCoordinates(this.position, event.clientX, event.clientY);
-			this.sendEvent("onRotate", this.position, event.rotation, "touch", event);
+			var rotation = event.rotation - this.lastRotation;
+			this.lastRotation = event.rotation;
+			if(Math.max(rotation) < 10){ //limit too big jumps
+				this.sendEvent("onRotate", this.position, rotation, "touch", event);
+			}
+
 		}
+	},
+
+	onRotateEnd: function(event){
+		this.lastRotation = 0;
 	},
 
 
