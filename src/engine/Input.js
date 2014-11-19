@@ -144,7 +144,7 @@ var Input = Class.extend({
 			this.hammertime.on("tap", ClassCallback(this, this.onTap));
 			this.hammertime.on("transformstart", ClassCallback(this, this.onTransformStart));
 			this.hammertime.on("pan", ClassCallback(this, this.onPan));
-			this.hammertime.on("release", ClassCallback(this, this.onTouchRelease));
+			this.hammertime.on("panend", ClassCallback(this, this.onPanEnd));
 			this.hammertime.on("rotate", ClassCallback(this, this.onRotate));
 			this.hammertime.on("touch", ClassCallback(this, this.onTouch));
 		}
@@ -232,6 +232,10 @@ var Input = Class.extend({
 		}
 	},
 
+	onPanEnd: function(){
+		vec2.set(this.lastDelta, 0, 0);
+	},
+
 	onTouch: function(){
 		//console.info("onTouch");
 	},
@@ -262,14 +266,6 @@ var Input = Class.extend({
 
 	onMultiDrag: function(event){
 
-	},
-
-	onTouchRelease: function(){
-		this.lastPinch = 0;
-		this.lastRotation = 0;
-		this.lastDeltaY = 0;
-		this.lastDeltaX = 0;
-		vec2.set(this.lastDelta, 0, 0);
 	},
 
 	onMouseWheel: function(event){
