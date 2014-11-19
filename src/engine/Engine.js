@@ -141,6 +141,7 @@ var Engine=Class.extend({
 	/** Runs engine to render a single frame and do an update */
 	frame: function() {
 		this.context.engine = this;
+		this.input.update(this);
 		this.scene.update(this);
 		this.scene.render(this.context);
 		this.fps.measure();

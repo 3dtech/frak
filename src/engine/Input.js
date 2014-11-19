@@ -302,7 +302,6 @@ var Input = Class.extend({
 			this.sendEvent("onKeyDown", event.which, "keyboard", event);
 			this.sendEvent("onKeyStateChange", event.which, true, "keyboard", event);
 			this.keyStates[event.which] = true;
-			this.processKeyEvents();
 		}
 	},
 
@@ -311,8 +310,14 @@ var Input = Class.extend({
 			this.sendEvent("onKeyUp", event.which, "keyboard", event);
 			this.sendEvent("onKeyStateChange", event.which, false, "keyboard", event);
 			delete this.keyStates[event.which];
-			this.processKeyEvents();
+
 		}
+	},
+	/**
+	*	Called when engine redraws
+	*/
+	update: function(){
+		this.processKeyEvents();
 	},
 
 	processKeyEvents: function() {
