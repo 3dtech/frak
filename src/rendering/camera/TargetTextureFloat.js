@@ -3,6 +3,7 @@ var TargetTextureFloat = TargetTexture.extend({
 		var floatTextureExt = !!context.gl.getExtension('OES_texture_float');
 		if (!floatTextureExt)
 			throw('TargetTextureFloat: "OES_texture_float" WebGL extension is not supported on this system.');
+		this.halfFloatTextureExt = context.gl.getExtension('OES_texture_half_float');
 
 		this._super(sizeOrTexture, context, useDepthTexture);
 	},
@@ -12,6 +13,17 @@ var TargetTextureFloat = TargetTexture.extend({
 	},
 
 	getDataType: function(context) {
+		if (navigator && navigator.platform) {
+			switch (navigator.platform) {
+				case 'iPad':
+				case 'iPod':
+				case 'iPhone':
+					return this.halfFloatTextureExt.HALF_FLOAT_OES;
+
+				default:
+					return context.gl.FLOAT;
+			}
+		}
 		return context.gl.FLOAT;
 	},
 
