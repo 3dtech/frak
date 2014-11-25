@@ -144,19 +144,16 @@ var ShadowMapRenderStage=RenderStage.extend({
 		}
 		// gl.disable(gl.CULL_FACE);
 
-		for (var i in this.parent.transparentRenderers) {
-			if ((this.parent.transparentRenderers[i].layer & light.shadowMask) &&
-				this.parent.transparentRenderers[i].visible &&
-				this.parent.transparentRenderers[i].castShadows) {
-
-				context.modelview.push();
-				context.modelview.multiply(this.parent.transparentRenderers[i].matrix);
-
-				this.parent.transparentRenderers[i].renderGeometry(context, this.material.shader);
-
-				context.modelview.pop();
-			}
-		}
+		// for (var i in this.parent.transparentRenderers) {
+		// 	if ((this.parent.transparentRenderers[i].layer & light.shadowMask) &&
+		// 		this.parent.transparentRenderers[i].visible &&
+		// 		this.parent.transparentRenderers[i].castShadows) {
+		// 		context.modelview.push();
+		// 		context.modelview.multiply(this.parent.transparentRenderers[i].matrix);
+		// 		this.parent.transparentRenderers[i].renderGeometry(context, this.material.shader);
+		// 		context.modelview.pop();
+		// 	}
+		// }
 
 		this.material.unbind();
 
