@@ -95,12 +95,14 @@ var RenderStage=Class.extend({
 	enable: function() {
 		this.enabled = true;
 		this.onEnable();
+		return this;
 	},
 
 	/** Disables this render stage. */
 	disable: function() {
 		this.enabled = false;
 		this.onDisable();
+		return this;
 	},
 
 	// Events
