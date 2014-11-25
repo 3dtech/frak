@@ -65,7 +65,8 @@ var Renderer=Class.extend({
 			if (context.camera.near) {
 				if ('zNear' in uniforms) uniforms.zNear.value = context.camera.near;
 				else uniforms.zNear = new UniformFloat(context.camera.near);
-
+			}
+			if (context.camera.far) {
 				if ('zFar' in uniforms) uniforms.zFar.value = context.camera.far;
 				else uniforms.zFar = new UniformFloat(context.camera.far);
 			}
