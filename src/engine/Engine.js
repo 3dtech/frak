@@ -33,6 +33,7 @@ var Engine=Class.extend({
 			'requestedFPS': 30.0,
 			'debug': false,
 			'antialias': false,
+			'ssao': false,
 			'transparencyMode': 'default',
 			'context': new RenderingContext(canvas)
 		}, options);

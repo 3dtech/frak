@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 precision highp float;
 
-uniform sampler2D tex0;
+uniform sampler2D src;
 
 uniform vec2 ViewportSize;
 uniform float reduce_min;
@@ -97,5 +97,5 @@ vec4 fxaa(sampler2D tex, vec2 fragCoord) {
 }
 
 void main () {
-	gl_FragColor = fxaa(tex0, gl_FragCoord.xy);
+	gl_FragColor = fxaa(src, gl_FragCoord.xy);
 }

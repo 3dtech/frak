@@ -8,7 +8,7 @@
 	</head>
 	<body>
 		<!-- Canvas -->
-		<canvas id="canvas" style="z-index: 1; border: none;" width="1200" height="800"></canvas>
+		<canvas tabindex="1" id="canvas" style="z-index: 1; border: none;" width="1200" height="800"></canvas>
 
 		<div style="position: absolute; right: 10px; top: 10px;">
 			<div id="fps"></div>
@@ -16,12 +16,6 @@
 			<button id="ssao-toggle">Enabled</button>
 			<div>Only</div>
 			<button id="only-toggle">Disabled</button>
-			<div>Position Buffer</div>
-			<button id="pb-toggle">Enabled</button>
-			<div>SSAO Buffer</div>
-			<button id="sb-toggle">Enabled</button>
-			<div>SSAO Blur</div>
-			<button id="ss-toggle">Enabled</button>
 		</div>
 
 		<!-- Libraries -->
@@ -42,10 +36,11 @@
 			};
 
 			function setupScene(scene) {
-				//scene.light.shadowCasting = true;
+				scene.light.shadowCasting = true;
 				scene.light.intensity = 1.5;
 
-				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
+				scene.camera.backgroundColor = new Color(0.4, 0.4, 0.4, 1.0);
+				scene.cameraComponent.setClipPlanes(1.0, 40.0);
 
 				var texture = scene.engine.assetsManager.texturesManager.add("data/lena.jpg");
 				var material = new Material(
@@ -82,9 +77,9 @@
 				}
 
 				var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
-				orbitController.distance=20.0;
-				orbitController.minimumDistance=0.5;
-				orbitController.maximumDistance=100.0;
+				orbitController.distance=16.0;
+				orbitController.minimumDistance=1.5;
+				orbitController.maximumDistance=40.0;
 				orbitController.target.value=scene.root.transform;
 			}
 
@@ -93,12 +88,8 @@
 				$('#ssao-toggle').click(function() {
 					var stage = engine.scene.camera.renderStage;
 					var ss = stage.getStageByType(SSAOPostProcess);
-					var pb = ss.parent.generator.positionBufferStage;
-					var sb = ss.parent.generator.ssaoBufferStage;
 					if (ss.enabled) {
 						ss.disable();
-						pb.disable();
-						sb.disable();
 						$('#ssao-toggle').text('Disabled');
 						$('#pb-toggle').text('Disabled');
 						$('#sb-toggle').text('Disabled');
@@ -106,8 +97,6 @@
 					}
 					else {
 						ss.enable();
-						pb.enable();
-						sb.enable();
 						$('#ssao-toggle').text('Enabled');
 						$('#pb-toggle').text('Enabled');
 						$('#sb-toggle').text('Enabled');
@@ -128,44 +117,9 @@
 					}
 				});
 
-				$('#pb-toggle').click(function() {
-					var pb = engine.scene.camera.renderStage.generator.positionBufferStage;
-					if (pb.enabled) {
-						pb.disable();
-						$('#pb-toggle').text('Disabled');
-					}
-					else {
-						pb.enable();
-						$('#pb-toggle').text('Enabled');
-					}
-				});
-
-				$('#sb-toggle').click(function() {
-					var sb = engine.scene.camera.renderStage.generator.ssaoBufferStage;
-					if (sb.enabled) {
-						sb.disable();
-						$('#sb-toggle').text('Disabled');
-					}
-					else {
-						sb.enable();
-						$('#sb-toggle').text('Enabled');
-					}
-				});
-
-				$('#ss-toggle').click(function() {
-					var ss = engine.scene.camera.renderStage.getStageByType(SSAOPostProcess);
-					if (ss.enabled) {
-						ss.disable();
-						$('#ss-toggle').text('Disabled');
-					}
-					else {
-						ss.enable();
-						$('#ss-toggle').text('Enabled');
-					}
-				});
-
 				engine=new Engine($('#canvas'), {
 					'assetsPath': '../assets/',
+					'antialias': true,
 					'ssao': true
 				});
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally

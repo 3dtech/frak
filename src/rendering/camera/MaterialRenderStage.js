@@ -39,10 +39,7 @@ var MaterialRenderStage=RenderStage.extend({
 
 		// Rendering order is defined as follows:
 		this.shadowMapStage = this.addStage(new ShadowMapRenderStage());
-		this.positionBufferStage = this.addStage(new PositionBufferRenderStage());
-		this.ssaoBufferStage = this.addStage(new SSAOBufferRenderStage());
-		this.positionBufferStage.disable();
-		this.ssaoBufferStage.disable();
+		this.depthStage = this.addStage(new DepthRenderStage()).disable();
 		this.oitStage = this.addStage(new OITRenderStage());
 		this.addStage(this.bindCameraTarget);
 		this.skyboxStage = this.addStage(new SkyboxRenderStage());
@@ -79,8 +76,7 @@ var MaterialRenderStage=RenderStage.extend({
 
 	onStart: function(context, engine, camera) {
 		if (engine.options.ssao === true) {
-			this.positionBufferStage.enable();
-			this.ssaoBufferStage.enable();
+			this.depthStage.enable();
 		}
 	},
 
