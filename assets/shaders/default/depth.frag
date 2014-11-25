@@ -1,14 +1,8 @@
-// Fallback shader
-precision mediump float; 
+// Shader for rendering linear depth values into a floating point texture
+precision mediump float;
 
-uniform vec4 color;
-uniform float nearDistance;
-uniform float farDistance;
+varying float depth;
 
-varying vec4 fragPosition;
-
-void main(void) { 
-	float d=farDistance-nearDistance;
-	float z=(fragPosition.z-nearDistance)/d;
-	gl_FragColor = vec4(z, z, z, 1.0);
+void main() {
+	gl_FragColor.r = depth;
 }
