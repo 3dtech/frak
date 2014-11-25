@@ -52,6 +52,7 @@ var DepthRenderStage = RenderStage.extend({
 		gl.depthMask(true);
 		this.material.bind();
 
+		// Render opaque geometry
 		var renderers = this.parent.solidRenderers;
 		for (var i=0; i<renderers.length; ++i) {
 			context.modelview.push();
@@ -59,6 +60,9 @@ var DepthRenderStage = RenderStage.extend({
 			renderers[i].renderGeometry(context, this.material.shader);
 			context.modelview.pop();
 		}
+
+		// Render alpha mapped portions of opaque geometry
+		this.parent.oitStage.renderAlphaMapped(context, scene, camera);
 
 		this.material.unbind();
 		gl.disable(gl.DEPTH_TEST);
