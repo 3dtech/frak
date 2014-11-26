@@ -302,7 +302,7 @@ var MaterialRenderStage=RenderStage.extend({
 			context.modelview.multiply(renderer.matrix);
 
 			var samplers;
-			if (material.samplers.length > 0) {
+			if (renderer.material.samplers.length > 0) {
 				samplers = globalSamplers;
 			}
 			else {
