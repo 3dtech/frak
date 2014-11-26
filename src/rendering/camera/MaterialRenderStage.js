@@ -19,7 +19,8 @@ var MaterialRenderStage=RenderStage.extend({
 		this.transparentRenderers=[];
 		this.transparentRendererBatches={};
 
-		this.shadowMapFallbackSampler = false; // TODO: refactor?
+		this.shadowMapFallbackSampler = null;
+		this.diffuseFallback = null;
 
 		this.bindCameraTarget = {
 			started: true,
@@ -75,6 +76,8 @@ var MaterialRenderStage=RenderStage.extend({
 	},
 
 	onStart: function(context, engine, camera) {
+		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
+
 		if (engine.options.ssao === true) {
 			this.depthStage.enable();
 		}
@@ -86,7 +89,7 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Prepares shadow-mapping uniforms that are shared between all materials. */
 	prepareShadowContext: function(context, scene) {
-		if (this.shadowMapFallbackSampler===false) {
+		if (this.shadowMapFallbackSampler === null) {
 			this.shadowMapFallbackSampler = new Sampler('shadow0', scene.engine.WhiteTexture);
 		}
 
@@ -253,6 +256,9 @@ var MaterialRenderStage=RenderStage.extend({
 
 			// Bind samplers
 			var samplers=globalSamplers.concat(material.samplers);
+			if (material.samplers.length == 0) {
+				samplers.push(this.diffuseFallback);
+			}
 			shader.bindSamplers(samplers);
 
 			// Bind material uniforms
@@ -295,7 +301,14 @@ var MaterialRenderStage=RenderStage.extend({
 			context.modelview.push();
 			context.modelview.multiply(renderer.matrix);
 
-			renderer.material.bind(renderer.getDefaultUniforms(context), globalSamplers);
+			var samplers;
+			if (material.samplers.length > 0) {
+				samplers = globalSamplers;
+			}
+			else {
+				samplers = globalSamplers.concat([this.diffuseFallback]);
+			}
+			renderer.material.bind(renderer.getDefaultUniforms(context), samplers);
 			renderer.render(context);
 			renderer.material.unbind(globalSamplers);
 

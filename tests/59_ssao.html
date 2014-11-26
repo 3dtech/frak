@@ -60,7 +60,14 @@
 				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, rotation0, [0,0,-2]);
 				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, rotation1, [2,0, 2]);
 				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, rotation1, [0,0, 0]);
-				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, rotation1, [-2,0,-2]);
+
+				var yellow = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/diffuse"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:0.0, a:1.0}) },
+					[]
+				);
+				var yellowBox = Primitives.box([0,0,0], [1.0, 1.0, 0.5], yellow);
+				mat4.fromRotationTranslation(scene.root.addNode(yellowBox).transform.relative, rotation1, [-2,0,-2]);
 
 				var transparentMaterial = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),

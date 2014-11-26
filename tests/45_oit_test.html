@@ -49,14 +49,14 @@
 				var red = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
 					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.5}) },
-					[ scene.engine.WhiteTextureSampler ]
+					[]
 				);
 				red.name = 'red';
 
 				var blue = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
 					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.5}) },
-					[ scene.engine.WhiteTextureSampler ]
+					[]
 				);
 				blue.name = 'blue';
 
