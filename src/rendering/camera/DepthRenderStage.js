@@ -50,9 +50,9 @@ var DepthRenderStage = RenderStage.extend({
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
 		gl.depthMask(true);
-		this.material.bind();
 
 		// Render opaque geometry
+		this.material.bind();
 		var renderers = this.parent.solidRenderers;
 		for (var i=0; i<renderers.length; ++i) {
 			context.modelview.push();
@@ -60,14 +60,60 @@ var DepthRenderStage = RenderStage.extend({
 			renderers[i].renderGeometry(context, this.material.shader);
 			context.modelview.pop();
 		}
+		this.material.unbind();
 
 		// Render alpha mapped portions of opaque geometry
-		this.parent.oitStage.renderAlphaMapped(context, scene, camera);
+		this.renderAlphaMapped(context, scene, camera);
 
-		this.material.unbind();
 		gl.disable(gl.DEPTH_TEST);
 
 		this.target.unbind(context);
-	}
+	},
 
+	renderAlphaMapped: function(context, scene, camera) {
+		var batches = this.parent.transparentRendererBatches;
+		var shader = this.material.shader;
+
+		shader.use();
+
+		// Bind shared uniforms
+		shader.bindUniforms(this.material.uniforms);
+		shader.bindUniforms(this.parent.sharedUniforms);
+		if (context.light && context.light.uniforms)
+			shader.bindUniforms(context.light.uniforms);
+
+		for (var i in batches) {
+			var batch = batches[i];
+			var batchMaterial = batch[0].material;
+
+			var samplers;
+			if (this.material.samplers.length>0) {
+				samplers = this.material.samplers.concat(batchMaterial.samplers);
+			}
+			else {
+				samplers = batchMaterial.samplers;
+			}
+
+			// Bind material uniforms and samplers
+			shader.bindUniforms(batchMaterial.uniforms);
+			shader.bindSamplers(samplers);
+
+			for (var j=0; j<batch.length; ++j) {
+				context.modelview.push();
+				context.modelview.multiply(batch[j].matrix);
+
+				// Bind renderer specific uniforms
+				this.parent.rendererUniforms.model.value = batch[j].matrix;
+				this.parent.rendererUniforms.modelview.value = context.modelview.top();
+				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
+				shader.bindUniforms(this.parent.rendererUniforms);
+
+				batch[j].renderGeometry(context, shader);
+
+				context.modelview.pop();
+			}
+
+			shader.unbindSamplers(samplers);
+		}
+	}
 });

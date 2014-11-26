@@ -160,7 +160,7 @@ void main(void) {
 
 	// Alpha reveal amount pass
 	else if (render_mode == 1) {
-		gl_FragColor = vec4(color.a); // total amount revealed (blending: 0; 1-SRCa)
+		gl_FragColor = vec4(color.a); // total amount revealed (blending: 0; 1-src.a)
 	}
 
 	// Alpha mapping pass

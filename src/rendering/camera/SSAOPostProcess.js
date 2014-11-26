@@ -19,11 +19,16 @@ var SSAOPostProcess = PostProcess.extend({
 		);
 		this.material.name = "SSAO";
 
+		if (engine.options.transparencyMode != 'sorted') {
+			this.material.samplers.push(this.parent.generator.oitStage.transparencyWeightSampler);
+		}
+
 		engine.assetsManager.load();
 	},
 
 	onPreRender: function(context, scene, camera) {
 		this._super(context, scene, camera);
+
 
 		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.size[0], this.parent.size[1]);
 		this.material.uniforms.ssaoOnly.value = (this.ssaoOnly === true) ? 1 : 0;

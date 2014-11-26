@@ -45,12 +45,12 @@ var CameraComponent=Component.extend({
 			this.camera.target.setSize(context.canvas.width(), context.canvas.height());
 		}
 
-		if (engine.options.ssao === true) {
-			this.camera.renderStage.addStage(new SSAOPostProcess());
-		}
-
 		if (engine.options.transparencyMode == 'blended' || engine.options.transparencyMode == 'stochastic') {
 			this.camera.renderStage.addStage(new OITPostProcess());
+		}
+
+		if (engine.options.ssao === true) {
+			this.camera.renderStage.addStage(new SSAOPostProcess());
 		}
 
 		if (engine.options.antialias === true) {

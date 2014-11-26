@@ -16,6 +16,7 @@ precision mediump float;
 #define PI 3.14159265
 
 uniform sampler2D depth0;
+uniform sampler2D oitWeight;
 uniform sampler2D src;
 
 uniform float zNear;
@@ -34,7 +35,6 @@ float aoclamp = 0.25; // depth clamp - reduces haloing at screen edges
 bool noise = true; // use noise instead of pattern for sample dithering
 float noiseamount = 0.0002; // dithering amount
 float diffarea = 0.4; // self-shadowing reduction
-// float ssaoLuminanceInfluence = 0.4; // how much luminance affects occlusion
 
 vec2 rand(vec2 coord) {
 	float noiseX = ((fract(1.0-coord.s*(ViewportSize.x/2.0))*0.25)+(fract(coord.t*(ViewportSize.y/2.0))*0.75))*2.0-1.0;
@@ -95,6 +95,7 @@ void main() {
 
 	vec2 noise = rand(texCoord);
 	float depth = readDepth(texCoord);
+	float reveal = texture2D(oitWeight, texCoord).a;
 
 	float w = inverseVP.x/clamp(depth, aoclamp,1.0)+(noise.x*(1.0-noise.x));
 	float h = inverseVP.y/clamp(depth, aoclamp,1.0)+(noise.y*(1.0-noise.y));
@@ -119,7 +120,7 @@ void main() {
 	}
 
 	ao /= float(samples);
-	ao = 1.0-ao;
+	ao = 1.0 - ao * reveal;
 
 	vec3 color = texture2D(src, texCoord).rgb;
 	vec3 lumcoeff = vec3(0.299, 0.587, 0.114);
