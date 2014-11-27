@@ -1,5 +1,5 @@
 /** Scene-node class that keeps only subnodes and components. Transform component is omitted */
-var EmptyNode=Serializable.extend({ 
+var EmptyNode=Serializable.extend({
 	/** Constructs new node */
 	init: function(name) {
 		this._super();
@@ -12,18 +12,21 @@ var EmptyNode=Serializable.extend({
 		this.tags=[];
 		// this._super(); // FIXME: remove this or implement init() in Serializable
 	},
-	
+
 	excluded: function() {
 		return ["parent", "scene"];
 	},
-	
+
 	type: function() {
 		return "EmptyNode";
 	},
-	
+
 	// --------- Methods ---------
 	/** Add new node */
 	addNode: function(node) {
+		if (!(node instanceof EmptyNode))
+			throw "addNode: The given node is not a subclass of EmptyNode";
+
 		this.subnodes.push(node);
 		var me=this;
 		node.parent=this;
@@ -33,7 +36,7 @@ var EmptyNode=Serializable.extend({
 		}
 		node.onAdd(this);
 		if(me.scene.engine) {
-			node.onEachChildComponent(function(c) { 
+			node.onEachChildComponent(function(c) {
 				if(!c.started) {
 					if(me.scene.starting || me.scene.started===false) {
 						me.scene.startingQueue.push(c);
@@ -48,7 +51,7 @@ var EmptyNode=Serializable.extend({
 		}
 		return node;
 	},
-	
+
 	/** Removes given node */
 	removeNode: function(node) {
 		var me=this;
@@ -65,7 +68,7 @@ var EmptyNode=Serializable.extend({
 		}
 		return node;
 	},
-	
+
 	/** Removes all subnodes of this node */
 	removeSubnodes: function() {
 		var nodes=this.subnodes.slice(0);	// Create a temporary copy of nodes list
@@ -73,7 +76,7 @@ var EmptyNode=Serializable.extend({
 			this.removeNode(nodes[n]);
 		}
 	},
-	
+
 	/** Adds component to this node */
 	addComponent: function(component) {
 		if(!component.type()) throw "Unable to add a component that doesn't define it's type by returning it from type() method";
@@ -82,15 +85,15 @@ var EmptyNode=Serializable.extend({
 		component.onAdd(this);
 		if(this.scene) {
 			component.onAddScene(this);
-			this.onAddComponent(component); 
+			this.onAddComponent(component);
 		}
 		if(this.scene.engine && !component.started) {
-			component.start(this.scene.engine.context, this.scene.engine); 
+			component.start(this.scene.engine.context, this.scene.engine);
 			component.started=true;
 		}
 		return component;
 	},
-	
+
 	/** Removes component from this node */
 	removeComponent: function(component) {
 		for (var c in this.components) {
@@ -100,7 +103,7 @@ var EmptyNode=Serializable.extend({
 			}
 		}
 		if(this.scene.engine && component.started) {
-			component.onEnd(this.scene.engine.context, this.scene.engine); 
+			component.onEnd(this.scene.engine.context, this.scene.engine);
 			component.started=false;
 		}
 		if(this.scene) {
@@ -111,7 +114,7 @@ var EmptyNode=Serializable.extend({
 		component.node=false;
 		return component;
 	},
-	
+
 	/** Removes all components of the given type */
 	removeComponentsByType: function(componentType) {
 		var removed=[];
@@ -124,7 +127,7 @@ var EmptyNode=Serializable.extend({
 		}
 		for (var i in removed) {
 			if(this.scene.engine && removed[i].started) {
-				removed[i].onEnd(this.scene.engine.context, this.scene.engine); 
+				removed[i].onEnd(this.scene.engine.context, this.scene.engine);
 				removed[i].started=false;
 			}
 			if(this.scene) {
@@ -136,7 +139,7 @@ var EmptyNode=Serializable.extend({
 		}
 		return removed;
 	},
-	
+
 	/** Returns the first component of the given type */
 	getComponent: function(componentType) {
 		for (var c in this.components) {
@@ -145,7 +148,7 @@ var EmptyNode=Serializable.extend({
 		}
 		return false;
 	},
-	
+
 	/** Returns all components of the given type */
 	getComponents: function(componentType) {
 		var a=[];
@@ -157,15 +160,15 @@ var EmptyNode=Serializable.extend({
 			return false;
 		return a;
 	},
-	
-	/** Calculates relative transform of the node from it's own absolute transform 
+
+	/** Calculates relative transform of the node from it's own absolute transform
 		and the absolute transform of its parent */
 	calculateRelativeFromAbsolute: function() {
 		if(!this.parent.transform) return;
 		this.transform.calculateRelativeFromAbsolute(this.parent.transform.absolute);
 	},
-	
-	/** Creates a clone from the semi-deep clone from the node. 
+
+	/** Creates a clone from the semi-deep clone from the node.
 		All child nodes and all components are also instantiated and can decide which parts of
 		them are copied and which parts will reference original data. In general
 		geometrical data is referenced and materials are instantiated such that
@@ -182,37 +185,37 @@ var EmptyNode=Serializable.extend({
 		}
 		return instance;
 	},
-	
-	/** Enables this node and all its subnodes 
+
+	/** Enables this node and all its subnodes
 		@param onlyThisNode If true, then this function is not recursive [optional] */
 	enable: function(onlyThisNode) {
 		if(onlyThisNode) this.onEachComponent(function(c) { c.enable(); } );
 		else this.onEachChildComponent(function(c) { c.enable(); } );
 	},
-	
-	/** Disable this node and all its subnodes 
+
+	/** Disable this node and all its subnodes
 		@param onlyThisNode If true, then this function is not recursive [optional] */
 	disable: function(onlyThisNode) {
 		if(onlyThisNode) this.onEachComponent(function(c) { c.disable(); } );
 		else this.onEachChildComponent(function(c) { c.disable(); } );
 	},
-	
+
 	// --------- Events ---------
 	/** Called when this node is added to parent node */
 	onAdd: function(parent) {},
-	
+
 	/** Called when this node is removed from parent node */
 	onRemove: function(parent) {},
-	
+
 	/** Called when component is added and this node is under a scene */
 	onAddComponent: function(component) {
 		this.scene.components.push(component);
-		
+
 		if(component.onUpdate!=Component.prototype.onUpdate) this.scene.updatedComponents.push(component);
 		if(component.onPreRender!=Component.prototype.onPreRender) this.scene.preRenderedComponents.push(component);
 		if(component.onPostRender!=Component.prototype.onPostRender) this.scene.postRenderedComponents.push(component);
 	},
-	
+
 	/** Called when component is removed and this node was under a scene */
 	onRemoveComponent: function(component) {
 		function removeIfExists(list, component) {
@@ -222,51 +225,51 @@ var EmptyNode=Serializable.extend({
 				return;
 			}
 		};
-		
+
 		removeIfExists(this.scene.components, component);
-		
+
 		if(component.onUpdate!=Component.prototype.onUpdate) removeIfExists(this.scene.updatedComponents, component);
 		if(component.onPreRender!=Component.prototype.onPreRender) removeIfExists(this.scene.preRenderedComponents, component);
 		if(component.onPostRender!=Component.prototype.onPostRender) removeIfExists(this.scene.postRenderedComponents, component);
 	},
-	
+
 	// --------- Iterators ---------
 	/** Calls callback method on this node and all child nodes */
 	onEachChild: function(callback) {
 		callback(this);
 		for(var node in this.subnodes) this.subnodes[node].onEachChild(callback);
 	},
-	
+
 	/** Calls callback method on all child nodes, but not on this node */
 	onEachChildExclusive: function(callback) {
 		for(var node in this.subnodes) {
 			this.subnodes[node].onEachChild(callback);
 		}
 	},
-	
+
 	/** Calls callback method on all components of this node */
 	onEachComponent: function(callback) {
 		for(var c in this.components) {
 			callback(this.components[c]);
 		}
 	},
-	
+
 	/** Calls callback method on all components of this node and its child nodes */
 	onEachChildComponent: function(callback) {
 		this.onEachChild(function(child) {
 			child.onEachComponent(callback);
 		});
 	},
-	
+
 	/** Calls callback method on all components of child nodes, but not on this node */
 	onEachChildComponentExclusive: function(callback) {
 		this.onEachChildExclusive(function(child) {
 			child.onEachComponent(callback);
 		});
 	},
-	
-	/** Gets all components in this node or child nodes 
-		@param type Type of component to be searched for 
+
+	/** Gets all components in this node or child nodes
+		@param type Type of component to be searched for
 		@return An array of components */
 	getChildComponentsOfType: function(type) {
 		var result=[];
@@ -279,7 +282,7 @@ var EmptyNode=Serializable.extend({
 	/** Finds Nodes by slash-delimited ('/') path.
 		If the path starts with a '/' the search begins at the root node of the scene.
 		Otherwise the subtree of the current node is searched.
-		@param path A path to a Node 
+		@param path A path to a Node
 		@return {Node} at the given path or false if the target was not found */
 	find: function(path) {
 		var parts = path.split("/");
