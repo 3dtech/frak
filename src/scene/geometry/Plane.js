@@ -59,7 +59,7 @@ var Plane=Class.extend({
 		@return {vec3} The intersection point */
 	getLineIntersection: function(point, direction, out) {
 		if (!out) out=vec3.create();
-		var d = getDistanceOnLine(point, direction);
+		var d = this.getDistanceOnLine(point, direction);
 		vec3.scaleAndAdd(out, point, direction, d);
 		return out;
 	},
