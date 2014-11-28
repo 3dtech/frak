@@ -57,6 +57,7 @@ var DepthRenderStage = RenderStage.extend({
 		for (var i=0; i<renderers.length; ++i) {
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
+			this.material.shader.bindUniforms(renderers[i].material.uniforms);
 			renderers[i].renderGeometry(context, this.material.shader);
 			context.modelview.pop();
 		}
