@@ -49,13 +49,13 @@ var CameraComponent=Component.extend({
 			this.camera.renderStage.addStage(new OITPostProcess());
 		}
 
+		if (engine.options.ssao === true) {
+			this.camera.renderStage.addStage(new SSAOPostProcess());
+		}
+
 		if (engine.options.antialias === true) {
 			this.camera.renderStage.addStage(new AntiAliasPostProcess());
 		}
-        
-        if (engine.options.ssao === true) {
-            this.camera.renderStage.addStage(new SSAOPostProcess());
-        }
 
 		this.camera.renderStage.start(context, engine, this.camera);
 	},

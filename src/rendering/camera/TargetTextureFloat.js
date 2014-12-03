@@ -1,8 +1,16 @@
 var TargetTextureFloat = TargetTexture.extend({
-	init: function(sizeOrTexture, context, useDepthTexture) {
-		var floatTextureExt = !!context.gl.getExtension('OES_texture_float');
-		if (!floatTextureExt)
-			throw('TargetTextureFloat: "OES_texture_float" WebGL extension is not supported on this system.');
+	init: function(sizeOrTexture, context, useDepthTexture, useNearestFiltering) {
+		this.extHalfFloat = context.gl.getExtension('OES_texture_half_float');
+		this.extFloat = context.gl.getExtension('OES_texture_float');
+		if (!this.extFloat && !this.extHalfFloat)
+			throw('TargetTextureFloat: Floating point textures are not supported on this system.');
+
+		this.linearFloat = null;
+		this.linearHalf = null;
+		if (!useNearestFiltering) {
+			this.linearFloat = context.gl.getExtension('OES_texture_float_linear');
+			this.linearHalf = context.gl.getExtension('OES_texture_half_float_linear');
+		}
 
 		this._super(sizeOrTexture, context, useDepthTexture);
 	},
@@ -12,7 +20,26 @@ var TargetTextureFloat = TargetTexture.extend({
 	},
 
 	getDataType: function(context) {
+		if (this.extHalfFloat) {
+			if (navigator && navigator.platform) {
+				switch (navigator.platform) {
+					case 'iPad':
+					case 'iPod':
+					case 'iPhone':
+						return this.extHalfFloat.HALF_FLOAT_OES;
+
+					default:
+						return context.gl.FLOAT;
+				}
+			}
+		}
 		return context.gl.FLOAT;
+	},
+
+	getTextureFilter: function(context) {
+		if (this.linearFloat && this.linearHalf)
+			return context.gl.LINEAR;
+		return context.gl.NEAREST;
 	},
 
 	build: function(context) {
@@ -25,8 +52,8 @@ var TargetTextureFloat = TargetTexture.extend({
 			gl.bindTexture(gl.TEXTURE_2D, this.texture.glTexture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.getTextureFilter(context));
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.getTextureFilter(context));
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.size[0], this.size[1], 0, gl.RGBA, this.getDataType(context), null);
 			gl.bindTexture(gl.TEXTURE_2D, null);
 		}

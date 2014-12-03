@@ -5,6 +5,7 @@ var OITRenderStage = RenderStage.extend({
 	init: function() {
 		this._super();
 
+		this.diffuseFallback = null;
 		this.oitClearColor = new Color(0.0, 0.0, 0.0, 0.0);
 		this.transparencyTarget = false;
 		this.transparencySampler = false;
@@ -15,6 +16,7 @@ var OITRenderStage = RenderStage.extend({
 
 	onStart: function(context, engine, camera) {
 		var size = camera.target.size;
+		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
 		this.transparencyTarget = new TargetTextureFloat(size, context, false);
 		this.transparencySampler = new Sampler('oitAccum', this.transparencyTarget.texture);
 		this.transparencyWeight = new TargetTextureFloat(size, context, false);
@@ -73,6 +75,10 @@ var OITRenderStage = RenderStage.extend({
 			}
 			else {
 				samplers = batchMaterial.samplers;
+			}
+
+			if (batchMaterial.samplers.length == 0) {
+				samplers.push(this.diffuseFallback);
 			}
 
 			// Bind material uniforms and samplers

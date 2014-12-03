@@ -35,6 +35,26 @@ var LargeMeshCollider=Collider.extend({
 		// if (this.tree===false)
 		// 	this.rebuild();
 	},
+	
+	clone: function() {
+		// Note: might be buggy
+		var lmc = new LargeMeshCollider();
+		lmc.tree = new CollisionOctreeNode(this.tree.bounds.center, this.tree.bounds.size[0], false);
+		lmc.tree.faces = this.tree.faces;
+		lmc.tree.nodes = {};
+		for (var i in this.tree.nodes) {
+			lmc.tree.nodes[i] = this.tree.nodes[i];
+		}
+		lmc.tree.submeshes = {};
+		for (var i in this.tree.submeshes) {
+			lmc.tree.submeshes[i] = this.tree.submeshes[i];
+		}
+		lmc.invMat = mat4.clone(this.invMat);
+		for (var i in this.meshes) {
+			lmc.meshes.push(this.meshes[i]);
+		}
+		return lmc;
+	},
 
 	// rebuild: function() {
 	// 	this.meshes.length=0;

@@ -8,7 +8,7 @@
 	</head>
 	<body>
 		<!-- Canvas -->
-		<canvas id="canvas" width="1200" height="800"></canvas>
+		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
@@ -49,14 +49,14 @@
 				var red = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
 					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.5}) },
-					[ scene.engine.WhiteTextureSampler ]
+					[]
 				);
 				red.name = 'red';
 
 				var blue = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
 					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.5}) },
-					[ scene.engine.WhiteTextureSampler ]
+					[]
 				);
 				blue.name = 'blue';
 
@@ -123,7 +123,8 @@
 					// 'transparencyMode': 'sorted',
 					'transparencyMode': 'blended',
 					// 'transparencyMode': 'stochastic',
-					'antialias': true
+					'antialias': true,
+					'ssao': true
 				});
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
 				engine.assetsManager.texturesManager.path = './'; // Load test textures locally

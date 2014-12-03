@@ -18,24 +18,21 @@
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
-			var frak=new FRAK(
-				function() {
-					var engine = new Engine($('#canvas'), {
-						'assetsPath': '../assets/'
-					});
-					engine.assetsManager.modelsManager.path = './'; // Load test models locally
+			var engine = new Engine($('#canvas'), {
+				'assetsPath': '../assets/'
+			});
+			engine.assetsManager.modelsManager.path = './'; // Load test models locally
 
-					var scene=engine.scene;
-					var assetsManager=engine.assetsManager;
-					var node=assetsManager.addModel("data/axis_test.data");
+			var scene=engine.scene;
+			var assetsManager=engine.assetsManager;
+			var node=assetsManager.addModel("data/axis_test.data");
+			scene.camera.backgroundColor = new Color(0.4, 0.4, 0.0, 1.0);
 
-					assetsManager.load(function() {
-						scene.root.addNode(node);
-						scene.cameraComponent.fitNodeToView(node);
-
-						engine.run();
-					});
-				});
+			assetsManager.load(function() {
+				scene.root.addNode(node);
+				scene.cameraComponent.fitNodeToView(node);
+				engine.run();
+			});
 		</script>
 	</body>
 </html>

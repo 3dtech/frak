@@ -38,9 +38,10 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.srcSampler = new Sampler('src', this.src.texture);
 
 		this.dst = new TargetTexture(this.size, context, false);
-		this.dstSampler = new Sampler('dst', this.dst.texture);
+		this.dstSampler = new Sampler('src', this.dst.texture);
 
 		this.material = new Material(engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"), {}, []);
+		this.material.name = 'To Screen';
 
 		var vertices = [-1,-1,0, -1,1,0, 1,1,0, 1,-1,0];
 		var uv = [0,0, 0,1, 1,1, 1,0];
@@ -103,7 +104,7 @@ var PostProcessRenderStage = RenderStage.extend({
 
 		material.bind({}, [sampler]);
 		this.renderQuad(context, material.shader);
-		material.unbind();
+		material.unbind([sampler]);
 	},
 
 	renderQuad: function(context, shader) {

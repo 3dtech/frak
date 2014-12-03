@@ -88,7 +88,6 @@ var OrbitController=FlightController.extend({
 
 	/** Zooms in by moving target distance closer */
 	zoomIn: function(deltaTime) {
-		console.info("zoomIn");
 		if (!this.enabled)
 			return;
 		if(!deltaTime) deltaTime=1.0;

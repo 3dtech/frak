@@ -146,6 +146,7 @@ var Input = Class.extend({
 			this.hammertime.on("tap", ClassCallback(this, this.onTap));
 			this.hammertime.on("transformstart", ClassCallback(this, this.onTransformStart));
 			this.hammertime.on("pan", ClassCallback(this, this.onPan));
+			this.hammertime.on("panstart", ClassCallback(this, this.onPanStart));
 			this.hammertime.on("panend", ClassCallback(this, this.onPanEnd));
 			this.hammertime.on("rotate", ClassCallback(this, this.onRotate));
 			this.hammertime.on("rotateend", ClassCallback(this, this.onRotateEnd));
@@ -237,9 +238,28 @@ var Input = Class.extend({
 			}
 		}
 	},
+	
+	onPanStart: function(event){
+		if(event){
+			this.button = 0;
+			if (event.srcEvent && event.srcEvent.button)
+				this.button = event.srcEvent.button;
+			
+			this.translateCoordinates(this.position, event.center.x, event.center.y);
+			this.sendEvent("onButtonDown", this.position, this.button, 0.0, event.pointerType, event);
+		}
+	},
 
-	onPanEnd: function(){
+	onPanEnd: function(event){
 		vec2.set(this.lastDelta, 0, 0);
+		if(event){
+			this.button = 0;
+			if (event.srcEvent && event.srcEvent.button)
+				this.button = event.srcEvent.button;
+			
+			this.translateCoordinates(this.position, event.center.x, event.center.y);
+			this.sendEvent("onButtonUp", this.position, this.button, 0.0, event.pointerType, event);
+		}
 	},
 
 	onTouch: function(){
