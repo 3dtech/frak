@@ -26,6 +26,7 @@ uniform vec2 ViewportSize;
 uniform int ssaoOnly;
 uniform float gdisplace; // Gauss bell center, default: 0.3
 uniform float radius; // AO radius, default: 2.0
+uniform float brightness; // AO brightness, default: 1.0
 uniform float luminanceInfluence; // how much luminance affects occlusion, default: 0.7
 
 const int samples = 16;
@@ -119,7 +120,7 @@ void main() {
 		l = l + dl;
 	}
 
-	ao /= float(samples);
+	ao /= float(samples) * brightness;
 	ao = 1.0 - ao * reveal;
 
 	vec3 color = texture2D(src, texCoord).rgb;
