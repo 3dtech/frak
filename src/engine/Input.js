@@ -20,7 +20,7 @@ var Input = Class.extend({
 		this.hammertime = HammerWF(this.canvas);
 		this.hammertime.get('pinch').set({ enable: true });
 		this.hammertime.get('rotate').set({ enable: true });
-		this.hammertime.get('pan').set({ threshold: 5 });
+		this.hammertime.get('pan').set({ threshold: 0, pointers: 0 });
 
 		this.bindings = {};
 		this.keyStates = {};
@@ -271,12 +271,13 @@ var Input = Class.extend({
 	onRotate: function(event){
 		if(event){
 			this.translateCoordinates(this.position, event.clientX, event.clientY);
+
 			var rotation = event.rotation - this.lastRotation;
+			//console.info(event.rotation, "-", this.lastRotation, "=",rotation );
 			this.lastRotation = event.rotation;
 			if(Math.max(rotation) < 10){ //limit too big jumps
 				this.sendEvent("onRotate", this.position, rotation, "touch", event);
 			}
-
 		}
 	},
 
