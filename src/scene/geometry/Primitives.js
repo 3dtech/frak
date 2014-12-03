@@ -99,6 +99,7 @@ var Primitives = {
 		createSide(points[4], points[5], points[1], points[0]); // bottom
 		createSide(points[3], points[2], points[6], points[7]); // top
 
+		submesh.calculateTangents();
 		submesh.recalculateBounds();
 		mesh.addSubmesh(submesh, material);
 		var box = new Node("Box");

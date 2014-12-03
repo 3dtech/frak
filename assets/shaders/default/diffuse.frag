@@ -11,7 +11,6 @@ uniform float specularStrength;
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;
-// uniform float linearDepthConstant;
 uniform float shadowIntensity;
 
 uniform sampler2D diffuse0;
@@ -19,13 +18,12 @@ uniform sampler2D shadow0;
 
 uniform int useShadows;
 
-varying vec4 worldPosition;
-varying vec4 viewPosition;
-varying vec3 worldNormal;
-varying vec3 viewNormal;
-// varying vec3 viewVector;
-varying vec4 shadowPosition;
 varying vec2 uv0;
+varying vec4 worldPosition;
+varying vec3 worldNormal;
+varying vec4 viewPosition;
+varying vec3 viewNormal;
+varying vec4 shadowPosition;
 
 #define MAXIMUM_HARDNESS 256
 

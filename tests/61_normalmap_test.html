@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Normalmap test</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+
+		<!-- Libraries -->
+		<script src="../lib/jquery-1.11.1.min.js"></script>
+		<script src="../builds/frak-latest.min.js"></script>
+
+		<script type="text/javascript">
+			function setupScene(scene) {
+				scene.light.shadowCasting = true;
+				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
+				// scene.camera.backgroundColor = new Color(1.0, 1.0, 1.0, 1.0);
+
+				scene.cameraComponent.setClipPlanes(0.1, 100.0);
+
+				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");
+				var texNormal = scene.engine.assetsManager.texturesManager.add("data/tiles_n.png");
+
+				var material = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/normalmapped"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[
+						new Sampler("diffuse0", texColor),
+						new Sampler("normal0", texNormal)
+					]
+				);
+				material.name = 'Normalmapped';
+
+				var box = Primitives.box([0,0,0], [1.0, 1.0, 1.0], material);
+				scene.root.addNode(box);
+				mat4.fromRotationTranslation(scene.root.addNode(box).transform.relative, quat.create(), [-3, 0, 0]);
+
+				var model = scene.engine.assetsManager.addModel('data/axis_test.data');
+				scene.root.addNode(model);
+
+				scene.engine.sceneStarted = function() {
+					model.onEachChildComponent(function (component) {
+						if (component instanceof MeshRendererComponent) {
+							for (var i=0; i<component.meshRenderers.length; i++) {
+								component.meshRenderers[i].material = material;
+							}
+						}
+					});
+				}
+
+				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.distance = 6.0;
+				orbitController.minimumDistance = 2.0;
+				orbitController.maximumDistance = 20.0;
+				orbitController.rotation[1] = 1.0;
+				orbitController.target.value = scene.root.transform;
+			}
+
+			var engine;
+			$(function() {
+				engine = new Engine($('#canvas'), {
+					'assetsPath': '../assets/',
+					'transparencyMode': 'blended',
+					'antialias': true,
+					'ssao': true
+				});
+
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+				setupScene(engine.scene);
+				engine.assetsManager.load(function() {
+					engine.run();
+				});
+			});
+		</script>
+	</body>
+</html>
