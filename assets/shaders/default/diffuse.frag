@@ -7,6 +7,7 @@ uniform mat4 view;
 uniform vec4 ambient;
 uniform vec4 diffuse;
 uniform float specularStrength;
+uniform int specularPower;
 
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
@@ -53,9 +54,14 @@ vec4 lighting() {
 	vec3 V = normalize(-viewPosition.xyz);
 	vec3 H = normalize(L + V);
 	float diffuseLight = max(dot(N, L), 0.0) * lightIntensity;
-	float specularLight = min(max(dot(N, H), 0.0), 1.0) * lightIntensity;
-	specularLight = pow(specularLight, 4);
-	return ((ambient * textureColor) + (diffuse * textureColor * lightColor * diffuseLight) + (lightColor * specularLight * specularStrength));
+	float specularLight = min(max(dot(N, H), 0.0), 1.0);
+	specularLight = pow(specularLight, specularPower);
+
+	vec4 ambientColor = ambient * textureColor;
+	vec4 diffuseColor = diffuse * diffuse * textureColor * lightColor * diffuseLight;
+	vec4 specularColor = lightColor * specularLight * specularStrength;
+
+	return ambient + diffuseColor + specularColor;
 }
 
 float ChebychevInequality(vec2 moments, float t) {
