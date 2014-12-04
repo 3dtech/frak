@@ -35,17 +35,18 @@ var Node = EmptyNode.extend({
 	},
 
 	instantiate: function() {
-		var instance=new Node(this.name+' (instance)');
+		var instance = new Node(this.name);
+		instance.isInstanced = true;
 		instance.removeComponentsByType(Transform);
-		instance.layer=this.layer;
-		instance.tags=this.tags.slice(0);
+		instance.layer = this.layer;
+		instance.tags = this.tags.slice(0);
 		for(var n in this.subnodes) {
 			instance.addNode(this.subnodes[n].instantiate());
 		}
 		for(var c in this.components) {
 			instance.addComponent(this.components[c].instantiate());
 		}
-		instance.transform=instance.getComponent(Transform);
+		instance.transform = instance.getComponent(Transform);
 		return instance;
 	},
 

@@ -174,9 +174,10 @@ var EmptyNode=Serializable.extend({
 		geometrical data is referenced and materials are instantiated such that
 		shader and textures are referenced, but uniforms are cloned. */
 	instantiate: function() {
-		var instance=new EmptyNode(this.name+' (instance)');
-		instance.layer=this.layer;
-		instance.tags=this.tags.slice(0);
+		var instance = new EmptyNode(this.name);
+		instance.isInstanced = true;
+		instance.layer = this.layer;
+		instance.tags = this.tags.slice(0);
 		for(var n in this.subnodes) {
 			instance.addNode(this.subnodes[n].instantiate());
 		}
