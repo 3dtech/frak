@@ -247,6 +247,13 @@ var EmptyNode=Serializable.extend({
 			this.subnodes[node].onEachChild(callback);
 		}
 	},
+	
+	/** Calls callback method on all child nodes, but not their children */
+	onEachDirectChild: function(callback) {
+		for(var node in this.subnodes) {
+			callback(this.subnodes[node]);
+		}
+	},
 
 	/** Calls callback method on all components of this node */
 	onEachComponent: function(callback) {
