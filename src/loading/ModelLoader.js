@@ -50,7 +50,9 @@ var ModelLoader=Class.extend({
 	/** Loads a node from hierarchy
 		@param node */
 	loadNode: function(node, parsedNode) {
-		this.nodesByID[parsedNode.id]=node;
+		node.localCollisionID = parsedNode.id;
+		this.nodesByID[node.localCollisionID] = node;
+
 		this.loadTransform(node.transform, parsedNode.transform);
 		this.loadMesh(node, parsedNode.meshes);
 

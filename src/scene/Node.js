@@ -5,6 +5,7 @@ var Node = EmptyNode.extend({
 		this._super(name);
 		this.name=name?name:"Node";
 		this.transform=this.addComponent(new Transform());
+		this.localCollisionID = -1; // This is used to map nodes in the model sub-graph
 	},
 
 	excluded: function() {
@@ -37,6 +38,7 @@ var Node = EmptyNode.extend({
 	instantiate: function() {
 		var instance = new Node(this.name);
 		instance.isInstanced = true;
+		instance.localCollisionID = this.localCollisionID;
 		instance.removeComponentsByType(Transform);
 		instance.layer = this.layer;
 		instance.tags = this.tags.slice(0);

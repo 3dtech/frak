@@ -14,10 +14,10 @@ var CollisionOctreeNode=Class.extend({
 			this.root=parent.root;
 			this.depth=parent.depth+1;
 		} else {
-			this.maxDepth=3;
-			this.root=this;
-			this.nodes=[];
-			this.submeshes=[];
+			this.maxDepth = 3;
+			this.root = this;
+			this.nodes = {}; // Nodes mapped by ID
+			this.submeshes = {}; // Submeshes mapped by ID
 
 			// Ugly, but makes quite a difference
 			this.cache = [
@@ -31,6 +31,46 @@ var CollisionOctreeNode=Class.extend({
 
 		this.faces=false;
 		this.setSize(center, size);
+	},
+
+	clone: function(parent) {
+		var copy = new CollisionOctreeNode(this.bounds.center, this.bounds.size[0], parent ? parent : false);
+		copy.depth = this.depth;
+
+		if (this.nodes) {
+			copy.nodes = {};
+			for (var nodeID in this.nodes)
+				copy.nodes[nodeID] = this.nodes[nodeID];
+		}
+
+		if (this.submeshes) {
+			copy.submeshes = {};
+			for (var meshID in this.submeshes)
+				copy.submeshes[meshID] = this.submeshes[meshID];
+		}
+
+		copy.faces = this.faces; // XXX: saves memory, but might cause problems with shared data
+		// if (this.faces) {
+		// 	copy.faces = {};
+		// 	for (var nodeID in this.faces) {
+		// 		if (!(nodeID in copy.faces))
+		// 			copy.faces[nodeID] = {};
+		// 		for (var meshID in this.faces[nodeID]) {
+		// 			if (!(meshID in copy.faces[nodeID]))
+		// 				copy.faces[nodeID][meshID] = [];
+		// 			copy.faces[nodeID][meshID] = this.faces[nodeID][meshID];
+		// 		}
+		// 	}
+		// }
+
+		if (this.subnodes) {
+			copy.subnodes = [];
+			for (var i=0; i<this.subnodes.length; i++) {
+				copy.subnodes.push(this.subnodes[i].clone(copy));
+			}
+		}
+
+		return copy;
 	},
 
 	getNodeID: function() {
@@ -49,7 +89,7 @@ var CollisionOctreeNode=Class.extend({
 	},
 
 	setSize: function(center, size) {
-		this.bounds=new BoundingBox(center, [size, size, size]);
+		this.bounds = new BoundingBox(center, [size, size, size]);
 	},
 
 	isLeaf: function() {
