@@ -22,6 +22,7 @@ var ShadersManager=Manager.extend({
 
 		this.aliases = {
 			'diffuse': 'shaders/default/diffuse',
+			'normalmapped': 'shaders/default/normalmapped',
 			'transparent': 'shaders/default/transparent',
 			'test': 'shaders/default/test',
 			'fallback': 'shaders/default/fallback',

@@ -1,80 +1,114 @@
-// Diffuse shader
-precision highp float; 
+// Normal mapped diffuse shader
+precision highp float;
 
 uniform mat4 modelview;
 uniform mat4 view;
 
 uniform vec4 ambient;
 uniform vec4 diffuse;
-uniform float diffuseIntensity;
-uniform vec4 specular;
-uniform float specularPower;
-uniform float specularIntensity;
+uniform float specularStrength;
+uniform int specularPower;
 
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;
-// uniform float linearDepthConstant;
 uniform float shadowIntensity;
-uniform float poissonDiscSize;
 
 uniform sampler2D diffuse0;
+uniform sampler2D normal0;
 uniform sampler2D shadow0;
-uniform sampler2D height0;
 
+uniform int useShadows;
+
+varying vec2 uv0;
+varying vec4 worldPosition;
+varying vec3 worldNormal;
 varying vec4 viewPosition;
 varying vec3 viewNormal;
 varying vec4 shadowPosition;
-varying vec2 uv0;
+
+varying mat3 tbn;
+
+#define MAXIMUM_HARDNESS 256
 
 float unpack(vec4 c) {
-	const vec4 bitShifts = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
+	const vec4 bitShifts = vec4(1.0 / (255.0 * 255.0 * 255.0), 1.0 / (255.0 * 255.0), 1.0 / 255.0, 1.0);
 	return dot(c, bitShifts);
 }
 
-void main(void) {
-	vec2 poissonDisk[4];
-	poissonDisk[0]=vec2( -0.94201624, -0.39906216 );
-	poissonDisk[1]=vec2( 0.94558609, -0.76890725 );
-	poissonDisk[2]=vec2( -0.094184101, -0.92938870 );
-	poissonDisk[3]=vec2( 0.34495938, 0.29387760 );
-	
-	// Color and directional lighting
+float unpackHalf(vec2 c) {
+	return c.x + (c.y / 255.0);
+}
+
+float pow(float v, int n) {
+	for (int i = 1; i < MAXIMUM_HARDNESS; i++) {
+		if (i >= n)
+			break;
+		v *= v;
+	}
+	return v;
+}
+
+/** Computes color and directional lighting */
+vec4 lighting() {
+	vec4 encodedNormal = texture2D(normal0, uv0);
+	// vec3 localCoords = 2.0 * encodedNormal.rgb - vec3(1.0);
+	vec3 localCoords = vec3(2.0 * encodedNormal.rg - vec2(1.0), encodedNormal.b);
+	vec3 normalDirection = normalize(tbn * localCoords);
+	vec3 N = normalDirection;
+	N = normalize(mat3(view) * N);
+
 	vec4 textureColor = texture2D(diffuse0, uv0);
-	vec4 heightColor = texture2D(height0, uv0);
-	//vec3 N = normalize(vec3(viewNormal.x, viewNormal.y, viewNormal.z)+heightColor.xyz);
-	vec3 N = normalize(heightColor.xyz+viewNormal.xyz);
-	//vec3 N = normalize(viewNormal);
 	vec3 L = normalize(mat3(view)*lightDirection);
+	vec3 V = normalize(-viewPosition.xyz);
+	vec3 H = normalize(L + V);
 	float diffuseLight = max(dot(N, L), 0.0) * lightIntensity;
-	
-	vec3 reflection=normalize(reflect(lightDirection, N));
-	float specularFactor = max(dot(-viewPosition.xyz, reflection), 0.0);
-	specularFactor=pow(specularFactor, specularPower);
-	
-	//vec4 color = (ambient * textureColor) + (diffuse * textureColor * lightColor * diffuseLight);
-	vec4 color = (ambient * textureColor) + (diffuse * diffuseIntensity * textureColor * lightColor * diffuseLight)+(lightColor*specularFactor*specularIntensity);
-	//vec4 color = vec4(diffuseLight, diffuseLight, diffuseLight, 1);
-	//vec4 color = vec4(vec3(1,1,1)*specularFactor*specularIntensity, 1);
-	//vec4 color = heightColor;
-	
+	float specularLight = min(max(dot(N, H), 0.0), 1.0);
+	specularLight = pow(specularLight, specularPower);
+
+	vec4 ambientColor = ambient * textureColor;
+	vec4 diffuseColor = diffuse * diffuse * textureColor * lightColor * diffuseLight;
+	vec4 specularColor = lightColor * specularLight * specularStrength;
+
+	return ambient + diffuseColor + specularColor;
+}
+
+float ChebychevInequality(vec2 moments, float t) {
+	if ( t <= moments.x )
+		return 1.0;
+	float variance = moments.y - (moments.x * moments.x);
+	variance = max(variance, 0.02);
+	float d = (t - moments.x); // * shadowIntensity;
+	return variance / (variance + d * d);
+	// return variance / (variance + pow(d*d, 0.7));
+}
+
+float VsmFixLightBleed(float pMax, float amount) {
+	return clamp((pMax - amount) / (1.0 - amount), 0.0, 1.0);
+}
+
+void main(void) {
+	vec4 color = lighting();
+	if (useShadows==0) {
+		gl_FragColor = color;
+		return;
+	}
+
+	vec3 depth = shadowPosition.xyz / shadowPosition.w;
 	float shadow = 1.0;
-	float vertexDepth = shadowPosition.z * 0.99;
-	
-	// float shadowDepth = unpack(texture2D(shadow0, shadowPosition.xy));
-	// if (shadowDepth < vertexDepth)
-		// shadow = 0.5;
-	
-	vec2 shadowUV = shadowPosition.xy;
-	float shadowDepth = 0.0;
-	shadowDepth = unpack(texture2D(shadow0, shadowUV+poissonDisk[0]*poissonDiscSize));
-	if (shadowDepth<vertexDepth) shadow-=0.2*shadowIntensity;
-	shadowDepth = unpack(texture2D(shadow0, shadowUV+poissonDisk[1]*poissonDiscSize));
-	if (shadowDepth<vertexDepth) shadow-=0.2*shadowIntensity;
-	shadowDepth = unpack(texture2D(shadow0, shadowUV+poissonDisk[2]*poissonDiscSize));
-	if (shadowDepth<vertexDepth) shadow-=0.2*shadowIntensity;
-	shadowDepth = unpack(texture2D(shadow0, shadowUV+poissonDisk[3]*poissonDiscSize));
-	if (shadowDepth<vertexDepth) shadow-=0.2*shadowIntensity;
-		
+	vec4 texel = texture2D(shadow0, depth.xy);
+
+	// VSM
+	vec2 moments = vec2(unpackHalf(texel.xy), unpackHalf(texel.zw));
+	shadow = ChebychevInequality(moments, depth.z);
+	shadow = VsmFixLightBleed(shadow, 0.1);
+
+	// extra esm step to lessen the gradient near close surfaces
+	shadow = (clamp(exp(-4.0 * (depth.z - unpackHalf(texel.xy))), 0.0, 1.0) + shadow) / 2.0;
+
+	// // ESM
+	// float c = 4.0;
+	// shadow = clamp(exp(-c * (depth.z - unpack(texel))), 0.0, 1.0);
+
 	gl_FragColor = clamp(vec4(color.xyz*shadow, color.a), 0.0, 1.0);
 }

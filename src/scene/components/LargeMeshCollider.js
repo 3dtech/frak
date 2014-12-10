@@ -4,11 +4,12 @@ var LargeMeshCollider=Collider.extend({
 		@param mesh Instance of {Mesh} [optional] */
 	init: function(mesh) {
 		this._super();
-		this.tree=false;
-		this.meshes=[];
+		this.tree = false;
+		this.meshes = [];
+		this.damaged = false;
 
 		// internal cache
-		this.invMat=mat4.create();
+		this.invMat = mat4.create();
 
 		// if (mesh) {
 		// 	for (var i in mesh.submeshes)
@@ -32,26 +33,40 @@ var LargeMeshCollider=Collider.extend({
 
 	onAdd: function(node) {
 		this._super();
+
+		if (this.damaged) {
+			// Remap the nodes in the collision tree to nodes in this sub-tree
+			var root = this.node;
+			function findSubnodeWithCollisionID(id) {
+				var needle = null;
+				root.onEachChild(function (subnode) {
+					if (subnode.localCollisionID === id) {
+						needle = subnode;
+						return true;
+					}
+				});
+				return needle;
+			}
+
+			for (var i in this.tree.nodes) {
+				var id = this.tree.nodes[i].localCollisionID;
+				if (id < 0)
+					continue;
+				this.tree.nodes[i] = findSubnodeWithCollisionID(id);
+			}
+
+			this.damaged = false;
+		}
+
 		// if (this.tree===false)
 		// 	this.rebuild();
 	},
-	
+
 	clone: function() {
-		// Note: might be buggy
 		var lmc = new LargeMeshCollider();
-		lmc.tree = new CollisionOctreeNode(this.tree.bounds.center, this.tree.bounds.size[0], false);
-		lmc.tree.faces = this.tree.faces;
-		lmc.tree.nodes = {};
-		for (var i in this.tree.nodes) {
-			lmc.tree.nodes[i] = this.tree.nodes[i];
-		}
-		lmc.tree.submeshes = {};
-		for (var i in this.tree.submeshes) {
-			lmc.tree.submeshes[i] = this.tree.submeshes[i];
-		}
-		lmc.invMat = mat4.clone(this.invMat);
-		for (var i in this.meshes) {
-			lmc.meshes.push(this.meshes[i]);
+		if (this.tree) {
+			lmc.tree = this.tree.clone();
+			lmc.damaged = true;
 		}
 		return lmc;
 	},

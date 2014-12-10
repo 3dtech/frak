@@ -12,6 +12,7 @@ var SSAOPostProcess = PostProcess.extend({
 				"gdisplace": new UniformFloat((engine.options.ssaoGDisplace) ? engine.options.ssaoGDisplace : 0.3),
 				"radius": new UniformFloat((engine.options.ssaoRadius) ? engine.options.ssaoRadius : 2.0),
 				"luminanceInfluence": new UniformFloat((engine.options.ssaoLuminanceInfluence) ? engine.options.ssaoLuminanceInfluence : 0.7),
+				"brightness": new UniformFloat((engine.options.ssaoBrightness) ? engine.options.ssaoBrightness : 1.0),
 			},
 			[
 				this.parent.generator.depthStage.sampler
@@ -19,7 +20,10 @@ var SSAOPostProcess = PostProcess.extend({
 		);
 		this.material.name = "SSAO";
 
-		if (engine.options.transparencyMode != 'sorted') {
+		if (engine.options.transparencyMode == 'sorted') {
+			this.material.samplers.push(new Sampler('oitWeight', engine.WhiteTexture));
+		}
+		else {
 			this.material.samplers.push(this.parent.generator.oitStage.transparencyWeightSampler);
 		}
 

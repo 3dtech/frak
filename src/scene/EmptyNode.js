@@ -174,9 +174,10 @@ var EmptyNode=Serializable.extend({
 		geometrical data is referenced and materials are instantiated such that
 		shader and textures are referenced, but uniforms are cloned. */
 	instantiate: function() {
-		var instance=new EmptyNode(this.name+' (instance)');
-		instance.layer=this.layer;
-		instance.tags=this.tags.slice(0);
+		var instance = new EmptyNode(this.name);
+		instance.isInstanced = true;
+		instance.layer = this.layer;
+		instance.tags = this.tags.slice(0);
 		for(var n in this.subnodes) {
 			instance.addNode(this.subnodes[n].instantiate());
 		}
@@ -236,35 +237,51 @@ var EmptyNode=Serializable.extend({
 	// --------- Iterators ---------
 	/** Calls callback method on this node and all child nodes */
 	onEachChild: function(callback) {
-		callback(this);
-		for(var node in this.subnodes) this.subnodes[node].onEachChild(callback);
+		if (callback(this) === true)
+			return true;
+		for(var node in this.subnodes) {
+			if (this.subnodes[node].onEachChild(callback) === true)
+				return true;
+		}
 	},
 
 	/** Calls callback method on all child nodes, but not on this node */
 	onEachChildExclusive: function(callback) {
 		for(var node in this.subnodes) {
-			this.subnodes[node].onEachChild(callback);
+			if (this.subnodes[node].onEachChild(callback) === true)
+				return true;
+		}
+	},
+
+	/** Calls callback method on all child nodes, but not their children */
+	onEachDirectChild: function(callback) {
+		for(var node in this.subnodes) {
+			if (callback(this.subnodes[node]) === true)
+				return true;
 		}
 	},
 
 	/** Calls callback method on all components of this node */
 	onEachComponent: function(callback) {
 		for(var c in this.components) {
-			callback(this.components[c]);
+			if (callback(this.components[c]) === true)
+				return true;
 		}
 	},
 
 	/** Calls callback method on all components of this node and its child nodes */
 	onEachChildComponent: function(callback) {
 		this.onEachChild(function(child) {
-			child.onEachComponent(callback);
+			if (child.onEachComponent(callback) === true)
+				return true;
 		});
 	},
 
 	/** Calls callback method on all components of child nodes, but not on this node */
 	onEachChildComponentExclusive: function(callback) {
 		this.onEachChildExclusive(function(child) {
-			child.onEachComponent(callback);
+			if (child.onEachComponent(callback) === true)
+				return true;
 		});
 	},
 
@@ -311,5 +328,19 @@ var EmptyNode=Serializable.extend({
 				return this.subnodes[i];
 		}
 		return false;
+	},
+
+	/**
+	 * Returns the absolute path of this node in the scene tree
+	 * as a slash-delimited string. Mostly useful in debug situations.
+	 */
+	path: function() {
+		var path = [];
+		var node = this;
+		while (node) {
+			path.push(node.name);
+			node = node.parent;
+		}
+		return '/' + path.reverse().join('/');
 	}
 });
