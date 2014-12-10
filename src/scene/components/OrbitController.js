@@ -229,10 +229,10 @@ var OrbitController=FlightController.extend({
 
 	onMouseWheel: function(position, delta, type, event){
 		if(delta<0) {
-			this.zoomOut();
+			this.zoomIn();
 		}
 		else {
-			this.zoomIn();
+			this.zoomOut();
 		}
 	}
 });
