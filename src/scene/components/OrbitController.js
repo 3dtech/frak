@@ -26,6 +26,8 @@ var OrbitController=FlightController.extend({
 		this.rotationAcceleration=0.012;			///< Acceleration of rotation
 		this.rotationFriction=0.1;					///< Friction of rotation applied to velocity
 
+		this.lastPinch = 0;
+
 		// Zooming
 		this.zoomSpeed=1.0;								///< Zoom-speed
 		this.doZoomIn=false;							///< Set to true to zoom in when onUpdate is called
@@ -187,7 +189,7 @@ var OrbitController=FlightController.extend({
 		var delta=vec3.create();
 		vec3.scale(delta, this.panXAxis, -xDelta);
 		vec3.add(delta, delta, vec3.scale(vec3.create(), this.panYAxis, -yDelta));
-		delta=vec3.scale(delta, delta, this.panSpeed);
+		delta=vec3.scale(delta, delta, this.distance/900); //todo: use field of view times 20
 
 		var q = quat.fromMat4(quat.create(), this.node.transform.absolute);
 		var dir = vec3.fromValues(0, 0, 1);
@@ -199,7 +201,6 @@ var OrbitController=FlightController.extend({
 		quat.conjugate(q, q);
 		quat.normalize(q, q);
 		vec3.transformQuat(delta, delta, q);
-
 		vec3.add(this.pan, this.pan, delta);
 
 		this.pan[0]=Math.max(this.pan[0], this.minimumPan[0]);
@@ -209,5 +210,29 @@ var OrbitController=FlightController.extend({
 		this.pan[0]=Math.min(this.pan[0], this.maximumPan[0]);
 		this.pan[1]=Math.min(this.pan[1], this.maximumPan[1]);
 		this.pan[2]=Math.min(this.pan[2], this.maximumPan[2]);
+	},
+
+	onPinch: function(position, scale){
+		//Skip if it is still redrawing
+		if(this.lastPinch === 0){
+			this.lastPinch = this.getZoom();
+		}
+
+		scale =  this.lastPinch*(1/scale);
+		this.setZoom(scale);
+	},
+
+	onRotate: function(position, rotation, type, event){
+		var rad = (rotation * (Math.PI / 180));
+		this.rotation[1] = this.rotation[1] + rad;
+	},
+
+	onMouseWheel: function(position, delta, type, event){
+		if(delta<0) {
+			this.zoomOut();
+		}
+		else {
+			this.zoomIn();
+		}
 	}
 });

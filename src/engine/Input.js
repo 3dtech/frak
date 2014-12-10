@@ -193,7 +193,6 @@ var Input = Class.extend({
 	sendEvent: function(funcName){
 		var args = Array.prototype.slice.call(arguments, 0);
 		args = args.slice(1, args.length); //remove funcName
-		//console.info("sendEvent", funcName, args);
 		for(var i=0; i < this.controllers.length; i++){
 			if(this.controllers[i][funcName]){
 				this.controllers[i][funcName].apply(this.controllers[i], args);
@@ -238,13 +237,13 @@ var Input = Class.extend({
 			}
 		}
 	},
-	
+
 	onPanStart: function(event){
 		if(event){
 			this.button = 0;
 			if (event.srcEvent && event.srcEvent.button)
 				this.button = event.srcEvent.button;
-			
+
 			this.translateCoordinates(this.position, event.center.x, event.center.y);
 			this.sendEvent("onButtonDown", this.position, this.button, 0.0, event.pointerType, event);
 		}
@@ -256,7 +255,7 @@ var Input = Class.extend({
 			this.button = 0;
 			if (event.srcEvent && event.srcEvent.button)
 				this.button = event.srcEvent.button;
-			
+
 			this.translateCoordinates(this.position, event.center.x, event.center.y);
 			this.sendEvent("onButtonUp", this.position, this.button, 0.0, event.pointerType, event);
 		}
