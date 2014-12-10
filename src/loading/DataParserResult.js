@@ -11,14 +11,14 @@ var DataParserResult=Class.extend({
 			'hierarchyNodesByID': {}
 		};
 	},
-	
+
 	getData: function() {
 		return this.data;
 	},
-	
+
 	linkReferences: function() {
 		for (var i in this.data.meshes) {
-			if (this.data.meshes[i].material!=-1 && 
+			if (this.data.meshes[i].material!=-1 &&
 				this.data.meshes[i].material in this.data.materials)
 			this.data.meshes[i].material=this.data.materials[this.data.meshes[i].material];
 		}
@@ -36,7 +36,7 @@ var DataParserResult=Class.extend({
 			linkMeshesToGroups(this.data.hierarchy);
 		}
 	},
-	
+
 	createGroup: function() {
 		return {
 			'name': "",
@@ -54,18 +54,18 @@ var DataParserResult=Class.extend({
 	mapGroupID: function(group) {
 		this.data.hierarchyNodesByID[group.id]=group;
 	},
-	
+
 	setRoot: function(group) {
 		this.data.hierarchy=group;
 	},
-	
+
 	createMaterialTexture: function() {
 		return {
 			'path': false,
 			'scale': {u:1.0, v:1.0, w:1.0}
 		};
 	},
-	
+
 	createMaterial: function() {
 		return {
 			'name': '',
@@ -84,7 +84,7 @@ var DataParserResult=Class.extend({
 				'diffuse': [],
 				'specular':[],
 				'emissive':[],
-				'normals':[],
+				'normal':[],
 				'height':[],
 				'shininess':[],
 				'opacity':[],
@@ -94,17 +94,17 @@ var DataParserResult=Class.extend({
 			}
 		};
 	},
-	
+
 	addMaterial: function(material) {
 		this.data.materials.push(material);
 	},
-	
+
 	getMaterial: function(index) {
 		if (index>=0 && index<this.data.materials.length)
 			return this.data.materials[index];
 		return false;
 	},
-	
+
 	createMesh: function(numPoints) {
 		var mesh={
 			'index': -1,
@@ -116,7 +116,7 @@ var DataParserResult=Class.extend({
 			mesh.vertices.push(this.createVertex());
 		return mesh;
 	},
-	
+
 	createVertex: function() {
 		return {
 			'position': {x:0.0, y:0.0, z:0.0},
@@ -126,12 +126,12 @@ var DataParserResult=Class.extend({
 			'bitangent': {x:0.0, y:0.0, z:0.0}
 		};
 	},
-	
+
 	addMesh: function(mesh) {
 		this.data.meshes.push(mesh);
 		mesh.index=this.data.meshes.length-1;
 	},
-	
+
 	createCollisionTreeNode: function() {
 		return {
 			'parent': false,
@@ -141,7 +141,7 @@ var DataParserResult=Class.extend({
 			'faces': false
 		};
 	},
-	
+
 	addFaceList: function(collisionNode, nodeID, meshID, indices) {
 		if (nodeID<0 || meshID<0 || indices.length==0)
 			return false;
@@ -154,7 +154,7 @@ var DataParserResult=Class.extend({
 		collisionNode.faces[nodeID][meshID]=collisionNode.faces[nodeID][meshID].concat(indices);
 		return true;
 	},
-	
+
 	setCollisionTreeRoot: function(node) {
 		this.data.collision=node;
 	}

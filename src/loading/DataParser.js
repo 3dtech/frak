@@ -224,7 +224,7 @@ var DataParser=Class.extend({
 					this.parseMaterialTextures(param, material.textures.emissive);
 					break;
 				case DataParserTypes.NODE_TEXTURES_NORMALS:
-					this.parseMaterialTextures(param, material.textures.normals);
+					this.parseMaterialTextures(param, material.textures.normal);
 					break;
 				case DataParserTypes.NODE_TEXTURES_HEIGHT:
 					this.parseMaterialTextures(param, material.textures.height);

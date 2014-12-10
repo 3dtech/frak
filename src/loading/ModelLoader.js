@@ -137,6 +137,10 @@ var ModelLoader=Class.extend({
 				if (!material.samplers)
 					material.samplers=[];
 				material.samplers.push(new Sampler(textureType+i, texture));
+
+				if (textureType == 'normal') {
+					material.shader = this.shadersManager.addSource('normalmapped');
+				}
 			}
 		}
 
@@ -161,19 +165,25 @@ var ModelLoader=Class.extend({
 
 	loadUniforms: function(uniforms, parsedMaterial) {
 		// Color uniforms
-		if(parsedMaterial.color.ambient)
-			uniforms["ambient"]=new UniformColor(parsedMaterial.color.ambient);
+		if (parsedMaterial.color.ambient)
+			uniforms["ambient"] = new UniformColor(parsedMaterial.color.ambient);
 		else
-			uniforms["ambient"]=new UniformColor(new Color(0.2, 0.2, 0.2, 1.0));
+			uniforms["ambient"] = new UniformColor(new Color(0.2, 0.2, 0.2, 1.0));
 
-		if(parsedMaterial.color.diffuse) uniforms["diffuse"]=new UniformColor(parsedMaterial.color.diffuse);
-		if(parsedMaterial.color.emissive) uniforms["emissive"]=new UniformColor(parsedMaterial.color.emissive);
-		if(parsedMaterial.color.specular) uniforms["specular"]=new UniformColor(parsedMaterial.color.specular);
+		if (parsedMaterial.color.diffuse)
+			uniforms["diffuse"] = new UniformColor(parsedMaterial.color.diffuse);
+		else
+			uniforms["diffuse"] = new UniformColor(new Color(1.0, 1.0, 1.0, 1.0));
+
+		if (parsedMaterial.color.emissive) uniforms["emissive"] = new UniformColor(parsedMaterial.color.emissive);
+		if (parsedMaterial.color.specular) uniforms["specular"] = new UniformColor(parsedMaterial.color.specular);
+
+		// TODO: these need to be mapped to specularStrength(float) and specularPower(int)
+		// if(parsedMaterial.shininess) uniforms["shininess"]=new UniformFloat(parsedMaterial.shininess);
+		// if(parsedMaterial.shininess_strength) uniforms["shininess_strength"]=new UniformFloat(parsedMaterial.shininess_strength);
 
 		// Other uniforms
-		if(parsedMaterial.shininess) uniforms["shininess"]=new UniformFloat(parsedMaterial.shininess);
-		if(parsedMaterial.shininess_strength) uniforms["shininess_strength"]=new UniformFloat(parsedMaterial.shininess_strength);
-		uniforms["twosided"]=new UniformInt(parsedMaterial.twosided+0);
+		uniforms["twosided"] = new UniformInt(parsedMaterial.twosided+0);
 	},
 
 	loadTransform: function(transform, parsedTransform) {
