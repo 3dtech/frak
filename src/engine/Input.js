@@ -194,10 +194,20 @@ var Input = Class.extend({
 	sendEvent: function(funcName){
 		var args = Array.prototype.slice.call(arguments, 0);
 		args = args.slice(1, args.length); //remove funcName
-		for(var i=0; i < this.controllers.length; i++){
-			if(this.controllers[i][funcName]){
-				this.controllers[i][funcName].apply(this.controllers[i], args);
-			}
+
+		var activated = [];
+		for (var i=0; i < this.controllers.length; i++) {
+			if (this.controllers[i][funcName])
+				activated.push(this.controllers[i]);
+		}
+
+		activated.sort(function(a, b) {
+			return b.getPriority(funcName) - a.getPriority(funcName);
+		});
+
+		for (var i=0; i<activated.length; i++) {
+			if (activated[i][funcName].apply(activated[i], args) === true)
+				break;
 		}
 	},
 	/**
