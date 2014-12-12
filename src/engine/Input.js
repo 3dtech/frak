@@ -154,10 +154,11 @@ var Input = Class.extend({
 		}
 
 		this.canvas.addEventListener("mousewheel", ClassCallback(this, this.onMouseWheel));
+		this.canvas.addEventListener("DOMMouseScroll", ClassCallback(this, this.onMouseWheelMOZ));
 
 		this.canvas.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        }, false);
+			e.preventDefault();
+		}, false);
 	},
 
 	registerKeyboardEvents: function(){
@@ -309,12 +310,25 @@ var Input = Class.extend({
 
 	},
 
-	onMouseWheel: function(event){
-		if(event){
-			this.scrollDelta += event.deltaY;
-			this.translateCoordinates(this.position, event.clientX, event.clientY);
-			this.sendEvent("onMouseWheel", this.position, this.scrollDelta, "mouse", event);
-		}
+	onMouseWheel: function(event) {
+		if (!event)
+			return;
+
+		var direction = event.deltaY > 0 ? 1 : event.deltaY < 0 ? -1 : 0;
+		this.scrollDelta += event.deltaY;
+		this.translateCoordinates(this.position, event.clientX, event.clientY);
+		this.sendEvent("onMouseWheel", this.position, this.scrollDelta, direction, "mouse", event);
+	},
+
+	/** Firefox mouse wheel handler */
+	onMouseWheelMOZ: function(event) {
+		if (!event)
+			return;
+
+		var direction = event.detail > 0 ? 1 : event.detail < 0 ? -1 : 0;
+		this.scrollDelta += event.detail;
+		this.translateCoordinates(this.position, event.clientX, event.clientY);
+		this.sendEvent("onMouseWheel", this.position, this.scrollDelta, direction, "mouse", event);
 	},
 
 	onKeyDown: function(event){

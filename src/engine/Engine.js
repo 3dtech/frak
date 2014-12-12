@@ -56,15 +56,6 @@ var Engine=Class.extend({
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
 		this.WhiteTextureSampler =  new Sampler('tex0', this.WhiteTexture);
 
-		if (this.options.debug) {
-			var me=this;
-			this.context.canvas.bind('keydown', function(e) {
-					if(e.which=='P'.charCodeAt(0)) me.togglePause();
-					if(e.which=='L'.charCodeAt(0)) me.debug();
-					if(e.which=='M'.charCodeAt(0)) me.debugScene();
-				});
-		}
-
 		this.setupInput();
 	},
 
