@@ -61,7 +61,7 @@ vec4 lighting() {
 	vec4 diffuseColor = diffuse * diffuse * textureColor * lightColor * diffuseLight;
 	vec4 specularColor = lightColor * specularLight * specularStrength;
 
-	return ambient + diffuseColor + specularColor;
+	return ambientColor + diffuseColor + specularColor;
 }
 
 float ChebychevInequality(vec2 moments, float t) {
