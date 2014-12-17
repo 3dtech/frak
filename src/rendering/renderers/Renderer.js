@@ -9,6 +9,7 @@ var Renderer=Class.extend({
 		this.layer=1;												///< Usually updated automatically by the component
 		this.visible=true;											///< Usually updated automatically by the component
 		this.castShadows=true;										///< Usually updated automatically by the component
+		this.receiveShadows=true;									///< Usually updated automatically by the component
 		this.transparent=false; 									///< Value must be set to true to have renderer passed through transparent pipeline
 
 		this.localBoundingBox=new BoundingBox();
@@ -55,6 +56,13 @@ var Renderer=Class.extend({
 		if ('projection' in uniforms) mat4.copy(uniforms.projection.value, context.projection.top());
 		else uniforms.projection = new UniformMat4(context.projection.top());
 
+		// if ('castShadows' in uniforms) uniforms.castShadows.value = this.castShadows ? 1 : 0;
+		// else uniforms.castShadows = new UniformInt(this.castShadows ? 1 : 0);
+
+		if ('receiveShadows' in uniforms) uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0;
+		else uniforms.receiveShadows = new UniformInt(this.receiveShadows ? 1 : 0);
+
+		// Camera uniforms
 		if (context.camera) {
 			if ('view' in uniforms) mat4.copy(uniforms.view.value, context.camera.viewMatrix);
 			else uniforms.view = new UniformMat4(context.camera.viewMatrix);

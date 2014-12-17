@@ -64,7 +64,8 @@ var MaterialRenderStage=RenderStage.extend({
 		this.rendererUniforms = {
 			"model": new UniformMat4(null),
 			"modelview": new UniformMat4(null),
-			"modelviewInverse": new UniformMat4(null)
+			"modelviewInverse": new UniformMat4(null),
+			"receiveShadows": new UniformInt(1)
 		};
 
 		// Shadow uniforms cache
@@ -272,6 +273,7 @@ var MaterialRenderStage=RenderStage.extend({
 				this.rendererUniforms.model.value = batch[j].matrix;
 				this.rendererUniforms.modelview.value = context.modelview.top();
 				this.rendererUniforms.modelviewInverse.value = this.invModelview;
+				this.rendererUniforms.receiveShadows.value = batch[j].receiveShadows;
 
 				shader.bindUniforms(this.rendererUniforms);
 

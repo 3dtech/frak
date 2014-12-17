@@ -19,6 +19,7 @@ uniform sampler2D normal0;
 uniform sampler2D shadow0;
 
 uniform int useShadows;
+uniform int receiveShadows;
 
 varying vec2 uv0;
 varying vec4 worldPosition;
@@ -89,7 +90,7 @@ float VsmFixLightBleed(float pMax, float amount) {
 
 void main(void) {
 	vec4 color = lighting();
-	if (useShadows==0) {
+	if (useShadows == 0 || receiveShadows == 0) {
 		gl_FragColor = color;
 		return;
 	}

@@ -61,6 +61,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		for (var i=0; i<this.meshRenderers.length; i++) {
 			this.meshRenderers[i].layer = this.node.layer;
 			this.meshRenderers[i].castShadows = this.castShadows;
+			this.meshRenderers[i].receiveShadows = this.receiveShadows;
 			this.meshRenderers[i].setMatrix(absolute);
 		}
 	},
