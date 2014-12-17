@@ -36,6 +36,11 @@ var Controller=Component.extend({
 		}
 	},
 
+	/** Override this to give your Controller priority over others using the same event. */
+	getPriority: function(eventName) {
+		return 0;
+	},
+
 	// Events
 	/** Called when starting engine */
 	onStart: function(context, engine) {

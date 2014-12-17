@@ -1,18 +1,5 @@
-/** Engine handles the real-time rendering and updates.
-
-Engine binds keys bound to canvas at its creation are:
-'P' - toggles pause
-'L' - displays debug information
-'M' - displays current scene debug information
-
-Example of usage:
-<pre>
-	var frak=new FRAK(function() {
-		var engine=new Engine($('#canvas'));
-		engine.run();		// Runs empty engine
-	});
-</pre>
-
+/**
+ * Engine is what ties everything together and handles the real-time rendering and updates.
  */
 var Engine=Class.extend({
 	/** Constructor
@@ -35,9 +22,10 @@ var Engine=Class.extend({
 			'antialias': false,
 			'ssao': false,
 			'transparencyMode': 'default',
-			'context': new RenderingContext(canvas)
+			'renderer': 'default',
+			'context': false
 		}, options);
-		this.validateOptions();
+		this.validateOptions(canvas);
 
 		this.context = this.options.context;
 		if(!scene) scene=new DefaultScene();
@@ -55,15 +43,6 @@ var Engine=Class.extend({
 		this.WhiteTexture.mipmapped = false;
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
 		this.WhiteTextureSampler =  new Sampler('tex0', this.WhiteTexture);
-
-		if (this.options.debug) {
-			var me=this;
-			this.context.canvas.bind('keydown', function(e) {
-					if(e.which=='P'.charCodeAt(0)) me.togglePause();
-					if(e.which=='L'.charCodeAt(0)) me.debug();
-					if(e.which=='M'.charCodeAt(0)) me.debugScene();
-				});
-		}
 
 		this.setupInput();
 	},
@@ -148,16 +127,28 @@ var Engine=Class.extend({
 		this.fps.measure();
 	},
 
-	validateOptions: function() {
+	validateOptions: function(canvas) {
+		// Create default rendering context
+		this.options.context = new RenderingContext(canvas);
+
 		// Transparency mode validation
 		switch (this.options.transparencyMode) {
 			case 'sorted':
 			case 'blended':
 			case 'stochastic':
 				break;
-			case 'default':
 			default:
 				this.options.transparencyMode = 'blended';
+				break;
+		}
+
+		// Renderer mode validation
+		switch (this.options.renderer) {
+			case 'deferred':
+			case 'forward':
+				break;
+			default:
+				this.options.renderer = 'forward'
 				break;
 		}
 	}

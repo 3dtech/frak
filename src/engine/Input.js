@@ -154,10 +154,11 @@ var Input = Class.extend({
 		}
 
 		this.canvas.addEventListener("mousewheel", ClassCallback(this, this.onMouseWheel));
+		this.canvas.addEventListener("DOMMouseScroll", ClassCallback(this, this.onMouseWheelMOZ));
 
 		this.canvas.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        }, false);
+			e.preventDefault();
+		}, false);
 	},
 
 	registerKeyboardEvents: function(){
@@ -193,10 +194,20 @@ var Input = Class.extend({
 	sendEvent: function(funcName){
 		var args = Array.prototype.slice.call(arguments, 0);
 		args = args.slice(1, args.length); //remove funcName
-		for(var i=0; i < this.controllers.length; i++){
-			if(this.controllers[i][funcName]){
-				this.controllers[i][funcName].apply(this.controllers[i], args);
-			}
+
+		var activated = [];
+		for (var i=0; i < this.controllers.length; i++) {
+			if (this.controllers[i][funcName])
+				activated.push(this.controllers[i]);
+		}
+
+		activated.sort(function(a, b) {
+			return b.getPriority(funcName) - a.getPriority(funcName);
+		});
+
+		for (var i=0; i<activated.length; i++) {
+			if (activated[i][funcName].apply(activated[i], args) === true)
+				break;
 		}
 	},
 	/**
@@ -309,12 +320,25 @@ var Input = Class.extend({
 
 	},
 
-	onMouseWheel: function(event){
-		if(event){
-			this.scrollDelta += event.deltaY;
-			this.translateCoordinates(this.position, event.clientX, event.clientY);
-			this.sendEvent("onMouseWheel", this.position, this.scrollDelta, "mouse", event);
-		}
+	onMouseWheel: function(event) {
+		if (!event)
+			return;
+
+		var direction = event.deltaY > 0 ? 1 : event.deltaY < 0 ? -1 : 0;
+		this.scrollDelta += event.deltaY;
+		this.translateCoordinates(this.position, event.clientX, event.clientY);
+		this.sendEvent("onMouseWheel", this.position, this.scrollDelta, direction, "mouse", event);
+	},
+
+	/** Firefox mouse wheel handler */
+	onMouseWheelMOZ: function(event) {
+		if (!event)
+			return;
+
+		var direction = event.detail > 0 ? 1 : event.detail < 0 ? -1 : 0;
+		this.scrollDelta += event.detail;
+		this.translateCoordinates(this.position, event.clientX, event.clientY);
+		this.sendEvent("onMouseWheel", this.position, this.scrollDelta, direction, "mouse", event);
 	},
 
 	onKeyDown: function(event){

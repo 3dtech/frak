@@ -227,8 +227,8 @@ var OrbitController=FlightController.extend({
 		this.rotation[1] = this.rotation[1] + rad;
 	},
 
-	onMouseWheel: function(position, delta, type, event){
-		if(delta<0) {
+	onMouseWheel: function(position, delta, direction, type, event){
+		if(direction<0) {
 			this.zoomIn();
 		}
 		else {

@@ -46,23 +46,13 @@ var Submesh=Class.extend({
 			var i2 = this.faces[i+1];
 			var i3 = this.faces[i+2];
 
-			// console.log('face: ', i1, i2, i3);
-
 			vec3.set(v1, this.positions[i1*3], this.positions[(i1*3)+1], this.positions[(i1*3)+2]);
 			vec3.set(v2, this.positions[i2*3], this.positions[(i2*3)+1], this.positions[(i2*3)+2]);
 			vec3.set(v3, this.positions[i3*3], this.positions[(i3*3)+1], this.positions[(i3*3)+2]);
 
-			// console.log('v1 = ', vec3.str(v1));
-			// console.log('v2 = ', vec3.str(v2));
-			// console.log('v3 = ', vec3.str(v3));
-
 			vec2.set(w1, uv[i1*2], uv[(i1*2)+1]);
 			vec2.set(w2, uv[i2*2], uv[(i2*2)+1]);
 			vec2.set(w3, uv[i3*2], uv[(i3*2)+1]);
-
-			// console.log('w1 = ', vec2.str(w1));
-			// console.log('w2 = ', vec2.str(w2));
-			// console.log('w3 = ', vec2.str(w3));
 
 			var x1 = v2[0] - v1[0];
 			var x2 = v3[0] - v1[0];
