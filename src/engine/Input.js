@@ -318,7 +318,16 @@ var Input = Class.extend({
 		if (!event)
 			return;
 
-		var direction = event.deltaY > 0 ? 1 : event.deltaY < 0 ? -1 : 0;
+		event.preventDefault();
+
+		var direction = 0;
+		if ('wheelDelta' in event) {
+			direction = event.wheelDelta < 0 ? 1 : event.wheelDelta > 0 ? -1 : 0;
+		}
+		else {
+			direction = event.deltaY > 0 ? 1 : event.deltaY < 0 ? -1 : 0;
+		}
+
 		this.scrollDelta += event.deltaY;
 		this.translateCoordinates(this.position, event.clientX, event.clientY);
 		this.sendEvent("onMouseWheel", this.position, this.scrollDelta, direction, "mouse", event);
