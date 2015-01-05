@@ -400,6 +400,7 @@ var Input = Class.extend({
 });
 
 //Hack for Hammer.js to enable other mouse buttons
+
 HammerWF.MouseInput.prototype.handler = function(ev) {
 	if (!this.allow)
 		return;
@@ -442,4 +443,96 @@ HammerWF.MouseInput.prototype.handler = function(ev) {
 		srcEvent: ev,
 		frakButtons: buttons
 	});
+};
+
+HammerWF.PointerEventInput.prototype.handler = function(ev) {
+	var store = this.store;
+	var removePointer = false;
+
+	var INPUT_TYPE_TOUCH = 'touch';
+	var INPUT_TYPE_PEN = 'pen';
+	var INPUT_TYPE_MOUSE = 'mouse';
+	var INPUT_TYPE_KINECT = 'kinect';
+
+	var INPUT_START = 1;
+	var INPUT_MOVE = 2;
+	var INPUT_END = 4;
+	var INPUT_CANCEL = 8;
+
+	var POINTER_INPUT_MAP = {
+		pointerdown: INPUT_START,
+		pointermove: INPUT_MOVE,
+		pointerup: INPUT_END,
+		pointercancel: INPUT_CANCEL,
+		pointerout: INPUT_CANCEL
+	};
+
+	// in IE10 the pointer types is defined as an enum
+	var IE10_POINTER_TYPE_ENUM = {
+		2: INPUT_TYPE_TOUCH,
+		3: INPUT_TYPE_PEN,
+		4: INPUT_TYPE_MOUSE,
+		5: INPUT_TYPE_KINECT
+	};
+
+	function inArray(src, find, findByKey) {
+		if (src.indexOf && !findByKey) {
+			return src.indexOf(find);
+		} else {
+			var i = 0;
+			while (i < src.length) {
+				if ((findByKey && src[i][findByKey] == find) || (!findByKey && src[i] === find)) {
+					return i;
+				}
+				i++;
+			}
+			return -1;
+		}
+	}
+
+	var eventTypeNormalized = ev.type.toLowerCase().replace('ms', '');
+	var eventType = POINTER_INPUT_MAP[eventTypeNormalized];
+	var pointerType = IE10_POINTER_TYPE_ENUM[ev.pointerType] || ev.pointerType;
+
+	var isTouch = (pointerType == INPUT_TYPE_TOUCH);
+
+	// get index of the event in the store
+	var storeIndex = inArray(store, ev.pointerId, 'pointerId');
+
+	// start and mouse must be down
+	if (eventType & INPUT_START) {
+		if (storeIndex < 0) {
+			store.push(ev);
+			storeIndex = store.length - 1;
+		}
+	} else if (eventType & (INPUT_END | INPUT_CANCEL)) {
+		removePointer = true;
+	}
+
+	// it not found, so the pointer hasn't been down (so it's probably a hover)
+	if (storeIndex < 0) {
+		return;
+	}
+
+	// update the event in the store
+	store[storeIndex] = ev;
+
+	var buttons = [
+		!!(ev.buttons & 1), // left
+		!!(ev.buttons & 4), // middle
+		!!(ev.buttons & 2)  // right
+	];
+
+	this.callback(this.manager, eventType, {
+		pointers: store,
+		changedPointers: [ev],
+		pointerType: pointerType,
+		srcEvent: ev,
+		frakButtons: buttons
+	});
+
+	if (removePointer) {
+		// remove from the store
+		store.splice(storeIndex, 1);
+	}
 };
