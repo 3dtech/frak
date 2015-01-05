@@ -1,6 +1,7 @@
 var SSAOPostProcess = PostProcess.extend({
 	init: function(size) {
 		this._super();
+		this.ssaoOnly = false;
 	},
 
 	onStart: function(context, engine) {

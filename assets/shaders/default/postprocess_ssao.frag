@@ -111,7 +111,7 @@ void main() {
 	float l = 0.0;
 	float z = 1.0 - dz/2.0;
 
-	for (int i = 0; i <= samples; i ++) {
+	for (int i = 0; i <= samples; i++) {
 		float r = sqrt(1.0-z);
 		pw = cos(l)*r;
 		ph = sin(l)*r;

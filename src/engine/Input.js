@@ -8,6 +8,8 @@ var Input = Class.extend({
 		this.canvas = canvas;
 		this.lastPinch = 0;
 		this.lastRotation = 0;
+		this.buttons = [false, false, false];
+		this.button = -1;
 
 		this.position = vec2.create();
 		this.delta = vec2.create();
@@ -237,10 +239,7 @@ var Input = Class.extend({
 			vec2.set(this.deltaChange, event.deltaX, event.deltaY);
 			vec2.sub(this.deltaChange, this.deltaChange, this.lastDelta);
 			vec2.set(this.lastDelta, event.deltaX, event.deltaY);
-
-			this.button = 0;
-			if(event.srcEvent && event.srcEvent.button)
-				this.button = event.srcEvent.button;
+			this.setMouseButtons(event.frakButtons);
 
 			this.translateCoordinates(this.position, event.center.x, event.center.y);
 			if(Math.max(vec2.len(this.deltaChange)) < 100){
@@ -251,10 +250,7 @@ var Input = Class.extend({
 
 	onPanStart: function(event){
 		if(event){
-			this.button = 0;
-			if (event.srcEvent && event.srcEvent.button)
-				this.button = event.srcEvent.button;
-
+			this.setMouseButtons(event.frakButtons);
 			this.translateCoordinates(this.position, event.center.x, event.center.y);
 			this.sendEvent("onButtonDown", this.position, this.button, 0.0, event.pointerType, event);
 		}
@@ -263,12 +259,10 @@ var Input = Class.extend({
 	onPanEnd: function(event){
 		vec2.set(this.lastDelta, 0, 0);
 		if(event){
-			this.button = 0;
-			if (event.srcEvent && event.srcEvent.button)
-				this.button = event.srcEvent.button;
-
+			this.setMouseButtons(event.frakButtons);
 			this.translateCoordinates(this.position, event.center.x, event.center.y);
 			this.sendEvent("onButtonUp", this.position, this.button, 0.0, event.pointerType, event);
+			this.resetMouseButtons();
 		}
 	},
 
@@ -374,44 +368,69 @@ var Input = Class.extend({
 
 			}
 		}
+	},
+
+	setMouseButtons: function(buttons) {
+		if (!buttons || buttons.length < 3)
+			return;
+
+		this.button = -1;
+		for (var i=0; i<3; i++) {
+			this.buttons[i] = buttons[i];
+			if (buttons[i] === true)
+				this.button = i;
+		}
+	},
+
+	resetMouseButtons: function() {
+		this.button = -1;
+		this.buttons[0]=false;
+		this.buttons[1]=false;
+		this.buttons[2]=false;
 	}
 });
+
 //Hack for Hammer.js to enable other mouse buttons
 HammerWF.MouseInput.prototype.handler = function(ev) {
-		var MOUSE_INPUT_MAP = {
-			mousedown: 1,
-			mousemove: 2,
-			mouseup: 4,
-		};
+	if (!this.allow)
+		return;
 
-		var INPUT_START = 1;
-		var INPUT_MOVE = 2;
-		var INPUT_END = 4;
+	if (ev.type == 'mousedown') {
+		this.pressed = true;
+	}
 
-		var eventType = MOUSE_INPUT_MAP[ev.type];
+	else if (ev.type == 'mouseup') {
+		this.pressed = false;
+	}
 
-		//fix other mouse buttons
-        if (eventType == INPUT_START && ev.button > -1) {
-            this.pressed = true;
-        }
-        //fix other mouse buttons
-        if (eventType & INPUT_MOVE && ev.which !== 1) {
-            //eventType = INPUT_END;
-        }
+	if (!this.pressed)
+		return;
 
-        // mouse must be down, and mouse events are allowed (see the TouchMouse input)
-        if (!this.pressed || !this.allow) {
-            return;
-        }
+	var buttons = [false, false, false];
 
-        if (eventType & INPUT_END) {
-            this.pressed = false;
-        }
+	// Detect button the Microsoft/Mozilla way
+	if ('buttons' in ev) {
+		buttons[0] = !!(ev.buttons & 1); // left
+		buttons[1] = !!(ev.buttons & 4); // middle
+		buttons[2] = !!(ev.buttons & 2); // right
+	}
 
-        this.callback(this.manager, eventType, {
-            pointers: [ev],
-            changedPointers: [ev],
-            pointerType: 'mouse',
-            srcEvent: ev
-        });
+	// Detect button the W3C way
+	else if ('button' in ev) {
+		buttons[ev.button] = true;
+	}
+
+	var MOUSE_INPUT_MAP = {
+		mousedown: 1,
+		mousemove: 2,
+		mouseup: 4,
+	};
+
+	this.callback(this.manager, MOUSE_INPUT_MAP[ev.type], {
+		pointers: [ev],
+		changedPointers: [ev],
+		pointerType: 'mouse',
+		srcEvent: ev,
+		frakButtons: buttons
+	});
 };
