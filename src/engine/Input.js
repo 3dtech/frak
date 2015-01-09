@@ -400,21 +400,18 @@ var Input = Class.extend({
 });
 
 //Hack for Hammer.js to enable other mouse buttons
-
 HammerWF.MouseInput.prototype.handler = function(ev) {
-	if (!this.allow)
-		return;
-
 	if (ev.type == 'mousedown') {
 		this.pressed = true;
 	}
 
-	else if (ev.type == 'mouseup') {
+
+	if (!this.pressed || !this.allow)
+		return;
+
+	if (ev.type == 'mouseup') {
 		this.pressed = false;
 	}
-
-	if (!this.pressed)
-		return;
 
 	var buttons = [false, false, false];
 
