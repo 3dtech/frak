@@ -196,7 +196,7 @@ var Input = Class.extend({
 	sendEvent: function(funcName){
 		var args = Array.prototype.slice.call(arguments, 0);
 		args = args.slice(1, args.length); //remove funcName
-
+		//console.info("sendEvent", funcName, args);
 		var activated = [];
 		for (var i=0; i < this.controllers.length; i++) {
 			if (this.controllers[i][funcName])
@@ -243,7 +243,14 @@ var Input = Class.extend({
 
 			this.translateCoordinates(this.position, event.center.x, event.center.y);
 			if(Math.max(vec2.len(this.deltaChange)) < 100){
-				this.sendEvent("onMouseMove", this.position, this.button, this.deltaChange, event.pointerType, event);
+				if(event.pointerType == "touch"){
+					//console.info("onPan", this.position, this.button, this.deltaChange, event.pointerType, event);
+					this.sendEvent("onPan", this.position, this.deltaChange, event.pointerType, event);
+				}
+				else {
+					this.sendEvent("onMouseMove", this.position, this.button, this.deltaChange, event.pointerType, event);
+				}
+
 			}
 		}
 	},
@@ -337,6 +344,8 @@ var Input = Class.extend({
 	onMouseWheelMOZ: function(event) {
 		if (!event)
 			return;
+
+		event.preventDefault();
 
 		var direction = event.detail > 0 ? 1 : event.detail < 0 ? -1 : 0;
 		this.scrollDelta += event.detail;
