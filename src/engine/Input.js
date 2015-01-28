@@ -290,8 +290,8 @@ var Input = Class.extend({
 		if(event){
 			this.translateCoordinates(this.position, event.clientX, event.clientY);
 			var scale = event.scale - this.lastPinch;
-			this.lastPinch = event.scale;
-			this.sendEvent("onPinch", this.position, event.scale, "touch", event);
+			this.lastPinch = event.scale - 1;
+			this.sendEvent("onPinch", this.position, scale, "touch", event);
 		}
 	},
 

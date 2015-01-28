@@ -217,12 +217,7 @@ var OrbitController=FlightController.extend({
 	},
 
 	onPinch: function(position, scale){
-		//Skip if it is still redrawing
-		if(this.lastPinch === 0){
-			this.lastPinch = this.getZoom();
-		}
-
-		scale =  this.lastPinch*(1/scale);
+		scale = this.getZoom() + (1-scale);
 		this.setZoom(scale);
 	},
 
