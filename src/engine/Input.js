@@ -164,10 +164,11 @@ var Input = Class.extend({
 	},
 
 	registerKeyboardEvents: function(){
-		var me=this;
 		if(this.canvas){
 			this.canvas.addEventListener("keydown", ClassCallback(this, this.onKeyDown));
 			this.canvas.addEventListener("keyup", ClassCallback(this, this.onKeyUp));
+			if (this.canvas.focus)
+				this.canvas.focus();
 		}
 	},
 
