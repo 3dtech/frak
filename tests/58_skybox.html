@@ -42,7 +42,7 @@
 					var skyboxImages = [lena, barb, barb,
 										lena, lena, barb];
 					var skyboxComponent=scene.cameraNode.addComponent(new SkyboxComponent());
-					skyboxComponent.setup(engine.assetsManager, engine, skyboxImages, 0.5);
+					skyboxComponent.setup(engine.assetsManager, engine, skyboxImages);
 					orbitController.target.value=node.transform;
 					orbitController.rotation[0]=1.5;
 

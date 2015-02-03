@@ -3,13 +3,15 @@ var SkyboxComponent = Component.extend({
 		this._super();
 	},
 
-	setup: function(assetsManager, engine, images, offsetY) {
+	setup: function(assetsManager, engine, images) {
 		this.meshNode = new Node("Skybox");
 
 		var center=[0.0, 0.0, 0.0];
-		if (offsetY)
-			center[1] += offsetY;
-		var extents=[1.0, 1.0, 1.0];
+		var extent = 1.0;
+		if (engine.scene && engine.scene.camera && engine.scene.camera.far) {
+			extent = Math.sqrt(engine.scene.camera.far*engine.scene.camera.far / 3.0);
+		}
+		var extents=[extent, extent, extent];
 
 		var mesh = new Mesh();
 
