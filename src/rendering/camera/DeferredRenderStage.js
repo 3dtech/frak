@@ -18,4 +18,8 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 	getGeneratorStage: function() {
 		return new DeferredShadingRenderStage();
 	}
+
+	// onStart: function(context, engine, camera) {
+	// 	this._super();
+	// }
 });

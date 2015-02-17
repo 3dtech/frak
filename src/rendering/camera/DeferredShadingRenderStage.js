@@ -6,6 +6,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		this._super();
 		this.organizer = new RendererOrganizer();
 		this.diffuseFallback = null;
+		this.size = vec2.create();
 		this.invModelview = mat4.create();
 
 		this.bindCameraTarget = {
@@ -25,7 +26,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		};
 
 		// Rendering order is defined as follows:
-		this.oitStage = this.addStage(new OITRenderStage());
+		// this.oitStage = this.addStage(new OITRenderStage()); // needs opaquestage
 		this.gbufferStage = this.addStage(new GBufferRenderStage());
 		this.addStage(this.bindCameraTarget);
 		this.lightsStage = this.addStage(new LightsRenderStage());
@@ -50,6 +51,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
 
 	onStart: function(context, engine, camera) {
 		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
+		vec2.copy(this.size, this.parent.size);
 	},
 
 	/** Prepares data shared among most renderers. */

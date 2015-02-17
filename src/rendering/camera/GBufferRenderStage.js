@@ -12,7 +12,7 @@ var GBufferRenderStage = RenderStage.extend({
 	},
 
 	onStart: function(context, engine, camera) {
-		this.buffer = new TargetTextureMulti(context, size, { numTargets: 4 });
+		this.buffer = new TargetTextureMulti(context, this.parent.size, { numTargets: 4 });
 		this.material = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/deferred_gbuffer"),
 			{
