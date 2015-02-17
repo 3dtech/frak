@@ -8,7 +8,7 @@
 	"lib/hammer.min.js",
 
 	"src/Version.js",
-	"src/FRAK-minified.js",
+	"src/FRAK.js",
 	"src/scene/Cloneable.js",
 	"src/scene/Serializable.js",
 	"src/scene/Serializer.js",
@@ -35,6 +35,8 @@
 	"src/rendering/shaders/Sampler.js",
 
 	"src/rendering/camera/Camera.js",
+	"src/rendering/camera/RendererOrganizer.js",
+
 	"src/rendering/camera/RenderStage.js",
 	"src/rendering/camera/MaterialRenderStage.js",
 	"src/rendering/camera/ShaderRenderStage.js",
@@ -48,14 +50,21 @@
 	"src/rendering/camera/TransparentGeometryRenderStage.js",
 	"src/rendering/camera/OITRenderStage.js",
 	"src/rendering/camera/PostProcessRenderStage.js",
+	"src/rendering/camera/DeferredRenderStage.js",
+	"src/rendering/camera/DeferredShadingRenderStage.js",
+	"src/rendering/camera/GBufferRenderStage.js",
+	"src/rendering/camera/LightsRenderStage.js",
+
 	"src/rendering/camera/PostProcess.js",
 	"src/rendering/camera/AntiAliasPostProcess.js",
 	"src/rendering/camera/OITPostProcess.js",
 	"src/rendering/camera/SSAOPostProcess.js",
+
 	"src/rendering/camera/RenderTarget.js",
 	"src/rendering/camera/TargetScreen.js",
 	"src/rendering/camera/TargetTexture.js",
 	"src/rendering/camera/TargetTextureFloat.js",
+	"src/rendering/camera/TargetTextureMulti.js",
 
 	"src/rendering/buffers/RenderBuffer.js",
 	"src/rendering/buffers/TrianglesRenderBuffer.js",
