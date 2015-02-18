@@ -85,6 +85,7 @@ var Renderer=Class.extend({
 			uniforms.lightDirection = context.light.uniforms.lightDirection;
 			uniforms.lightColor = context.light.uniforms.lightColor;
 			uniforms.lightIntensity = context.light.uniforms.lightIntensity;
+			uniforms.useShadows = context.light.uniforms.useShadows;
 		}
 
 		// Shadow uniforms

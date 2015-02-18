@@ -14,6 +14,19 @@
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
+			function makeTransparent(subnode) {
+				if (subnode.getComponent(MeshRendererComponent)) {
+					var meshRendererComponent = subnode.getComponent(MeshRendererComponent);
+					meshRendererComponent.castShadows=false;
+					for (var i in meshRendererComponent.meshRenderers) {
+						meshRendererComponent.meshRenderers[i].transparent=true;
+						var material = meshRendererComponent.meshRenderers[i].material;
+						material.shader = engine.assetsManager.addShaderSource("Transparent");
+						material.shader.requirements.transparent = true;
+					}
+				}
+			};
+
 			function setupScene(scene) {
 				scene.light.shadowCasting = true;
 				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
@@ -45,7 +58,74 @@
 				var model = scene.engine.assetsManager.addModel('data/axis_test.data');
 				scene.root.addNode(model);
 
+				var p0 = scene.engine.assetsManager.texturesManager.add("data/pattern_0.jpg");
+				var p1 = scene.engine.assetsManager.texturesManager.add("data/pattern_1.jpg");
+				var windowTexture = scene.engine.assetsManager.texturesManager.add("data/window.png");
+
+				var groundMaterial = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/diffuse"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[ new Sampler("diffuse0", p1) ]
+				);
+				groundMaterial.name = 'ground';
+
+				var red = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.5}) },
+					[]
+				);
+				red.name = 'red';
+
+				var blue = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.5}) },
+					[]
+				);
+				blue.name = 'blue';
+
+				var ceiling = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					// { "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:0.5}) },
+					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:0.5}) },
+					// []
+					[ new Sampler("diffuse0", p0) ]
+				);
+				ceiling.name = 'ceiling';
+
+				var windowMaterial = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					// { "diffuse": new UniformColor({r:1.0, g:1.0, b:0.0, a:1.0}) },
+					[ new Sampler("diffuse0", windowTexture) ]
+				);
+				windowMaterial.name = 'window';
+
+				var ground = Primitives.plane(10.0, 10.0, groundMaterial);
+				mat4.fromRotationTranslation(ground.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, -1, 0]);
+				scene.root.addNode(ground);
+
+				var redBox = Primitives.box([0,0,0], [5.0, 0.5, 0.2], red);
+				mat4.fromRotationTranslation(redBox.transform.relative, quat.euler(quat.create(), 0, 90, 0), [3, 0.1, 0]);
+				scene.root.addNode(redBox);
+
+				var blueBox = Primitives.box([0,0,0], [2.0, 2.0, 2.0], blue);
+				mat4.fromRotationTranslation(blueBox.transform.relative, quat.euler(quat.create(), 0, 0, 0), [3, 0.1, 0]);
+				scene.root.addNode(blueBox);
+
+				var plane = Primitives.plane(10.0, 5.0, ceiling);
+				mat4.fromRotationTranslation(plane.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, 3, -2.5]);
+				scene.root.addNode(plane);
+
+				var aken = Primitives.plane(10.0, 5.0, windowMaterial);
+				mat4.fromRotationTranslation(aken.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, 3, 2.5]);
+				scene.root.addNode(aken);
+
 				scene.engine.sceneStarted = function() {
+					redBox.onEachChild(makeTransparent);
+					blueBox.onEachChild(makeTransparent);
+					plane.onEachChild(makeTransparent);
+					aken.onEachChild(makeTransparent);
+
 					model.onEachChildComponent(function (component) {
 						if (component instanceof MeshRendererComponent) {
 							for (var i=0; i<component.meshRenderers.length; i++) {

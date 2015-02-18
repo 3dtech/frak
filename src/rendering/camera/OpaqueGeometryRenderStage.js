@@ -13,7 +13,7 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 		if (scene.lights.length>0)
 			context.light = scene.lights[0];
 
-		if (this.parent.enableDynamicBatching) {
+		if (this.parent.organizer.enableDynamicBatching) {
 			this.parent.renderBatched(context, this.parent.solidRendererBatches);
 		}
 		else {
@@ -28,7 +28,7 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 			gl.enable(gl.BLEND);
 			for (var l=1; l<scene.lights.length; l++) {
 				context.light = scene.lights[l];
-				if (this.parent.enableDynamicBatching) {
+				if (this.parent.organizer.enableDynamicBatching) {
 					this.parent.renderBatched(context, this.parent.solidRendererBatches);
 				}
 				else {
