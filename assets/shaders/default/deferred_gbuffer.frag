@@ -1,3 +1,5 @@
+#extension GL_EXT_draw_buffers : require
+
 precision highp float;
 
 uniform vec4 diffuse;
