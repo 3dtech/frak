@@ -29,7 +29,7 @@ var SkyboxRenderStage = RenderStage.extend({
 			return;
 		}
 
-		var globalSamplers = [this.parent.shadowMapFallbackSampler];
+		var globalSamplers = [this.parent.shadowFallback];
 
 		var renderComponent = skybox.meshNode.getComponent(MeshRendererComponent);
 		var renderers = renderComponent.meshRenderers;

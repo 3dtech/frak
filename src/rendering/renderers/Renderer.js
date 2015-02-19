@@ -90,7 +90,6 @@ var Renderer=Class.extend({
 
 		// Shadow uniforms
 		if (context.shadow) {
-			uniforms.linearDepthConstant = context.shadow.linearDepthConstant;
 			uniforms.lightView = context.shadow.lightView;
 			uniforms.lightProjection = context.shadow.lightProjection;
 			uniforms.shadowIntensity = context.shadow.shadowIntensity;

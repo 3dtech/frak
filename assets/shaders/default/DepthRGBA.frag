@@ -1,8 +1,8 @@
 // Shader for rendering linear depth values into RGBA texture
-precision highp float; 
+precision highp float;
 
 uniform mat4 modelview;
-uniform float linearDepthConstant;
+// uniform float linearDepthConstant;
 
 /** Packing Type:
 	1 - packs depth value into RGBA

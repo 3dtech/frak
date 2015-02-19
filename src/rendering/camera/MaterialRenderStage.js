@@ -10,7 +10,7 @@ var MaterialRenderStage=RenderStage.extend({
 		this.transparentRenderers=[];
 		this.transparentRendererBatches={};
 
-		this.shadowMapFallbackSampler = null;
+		this.shadowFallback = null;
 		this.diffuseFallback = null;
 
 		this.bindCameraTarget = {
@@ -69,6 +69,7 @@ var MaterialRenderStage=RenderStage.extend({
 
 	onStart: function(context, engine, camera) {
 		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
+		this.shadowFallback = new Sampler('shadow0', engine.WhiteTexture);
 
 		if (engine.options.ssao === true) {
 			this.depthStage.enable();
@@ -81,9 +82,17 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Prepares shadow-mapping uniforms that are shared between all materials. */
 	prepareShadowContext: function(context, scene) {
-		if (this.shadowMapFallbackSampler === null) {
-			this.shadowMapFallbackSampler = new Sampler('shadow0', scene.engine.WhiteTexture);
+		if (!this._shadowContext) {
+			this._shadowContext = {
+				'shadow0': this.shadowFallback,
+				'lightProjection': this.shadowUniforms.lightProjection,
+				'lightView': this.shadowUniforms.lightView,
+				'shadowIntensity': this.shadowUniforms.shadowIntensity
+			};
 		}
+
+		context.shadow = this._shadowContext;
+		context.shadow.shadow0 = this.shadowFallback;
 
 		if (!this.shadowMapStage.active)
 			return;
@@ -96,13 +105,7 @@ var MaterialRenderStage=RenderStage.extend({
 		mat4.copy(this.shadowUniforms.lightProjection.value, this.shadowMapStage.lightProj);
 		this.shadowUniforms.shadowIntensity.value = light.shadowIntensity;
 
-		context.shadow = {
-			'shadow0': this.shadowMapStage.shadowSampler,
-			'linearDepthConstant': this.shadowMapStage.material.uniforms.linearDepthConstant,
-			'lightProjection': this.shadowUniforms.lightProjection,
-			'lightView': this.shadowUniforms.lightView,
-			'shadowIntensity': this.shadowUniforms.shadowIntensity
-		};
+		context.shadow.shadow0 = this.shadowMapStage.shadowSampler;
 	},
 
 	/** Prepares Light uniforms that are shared between all materials. */
@@ -166,13 +169,7 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Renders renderers in batches by material */
 	renderBatched: function(context, batches) {
-		var globalSamplers = [];
-		if (context.shadow) {
-			globalSamplers.push(context.shadow.shadow0);
-		}
-		else {
-			globalSamplers.push(this.shadowMapFallbackSampler);
-		}
+		var globalSamplers = [context.shadow.shadow0];
 
 		var usedShader = false;
 		for (var i in batches) {
@@ -230,17 +227,10 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Renders without dynamic batching */
 	renderBruteForce: function(context, renderers) {
-		var globalSamplers = [];
-		if (context.shadow) {
-			globalSamplers.push(context.shadow.shadow0);
-		}
-		else {
-			globalSamplers.push(this.shadowMapFallbackSampler);
-		}
+		var globalSamplers = [context.shadow.shadow0];
 
 		for (var j=0; j<renderers.length; ++j) {
 			var renderer=renderers[j];
-
 			context.modelview.push();
 			context.modelview.multiply(renderer.matrix);
 
@@ -251,9 +241,10 @@ var MaterialRenderStage=RenderStage.extend({
 			else {
 				samplers = globalSamplers.concat([this.diffuseFallback]);
 			}
+
 			renderer.material.bind(renderer.getDefaultUniforms(context), samplers);
 			renderer.render(context);
-			renderer.material.unbind(globalSamplers);
+			renderer.material.unbind(samplers);
 
 			context.modelview.pop();
 		}
