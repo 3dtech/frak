@@ -4,7 +4,6 @@
 var GBufferRenderStage = RenderStage.extend({
 	init: function() {
 		this._super();
-		this.organizer = new RendererOrganizer();
 		this.buffer = null;
 		this.clearColor = new Color(0.0, 0.0, 0.0, 0.0);
 
@@ -13,6 +12,7 @@ var GBufferRenderStage = RenderStage.extend({
 
 	onStart: function(context, engine, camera) {
 		this.buffer = new TargetTextureMulti(context, this.parent.size, { numTargets: 4 });
+
 		this.material = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/deferred_gbuffer"),
 			{
@@ -36,14 +36,16 @@ var GBufferRenderStage = RenderStage.extend({
 		gl.colorMask(true, true, true, true);
 		gl.depthFunc(gl.LESS);
 		gl.enable(gl.DEPTH_TEST);
+		gl.clearColor(0.0, 0.0, 0.0, 0.0);
+		gl.clear(gl.COLOR_BUFFER_BIT);
 
 		this.buffer.bind(context, false, this.clearColor);
 
 		// Render opaque geometry to the g-buffer
-		this.renderBatches(context, scene, camera, this.organizer.solidRendererBatches, this.material);
+		this.renderBatches(context, scene, camera, this.parent.organizer.solidRendererBatches, this.material);
 
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
-		this.renderBatches(context, scene, camera, this.organizer.transparentRendererBatches, this.material);
+		this.renderBatches(context, scene, camera, this.parent.organizer.transparentRendererBatches, this.material);
 
 		this.buffer.unbind(context);
 

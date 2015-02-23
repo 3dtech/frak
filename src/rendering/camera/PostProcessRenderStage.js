@@ -103,27 +103,27 @@ var PostProcessRenderStage = RenderStage.extend({
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
 		material.bind({}, [sampler]);
-		this.renderQuad(context, material.shader);
+		this.renderQuad(context, material.shader, this.quad);
 		material.unbind([sampler]);
 	},
 
-	renderQuad: function(context, shader) {
+	renderQuad: function(context, shader, quad) {
 		if (!shader.linked)
 			return;
 
 		var gl = context.gl;
 		var locations=[];
-		for(var bufferName in this.quad.buffers) {
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.quad.buffers[bufferName]);
+		for(var bufferName in quad.buffers) {
+			gl.bindBuffer(gl.ARRAY_BUFFER, quad.buffers[bufferName]);
 			var bufferLocation = shader.getAttribLocation(bufferName);
 			if (bufferLocation==-1)
 				continue;
 
 			gl.enableVertexAttribArray(bufferLocation);
 			locations.push(bufferLocation);
-			gl.vertexAttribPointer(bufferLocation, this.quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
+			gl.vertexAttribPointer(bufferLocation, quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
 		}
-		this.quad.drawElements();
+		quad.drawElements();
 		for (var i=0; i<locations.length; i++) {
 			gl.disableVertexAttribArray(locations[i]);
 		}

@@ -5,21 +5,55 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 	init: function() {
 		this._super();
 
-		// TODO: check that the system can handle deferred rendering
+		this.debugActive = true;
+		this.debugger = null;
 
-		// #1 - render OIT (renders to 2 float targets)
-		// #2 - render geometry to g-buffer (renders to 4 float targets)
-		// -- - bind camera target (renders to normal RGBA target)
-		// #3 - render light shapes and use g-buffer to apply right color, apply OIT data
-		// -- - unbind camera target
-		// #4 - apply post processing effects (normal RGBA targets swapped once per effect)
+		// TODO: check that the system can handle deferred rendering
 	},
 
 	getGeneratorStage: function() {
 		return new DeferredShadingRenderStage();
-	}
+	},
 
-	// onStart: function(context, engine, camera) {
-	// 	this._super();
-	// }
+	debug: function(val) {
+		this.debugActive = !(val === false);
+	},
+
+	initDebugger: function(context) {
+		this.debugger = {};
+
+		function createQuad(x, y, width, height) {
+			var vertices = [x,y,0, x,y+height,0, x+width,y+height,0, x+width,y,0];
+			var quad = new TrianglesRenderBuffer(context, [0, 1, 2, 0, 2, 3]);
+			quad.add('position', vertices, 3);
+			quad.add("uv0", [0,0, 0,1, 1,1, 1,0], 2);
+			return quad;
+		}
+
+		this.debugger.quads = [];
+		this.debugger.quads.push(createQuad(-1, -1, 0.5, 0.5));
+		this.debugger.quads.push(createQuad(-0.5, -1, 0.5, 0.5));
+		this.debugger.quads.push(createQuad(0, -1, 0.5, 0.5));
+		this.debugger.quads.push(createQuad(0.5, -1, 0.5, 0.5));
+		this.debugger.sampler = new Sampler('tex0', null);
+	},
+
+	onPostRender: function(context, scene, camera) {
+		this._super(context, scene, camera);
+
+		if (this.debugActive) {
+			if (!this.debugger)
+				this.initDebugger(context);
+			var gl = context.gl;
+			gl.disable(gl.DEPTH_TEST);
+			gl.disable(gl.CULL_FACE);
+			var buffer = this.generator.gbufferStage.buffer;
+			for (var i=0; i<4; i++) {
+				this.debugger.sampler.texture = buffer.targets[i];
+				this.material.bind({}, [this.debugger.sampler]);
+				this.renderQuad(context, this.material.shader, this.debugger.quads[i]);
+				this.material.unbind([this.debugger.sampler]);
+			}
+		}
+	},
 });
