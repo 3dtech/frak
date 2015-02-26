@@ -110,10 +110,10 @@ var Primitives = {
 
 	sphere: function(radius, slices, stacks, material) {
 		if (radius<=0.0)
-			throw "Primitives.sphere: invalid sphere radius (radius>0)";
+			throw "Primitives.sphere: invalid sphere radius";
 
 		if (slices<2 || stacks<2)
-			throw "Primitives.sphere: invalid sphere slices/stacks parameters (slices>1 and stacks>1)";
+			throw "Primitives.sphere: invalid sphere slices/stacks parameters (slices<2 or stacks<2)";
 
 		var dtheta = 360.0/slices;
 		var dphi = 180.0/stacks;
@@ -220,6 +220,120 @@ var Primitives = {
 		mesh.addSubmesh(submesh, material);
 
 		var node = new Node('Sphere');
+		node.addComponent(new MeshComponent(mesh));
+		node.addComponent(new MeshRendererComponent());
+		return node;
+	},
+
+	cone: function(radius, height, slices, material) {
+		if (radius<=0.0)
+			throw "Primitives.cone: invalid cone radius";
+		if (height==0)
+			throw "Primitives.cone: cannot create a cone with zero height";
+		if (slices<2)
+			throw "Primitives.cone: invalid slices (slices<2)";
+
+		var dtheta = 360.0/slices;
+		var upperCap = vec3.fromValues(0, height/2.0, 0);
+		var lowerCap = vec3.fromValues(0, -height/2.0, 0);
+
+		var vertexcount = (360/dtheta)*6;
+		var facecount = (360/dtheta)*2;
+
+		var mesh = new Mesh();
+		var submesh = new Submesh();
+		submesh.positions = new Float32Array(vertexcount*3);
+		submesh.normals = new Float32Array(vertexcount*3);
+		submesh.texCoords2D = [new Float32Array(vertexcount*2)];
+
+		var Deg2Rad = Math.PI/180.0;
+
+		// this is for computing smooth normals
+		var P = vec3.fromValues(lowerCap[0], 0.5*height - (radius*radius + height*height) / height, lowerCap[2]);
+
+		var vert = 0;
+		var normal = vec3.create();
+		for (var theta = 0; theta < 360; theta += dtheta) {
+			// bottom triangle of the slice
+			submesh.faces.push(vert+0, vert+1, vert+2);
+			vec3.set(normal, 0, -1, 0);
+
+			submesh.positions[3*vert + 0] = radius * Math.sin(theta* Deg2Rad);
+			submesh.positions[3*vert + 1] = lowerCap[1];
+			submesh.positions[3*vert + 2] = radius * Math.cos(theta * Deg2Rad);
+			submesh.normals[3*vert + 0] = normal[0];
+			submesh.normals[3*vert + 1] = normal[1];
+			submesh.normals[3*vert + 2] = normal[2];
+			submesh.texCoords2D[0][2*vert + 0] = theta/360.0;
+			submesh.texCoords2D[0][2*vert + 1] = 1.0;
+			vert++;
+
+			submesh.positions[3*vert + 0] = radius * Math.sin((theta+dtheta) * Deg2Rad);
+			submesh.positions[3*vert + 1] = lowerCap[1];
+			submesh.positions[3*vert + 2] = radius*Math.cos((theta+dtheta) * Deg2Rad);
+			submesh.normals[3*vert + 0] = normal[0];
+			submesh.normals[3*vert + 1] = normal[1];
+			submesh.normals[3*vert + 2] = normal[2];
+			submesh.texCoords2D[0][2*vert + 0] = (theta+dtheta)/360.0;
+			submesh.texCoords2D[0][2*vert + 1] = 1.0;
+			vert++;
+
+			submesh.positions[3*vert + 0] = lowerCap[0];
+			submesh.positions[3*vert + 1] = lowerCap[1];
+			submesh.positions[3*vert + 2] = lowerCap[2];
+			submesh.normals[3*vert + 0] = normal[0];
+			submesh.normals[3*vert + 1] = normal[1];
+			submesh.normals[3*vert + 2] = normal[2];
+			submesh.texCoords2D[0][2*vert + 0] = theta/360.0;
+			submesh.texCoords2D[0][2*vert + 1] = 0.0;
+			vert++;
+
+			// the side of the slice
+			submesh.faces.push(vert+0, vert+1, vert+2);
+			var a = vec3.fromValues(radius * Math.sin(theta * Deg2Rad), lowerCap[1], radius * Math.cos(theta * Deg2Rad));
+			var b = vec3.fromValues(radius * Math.sin((theta+dtheta) * Deg2Rad), lowerCap[1], radius * Math.cos((theta+dtheta) * Deg2Rad));
+			var c = vec3.fromValues(upperCap[0], upperCap[1], upperCap[2]);
+
+			vec3.sub(normal, a, P);
+			vec3.normalize(normal, normal);
+			submesh.positions[3*(vert+0) + 0] = a[0];
+			submesh.positions[3*(vert+0) + 1] = a[1];
+			submesh.positions[3*(vert+0) + 2] = a[2];
+			submesh.normals[3*(vert+0) + 0] = normal[0];
+			submesh.normals[3*(vert+0) + 1] = normal[1];
+			submesh.normals[3*(vert+0) + 2] = normal[2];
+			submesh.texCoords2D[0][2*(vert+0) + 0] = theta/360.0;
+			submesh.texCoords2D[0][2*(vert+0) + 1] = 1.0;
+
+			vec3.sub(normal, b, P);
+			vec3.normalize(normal, normal);
+			submesh.positions[3*(vert+1) + 0] = b[0];
+			submesh.positions[3*(vert+1) + 1] = b[1];
+			submesh.positions[3*(vert+1) + 2] = b[2];
+			submesh.normals[3*(vert+1) + 0] = normal[0];
+			submesh.normals[3*(vert+1) + 1] = normal[1];
+			submesh.normals[3*(vert+1) + 2] = normal[2];
+			submesh.texCoords2D[0][2*(vert+1) + 0] = (theta+dtheta)/360.0;
+			submesh.texCoords2D[0][2*(vert+1) + 1] = 1.0;
+
+			vec3.set(normal, 0, 1, 0);
+			submesh.positions[3*(vert+2) + 0] = c[0];
+			submesh.positions[3*(vert+2) + 1] = c[1];
+			submesh.positions[3*(vert+2) + 2] = c[2];
+			submesh.normals[3*(vert+2) + 0] = normal[0];
+			submesh.normals[3*(vert+2) + 1] = normal[1];
+			submesh.normals[3*(vert+2) + 2] = normal[2];
+			submesh.texCoords2D[0][2*(vert+2) + 0] = theta/360.0;
+			submesh.texCoords2D[0][2*(vert+2) + 1] = 0.0;
+
+			vert+=3;
+		}
+
+		submesh.calculateTangents();
+		submesh.recalculateBounds();
+		mesh.addSubmesh(submesh, material);
+
+		var node = new Node('Cone');
 		node.addComponent(new MeshComponent(mesh));
 		node.addComponent(new MeshRendererComponent());
 		return node;
