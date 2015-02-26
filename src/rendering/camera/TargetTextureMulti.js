@@ -194,32 +194,37 @@ var TargetTextureMulti = RenderTarget.extend({
 	bind: function(context, doNotClear, clearColor) {
 		var gl = context.gl;
 
-		// if (this.rebuild) {
-		// 	gl.bindTexture(gl.TEXTURE_2D, this.texture.glTexture);
-		// 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		// 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		// 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.getTextureFilter(context));
-		// 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.getTextureFilter(context));
-		// 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.size[0], this.size[1], 0, gl.RGBA, this.getDataType(context), null);
-		// 	gl.bindTexture(gl.TEXTURE_2D, null);
+		if (this.rebuild) {
+			this.rebuild = false;
 
-		// 	if (this.useDepthTexture) {
-		// 		gl.bindTexture(gl.TEXTURE_2D, this.depth.glTexture);
-		// 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		// 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		// 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		// 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-		// 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, this.size[0], this.size[1], 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
-		// 		gl.bindTexture(gl.TEXTURE_2D, null);
-		// 	}
-		// 	else {
-		// 		gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
-		// 		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
-		// 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-		// 	}
+			// Resize color targets
+			for (var i=0; i<this.targets.length; i++) {
+				var target = this.targets[i];
+				gl.bindTexture(gl.TEXTURE_2D, target.glTexture);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.getTextureFilter(context));
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.getTextureFilter(context));
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.size[0], this.size[1], 0, gl.RGBA, this.getDataType(context), null);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+			}
 
-		// 	this.rebuild = false;
-		// }
+			// Resize depth target
+			if (this.options.depth) {
+				gl.bindTexture(gl.TEXTURE_2D, this.depth.glTexture);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, this.size[0], this.size[1], 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+			}
+			else {
+				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
+				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
+				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+			}
+		}
 
 		doNotClear = (doNotClear === true);
 		clearColor = (clearColor instanceof Color) ? clearColor : false;
