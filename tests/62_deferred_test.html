@@ -28,11 +28,29 @@
 			};
 
 			function setupScene(scene) {
-				scene.light.shadowCasting = true;
+				// Camera
 				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
-
 				scene.cameraComponent.setClipPlanes(0.1, 100.0);
+				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.distance = 6.0;
+				orbitController.minimumDistance = 1.0;
+				orbitController.maximumDistance = 15.0;
+				orbitController.rotation[1] = 1.0;
+				orbitController.target.value = scene.root.transform;
 
+				// Lights
+				// scene.light.shadowCasting = true;
+				var lights = scene.root.addNode(new Node('lights'));
+
+				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
+
+				var light0 = lights.addNode(new Node('light0'));
+				light0.addComponent(new OmniLight());
+				light0.transform.setPosition([0, 1, 0]);
+				light0.transform.scale([2, 2, 2]);
+
+
+				// Geometry
 				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");
 				var texNormal = scene.engine.assetsManager.texturesManager.add("data/tiles_n.png");
 
@@ -142,13 +160,6 @@
 						}
 					});
 				}
-
-				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
-				orbitController.distance = 6.0;
-				orbitController.minimumDistance = 1.0;
-				orbitController.maximumDistance = 15.0;
-				orbitController.rotation[1] = 1.0;
-				orbitController.target.value = scene.root.transform;
 			}
 
 			var engine;

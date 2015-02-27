@@ -7,6 +7,10 @@ var GBufferRenderStage = RenderStage.extend({
 		this.buffer = null;
 		this.clearColor = new Color(0.0, 0.0, 0.0, 0.0);
 
+		this.perBatchUniforms = {
+			'useNormalmap': new UniformInt(0)
+		};
+
 		// this.skyboxStage = this.addStage(new SkyboxRenderStage()); // needs to be part of G-buffer
 	},
 
@@ -64,6 +68,15 @@ var GBufferRenderStage = RenderStage.extend({
 			var batch = batches[i];
 			var batchMaterial = batch[0].material;
 
+			// Check if material has a normal-map
+			this.perBatchUniforms.useNormalmap.value = 0;
+			for (var i=0; i<batchMaterial.samplers.length; i++) {
+				if (batchMaterial.samplers[i].name == 'normal0') {
+					this.perBatchUniforms.useNormalmap.value = 1;
+					break;
+				}
+			}
+
 			var samplers;
 			if (material.samplers.length>0) {
 				samplers = material.samplers.concat(batchMaterial.samplers);
@@ -77,6 +90,7 @@ var GBufferRenderStage = RenderStage.extend({
 			}
 
 			// Bind material uniforms and samplers
+			shader.bindUniforms(this.perBatchUniforms);
 			shader.bindUniforms(batchMaterial.uniforms);
 			shader.bindSamplers(samplers);
 
@@ -87,7 +101,7 @@ var GBufferRenderStage = RenderStage.extend({
 				// Bind renderer specific uniforms
 				this.parent.rendererUniforms.model.value = batch[j].matrix;
 				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				this.parent.rendererUniforms.modelviewInverse.value = this.invModelview;
+				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
 				shader.bindUniforms(this.parent.rendererUniforms);
 
 				batch[j].renderGeometry(context, shader);
