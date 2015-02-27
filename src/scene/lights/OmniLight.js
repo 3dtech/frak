@@ -29,7 +29,7 @@ var OmniLight = Light.extend({
 			[]
 		);
 
-		this.geometry = Primitives.sphere(1.0, 16, 16, this.material);
+		this.geometry = Primitives.sphere(this.size, 16, 16, this.material);
 		this.geometry.getComponent(MeshRendererComponent).disable();
 		this.node.addNode(this.geometry);
 
