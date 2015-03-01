@@ -38,14 +38,12 @@ var AmbientLight = Light.extend({
 			0.0, 0.0, 1.0,
 			0.0, 0.0, 1.0
 		];
-
 		submesh.texCoords2D = [[
 			0.0, 0.0,
 			0.0, 1.0,
 			1.0, 1.0,
 			1.0, 0.0
 		]];
-
 		submesh.faces = [0, 1, 2, 0, 2, 3];
 		submesh.recalculateBounds();
 		mesh.addSubmesh(submesh, this.material);
@@ -59,7 +57,7 @@ var AmbientLight = Light.extend({
 	},
 
 	onUpdate: function() {
-		// TODO: update light uniforms
+		vec4.set(this.material.uniforms.lightColor.value, this.color.r, this.color.g, this.color.b, this.color.a);
 	},
 
 	getGeometryRenderers: function() {

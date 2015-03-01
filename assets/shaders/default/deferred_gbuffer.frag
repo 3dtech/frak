@@ -2,8 +2,6 @@
 
 precision highp float;
 
-uniform mat4 view;
-
 uniform vec4 diffuse;
 uniform float specularStrength;
 uniform int specularPower;
@@ -32,7 +30,6 @@ void main() {
 		vec4 encodedNormal = texture2D(normal0, uv0);
 		vec3 localCoords = vec3(2.0 * encodedNormal.rg - vec2(1.0), encodedNormal.b);
 		N = normalize(tbn * localCoords);
-		N = normalize(mat3(view) * N);
 	}
 
 	gl_FragData[0] = vec4(color.rgb, specularStrength);
