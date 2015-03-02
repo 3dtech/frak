@@ -50,8 +50,10 @@
 	"src/rendering/camera/TransparentGeometryRenderStage.js",
 	"src/rendering/camera/OITRenderStage.js",
 	"src/rendering/camera/PostProcessRenderStage.js",
+
 	"src/rendering/camera/DeferredRenderStage.js",
 	"src/rendering/camera/DeferredShadingRenderStage.js",
+	"src/rendering/camera/DeferredShadowRenderStage.js",
 	"src/rendering/camera/GBufferRenderStage.js",
 	"src/rendering/camera/LightsRenderStage.js",
 

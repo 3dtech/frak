@@ -13,6 +13,12 @@ var DirectionalLight = Light.extend({
 
 		this.geometry = null;
 		this.material = null;
+
+		// Shadow-mapping related
+		this.shadow = null;
+		this.shadowResolution = vec2.fromValues(256, 256);
+		this.lightView = mat4.create();
+		this.lightProj = mat4.create();
 	},
 
 	type: function() {
@@ -34,10 +40,17 @@ var DirectionalLight = Light.extend({
 			{
 				'lightColor': new UniformColor(this.color),
 				'lightIntensity': new UniformFloat(this.intensity),
-				'lightDirection': new UniformVec3(vec3.create())
+				'lightDirection': new UniformVec3(vec3.create()),
+				'lightView': new UniformMat4(mat4.create()),
+				'lightProjection': new UniformMat4(mat4.create())
 			},
 			[]
 		);
+
+		if (this.shadowCasting && !this.shadow) {
+			this.shadow = new TargetTextureFloat(this.shadowResolution, context, false);
+			this.material.samplers.push(new Sampler('shadow0', this.shadow.texture));
+		}
 
 		var mesh = new Mesh();
 		var submesh = new Submesh();
@@ -71,10 +84,20 @@ var DirectionalLight = Light.extend({
 		engine.assetsManager.load();
 	},
 
-	onUpdate: function() {
+	onUpdate: function(engine) {
 		vec4.set(this.material.uniforms.lightColor.value, this.color.r, this.color.g, this.color.b, this.color.a);
 		vec3.copy(this.material.uniforms.lightDirection.value, this.direction);
 		this.material.uniforms.lightIntensity.value = this.intensity;
+
+		if (this.shadowCasting) {
+			if (!this.shadow) {
+				this.shadow = new TargetTextureFloat(this.shadowResolution, engine.context, false);
+				this.material.samplers.push(new Sampler('shadow0', this.shadow.texture));
+			}
+
+			mat4.copy(this.material.uniforms.lightView.value, this.lightView);
+			mat4.copy(this.material.uniforms.lightProjection.value, this.lightProj);
+		}
 	},
 
 	getGeometryRenderers: function() {

@@ -13,9 +13,6 @@ varying vec2 uv;
 void main () {
 	vec4 data0 = texture2D(gb0, uv);
 	vec3 color = data0.rgb * lightColor.rgb;
-
-	// TODO: shadows
-
 	gl_FragColor = vec4(color, 1.0);
 }
 

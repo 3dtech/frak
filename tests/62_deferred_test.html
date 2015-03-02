@@ -8,6 +8,7 @@
 	<body>
 		<!-- Canvas -->
 		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+		<button onclick="toggleDebug();">Toggle debug</button>
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
@@ -29,24 +30,23 @@
 
 			function setupScene(scene) {
 				// Camera
-				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
+				scene.camera.backgroundColor = new Color(0.1, 0.1, 0.1, 1.0);
 				scene.cameraComponent.setClipPlanes(0.1, 100.0);
 				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
-				orbitController.distance = 6.0;
+				orbitController.distance = 10.0;
 				orbitController.minimumDistance = 1.0;
-				orbitController.maximumDistance = 15.0;
+				orbitController.maximumDistance = 20.0;
 				orbitController.rotation[1] = 1.0;
 				orbitController.target.value = scene.root.transform;
 
 				// Lights
-				// scene.light.shadowCasting = true;
 				var lights = scene.root.addNode(new Node('lights'));
-
 				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
 				var lightDirectional = scene.light;
 				lightDirectional.setLightDirection([1, 1, 1]);
 				// lightDirectional.setLightDirection([0, 1, 0]);
 				lightDirectional.intensity = 0.3;
+				lightDirectional.shadowCasting = true;
 
 				var light0 = lights.addNode(new Node('light0'));
 				light0.addComponent(new OmniLight(2.0, new Color(0.7, 0.1, 0.4)));
@@ -105,14 +105,14 @@
 
 				var red = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
-					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.5}) },
+					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.2}) },
 					[]
 				);
 				red.name = 'red';
 
 				var blue = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
-					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.5}) },
+					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.2}) },
 					[]
 				);
 				blue.name = 'blue';
@@ -120,7 +120,7 @@
 				var ceiling = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
 					// { "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:0.5}) },
-					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:0.5}) },
+					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:0.2}) },
 					// []
 					[ new Sampler("diffuse0", p0) ]
 				);
@@ -188,6 +188,11 @@
 					engine.run();
 				});
 			});
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
 		</script>
 	</body>
 </html>

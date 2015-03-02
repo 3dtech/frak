@@ -42,7 +42,6 @@ var LightsRenderStage = RenderStage.extend({
 		this.sharedSamplers.push(new Sampler('gb1', gb.targets[1]));
 		this.sharedSamplers.push(new Sampler('gb2', gb.targets[2]));
 		this.sharedSamplers.push(new Sampler('gb3', gb.targets[3]));
-		this.sharedSamplers.push(new Sampler('shadow0', engine.WhiteTexture)); // TODO: shadows
 	},
 
 	onPostRender: function(context, scene, camera) {

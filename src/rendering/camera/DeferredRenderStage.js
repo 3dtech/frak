@@ -19,7 +19,7 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 		this.debugActive = !(val === false);
 	},
 
-	initDebugger: function(context) {
+	initDebugger: function(context, scene) {
 		this.debugger = {};
 
 		function createQuad(x, y, width, height) {
@@ -41,6 +41,20 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 		this.debugger.quads.push({ quad: createQuad(0.5, -0.5, 0.5, 0.5),  texture: this.generator.oitStage.transparencyTarget.texture });
 		this.debugger.quads.push({ quad: createQuad(0.5, 0, 0.5, 0.5),  texture: this.generator.oitStage.transparencyWeight.texture });
 
+
+		for (var i=0; i<scene.lights.length; i++) {
+			if (!scene.lights[i].enabled)
+				continue;
+			if (!scene.lights[i].shadowCasting)
+				continue;
+			if (!scene.lights[i].shadow)
+				continue;
+			if (scene.lights[i] instanceof DirectionalLight) {
+				this.debugger.quads.push({ quad: createQuad(0.5, 0.5, 0.5, 0.5),  texture: scene.lights[i].shadow.texture });
+				break;
+			}
+		}
+
 		this.debugger.sampler = new Sampler('tex0', null);
 	},
 
@@ -49,7 +63,7 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 
 		if (this.debugActive) {
 			if (!this.debugger)
-				this.initDebugger(context);
+				this.initDebugger(context, scene);
 			var gl = context.gl;
 			gl.disable(gl.DEPTH_TEST);
 			gl.disable(gl.CULL_FACE);
