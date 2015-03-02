@@ -39,7 +39,7 @@
 
 			function setupLights(scene) {
 				var lights = scene.root.addNode(new Node("Lights"));
-				var light = lights.addNode(new Node("DirectionalLight")).addComponent(new Light());
+				var light = lights.addNode(new Node("DirectionalLight")).addComponent(new DirectionalLight());
 				light.intensity=1.2;
 				light.color.set(1.0, 1.0, 1.0);
 				light.shadowCasting=true;

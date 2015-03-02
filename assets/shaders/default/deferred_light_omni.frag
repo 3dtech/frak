@@ -41,5 +41,5 @@ void main() {
 	vec3 directionToCamera = normalize(cameraPosition - P);
 	float specularLight = specularIntensity * pow(clamp(dot(reflectionVector, directionToCamera), 0.0, 1.0), specularPower);
 
-	gl_FragColor = attenuation * (lightIntensity * vec4(diffuseLight, 1.0) * lightColor + specularLight * lightColor);
+	gl_FragColor = lightIntensity * attenuation * (vec4(diffuseLight, 1.0) * lightColor + specularLight * lightColor);
 }

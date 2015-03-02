@@ -150,6 +150,7 @@
 	"src/scene/components/Light.js",
 	"src/scene/lights/OmniLight.js",
 	"src/scene/lights/AmbientLight.js",
+	"src/scene/lights/DirectionalLight.js",
 
 	"src/scene/descriptors/Descriptor.js",
 	"src/scene/descriptors/TextDescriptor.js",

@@ -62,7 +62,7 @@
 				var model=engine.assetsManager.addModel("http://localhost/api/?class=PublicBuilding&method=getModelSessionless&parameters=[%22demo%22,%229%22]&json_out=0&result_out=0", true);
 
 				var lights = scene.root.addNode(new Node("Lights"));
-				var light = lights.addNode(new Node("DirectionalLight")).addComponent(new Light());
+				var light = lights.addNode(new Node("DirectionalLight")).addComponent(new DirectionalLight());
 				light.intensity=1.2;
 				light.color.set(1.0, 1.0, 1.0);
 				light.shadowCasting=true;

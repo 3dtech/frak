@@ -18,16 +18,18 @@ var LightsRenderStage = RenderStage.extend({
 
 		for (var i=0; i<scene.lights.length; i++) {
 			var light = scene.lights[i];
+			if (!light.enabled)
+				continue;
 			if (!light.geometry)
 				continue;
 			if (light instanceof AmbientLight) {
 				ambient.push(light);
 				continue;
 			}
-			// if (light instanceof DirectionaLight) { // TODO: directional light
-			// 	directional.push(light);
-			// 	continue;
-			// }
+			if (light instanceof DirectionalLight) {
+				directional.push(light);
+				continue;
+			}
 			other.push(light);
 		}
 

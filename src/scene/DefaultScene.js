@@ -13,7 +13,7 @@ var DefaultScene=Scene.extend({
 		this.root.addNode(this.cameraNode);
 
 		this.lightNode=new Node("Light");
-		this.light=new Light();
+		this.light=new DirectionalLight();
 		this.light.color= new Color(1, 1, 1, 1);
 		this.light.intensity = 1.0;
 		this.light.setLightDirection(vec3.fromValues(0.9, 1.0, 0.9));

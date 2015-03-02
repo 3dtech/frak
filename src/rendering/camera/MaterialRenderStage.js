@@ -112,6 +112,11 @@ var MaterialRenderStage=RenderStage.extend({
 	prepareLightContext: function(context, scene) {
 		for (var i=0; i<scene.lights.length; i++) {
 			var light = scene.lights[i];
+			if (!(light instanceof DirectionalLight))
+				continue;
+			if (!light.enabled)
+				continue;
+
 			if (light.uniforms) {
 				vec3.copy(light.uniforms.lightDirection.value, light.direction);
 				light.uniforms.lightIntensity.value = light.intensity;
