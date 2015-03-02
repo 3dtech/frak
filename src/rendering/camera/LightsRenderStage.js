@@ -69,6 +69,7 @@ var LightsRenderStage = RenderStage.extend({
 	renderLight: function(context, light) {
 		var shader = light.material.shader;
 		shader.use();
+		shader.bindUniforms(this.parent.sharedUniforms);
 		shader.bindUniforms(this.sharedUniforms);
 		shader.bindUniforms(light.material.uniforms);
 

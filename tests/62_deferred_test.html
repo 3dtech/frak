@@ -46,7 +46,7 @@
 				var lightDirectional = scene.light;
 				lightDirectional.setLightDirection([1, 1, 1]);
 				// lightDirectional.setLightDirection([0, 1, 0]);
-				// lightDirectional.intensity = 0.25;
+				lightDirectional.intensity = 0.3;
 
 				var light0 = lights.addNode(new Node('light0'));
 				light0.addComponent(new OmniLight(2.0, new Color(0.7, 0.1, 0.4)));
@@ -176,7 +176,7 @@
 					'assetsPath': '../assets/',
 					'transparencyMode': 'blended',
 					'antialias': true,
-					'ssao': true,
+					// 'ssao': true,
 					'renderer': 'deferred'
 				});
 

@@ -26,7 +26,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		};
 
 		// Rendering order is defined as follows:
-		// this.oitStage = this.addStage(new OITRenderStage()); // needs opaquestage
+		this.oitStage = this.addStage(new OITRenderStage());
 		this.gbufferStage = this.addStage(new GBufferRenderStage());
 		this.addStage(this.bindCameraTarget);
 		this.lightsStage = this.addStage(new LightsRenderStage());

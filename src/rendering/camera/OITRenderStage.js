@@ -27,6 +27,17 @@ var OITRenderStage = RenderStage.extend({
 				'render_mode': new UniformInt(0)
 			},
 			[]);
+		this.opaqueDepthMaterial = new Material(
+			engine.assetsManager.addShaderSource("diffuse"),
+			{
+				'useShadows': new UniformInt(0),
+				'ambient': new UniformColor(),
+				'diffuse': new UniformColor()
+			},
+			[
+				this.diffuseFallback,
+				new Sampler('shadow0', engine.WhiteTexture)
+			]);
 		engine.assetsManager.load();
 	},
 
@@ -54,7 +65,7 @@ var OITRenderStage = RenderStage.extend({
 	},
 
 	renderTransparentBatches: function(context, scene, camera, material) {
-		var batches = this.parent.transparentRendererBatches;
+		var batches = this.parent.organizer.transparentRendererBatches;
 		var shader = material.shader;
 
 		shader.use();
@@ -116,13 +127,43 @@ var OITRenderStage = RenderStage.extend({
 		gl.disable(gl.DEPTH_TEST);
 	},
 
+	renderOpaque: function(context, scene, camera) {
+		var gl = context.gl;
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LESS);
+
+		var shader = this.opaqueDepthMaterial.shader;
+		shader.use();
+		shader.bindUniforms(this.parent.sharedUniforms);
+		shader.bindUniforms(this.opaqueDepthMaterial.uniforms);
+		shader.bindSamplers(this.opaqueDepthMaterial.samplers);
+
+		var renderers = this.parent.organizer.solidRenderers;
+		for (var i=0; i<renderers.length; i++) {
+			context.modelview.push();
+			context.modelview.multiply(renderers[i].matrix);
+			this.parent.rendererUniforms.model.value = renderers[i].matrix;
+			this.parent.rendererUniforms.modelview.value = context.modelview.top();
+			this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
+			shader.bindUniforms(this.parent.rendererUniforms);
+
+			renderers[i].renderGeometry(context, shader);
+
+			context.modelview.pop();
+		}
+
+		shader.unbindSamplers(this.opaqueDepthMaterial.samplers);
+
+		gl.disable(gl.DEPTH_TEST);
+	},
+
 	renderPass: function(context, scene, camera, renderColor) {
 		var gl = context.gl;
 
 		// Depth only pass for opaque geometry
 		gl.depthMask(true);
 		gl.colorMask(false, false, false, false);
-		this.parent.opaqueStage.render(context, scene, camera);
+		this.renderOpaque(context, scene, camera);
 		this.renderAlphaMapped(context, scene, camera);
 
 		// Transparency accumulation pass

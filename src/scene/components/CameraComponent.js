@@ -57,6 +57,7 @@ var CameraComponent=Component.extend({
 		else if (engine.options.renderer == 'deferred') {
 			delete this.camera.renderStage;
 			this.camera.renderStage = new DeferredRenderStage();
+			this.camera.renderStage.addStage(new OITPostProcess());
 		}
 
 		if (engine.options.antialias === true) {

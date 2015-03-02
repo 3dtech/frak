@@ -30,11 +30,17 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 			return quad;
 		}
 
+		var buffer = this.generator.gbufferStage.buffer;
+
 		this.debugger.quads = [];
-		this.debugger.quads.push(createQuad(-1, -1, 0.5, 0.5));
-		this.debugger.quads.push(createQuad(-0.5, -1, 0.5, 0.5));
-		this.debugger.quads.push(createQuad(0, -1, 0.5, 0.5));
-		this.debugger.quads.push(createQuad(0.5, -1, 0.5, 0.5));
+		this.debugger.quads.push({ quad: createQuad(-1, -1, 0.5, 0.5),   texture: buffer.targets[0] });
+		this.debugger.quads.push({ quad: createQuad(-0.5, -1, 0.5, 0.5), texture: buffer.targets[1] });
+		this.debugger.quads.push({ quad: createQuad(0, -1, 0.5, 0.5),    texture: buffer.targets[2] });
+		this.debugger.quads.push({ quad: createQuad(0.5, -1, 0.5, 0.5),  texture: buffer.targets[3] });
+
+		this.debugger.quads.push({ quad: createQuad(0.5, -0.5, 0.5, 0.5),  texture: this.generator.oitStage.transparencyTarget.texture });
+		this.debugger.quads.push({ quad: createQuad(0.5, 0, 0.5, 0.5),  texture: this.generator.oitStage.transparencyWeight.texture });
+
 		this.debugger.sampler = new Sampler('tex0', null);
 	},
 
@@ -47,11 +53,10 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 			var gl = context.gl;
 			gl.disable(gl.DEPTH_TEST);
 			gl.disable(gl.CULL_FACE);
-			var buffer = this.generator.gbufferStage.buffer;
-			for (var i=0; i<4; i++) {
-				this.debugger.sampler.texture = buffer.targets[i];
+			for (var i=0; i<this.debugger.quads.length; i++) {
+				this.debugger.sampler.texture = this.debugger.quads[i].texture;
 				this.material.bind({}, [this.debugger.sampler]);
-				this.renderQuad(context, this.material.shader, this.debugger.quads[i]);
+				this.renderQuad(context, this.material.shader, this.debugger.quads[i].quad);
 				this.material.unbind([this.debugger.sampler]);
 			}
 		}
