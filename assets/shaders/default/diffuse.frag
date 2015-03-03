@@ -27,8 +27,6 @@ varying vec4 viewPosition;
 varying vec3 viewNormal;
 varying vec4 shadowPosition;
 
-#define MAXIMUM_HARDNESS 256
-
 float unpack(vec4 c) {
 	const vec4 bitShifts = vec4(1.0 / (255.0 * 255.0 * 255.0), 1.0 / (255.0 * 255.0), 1.0 / 255.0, 1.0);
 	return dot(c, bitShifts);
@@ -36,15 +34,6 @@ float unpack(vec4 c) {
 
 float unpackHalf(vec2 c) {
 	return c.x + (c.y / 255.0);
-}
-
-float pow(float v, int n) {
-	for (int i = 1; i < MAXIMUM_HARDNESS; i++) {
-		if (i >= n)
-			break;
-		v *= v;
-	}
-	return v;
 }
 
 /** Computes color and directional lighting */
@@ -56,7 +45,7 @@ vec4 lighting() {
 	vec3 H = normalize(L + V);
 	float diffuseLight = max(dot(N, L), 0.0) * lightIntensity;
 	float specularLight = min(max(dot(N, H), 0.0), 1.0);
-	specularLight = pow(specularLight, specularPower);
+	specularLight = pow(specularLight, float(specularPower));
 
 	vec4 ambientColor = ambient * textureColor;
 	vec4 diffuseColor = diffuse * diffuse * textureColor * lightColor * diffuseLight;

@@ -46,7 +46,7 @@
 				lightDirectional.setLightDirection([1, 1, 1]);
 				// lightDirectional.setLightDirection([0, 1, 0]);
 				lightDirectional.intensity = 0.3;
-				lightDirectional.shadowCasting = true;
+				// lightDirectional.shadowCasting = true;
 
 				var light0 = lights.addNode(new Node('light0'));
 				light0.addComponent(new OmniLight(2.0, new Color(0.7, 0.1, 0.4)));
@@ -56,7 +56,6 @@
 				var light1 = lights.addNode(new Node('light1'));
 				light1.addComponent(new OmniLight(2.0, new Color(0.0, 1.0, 0.0)));
 				light1.transform.setPosition([1, 0, -1.5]);
-
 
 				// Geometry
 				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");
@@ -68,7 +67,7 @@
 					{
 						"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
 						"specularStrength": new UniformFloat(0.8),
-						"specularPower": new UniformInt(10)
+						"specularPower": new UniformInt(256)
 					},
 					[
 						new Sampler("diffuse0", texColor),

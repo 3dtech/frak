@@ -4,13 +4,13 @@ uniform sampler2D gb0;
 uniform sampler2D gb1;
 uniform sampler2D gb2;
 uniform sampler2D gb3;
-uniform sampler2D shadow0;
 
 uniform vec4 lightColor;
 uniform vec3 lightPosition;
 uniform float lightIntensity;
 uniform float lightRadius;
 
+uniform mat4 view;
 uniform vec3 cameraPosition;
 
 varying vec4 screenPosition;
@@ -35,11 +35,16 @@ void main() {
 	float attenuation = clamp(1.0 - length(lightVector)/lightRadius, 0.0, 1.0);
 	lightVector = normalize(lightVector);
 
-	float NdotL = max(0.0, dot(N, lightVector));
-	vec3 diffuseLight = NdotL * C;
-	vec3 reflectionVector = normalize(reflect(-lightVector, N));
-	vec3 directionToCamera = normalize(cameraPosition - P);
-	float specularLight = specularIntensity * pow(clamp(dot(reflectionVector, directionToCamera), 0.0, 1.0), specularPower);
+	vec4 viewPosition = view * vec4(P, 1.0);
+	vec3 L = normalize(mat3(view) * lightVector);
+	vec3 V = normalize(-viewPosition.xyz);
+	vec3 H = normalize(L + V);
+	float diffuseLight = max(dot(N, L), 0.0);
+	float specularLight = pow(clamp(dot(N, H), 0.0, 1.0), float(specularPower));
+	vec3 diffuseColor = C * lightColor.rgb * diffuseLight * lightIntensity;
+	vec3 specularColor = lightColor.rgb * specularLight * specularIntensity;
 
-	gl_FragColor = lightIntensity * attenuation * (vec4(diffuseLight, 1.0) * lightColor + specularLight * lightColor);
+	vec3 final = attenuation * (diffuseColor + specularColor);
+
+	gl_FragColor = vec4(final, 1.0);
 }

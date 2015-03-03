@@ -7,8 +7,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		this.material = null;
 		this.directional = [];
 		this.sceneBounds = new BoundingSphere();
-		// this.lightView = mat4.create();
-		// this.lightProj = mat4.create();
+		this.clearColor = new Color(0.0, 0.0, 0.0, 0.0);
 		this.lightPosition = vec3.create();
 	},
 
@@ -64,7 +63,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 	},
 
 	renderDirectionalLightDepth: function(context, light, size) {
-		mat4.ortho(light.lightProj, -size, size, -size, size, 0.1, size*2.0);
+		mat4.ortho(light.lightProj, -size, size, -size, size, 1.0, size*2.0);
 		vec3.scale(this.lightPosition, light.direction, size);
 		mat4.lookAt(light.lightView, this.lightPosition, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 
@@ -73,7 +72,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		context.modelview.push();
 		context.modelview.load(light.lightView);
 
-		light.shadow.bind(context);
+		light.shadow.bind(context, false, this.clearColor);
 
 		var gl = context.gl;
 		gl.enable(gl.DEPTH_TEST);

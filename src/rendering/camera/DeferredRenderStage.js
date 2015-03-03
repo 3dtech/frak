@@ -32,16 +32,25 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 
 		var buffer = this.generator.gbufferStage.buffer;
 
+
 		this.debugger.quads = [];
-		this.debugger.quads.push({ quad: createQuad(-1, -1, 0.5, 0.5),   texture: buffer.targets[0] });
-		this.debugger.quads.push({ quad: createQuad(-0.5, -1, 0.5, 0.5), texture: buffer.targets[1] });
-		this.debugger.quads.push({ quad: createQuad(0, -1, 0.5, 0.5),    texture: buffer.targets[2] });
-		this.debugger.quads.push({ quad: createQuad(0.5, -1, 0.5, 0.5),  texture: buffer.targets[3] });
 
-		this.debugger.quads.push({ quad: createQuad(0.5, -0.5, 0.5, 0.5),  texture: this.generator.oitStage.transparencyTarget.texture });
-		this.debugger.quads.push({ quad: createQuad(0.5, 0, 0.5, 0.5),  texture: this.generator.oitStage.transparencyWeight.texture });
+		var size = 0.33;
+		var x = -0.99;
+		var y = -1;
 
+		this.debugger.quads.push({ quad: createQuad(x, y, size, size),   texture: buffer.targets[0] });
+		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size), texture: buffer.targets[1] });
+		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),    texture: buffer.targets[2] });
+		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: buffer.targets[3] });
 
+		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.oitStage.transparencyTarget.texture });
+		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.oitStage.transparencyWeight.texture });
+
+		// Draw shadowmaps
+		size = 0.5;
+		x = -1;
+		y = 1 - size;
 		for (var i=0; i<scene.lights.length; i++) {
 			if (!scene.lights[i].enabled)
 				continue;
@@ -50,8 +59,8 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 			if (!scene.lights[i].shadow)
 				continue;
 			if (scene.lights[i] instanceof DirectionalLight) {
-				this.debugger.quads.push({ quad: createQuad(0.5, 0.5, 0.5, 0.5),  texture: scene.lights[i].shadow.texture });
-				break;
+				this.debugger.quads.push({ quad: createQuad(x, y, size, size),  texture: scene.lights[i].shadow.texture });
+				x+=size;
 			}
 		}
 
