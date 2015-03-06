@@ -1,10 +1,15 @@
 /** vec2(x, y) uniform */
 var UniformVec2=Uniform.extend({
 	init: function(value) {
-		if(value instanceof Float32Array) {
+		if (!value)
+			value = vec2.create();
+
+		if (value instanceof Float32Array) {
 			this._super(value);
 		}
-		else this._super(new Float32Array(value));
+		else {
+			this._super(new Float32Array(value));
+		}
 	},
 
 	type: function() {
