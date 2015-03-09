@@ -2,17 +2,17 @@
 var PositionBufferRenderStage = RenderStage.extend({
     init: function(size) {
         this._super();
-        
+
         this.size = 2048;
         if (size)
             this.size = size
-        
+
         this.target = false;
     },
-    
+
     onStart: function(context, engine) {
         this.target = new TargetTextureFloat([this.size, this.size], context, false);
-        
+
         this.material = new Material(
             engine.assetsManager.addShaderSource("shaders/default/positionbuffer"),
             {
@@ -20,50 +20,41 @@ var PositionBufferRenderStage = RenderStage.extend({
             },
             []
         );
-        /*this.material=new Material(
-			engine.assetsManager.addShaderSource("DepthRGBA"),
-			{
-				"linearDepthConstant": new UniformFloat(1.0),
-				// "packingType": new UniformInt(1)
-				"packingType": new UniformInt(2)
-			},
-			[]
-		);*/
-        
+
         var vertices = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
 		var uvs = [0,1, 0,0, 1,0, 1,1];
 		var faces = [0, 1, 2, 0, 2, 3];
 		this.quad=new TrianglesRenderBuffer(context, faces);
 		this.quad.add('position', vertices, 3);
 		this.quad.add('texcoord2d0', uvs, 2);
-        
+
         engine.assetsManager.load(function(){});
     },
-    
+
     onPreRender: function(context, scene, camera) {
         vec2.set(this.material.uniforms.ViewportSize.value, camera.target.size[0], camera.target.size[1]);
     },
-    
+
     onPostRender: function(context, scene, camera) {
         if (!this.parent || !(this.parent instanceof MaterialRenderStage))
             return;
-        
+
         if (!this.target || !this.material)
             return;
-        
+
         this.target.bind(context);
         var gl = context.gl;
-        
+
         gl.depthMask(true);
         gl.clearDepth(1.0);
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        
+
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LESS);
-        
+
         this.material.bind();
-        
+
         for (var i in this.parent.solidRenderers) {
 			if (this.parent.solidRenderers[i].layer &&
 				this.parent.solidRenderers[i].visible) {
@@ -76,12 +67,12 @@ var PositionBufferRenderStage = RenderStage.extend({
 				context.modelview.pop();
 			}
 		}
-        
+
         this.material.unbind();
-        
+
         gl.depthMask(true);
         gl.disable(gl.DEPTH_TEST);
-        
+
         this.target.unbind(context);
     }
 });

@@ -32,7 +32,6 @@ var ShadowMapRenderStage=RenderStage.extend({
 		this.material=new Material(
 			engine.assetsManager.addShaderSource("DepthRGBA"),
 			{
-				"linearDepthConstant": new UniformFloat(1.0),
 				// "packingType": new UniformInt(1)
 				"packingType": new UniformInt(2)
 			},
@@ -83,7 +82,11 @@ var ShadowMapRenderStage=RenderStage.extend({
 	},
 
 	getFirstShadowCastingLight: function(scene) {
-		for (var i in scene.lights) {
+		for (var i=0; i<scene.lights.length; i++) {
+			if (!(scene.lights[i] instanceof DirectionalLight))
+				continue;
+			if (!scene.lights[i].enabled)
+				continue;
 			if (scene.lights[i].shadowCasting===true)
 				return scene.lights[i];
 		}
@@ -123,7 +126,6 @@ var ShadowMapRenderStage=RenderStage.extend({
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
 
-		this.material.uniforms["linearDepthConstant"].value=1.0/(bounds.radius*2.0);
 		this.material.bind();
 
 		// gl.cullFace(gl.BACK);

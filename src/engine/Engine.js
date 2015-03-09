@@ -7,15 +7,8 @@ var Engine=Class.extend({
 		@param options Engine options [optional]
 		@param scene Scene to render and update [optional] */
 	init: function(canvas, options, scene) {
-		function extend(){
-			for(var i=1; i<arguments.length; i++)
-				for(var key in arguments[i])
-					if(arguments[i].hasOwnProperty(key))
-						arguments[0][key] = arguments[i][key];
-			return arguments[0];
-		}
 		if (!options) options={};
-		this.options = extend({
+		this.options = FRAK.extend({
 			'assetsPath': '',
 			'requestedFPS': 30.0,
 			'debug': false,
@@ -129,7 +122,8 @@ var Engine=Class.extend({
 
 	validateOptions: function(canvas) {
 		// Create default rendering context
-		this.options.context = new RenderingContext(canvas);
+		if (!this.options.context)
+			this.options.context = new RenderingContext(canvas);
 
 		// Transparency mode validation
 		switch (this.options.transparencyMode) {

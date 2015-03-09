@@ -30,8 +30,6 @@ varying vec4 shadowPosition;
 
 varying mat3 tbn;
 
-#define MAXIMUM_HARDNESS 256
-
 float unpack(vec4 c) {
 	const vec4 bitShifts = vec4(1.0 / (255.0 * 255.0 * 255.0), 1.0 / (255.0 * 255.0), 1.0 / 255.0, 1.0);
 	return dot(c, bitShifts);
@@ -41,23 +39,13 @@ float unpackHalf(vec2 c) {
 	return c.x + (c.y / 255.0);
 }
 
-float pow(float v, int n) {
-	for (int i = 1; i < MAXIMUM_HARDNESS; i++) {
-		if (i >= n)
-			break;
-		v *= v;
-	}
-	return v;
-}
-
 /** Computes color and directional lighting */
 vec4 lighting() {
 	vec4 encodedNormal = texture2D(normal0, uv0);
 	// vec3 localCoords = 2.0 * encodedNormal.rgb - vec3(1.0);
 	vec3 localCoords = vec3(2.0 * encodedNormal.rg - vec2(1.0), encodedNormal.b);
 	vec3 normalDirection = normalize(tbn * localCoords);
-	vec3 N = normalDirection;
-	N = normalize(mat3(view) * N);
+	vec3 N = normalize(mat3(view) * normalDirection);
 
 	vec4 textureColor = texture2D(diffuse0, uv0);
 	vec3 L = normalize(mat3(view)*lightDirection);
@@ -65,7 +53,7 @@ vec4 lighting() {
 	vec3 H = normalize(L + V);
 	float diffuseLight = max(dot(N, L), 0.0) * lightIntensity;
 	float specularLight = min(max(dot(N, H), 0.0), 1.0);
-	specularLight = pow(specularLight, specularPower);
+	specularLight = pow(specularLight, float(specularPower));
 
 	vec4 ambientColor = ambient * textureColor;
 	vec4 diffuseColor = diffuse * diffuse * textureColor * lightColor * diffuseLight;

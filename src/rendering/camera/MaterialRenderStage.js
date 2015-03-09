@@ -2,16 +2,7 @@
 var MaterialRenderStage=RenderStage.extend({
 	init: function() {
 		this._super();
-
-		this.enableDynamicBatching = true; ///< Set to false to turn off dynamic batching of renderers by material.
-
-		this.visibleRenderers=0;
-		this.visibleSolidRenderers=0;
-		this.visibleSolidBatches=0;
-		this.visibleSolidFaces=0;
-		this.visibleTransparentRenderers=0;
-		this.visibleTransparentFaces=0;
-		this.visibleTransparentBatches=0;
+		this.organizer = new RendererOrganizer();
 
 		this.solidRenderers=[];
 		this.solidRendererBatches={};
@@ -19,7 +10,7 @@ var MaterialRenderStage=RenderStage.extend({
 		this.transparentRenderers=[];
 		this.transparentRendererBatches={};
 
-		this.shadowMapFallbackSampler = null;
+		this.shadowFallback = null;
 		this.diffuseFallback = null;
 
 		this.bindCameraTarget = {
@@ -78,6 +69,7 @@ var MaterialRenderStage=RenderStage.extend({
 
 	onStart: function(context, engine, camera) {
 		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
+		this.shadowFallback = new Sampler('shadow0', engine.WhiteTexture);
 
 		if (engine.options.ssao === true) {
 			this.depthStage.enable();
@@ -90,9 +82,17 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Prepares shadow-mapping uniforms that are shared between all materials. */
 	prepareShadowContext: function(context, scene) {
-		if (this.shadowMapFallbackSampler === null) {
-			this.shadowMapFallbackSampler = new Sampler('shadow0', scene.engine.WhiteTexture);
+		if (!this._shadowContext) {
+			this._shadowContext = {
+				'shadow0': this.shadowFallback,
+				'lightProjection': this.shadowUniforms.lightProjection,
+				'lightView': this.shadowUniforms.lightView,
+				'shadowIntensity': this.shadowUniforms.shadowIntensity
+			};
 		}
+
+		context.shadow = this._shadowContext;
+		context.shadow.shadow0 = this.shadowFallback;
 
 		if (!this.shadowMapStage.active)
 			return;
@@ -105,19 +105,18 @@ var MaterialRenderStage=RenderStage.extend({
 		mat4.copy(this.shadowUniforms.lightProjection.value, this.shadowMapStage.lightProj);
 		this.shadowUniforms.shadowIntensity.value = light.shadowIntensity;
 
-		context.shadow = {
-			'shadow0': this.shadowMapStage.shadowSampler,
-			'linearDepthConstant': this.shadowMapStage.material.uniforms.linearDepthConstant,
-			'lightProjection': this.shadowUniforms.lightProjection,
-			'lightView': this.shadowUniforms.lightView,
-			'shadowIntensity': this.shadowUniforms.shadowIntensity
-		};
+		context.shadow.shadow0 = this.shadowMapStage.shadowSampler;
 	},
 
 	/** Prepares Light uniforms that are shared between all materials. */
 	prepareLightContext: function(context, scene) {
 		for (var i=0; i<scene.lights.length; i++) {
 			var light = scene.lights[i];
+			if (!(light instanceof DirectionalLight))
+				continue;
+			if (!light.enabled)
+				continue;
+
 			if (light.uniforms) {
 				vec3.copy(light.uniforms.lightDirection.value, light.direction);
 				light.uniforms.lightIntensity.value = light.intensity;
@@ -152,67 +151,17 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Acquires and organizes the visible renderers. */
 	onPreRender: function(context, scene, camera) {
-		this.solidRendererBatches = {};
-		this.transparentRendererBatches = {};
-		this.solidRenderers.length = 0;
-		this.transparentRenderers.length = 0;
-
-		this.visibleSolidRenderers=0;
-		this.visibleSolidBatches=0;
-		this.visibleSolidFaces=0;
-		this.visibleTransparentRenderers=0;
-		this.visibleTransparentFaces=0;
-		this.visibleTransparentBatches=0;
+		// Prepare shared uniforms
+		this.prepareShared(context);
 
 		var renderers = scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask);
-		this.visibleRenderers = renderers.length;
-
-		for (var i=0; i < renderers.length; i++) {
-			if (renderers[i].transparent) {
-				if (this.enableDynamicBatching && scene.engine.options.transparencyMode != 'sorted') {
-					if (renderers[i].material.id in this.transparentRendererBatches) {
-						this.transparentRendererBatches[renderers[i].material.id].push(renderers[i]);
-					}
-					else {
-						this.transparentRendererBatches[renderers[i].material.id]=[renderers[i]];
-						this.visibleTransparentBatches++;
-					}
-				}
-				this.transparentRenderers.push(renderers[i]);
-				this.visibleTransparentFaces += renderers[i].submesh.faces.length / 3;
-			}
-			else {
-				if (this.enableDynamicBatching) {
-					if (renderers[i].material.id in this.solidRendererBatches) {
-						this.solidRendererBatches[renderers[i].material.id].push(renderers[i]);
-					}
-					else {
-						this.solidRendererBatches[renderers[i].material.id]=[renderers[i]];
-						this.visibleSolidBatches++;
-					}
-				}
-				this.visibleSolidFaces += renderers[i].submesh.faces.length / 3;
-				this.solidRenderers.push(renderers[i]);
-			}
-		}
-
-		this.visibleTransparentRenderers = this.transparentRenderers.length;
-		this.visibleSolidRenderers = this.solidRenderers.length;
-
-		// Sort transparent renderers
-		if (scene.engine.options.transparencyMode == 'sorted') {
-			var eyePosition = this.eyePosition;
-			this.transparentRenderers.sort(function(a, b) {
-				var d1 = vec3.squaredDistance(eyePosition, a.globalBoundingSphere.center);
-				var d2 = vec3.squaredDistance(eyePosition, b.globalBoundingSphere.center);
-				if (d1>d2) return -1;
-				if (d1<d2) return 1;
-				return 0;
-			});
-		}
+		this.organizer.sort(scene.engine, renderers, this.eyePosition);
+		this.solidRenderers = this.organizer.solidRenderers;
+		this.transparentRenderers = this.organizer.transparentRenderers;
+		this.solidRendererBatches = this.organizer.solidRendererBatches;
+		this.transparentRendererBatches = this.organizer.transparentRendererBatches;
 
 		// Prepare uniforms for sub-stages
-		this.prepareShared(context);
 		this.prepareLightContext(context, scene);
 		this.prepareShadowContext(context, scene);
 	},
@@ -225,13 +174,7 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Renders renderers in batches by material */
 	renderBatched: function(context, batches) {
-		var globalSamplers = [];
-		if (context.shadow) {
-			globalSamplers.push(context.shadow.shadow0);
-		}
-		else {
-			globalSamplers.push(this.shadowMapFallbackSampler);
-		}
+		var globalSamplers = [context.shadow.shadow0];
 
 		var usedShader = false;
 		for (var i in batches) {
@@ -289,17 +232,10 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Renders without dynamic batching */
 	renderBruteForce: function(context, renderers) {
-		var globalSamplers = [];
-		if (context.shadow) {
-			globalSamplers.push(context.shadow.shadow0);
-		}
-		else {
-			globalSamplers.push(this.shadowMapFallbackSampler);
-		}
+		var globalSamplers = [context.shadow.shadow0];
 
 		for (var j=0; j<renderers.length; ++j) {
 			var renderer=renderers[j];
-
 			context.modelview.push();
 			context.modelview.multiply(renderer.matrix);
 
@@ -310,9 +246,10 @@ var MaterialRenderStage=RenderStage.extend({
 			else {
 				samplers = globalSamplers.concat([this.diffuseFallback]);
 			}
+
 			renderer.material.bind(renderer.getDefaultUniforms(context), samplers);
 			renderer.render(context);
-			renderer.material.unbind(globalSamplers);
+			renderer.material.unbind(samplers);
 
 			context.modelview.pop();
 		}

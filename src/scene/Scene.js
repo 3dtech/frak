@@ -102,7 +102,7 @@ var Scene=Serializable.extend({
 				if (component.node.layer & camera.layerMask) {
 					context.modelview.push();
 					context.modelview.multiply(component.node.transform.absolute);
-					component.onPostRender(context, camera);
+					component.onPreRender(context, camera);
 					context.modelview.pop();
 				}
 			}

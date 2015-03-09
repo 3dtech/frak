@@ -11,7 +11,6 @@
  * (http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere)
  */
 
-// precision mediump float;
 precision highp float;
 
 #define PI 3.14159265

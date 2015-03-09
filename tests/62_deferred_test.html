@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>Order-independent transparency test</title>
+		<title>Deferred shading</title>
 		<meta charset="utf-8" />
-		<meta name="description" content="3DWayfinder WebGL" />
 		<link rel="stylesheet" href="style.css" >
 	</head>
 	<body>
 		<!-- Canvas -->
 		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+		<button onclick="toggleDebug();">Toggle debug</button>
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
@@ -29,33 +29,95 @@
 			};
 
 			function setupScene(scene) {
-				scene.light.shadowCasting = true;
-				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
-				// scene.camera.backgroundColor = new Color(1.0, 1.0, 1.0, 1.0);
+				// Camera
+				scene.camera.backgroundColor = new Color(0.1, 0.1, 0.1, 1.0);
+				scene.cameraComponent.setClipPlanes(0.1, 100.0);
+				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.distance = 10.0;
+				orbitController.minimumDistance = 1.0;
+				orbitController.maximumDistance = 20.0;
+				orbitController.rotation[1] = 1.0;
+				orbitController.target.value = scene.root.transform;
 
-				scene.cameraComponent.setClipPlanes(0.01, 100.0);
+				// Lights
+				var lights = scene.root.addNode(new Node('lights'));
+				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
+				var lightDirectional = scene.light;
+				lightDirectional.setLightDirection([1, 1, 1]);
+				// lightDirectional.setLightDirection([0, 1, 0]);
+				lightDirectional.intensity = 0.7;
+				lightDirectional.shadowCasting = true;
+				// lightDirectional.shadowResolution = vec2.fromValues(512, 512);
+
+				var light0 = lights.addNode(new Node('light0'));
+				light0.addComponent(new OmniLight(2.0, new Color(0.7, 0.1, 0.4)));
+				light0.transform.setPosition([-1, 0, 1]);
+				light0.getComponent(OmniLight).intensity = 2.0;
+
+				var light1 = lights.addNode(new Node('light1'));
+				light1.addComponent(new OmniLight(2.0, new Color(0.0, 1.0, 0.0)));
+				light1.transform.setPosition([1, 0, -1.5]);
+
+				var light2 = lights.addNode(new Node('light2'));
+				light2.addComponent(new OmniLight(2.0, new Color(0.3, 0.5, 0.9)));
+				light2.transform.setPosition([-4.5, 0, -2.0]);
+				light2.getComponent(OmniLight).intensity = 2.0;
+
+				// Geometry
+				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");
+				var texNormal = scene.engine.assetsManager.texturesManager.add("data/tiles_n.png");
+
+				var material = new Material(
+					scene.engine.assetsManager.addShaderSource("normalmapped"),
+					// scene.engine.assetsManager.addShaderSource("diffuse"),
+					{
+						"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
+						"specularStrength": new UniformFloat(0.8),
+						"specularPower": new UniformInt(256)
+					},
+					[
+						new Sampler("diffuse0", texColor),
+						new Sampler("normal0", texNormal)
+					]
+				);
+				material.name = 'Normalmapped';
+
+				var box = Primitives.box([0,0,0], [1.0, 1.0, 1.0], material);
+				scene.root.addNode(box);
+				mat4.fromRotationTranslation(box.transform.relative, quat.create(), [-3, 0, 0]);
+
+				var sphere = Primitives.sphere(1.0, 16, 16, material);
+				scene.root.addNode(sphere);
+				mat4.fromRotationTranslation(sphere.transform.relative, quat.create(), [3, 0, -3]);
+
+				var cone = Primitives.cone(1.0, 2.0, 16, material);
+				scene.root.addNode(cone);
+				mat4.fromRotationTranslation(cone.transform.relative, quat.create(), [-3, 0, 3]);
+
+				var model = scene.engine.assetsManager.addModel('data/axis_test.data');
+				scene.root.addNode(model);
 
 				var p0 = scene.engine.assetsManager.texturesManager.add("data/pattern_0.jpg");
 				var p1 = scene.engine.assetsManager.texturesManager.add("data/pattern_1.jpg");
 				var windowTexture = scene.engine.assetsManager.texturesManager.add("data/window.png");
 
-				var material = new Material(
+				var groundMaterial = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/diffuse"),
 					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
 					[ new Sampler("diffuse0", p1) ]
 				);
-				material.name = 'ground';
+				groundMaterial.name = 'ground';
 
 				var red = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
-					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.5}) },
+					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.2}) },
 					[]
 				);
 				red.name = 'red';
 
 				var blue = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
-					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.5}) },
+					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.2}) },
 					[]
 				);
 				blue.name = 'blue';
@@ -63,7 +125,7 @@
 				var ceiling = new Material(
 					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
 					// { "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:0.5}) },
-					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:0.5}) },
+					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:0.2}) },
 					// []
 					[ new Sampler("diffuse0", p0) ]
 				);
@@ -77,13 +139,9 @@
 				);
 				windowMaterial.name = 'window';
 
-				var ground = Primitives.plane(10.0, 10.0, material);
+				var ground = Primitives.plane(10.0, 10.0, groundMaterial);
 				mat4.fromRotationTranslation(ground.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, -1, 0]);
 				scene.root.addNode(ground);
-
-				var box = Primitives.box([0,0,0], [1.0, 1.0, 1.0], material);
-				mat4.fromRotationTranslation(scene.root.addNode(box).transform.relative, quat.create(), [-1.5,0,2]);
-				mat4.fromRotationTranslation(scene.root.addNode(box.instantiate()).transform.relative, quat.create(), [-1.5,5,2]);
 
 				var redBox = Primitives.box([0,0,0], [5.0, 0.5, 0.2], red);
 				mat4.fromRotationTranslation(redBox.transform.relative, quat.euler(quat.create(), 0, 90, 0), [3, 0.1, 0]);
@@ -106,35 +164,41 @@
 					blueBox.onEachChild(makeTransparent);
 					plane.onEachChild(makeTransparent);
 					aken.onEachChild(makeTransparent);
-				}
 
-				var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
-				orbitController.distance=10.0;
-				orbitController.minimumDistance=0.5;
-				orbitController.maximumDistance=100.0;
-				orbitController.rotation[1]=1.0;
-				orbitController.target.value=scene.root.transform;
+					model.onEachChildComponent(function (component) {
+						if (component instanceof MeshRendererComponent) {
+							for (var i=0; i<component.meshRenderers.length; i++) {
+								component.meshRenderers[i].material = material;
+							}
+						}
+					});
+				}
 			}
 
 			var engine;
 			$(function() {
-				engine=new Engine($('#canvas'), {
+				engine = new Engine($('#canvas'), {
+					'requestedFPS': 60,
 					'assetsPath': '../assets/',
-					// 'transparencyMode': 'sorted',
 					'transparencyMode': 'blended',
-					// 'transparencyMode': 'stochastic',
 					'antialias': true,
-					'ssao': true
+					// 'ssao': true,
+					'renderer': 'deferred'
 				});
+
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
 				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
-
 
 				setupScene(engine.scene);
 				engine.assetsManager.load(function() {
 					engine.run();
 				});
 			});
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
 		</script>
 	</body>
 </html>
