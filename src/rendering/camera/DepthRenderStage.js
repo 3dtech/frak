@@ -9,6 +9,8 @@ var DepthRenderStage = RenderStage.extend({
 		this.size = vec2.fromValues(1024, 1024);
 		if (size)
 			vec2.copy(this.size, size);
+
+		this.clearColor = new Color(0.0, 0.0, 0.0, 0.0);
 	},
 
 	onStart: function(context, engine) {
@@ -44,7 +46,7 @@ var DepthRenderStage = RenderStage.extend({
 		this.material.uniforms.zNear.value = camera.near;
 		this.material.uniforms.zFar.value = camera.far;
 
-		this.target.bind(context);
+		this.target.bind(context, false, this.clearColor);
 
 		var gl = context.gl;
 		gl.enable(gl.DEPTH_TEST);

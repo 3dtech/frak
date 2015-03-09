@@ -13,5 +13,5 @@ void main() {
 	if (color.a < 0.99)
 		discard;
 
-	gl_FragColor.r = depth;
+	gl_FragColor = vec4(depth, depth, depth, depth);
 }
