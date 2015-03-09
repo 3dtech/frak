@@ -63,7 +63,10 @@ var DeferredShadowRenderStage = RenderStage.extend({
 	},
 
 	renderDirectionalLightDepth: function(context, light, size) {
-		mat4.ortho(light.lightProj, -size, size, -size, size, 1.0, size*2.0);
+		this.material.uniforms.zNear.value = 0.1;
+		this.material.uniforms.zFar.value = size*2.0;
+
+		mat4.ortho(light.lightProj, -size, size, -size, size, 0.1, size*2.0);
 		vec3.scale(this.lightPosition, light.direction, size);
 		mat4.lookAt(light.lightView, this.lightPosition, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 
@@ -94,7 +97,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		this.material.unbind();
 
 		// Render alpha mapped portions of opaque geometry
-		// this.renderAlphaMapped(context, scene, camera);
+		this.renderAlphaMapped(context);
 
 		gl.disable(gl.DEPTH_TEST);
 
@@ -104,18 +107,57 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		context.projection.pop();
 	},
 
-	onPreRender: function(context, scene, camera) {
-		this.material.uniforms.zNear.value = camera.near;
-		this.material.uniforms.zFar.value = camera.far;
+	renderAlphaMapped: function(context) {
+		var batches = this.parent.organizer.transparentRendererBatches;
+		var shader = this.material.shader;
+		var fallbackSamplers = [this.parent.diffuseFallback];
 
+		shader.use();
+
+		// Bind shared uniforms
+		shader.bindUniforms(this.material.uniforms);
+		shader.bindUniforms(this.parent.sharedUniforms);
+
+		var samplers;
+		for (var i in batches) {
+			var batch = batches[i];
+			var batchMaterial = batch[0].material;
+
+			if (batchMaterial.samplers.length>0)
+				samplers = batchMaterial.samplers;
+			else
+				samplers = fallbackSamplers;
+
+			// Bind material uniforms and samplers
+			shader.bindUniforms(batchMaterial.uniforms);
+			shader.bindSamplers(samplers);
+
+			for (var j=0; j<batch.length; ++j) {
+				context.modelview.push();
+				context.modelview.multiply(batch[j].matrix);
+
+				// Bind renderer specific uniforms
+				this.parent.rendererUniforms.model.value = batch[j].matrix;
+				this.parent.rendererUniforms.modelview.value = context.modelview.top();
+				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
+				shader.bindUniforms(this.parent.rendererUniforms);
+
+				batch[j].renderGeometry(context, shader);
+
+				context.modelview.pop();
+			}
+
+			shader.unbindSamplers(samplers);
+		}
+	},
+
+	onPreRender: function(context, scene, camera) {
 		this.collectLights(scene);
 		var radius = this.computeSceneBounds().radius;
 
 		for (var i=0; i<this.directional.length; i++) {
 			this.renderDirectionalLightDepth(context, this.directional[i], radius);
 		}
-
-		// NOTE: Substages can be used to apply image operations to the rendered shadowmaps (such as blur)
 	},
 
 	onPostRender: function(context, scene, camera) {

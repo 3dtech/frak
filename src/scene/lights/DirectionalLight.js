@@ -10,13 +10,13 @@ var DirectionalLight = Light.extend({
 		this.direction = vec3.fromValues(1.0, 1.0, 1.0);
 		if (direction)
 			this.setLightDirection(direction);
+		this.shadowResolution = vec2.fromValues(2048, 2048);
+		this.shadowBias = 0.16;
 
 		this.geometry = null;
 		this.material = null;
 
-		// Shadow-mapping related
 		this.shadow = null;
-		this.shadowResolution = vec2.fromValues(256, 256);
 		this.lightView = mat4.create();
 		this.lightProj = mat4.create();
 	},
@@ -42,7 +42,8 @@ var DirectionalLight = Light.extend({
 				'lightIntensity': new UniformFloat(this.intensity),
 				'lightDirection': new UniformVec3(vec3.create()),
 				'lightView': new UniformMat4(mat4.create()),
-				'lightProjection': new UniformMat4(mat4.create())
+				'lightProjection': new UniformMat4(mat4.create()),
+				'shadowBias': new UniformFloat(1.0)
 			},
 			[]
 		);
@@ -88,6 +89,7 @@ var DirectionalLight = Light.extend({
 		vec4.set(this.material.uniforms.lightColor.value, this.color.r, this.color.g, this.color.b, this.color.a);
 		vec3.copy(this.material.uniforms.lightDirection.value, this.direction);
 		this.material.uniforms.lightIntensity.value = this.intensity;
+		this.material.uniforms.shadowBias.value = this.shadowBias;
 
 		if (this.shadowCasting) {
 			if (!this.shadow) {
