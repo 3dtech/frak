@@ -59,6 +59,7 @@
 
 	"src/rendering/camera/PostProcess.js",
 	"src/rendering/camera/AntiAliasPostProcess.js",
+	"src/rendering/camera/BlurPostProcess.js",
 	"src/rendering/camera/OITPostProcess.js",
 	"src/rendering/camera/SSAOPostProcess.js",
 
