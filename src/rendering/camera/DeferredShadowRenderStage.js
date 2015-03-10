@@ -22,6 +22,8 @@ var DeferredShadowRenderStage = RenderStage.extend({
 			},
 			[]
 		);
+
+		engine.assetsManager.load();
 	},
 
 	/** Collects all shadow casting lights */

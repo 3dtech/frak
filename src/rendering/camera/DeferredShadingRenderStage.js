@@ -29,6 +29,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		this.shadowStage = this.addStage(new DeferredShadowRenderStage());
 		this.oitStage = this.addStage(new OITRenderStage());
 		this.gbufferStage = this.addStage(new GBufferRenderStage());
+		this.softShadowsStage = this.addStage(new SoftShadowsRenderStage()).disable();
 		this.addStage(this.bindCameraTarget);
 		this.lightsStage = this.addStage(new LightsRenderStage());
 		this.addStage(this.unbindCameraTarget);
@@ -53,6 +54,9 @@ var DeferredShadingRenderStage = RenderStage.extend({
 	onStart: function(context, engine, camera) {
 		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
 		vec2.copy(this.size, this.parent.size);
+
+		if (engine.options.softShadows)
+			this.softShadowsStage.enable();
 	},
 
 	/** Prepares data shared among most renderers. */

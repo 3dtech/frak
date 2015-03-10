@@ -16,6 +16,7 @@ var Engine=Class.extend({
 			'ssao': false,
 			'transparencyMode': 'default',
 			'renderer': 'default',
+			'softShadows': false,
 			'context': false
 		}, options);
 		this.validateOptions(canvas);

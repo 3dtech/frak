@@ -45,8 +45,8 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 
 		this.debugger.quads = [];
 
-		var size = 0.33;
-		var x = -0.99;
+		var size = 2/7;
+		var x = -1;
 		var y = -1;
 
 		this.debugger.quads.push({ quad: createQuad(x, y, size, size),   texture: buffer.targets[0] });
@@ -54,8 +54,11 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),    texture: buffer.targets[2] });
 		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: buffer.targets[3] });
 
+		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.softShadowsStage.target.texture });
+
 		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.oitStage.transparencyTarget.texture });
 		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.oitStage.transparencyWeight.texture });
+
 
 		// Draw shadowmaps
 		size = 0.5;

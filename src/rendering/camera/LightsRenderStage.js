@@ -6,7 +6,9 @@ var LightsRenderStage = RenderStage.extend({
 		this._super();
 
 		this.sharedUniforms = {
-			'cameraPosition': new UniformVec3(vec3.create())
+			'cameraPosition': new UniformVec3(vec3.create()),
+			'shadowOnly': new UniformInt(0),
+			'useSoftShadows': new UniformInt(1)
 		};
 		this.sharedSamplers = [];
 	},
@@ -45,6 +47,8 @@ var LightsRenderStage = RenderStage.extend({
 	},
 
 	onPostRender: function(context, scene, camera) {
+		this.sharedUniforms.useSoftShadows.value = this.parent.softShadowsStage.enabled ? 1 : 0;
+
 		var gl = context.gl;
 		var lights = this.getLightsWithGeometry(scene);
 
@@ -66,6 +70,12 @@ var LightsRenderStage = RenderStage.extend({
 	},
 
 	renderLight: function(context, light) {
+		var shadowSampler;
+		if (light instanceof DirectionalLight && this.sharedUniforms.useSoftShadows.value == 1) {
+			shadowSampler = light.shadowSampler.texture;
+			light.shadowSampler.texture = this.parent.softShadowsStage.target.texture;
+		}
+
 		var shader = light.material.shader;
 		shader.use();
 		shader.bindUniforms(this.parent.sharedUniforms);
@@ -100,5 +110,9 @@ var LightsRenderStage = RenderStage.extend({
 		}
 
 		shader.unbindSamplers(samplers);
+
+		if (light instanceof DirectionalLight && this.sharedUniforms.useSoftShadows.value == 1) {
+			light.shadowSampler.texture = shadowSampler;
+		}
 	}
 });

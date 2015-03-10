@@ -43,6 +43,7 @@ var DirectionalLight = Light.extend({
 				'lightDirection': new UniformVec3(vec3.create()),
 				'lightView': new UniformMat4(mat4.create()),
 				'lightProjection': new UniformMat4(mat4.create()),
+				'useShadows': new UniformInt(0),
 				'shadowBias': new UniformFloat(1.0)
 			},
 			[]
@@ -50,7 +51,8 @@ var DirectionalLight = Light.extend({
 
 		if (this.shadowCasting && !this.shadow) {
 			this.shadow = new TargetTextureFloat(this.shadowResolution, context, false);
-			this.material.samplers.push(new Sampler('shadow0', this.shadow.texture));
+			this.shadowSampler = new Sampler('shadow0', this.shadow.texture);
+			this.material.samplers.push(this.shadowSampler);
 		}
 
 		var mesh = new Mesh();
@@ -89,12 +91,14 @@ var DirectionalLight = Light.extend({
 		vec4.set(this.material.uniforms.lightColor.value, this.color.r, this.color.g, this.color.b, this.color.a);
 		vec3.copy(this.material.uniforms.lightDirection.value, this.direction);
 		this.material.uniforms.lightIntensity.value = this.intensity;
+		this.material.uniforms.useShadows.value = this.shadowCasting ? 1 : 0;
 		this.material.uniforms.shadowBias.value = this.shadowBias;
 
 		if (this.shadowCasting) {
 			if (!this.shadow) {
 				this.shadow = new TargetTextureFloat(this.shadowResolution, engine.context, false);
-				this.material.samplers.push(new Sampler('shadow0', this.shadow.texture));
+				this.shadowSampler = new Sampler('shadow0', this.shadow.texture);
+				this.material.samplers.push(this.shadowSampler);
 			}
 
 			mat4.copy(this.material.uniforms.lightView.value, this.lightView);

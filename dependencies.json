@@ -55,6 +55,7 @@
 	"src/rendering/camera/DeferredShadingRenderStage.js",
 	"src/rendering/camera/DeferredShadowRenderStage.js",
 	"src/rendering/camera/GBufferRenderStage.js",
+	"src/rendering/camera/SoftShadowsRenderStage.js",
 	"src/rendering/camera/LightsRenderStage.js",
 
 	"src/rendering/camera/PostProcess.js",
