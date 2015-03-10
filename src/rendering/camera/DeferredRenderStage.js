@@ -5,10 +5,20 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 	init: function() {
 		this._super();
 
-		this.debugActive = true;
+		this.debugActive = false;
 		this.debugger = null;
+	},
 
-		// TODO: check that the system can handle deferred rendering
+	onStart: function(context, engine, camera) {
+		// Check that the device can handle deferred rendering
+		if (!context.gl.getExtension('WEBGL_draw_buffers'))
+			throw('DeferredRenderStage: WEBGL_draw_buffers not available.');
+		if (!context.gl.getExtension('OES_texture_float'))
+			throw('DeferredRenderStage: OES_texture_float not available.');
+		if (!context.gl.getExtension('OES_standard_derivatives'))
+			throw('DeferredRenderStage: OES_standard_derivatives not available.');
+
+		this._super(context, engine, camera);
 	},
 
 	getGeneratorStage: function() {
