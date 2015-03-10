@@ -34,6 +34,8 @@ var ShadersManager=Manager.extend({
 	},
 
 	add: function(vertexSource, fragmentSource) {
+		vertexSource = this.sourceCallback(vertexSource);
+		fragmentSource = this.sourceCallback(fragmentSource);
 		return this.addDescriptor(new ShaderDescriptor(vertexSource, fragmentSource));
 	},
 
