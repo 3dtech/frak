@@ -71,9 +71,11 @@ var LightsRenderStage = RenderStage.extend({
 
 	renderLight: function(context, light) {
 		var shadowSampler;
-		if (light instanceof DirectionalLight && this.sharedUniforms.useSoftShadows.value == 1) {
-			shadowSampler = light.shadowSampler.texture;
-			light.shadowSampler.texture = this.parent.softShadowsStage.target.texture;
+		if (light.shadowCasting) {
+			if (light instanceof DirectionalLight && this.sharedUniforms.useSoftShadows.value == 1) {
+				shadowSampler = light.shadowSampler.texture;
+				light.shadowSampler.texture = this.parent.softShadowsStage.target.texture;
+			}
 		}
 
 		var shader = light.material.shader;
@@ -111,8 +113,10 @@ var LightsRenderStage = RenderStage.extend({
 
 		shader.unbindSamplers(samplers);
 
-		if (light instanceof DirectionalLight && this.sharedUniforms.useSoftShadows.value == 1) {
-			light.shadowSampler.texture = shadowSampler;
+		if (light.shadowCasting) {
+			if (light instanceof DirectionalLight && this.sharedUniforms.useSoftShadows.value == 1) {
+				light.shadowSampler.texture = shadowSampler;
+			}
 		}
 	}
 });
