@@ -50,8 +50,13 @@ var Renderer=Class.extend({
 		if ('modelview' in uniforms) mat4.copy(uniforms.modelview.value, context.modelview.top());
 		else uniforms.modelview = new UniformMat4(context.modelview.top());
 
-		if ('modelviewInverse' in uniforms) mat4.invert(uniforms.modelviewInverse.value, context.modelview.top());
-		else uniforms.modelviewInverse = new UniformMat4(mat4.invert(mat4.create(), context.modelview.top()));
+		if ('modelviewInverse' in uniforms) {
+			mat4.invert(uniforms.modelviewInverse.value, context.modelview.top());
+		}
+		else {
+			uniforms.modelviewInverse = new UniformMat4(mat4.create());
+			mat4.invert(uniforms.modelviewInverse.value, context.modelview.top());
+		}
 
 		if ('projection' in uniforms) mat4.copy(uniforms.projection.value, context.projection.top());
 		else uniforms.projection = new UniformMat4(context.projection.top());
