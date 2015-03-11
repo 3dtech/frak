@@ -90,14 +90,12 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		gl.disable(gl.BLEND);
 
 		// H-blur
-		// this.blurMaterial.uniforms.orientation.value = 0.0;
 		this.blurSampler.texture = this.target.texture;
 		this.blurTarget.bind(context, false, this.clearColor);
 		this.renderEffect(context, this.blurHorizontal, this.blurSampler);
 		this.blurTarget.unbind(context);
 
 		// V-blur
-		// this.blurMaterial.uniforms.orientation.value = 1.0;
 		this.blurSampler.texture = this.blurTarget.texture;
 		this.target.bind(context, false, this.clearColor);
 		this.renderEffect(context, this.blurVertical, this.blurSampler);
