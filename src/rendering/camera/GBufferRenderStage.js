@@ -6,16 +6,24 @@ var GBufferRenderStage = RenderStage.extend({
 		this._super();
 		this.buffer = null;
 		this.clearColor = new Color(0.0, 0.0, 0.0, 0.0);
+		this.size = vec2.create();
+		this.quality = 1.0;
+		this.damaged = false;
 
 		this.perBatchUniforms = {
 			'useNormalmap': new UniformInt(0)
 		};
+	},
 
-		// this.skyboxStage = this.addStage(new SkyboxRenderStage()); // needs to be part of G-buffer
+	setQuality: function(quality) {
+		this.quality = parseFloat(quality);
+		this.damaged = true;
 	},
 
 	onStart: function(context, engine, camera) {
-		this.buffer = new TargetTextureMulti(context, this.parent.size, { numTargets: 4 });
+		vec2.copy(this.size, this.parent.size);
+		var size = vec2.scale(vec2.create(), this.size, this.quality);
+		this.buffer = new TargetTextureMulti(context, size, { numTargets: 4 });
 
 		this.material = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/deferred_gbuffer"),
@@ -31,6 +39,12 @@ var GBufferRenderStage = RenderStage.extend({
 	onPreRender: function(context, scene, camera) {
 		this.material.uniforms.zNear.value = camera.near;
 		this.material.uniforms.zFar.value = camera.far;
+
+		if (this.damaged) {
+			var size = vec2.scale(vec2.create(), this.size, this.quality);
+			this.buffer.setSize(size[0], size[1]);
+			this.damaged = false;
+		}
 	},
 
 	onPostRender: function(context, scene, camera) {
