@@ -4,6 +4,8 @@
 var SoftShadowsRenderStage = RenderStage.extend({
 	init: function() {
 		this._super();
+		this.quality = 1.0;
+		this.damaged = false;
 
 		this.sharedUniforms = {
 			'cameraPosition': new UniformVec3(vec3.create()),
@@ -13,6 +15,11 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		this.sharedSamplers = [];
 		this.clearColor = new Color(0.0, 0.0, 0.0, 0.0);
 		this.target = null;
+	},
+
+	setQuality: function(quality) {
+		this.quality = parseFloat(quality);
+		this.damaged = true;
 	},
 
 	getShadowCastingLights: function(scene) {
@@ -46,15 +53,6 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		this.blurHorizontal = new Material(engine.assetsManager.addShader("shaders/default/shadow_blurh.vert", "shaders/default/shadow_blur.frag"), {},[]);
 		this.blurVertical = new Material(engine.assetsManager.addShader("shaders/default/shadow_blurv.vert", "shaders/default/shadow_blur.frag"), {},[]);
 
-		// this.blurMaterial = new Material(
-		// 	engine.assetsManager.addShader("shaders/default/shadow_blur"),
-		// 	{
-		// 		"orientation": new UniformFloat(0.0)
-		// 	},
-		// 	[]
-		// );
-		// this.blurMaterial.name = 'Shadow Blur';
-
 		var vertices = [-1,-1,0, -1,1,0, 1,1,0, 1,-1,0];
 		var uv = [0,0, 0,1, 1,1, 1,0];
 		var faces = [0, 1, 2, 0, 2, 3];
@@ -63,6 +61,15 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		this.quad.add("uv0", uv, 2);
 
 		engine.assetsManager.load();
+	},
+
+	onPreRender: function(context, scene, camera) {
+		if (this.damaged) {
+			var size = vec2.scale(vec2.create(), this.parent.size, this.quality);
+			this.target.setSize(size[0], size[1]);
+			this.blurTarget.setSize(size[0], size[1]);
+			this.damaged = false;
+		}
 	},
 
 	onPostRender: function(context, scene, camera) {
