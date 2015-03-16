@@ -1,11 +1,12 @@
 var TargetTexture = RenderTarget.extend({
-	init: function(sizeOrTexture, context, useDepthTexture) {
+	init: function(sizeOrTexture, context, useDepthTexture, useStencilBuffer) {
 		var size = sizeOrTexture;
 		if (sizeOrTexture instanceof Texture) {
 			size = sizeOrTexture.size;
 			this.texture = sizeOrTexture;
 		}
 		this.useDepthTexture = (useDepthTexture === true);
+		this.useStencilBuffer = (useStencilBuffer === true);
 		this.rebuild = false;
 
 		this._super(size);
@@ -68,9 +69,17 @@ var TargetTexture = RenderTarget.extend({
 		}
 		else {
 			this.depth = gl.createRenderbuffer();
-			gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
-			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
-			gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+			if (this.useStencilBuffer) {
+				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
+				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]);
+				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+			}
+			else {
+				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
+				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
+				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+			}
 		}
 
 		// Attach targets to framebuffer
@@ -80,7 +89,12 @@ var TargetTexture = RenderTarget.extend({
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depth.glTexture, 0);
 		}
 		else {
-			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
+			if (this.useStencilBuffer) {
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depth);
+			}
+			else {
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
+			}
 		}
 
 		this.checkStatus(context);
@@ -131,7 +145,10 @@ var TargetTexture = RenderTarget.extend({
 			}
 			else {
 				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
-				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
+				if (this.useStencilBuffer)
+					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]);
+				else
+					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
 				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 			}
 
