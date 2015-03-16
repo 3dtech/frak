@@ -18,8 +18,11 @@ var SoftShadowsRenderStage = RenderStage.extend({
 	},
 
 	setQuality: function(quality) {
-		this.quality = parseFloat(quality);
-		this.damaged = true;
+		quality = parseFloat(quality);
+		if (quality>0.0) {
+			this.quality = quality;
+			this.damaged = true;
+		}
 	},
 
 	getShadowCastingLights: function(scene) {
