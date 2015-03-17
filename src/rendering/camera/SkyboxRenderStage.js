@@ -21,6 +21,12 @@ var SkyboxRenderStage = RenderStage.extend({
 			'lightColor': new UniformColor(new Color()),
 			'lightIntensity': new UniformFloat(1.0),
 		};
+
+		this.shadowFallback = null;
+	},
+
+	onStart: function(context, engine, camera) {
+		this.shadowFallback = new Sampler('shadow0', engine.WhiteTexture);
 	},
 
 	onPostRender: function(context, scene, camera) {
@@ -29,8 +35,7 @@ var SkyboxRenderStage = RenderStage.extend({
 			return;
 		}
 
-		var globalSamplers = [this.parent.shadowFallback];
-
+		var globalSamplers = [this.shadowFallback];
 		var renderComponent = skybox.meshNode.getComponent(MeshRendererComponent);
 		var renderers = renderComponent.meshRenderers;
 		for (var i=0; i < renderers.length; i++) {
