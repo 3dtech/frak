@@ -169,9 +169,14 @@ var TargetTexture = RenderTarget.extend({
 		this._super(context);
 
 		if (!doNotClear) {
+			var flags = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
 			gl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 			gl.clearDepth(1.0);
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			if (this.useStencilBuffer) {
+				gl.clearStencil(0);
+				flags |= gl.STENCIL_BUFFER_BIT;
+			}
+			gl.clear(flags);
 		}
 	},
 
