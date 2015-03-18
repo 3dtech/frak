@@ -72,24 +72,37 @@ var SkyboxComponent = Component.extend({
 			"diffuse": new UniformColor(new Color())
 		};
 
+		var textures = [
+			assetsManager.texturesManager.addDescriptor(images[0]),
+			assetsManager.texturesManager.addDescriptor(images[1]),
+			assetsManager.texturesManager.addDescriptor(images[2]),
+			assetsManager.texturesManager.addDescriptor(images[3]),
+			assetsManager.texturesManager.addDescriptor(images[4]),
+			assetsManager.texturesManager.addDescriptor(images[5])
+		];
+
+		for (var i=0; i<textures.length; i++) {
+			textures[i].clampToEdge = true;
+		}
+
 		createSide(points[3], points[2], points[1], points[0], new Material(assetsManager.addShaderSource("diffuse"),
 																			uniforms,
-																			[ new Sampler("diffuse0", assetsManager.texturesManager.addDescriptor(images[0])) ])); // front
+																			[ new Sampler("diffuse0", textures[0]) ])); // front
 		createSide(points[6], points[7], points[4], points[5], new Material(assetsManager.addShaderSource("diffuse"),
 																			uniforms,
-																			[ new Sampler("diffuse0", assetsManager.texturesManager.addDescriptor(images[1])) ])); // back
+																			[ new Sampler("diffuse0", textures[1]) ])); // back
 		createSide(points[7], points[3], points[0], points[4], new Material(assetsManager.addShaderSource("diffuse"),
 																			uniforms,
-																			[ new Sampler("diffuse0", assetsManager.texturesManager.addDescriptor(images[2])) ])); // left
+																			[ new Sampler("diffuse0", textures[2]) ])); // left
 		createSide(points[2], points[6], points[5], points[1], new Material(assetsManager.addShaderSource("diffuse"),
 																			uniforms,
-																			[ new Sampler("diffuse0", assetsManager.texturesManager.addDescriptor(images[3])) ])); // right
+																			[ new Sampler("diffuse0", textures[3]) ])); // right
 		createSide(points[0], points[1], points[5], points[4], new Material(assetsManager.addShaderSource("diffuse"),
 																			uniforms,
-																			[ new Sampler("diffuse0", assetsManager.texturesManager.addDescriptor(images[4])) ])); // bottom
+																			[ new Sampler("diffuse0", textures[4]) ])); // bottom
 		createSide(points[7], points[6], points[2], points[3], new Material(assetsManager.addShaderSource("diffuse"),
 																			uniforms,
-																			[ new Sampler("diffuse0", assetsManager.texturesManager.addDescriptor(images[5])) ])); // top
+																			[ new Sampler("diffuse0", textures[5]) ])); // top
 
 		this.meshNode.addComponent(new MeshComponent(mesh));
 		var meshRenderer = this.meshNode.addComponent(new MeshRendererComponent());
