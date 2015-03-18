@@ -37,19 +37,19 @@
 				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
 				orbitController.distance = 10.0;
 				orbitController.minimumDistance = 1.0;
-				orbitController.maximumDistance = 20.0;
+				orbitController.maximumDistance = 50.0;
 				orbitController.maximumPitch = Math.PI/2.2;
 				orbitController.rotation[1] = 1.0;
 				orbitController.target.value = scene.root.transform;
 
 				// Skybox image order: front, back, left, right, bottom, top
 				var skybox = [
-					new TextureDescriptor("data/skybox/negativeX.png"),
-					new TextureDescriptor("data/skybox/positiveX.png"),
-					new TextureDescriptor("data/skybox/negativeZ.png"),
-					new TextureDescriptor("data/skybox/positiveZ.png"),
-					new TextureDescriptor("data/skybox/negativeY.png"),
-					new TextureDescriptor("data/skybox/positiveY.png"),
+					new TextureDescriptor("data/skybox/green_front.png"),
+					new TextureDescriptor("data/skybox/green_back.png"),
+					new TextureDescriptor("data/skybox/green_left.png"),
+					new TextureDescriptor("data/skybox/green_right.png"),
+					new TextureDescriptor("data/skybox/green_bottom.png"),
+					new TextureDescriptor("data/skybox/green_top.png")
 				];
 
 				var skyboxComponent = scene.cameraNode.addComponent(new SkyboxComponent());
