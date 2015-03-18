@@ -34,10 +34,10 @@ var PostProcessRenderStage = RenderStage.extend({
 			this.size = vec2.clone(camera.target.size);
 		}
 
-		this.src = new TargetTexture(this.size, context, false);
+		this.src = new TargetTexture(this.size, context, false, true);
 		this.srcSampler = new Sampler('src', this.src.texture);
 
-		this.dst = new TargetTexture(this.size, context, false);
+		this.dst = new TargetTexture(this.size, context, false, true);
 		this.dstSampler = new Sampler('src', this.dst.texture);
 
 		this.material = new Material(engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"), {}, []);

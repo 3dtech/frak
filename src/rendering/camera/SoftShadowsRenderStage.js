@@ -56,13 +56,6 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		this.blurHorizontal = new Material(engine.assetsManager.addShader("shaders/default/shadow_blurh.vert", "shaders/default/shadow_blur.frag"), {},[]);
 		this.blurVertical = new Material(engine.assetsManager.addShader("shaders/default/shadow_blurv.vert", "shaders/default/shadow_blur.frag"), {},[]);
 
-		var vertices = [-1,-1,0, -1,1,0, 1,1,0, 1,-1,0];
-		var uv = [0,0, 0,1, 1,1, 1,0];
-		var faces = [0, 1, 2, 0, 2, 3];
-		this.quad = new TrianglesRenderBuffer(context, faces);
-		this.quad.add('position', vertices, 3);
-		this.quad.add("uv0", uv, 2);
-
 		engine.assetsManager.load();
 	},
 
@@ -102,13 +95,13 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		// H-blur
 		this.blurSampler.texture = this.target.texture;
 		this.blurTarget.bind(context, false, this.clearColor);
-		this.renderEffect(context, this.blurHorizontal, this.blurSampler);
+		this.parent.parent.renderEffect(context, this.blurHorizontal, this.blurSampler);
 		this.blurTarget.unbind(context);
 
 		// V-blur
 		this.blurSampler.texture = this.blurTarget.texture;
 		this.target.bind(context, false, this.clearColor);
-		this.renderEffect(context, this.blurVertical, this.blurSampler);
+		this.parent.parent.renderEffect(context, this.blurVertical, this.blurSampler);
 		this.target.unbind(context);
 	},
 
@@ -148,36 +141,5 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		}
 
 		shader.unbindSamplers(samplers);
-	},
-
-	renderEffect: function(context, material, sampler) {
-		var gl = context.gl;
-		gl.disable(gl.DEPTH_TEST);
-		gl.disable(gl.CULL_FACE);
-		gl.clearColor(0.0, 0.0, 0.0, 0.0);
-		gl.clear(gl.COLOR_BUFFER_BIT);
-		material.bind({}, [sampler]);
-		this.renderQuad(context, material.shader, this.quad);
-		material.unbind([sampler]);
-	},
-
-	renderQuad: function(context, shader, quad) {
-		if (!shader.linked)
-			return;
-		var gl = context.gl;
-		var locations=[];
-		for(var bufferName in quad.buffers) {
-			gl.bindBuffer(gl.ARRAY_BUFFER, quad.buffers[bufferName]);
-			var bufferLocation = shader.getAttribLocation(bufferName);
-			if (bufferLocation==-1)
-				continue;
-			gl.enableVertexAttribArray(bufferLocation);
-			locations.push(bufferLocation);
-			gl.vertexAttribPointer(bufferLocation, quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
-		}
-		quad.drawElements();
-		for (var i=0; i<locations.length; i++) {
-			gl.disableVertexAttribArray(locations[i]);
-		}
 	}
 });

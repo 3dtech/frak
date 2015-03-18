@@ -9,12 +9,11 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		this.size = vec2.create();
 		this.invModelview = mat4.create();
 
-		var clearColor = new Color(0, 0, 0, 0);
 		this.bindCameraTarget = {
 			started: true,
 			start: function() {},
 			render: function(context, scene, camera) {
-				camera.target.bind(context, false, clearColor);
+				camera.target.bind(context, true);
 			}
 		};
 

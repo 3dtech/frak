@@ -5,6 +5,7 @@ var TargetTextureMulti = RenderTarget.extend({
 			dataType: 'float', // possible values: float, unsigned
 			filtering: 'linear', // possible values: linear, nearest
 			depth: false,
+			stencil: false,
 			numTargets: 2
 		}, options);
 
@@ -141,7 +142,10 @@ var TargetTextureMulti = RenderTarget.extend({
 		} else {
 			this.depth = gl.createRenderbuffer();
 			gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
-			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
+			if (this.options.stencil)
+				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]);
+			else
+				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
 			gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 		}
 
@@ -159,7 +163,10 @@ var TargetTextureMulti = RenderTarget.extend({
 		if (this.options.depth) {
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depth.glTexture, 0);
 		} else {
-			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
+			if (this.options.stencil)
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depth);
+			else
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
 		}
 
 		// Attach color
@@ -221,7 +228,10 @@ var TargetTextureMulti = RenderTarget.extend({
 			}
 			else {
 				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
-				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
+				if (this.options.stencil)
+					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]);
+				else
+					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
 				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 			}
 		}
@@ -240,9 +250,14 @@ var TargetTextureMulti = RenderTarget.extend({
 		this._super(context);
 
 		if (!doNotClear) {
+			var flags = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
 			gl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 			gl.clearDepth(1.0);
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			if (this.options.stencil) {
+				gl.clearStencil(0);
+				flags |= gl.STENCIL_BUFFER_BIT;
+			}
+			gl.clear(flags);
 		}
 	},
 

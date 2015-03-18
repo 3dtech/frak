@@ -11,6 +11,8 @@ var LightsRenderStage = RenderStage.extend({
 			'useSoftShadows': new UniformInt(1)
 		};
 		this.sharedSamplers = [];
+
+		this.skyboxRenderStage = new SkyboxRenderStage();
 	},
 
 	getLightsWithGeometry: function(scene) {
@@ -44,29 +46,55 @@ var LightsRenderStage = RenderStage.extend({
 		this.sharedSamplers.push(new Sampler('gb1', gb.targets[1]));
 		this.sharedSamplers.push(new Sampler('gb2', gb.targets[2]));
 		this.sharedSamplers.push(new Sampler('gb3', gb.targets[3]));
+
+		this.backgroundMaterial = new Material(
+			engine.assetsManager.addShaderSource("shaders/default/deferred_background"),
+			{
+				'color': new UniformColor(new Color(1.0, 1.0, 1.0, 1.0))
+			},
+			[]
+		);
+
+		engine.assetsManager.load();
+
+		this.skyboxRenderStage.start(context, engine, camera);
+	},
+
+	onPreRender: function(context, scene, camera) {
+		this.sharedUniforms.useSoftShadows.value = this.parent.softShadowsStage.enabled ? 1 : 0;
+		camera.getPosition(this.sharedUniforms.cameraPosition.value);
 	},
 
 	onPostRender: function(context, scene, camera) {
-		this.sharedUniforms.useSoftShadows.value = this.parent.softShadowsStage.enabled ? 1 : 0;
-
-		var gl = context.gl;
 		var lights = this.getLightsWithGeometry(scene);
+		var gl = context.gl;
 
-		camera.getPosition(this.sharedUniforms.cameraPosition.value);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.parent.gbufferStage.buffer.depth);
 
 		gl.disable(gl.DEPTH_TEST);
 		gl.depthMask(false);
+
+		gl.enable(gl.STENCIL_TEST);
+		gl.stencilMask(0x00);
+
+		gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
+		camera.backgroundColor.toVector(this.backgroundMaterial.uniforms.color.value);
+		this.parent.parent.renderEffect(context, this.backgroundMaterial, this.sharedSamplers[1]);
+		this.skyboxRenderStage.render(context, scene, camera);
+
+		gl.stencilFunc(gl.EQUAL, 1, 0xFF);
 		gl.blendEquation(gl.FUNC_ADD);
 		gl.blendFunc(gl.ONE, gl.ONE);
 		gl.enable(gl.BLEND);
 		gl.enable(gl.CULL_FACE);
 		gl.cullFace(gl.FRONT);
-
 		for (var i=0; i<lights.length; i++) {
 			this.renderLight(context, lights[i]);
 		}
-
 		gl.disable(gl.BLEND);
+
+		gl.stencilMask(0xFF);
+		gl.disable(gl.STENCIL_TEST);
 	},
 
 	renderLight: function(context, light) {

@@ -26,7 +26,7 @@ var GBufferRenderStage = RenderStage.extend({
 	onStart: function(context, engine, camera) {
 		vec2.copy(this.size, this.parent.size);
 		var size = vec2.scale(vec2.create(), this.size, this.quality);
-		this.buffer = new TargetTextureMulti(context, size, { numTargets: 4 });
+		this.buffer = new TargetTextureMulti(context, size, { numTargets: 4, stencil: true });
 
 		this.material = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/deferred_gbuffer"),
@@ -53,14 +53,17 @@ var GBufferRenderStage = RenderStage.extend({
 	onPostRender: function(context, scene, camera) {
 		var gl = context.gl;
 
+		this.buffer.bind(context, false, this.clearColor);
+
 		gl.depthMask(true);
 		gl.colorMask(true, true, true, true);
 		gl.depthFunc(gl.LESS);
 		gl.enable(gl.DEPTH_TEST);
-		gl.clearColor(0.0, 0.0, 0.0, 0.0);
-		gl.clear(gl.COLOR_BUFFER_BIT);
 
-		this.buffer.bind(context, false, this.clearColor);
+		gl.enable(gl.STENCIL_TEST);
+		gl.stencilMask(0xFF);
+		gl.stencilFunc(gl.ALWAYS, 1, 0xFF);
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 
 		// Render opaque geometry to the g-buffer
 		this.renderBatches(context, scene, camera, this.parent.organizer.solidRendererBatches, this.material);
@@ -68,9 +71,11 @@ var GBufferRenderStage = RenderStage.extend({
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
 		this.renderBatches(context, scene, camera, this.parent.organizer.transparentRendererBatches, this.material);
 
-		this.buffer.unbind(context);
-
+		gl.stencilMask(0xFF);
+		gl.disable(gl.STENCIL_TEST);
 		gl.disable(gl.DEPTH_TEST);
+
+		this.buffer.unbind(context);
 	},
 
 	renderBatches: function(context, scene, camera, batches, material) {
