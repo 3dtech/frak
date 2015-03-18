@@ -36,6 +36,7 @@
 
 	"src/rendering/camera/Camera.js",
 	"src/rendering/camera/RendererOrganizer.js",
+	"src/rendering/camera/ScreenQuad.js",
 
 	"src/rendering/camera/RenderStage.js",
 	"src/rendering/camera/MaterialRenderStage.js",
