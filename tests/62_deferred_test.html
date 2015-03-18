@@ -8,7 +8,10 @@
 	<body>
 		<!-- Canvas -->
 		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
-		<button onclick="toggleDebug();">Toggle debug</button>
+		<div>
+			<button onclick="toggleSoftShadows();">Soft shadows</button>
+			<button onclick="toggleDebug();">Debug</button>
+		</div>
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
@@ -28,28 +31,42 @@
 				}
 			};
 
-			function setupScene(scene) {
-				// Camera
-				scene.camera.backgroundColor = new Color(0.1, 0.1, 0.1, 1.0);
+			function setupCamera(scene) {
+				scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
 				scene.cameraComponent.setClipPlanes(0.1, 100.0);
 				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
 				orbitController.distance = 10.0;
 				orbitController.minimumDistance = 1.0;
 				orbitController.maximumDistance = 20.0;
+				orbitController.maximumPitch = Math.PI/2.2;
 				orbitController.rotation[1] = 1.0;
 				orbitController.target.value = scene.root.transform;
 
-				// Lights
+				// Skybox image order: front, back, left, right, bottom, top
+				var skybox = [
+					new TextureDescriptor("data/skybox/negativeX.png"),
+					new TextureDescriptor("data/skybox/positiveX.png"),
+					new TextureDescriptor("data/skybox/negativeZ.png"),
+					new TextureDescriptor("data/skybox/positiveZ.png"),
+					new TextureDescriptor("data/skybox/negativeY.png"),
+					new TextureDescriptor("data/skybox/positiveY.png"),
+				];
+
+				var skyboxComponent = scene.cameraNode.addComponent(new SkyboxComponent());
+				skyboxComponent.setup(engine.assetsManager, engine, skybox);
+			}
+
+			function setupLights(scene) {
 				var lights = scene.root.addNode(new Node('lights'));
 				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
 				var lightDirectional = scene.light;
 				lightDirectional.setLightDirection([1, 1, 1]);
-				// lightDirectional.setLightDirection([0, 1, 0]);
 				lightDirectional.intensity = 0.7;
 				lightDirectional.shadowCasting = true;
+				// lightDirectional.shadowResolution = vec2.fromValues(128, 128);
 				// lightDirectional.shadowResolution = vec2.fromValues(256, 256);
 				// lightDirectional.shadowResolution = vec2.fromValues(512, 512);
-				// lightDirectional.shadowResolution = vec2.fromValues(1024, 1024);
+				lightDirectional.shadowResolution = vec2.fromValues(1024, 1024);
 				// lightDirectional.shadowResolution = vec2.fromValues(2048, 2048);
 				// lightDirectional.shadowResolution = vec2.fromValues(4096, 4096);
 
@@ -66,14 +83,14 @@
 				light2.addComponent(new OmniLight(2.0, new Color(0.3, 0.5, 0.9)));
 				light2.transform.setPosition([-4.5, 0, -2.0]);
 				light2.getComponent(OmniLight).intensity = 2.0;
+			}
 
-				// Geometry
+			function setupScene(scene) {
 				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");
 				var texNormal = scene.engine.assetsManager.texturesManager.add("data/tiles_n.png");
 
 				var material = new Material(
 					scene.engine.assetsManager.addShaderSource("normalmapped"),
-					// scene.engine.assetsManager.addShaderSource("diffuse"),
 					{
 						"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
 						"specularStrength": new UniformFloat(0.8),
@@ -143,8 +160,8 @@
 				);
 				windowMaterial.name = 'window';
 
-				var ground = Primitives.plane(10.0, 10.0, groundMaterial);
-				mat4.fromRotationTranslation(ground.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, -1, 0]);
+				var ground = Primitives.box([0,0,0], [5.0, 0.05, 5.0], groundMaterial);
+				mat4.fromRotationTranslation(ground.transform.relative, quat.create(), [0, -1, 0]);
 				scene.root.addNode(ground);
 
 				var redBox = Primitives.box([0,0,0], [5.0, 0.5, 0.2], red);
@@ -194,7 +211,10 @@
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
 				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
 
+				setupCamera(engine.scene);
+				setupLights(engine.scene);
 				setupScene(engine.scene);
+
 				engine.assetsManager.load(function() {
 					engine.run();
 				});
@@ -203,6 +223,14 @@
 			function toggleDebug() {
 				var renderStage = engine.scene.camera.renderStage;
 				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function toggleSoftShadows() {
+				var stage = engine.scene.camera.renderStage.generator.softShadowsStage;
+				if (stage.enabled)
+					stage.disable();
+				else
+					stage.enable();
 			}
 		</script>
 	</body>
