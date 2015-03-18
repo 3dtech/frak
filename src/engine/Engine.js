@@ -11,6 +11,7 @@ var Engine=Class.extend({
 		this.options = FRAK.extend({
 			'assetsPath': '',
 			'requestedFPS': 30.0,
+			'anisotropicFiltering': 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
 			'debug': false,
 			'antialias': false,
 			'ssao': false,
@@ -22,14 +23,18 @@ var Engine=Class.extend({
 		this.validateOptions(canvas);
 
 		this.context = this.options.context;
-		if(!scene) scene=new DefaultScene();
-		this.scene=scene;
-		this.scene.engine=this;
-		this.fps=new FPS();
-		this.running=false;
+		this.context.engine = this;
+
+		if (!scene)
+			scene=new DefaultScene();
+
+		this.scene = scene;
+		this.scene.engine = this;
+		this.fps = new FPS();
+		this.running = false;
 		this.input = false;
 
-		this.assetsManager=new AssetsManager(this.context, this.options.assetsPath);
+		this.assetsManager = new AssetsManager(this.context, this.options.assetsPath);
 
 		// Universal 1x1 opaque white texture
 		this.WhiteTexture = new Texture(this.context);

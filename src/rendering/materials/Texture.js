@@ -3,12 +3,14 @@ var Texture=Serializable.extend({
 	/** Creates a texture
 		@param context Instance of RenderingContext (optional) */
 	init: function(context) {
-		this.glTexture=false;
-		this.name=false;		///< Texture name assigned by manager
-		this.size=false;		///< Texture size
-		this.mipmapped=true;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
+		this.glTexture = false;
+		this.name = false;		///< Texture name assigned by manager
+		this.size = false;		///< Texture size
+		this.mipmapped = true;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
 		this.clampToEdge = false;
-		this.loaded=false;
+		this.anisotropic = true;
+		this.anisotropyFilter = 4; // 4x filtering by default
+		this.loaded = false;
 
 		if (context)
 			this.create(context);
@@ -23,7 +25,21 @@ var Texture=Serializable.extend({
 	},
 
 	create: function(context) {
-		this.glTexture=context.gl.createTexture();
+		this.glTexture = context.gl.createTexture();
+
+		if (!context.engine.options.anisotropicFiltering)
+			this.anisotropic = false;
+
+		if (this.anisotropic) {
+			this.extTextureFilterAnisotropic = context.gl.getExtension('EXT_texture_filter_anisotropic');
+			if (!this.extTextureFilterAnisotropic) {
+				this.anisotropic = false;
+			}
+			else {
+				var maxAnisotropy = context.gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+				this.anisotropyFilter = Math.min(context.engine.options.anisotropicFiltering, maxAnisotropy);
+			}
+		}
 	},
 
 	clearImage: function(context, color, size) {
@@ -85,10 +101,13 @@ var Texture=Serializable.extend({
 		}
 
 		// Apply mipmapping settings
-		if(this.mipmapped) {
+		if (this.mipmapped) {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
 			gl.generateMipmap(gl.TEXTURE_2D);
+			if (this.anisotropic) {
+				gl.texParameteri(gl.TEXTURE_2D, this.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, 4);
+			}
 		}
 		else {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
