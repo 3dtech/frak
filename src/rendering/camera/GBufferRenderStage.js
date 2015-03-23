@@ -8,7 +8,7 @@ var GBufferRenderStage = RenderStage.extend({
 		this.clearColor = new Color(0.0, 0.0, 0.0, 0.0);
 		this.size = vec2.create();
 		this.quality = 1.0;
-		this.damaged = false;
+		this.damaged = true;
 
 		this.perBatchUniforms = {
 			'useNormalmap': new UniformInt(0)

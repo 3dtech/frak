@@ -68,6 +68,8 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
 		mat4.copy(this.sharedUniforms.view.value, context.camera.viewMatrix);
 		mat4.copy(this.sharedUniforms.viewInverse.value, context.camera.viewInverseMatrix);
+
+		vec2.copy(this.size, this.parent.size);
 	},
 
 	/** Acquires and organizes the visible renderers. */
