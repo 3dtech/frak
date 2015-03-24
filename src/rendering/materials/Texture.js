@@ -106,7 +106,7 @@ var Texture=Serializable.extend({
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
 			gl.generateMipmap(gl.TEXTURE_2D);
 			if (this.anisotropic) {
-				gl.texParameteri(gl.TEXTURE_2D, this.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, 4);
+				gl.texParameteri(gl.TEXTURE_2D, this.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.anisotropyFilter);
 			}
 		}
 		else {
