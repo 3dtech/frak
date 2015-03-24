@@ -195,9 +195,11 @@ var Input = Class.extend({
 	},
 
 	sendEvent: function(funcName){
+		if (!engine.running) // Drop events if engine is paused
+			return;
+
 		var args = Array.prototype.slice.call(arguments, 0);
 		args = args.slice(1, args.length); //remove funcName
-		//console.info("sendEvent", funcName, args);
 		var activated = [];
 		for (var i=0; i < this.controllers.length; i++) {
 			if (this.controllers[i][funcName])
