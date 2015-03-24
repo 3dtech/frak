@@ -15,6 +15,7 @@ var PostProcess = RenderStage.extend({
 
 		this.parent.dst.bind(context);
 		this.parent.renderEffect(context, this.material, this.parent.srcSampler);
+		context.gl.viewport(0, 0, this.parent.size[0], this.parent.size[1]);
 		this.parent.dst.unbind(context);
 		this.parent.swapBuffers();
 	}

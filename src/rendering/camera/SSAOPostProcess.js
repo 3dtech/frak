@@ -8,7 +8,7 @@ var SSAOPostProcess = PostProcess.extend({
 		this.material = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/postprocess_ssao"),
 			{
-				"ViewportSize": new UniformVec2(vec2.clone(this.parent.size)),
+				"ViewportSize": new UniformVec2(vec2.clone(this.parent.src.size)),
 				"ssaoOnly": new UniformInt((this.ssaoOnly === true) ? 1 : 0),
 				"gdisplace": new UniformFloat((engine.options.ssaoGDisplace) ? engine.options.ssaoGDisplace : 0.3),
 				"radius": new UniformFloat((engine.options.ssaoRadius) ? engine.options.ssaoRadius : 2.0),
@@ -35,7 +35,7 @@ var SSAOPostProcess = PostProcess.extend({
 		this._super(context, scene, camera);
 
 
-		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.size[0], this.parent.size[1]);
+		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.src.size[0], this.parent.src.size[1]);
 		this.material.uniforms.ssaoOnly.value = (this.ssaoOnly === true) ? 1 : 0;
 	}
 });

@@ -25,6 +25,44 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 		return new DeferredShadingRenderStage();
 	},
 
+	onPreRender: function(context, scene, camera) {
+		var cameraTarget = camera.target;
+
+		if (this.generator.gbufferStage.damaged) {
+			var size = vec2.scale(vec2.create(), this.generator.gbufferStage.size, this.generator.gbufferStage.quality);
+			this.src.setSize(size[0], size[1]);
+			this.dst.setSize(size[0], size[1]);
+		}
+
+		this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+
+		if (this.substages.length>0) {
+			camera.target = this.src;
+		}
+		this.generator.render(context, scene, camera);
+		camera.target = cameraTarget;
+	},
+
+	onPostRender: function(context, scene, camera) {
+		this._super(context, scene, camera);
+
+		if (this.debugActive) {
+			if (!this.debugger)
+				this.initDebugger(context, scene);
+			var gl = context.gl;
+			gl.disable(gl.DEPTH_TEST);
+			gl.disable(gl.CULL_FACE);
+			context.modelview.push();
+			for (var i=0; i<this.debugger.quads.length; i++) {
+				this.debugger.sampler.texture = this.debugger.quads[i].texture;
+				this.material.bind({}, [this.debugger.sampler]);
+				this.renderQuad(context, this.material.shader, this.debugger.quads[i].quad);
+				this.material.unbind([this.debugger.sampler]);
+			}
+			context.modelview.pop();
+		}
+	},
+
 	debug: function(val) {
 		this.debugActive = !(val === false);
 	},
@@ -78,23 +116,5 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 		}
 
 		this.debugger.sampler = new Sampler('tex0', null);
-	},
-
-	onPostRender: function(context, scene, camera) {
-		this._super(context, scene, camera);
-
-		if (this.debugActive) {
-			if (!this.debugger)
-				this.initDebugger(context, scene);
-			var gl = context.gl;
-			gl.disable(gl.DEPTH_TEST);
-			gl.disable(gl.CULL_FACE);
-			for (var i=0; i<this.debugger.quads.length; i++) {
-				this.debugger.sampler.texture = this.debugger.quads[i].texture;
-				this.material.bind({}, [this.debugger.sampler]);
-				this.renderQuad(context, this.material.shader, this.debugger.quads[i].quad);
-				this.material.unbind([this.debugger.sampler]);
-			}
-		}
-	},
+	}
 });

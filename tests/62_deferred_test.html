@@ -11,6 +11,7 @@
 		<div>
 			<button onclick="toggleSoftShadows();">Soft shadows</button>
 			<button onclick="toggleDebug();">Debug</button>
+			<button onclick="pauseEngine();">PAUSE</button>
 		</div>
 
 		<!-- Libraries -->
@@ -231,6 +232,10 @@
 					stage.disable();
 				else
 					stage.enable();
+			}
+
+			function pauseEngine() {
+				engine.togglePause();
 			}
 		</script>
 	</body>
