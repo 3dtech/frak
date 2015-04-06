@@ -11,7 +11,7 @@ var RenderingContext=Class.extend({
 			canvas = document.getElementById(canvas);
 		}
 
-		if (jQuery && canvas instanceof jQuery) {
+		if (window.jQuery && canvas instanceof jQuery) {
 			canvas = canvas[0];
 		}
 
