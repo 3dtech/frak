@@ -11,3 +11,15 @@ FRAK.extend = function() {
 				arguments[0][key] = arguments[i][key];
 	return arguments[0];
 }
+
+FRAK.isFunction = function(f) {
+	return typeof(f) === 'function';
+}
+
+FRAK.parseJSON = function(s) {
+	if (JSON && JSON.parse)
+		return JSON.parse(s);
+	if (jQuery && jQuery.parseJSON)
+		return jQuery.parseJSON(s);
+	throw "FRAK.parseJSON: No JSON parser available.";
+}
