@@ -15,18 +15,18 @@ var ThreadedDataParser=DataParser.extend({
 		this.timer=false;
 		this.inverval=10;
 	},
-	
+
 	parse: function() {
 		this.push(false, this.parseHeader);
 		this.timer=setTimeout(ClassCallback(this, this.threadStep), this.inverval);
 		return true;
 	},
-	
+
 	threadStep: function() {
 		if (this.completed()) {
 			if (this.linkReferences)
 				this.result.linkReferences();
-			if ($.isFunction(this.onComplete))
+			if (this.isFunction(this.onComplete))
 				this.onComplete(this.result.getData(), this.userdata);
 			return;
 		}

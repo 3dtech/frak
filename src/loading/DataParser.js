@@ -23,20 +23,24 @@ var DataParser=Class.extend({
 		this.linkReferences=true;
 		this.flipX=false;
 		this.warnOnUnknownChunks=true;
+
+		this.isFunction = function(f) {
+			return typeof(f) === 'function';
+		};
 	},
 
 	parse: function() {
 		this.push(false, this.parseHeader);
 		while(!this.completed()) {
 			if (!this.step()) {
-				if ($.isFunction(this.onError))
+				if (this.isFunction(this.onError))
 					this.onError(this.errors, this.userdata);
 				return false;
 			}
 		}
 		if (this.linkReferences)
 			this.result.linkReferences();
-		if ($.isFunction(this.onComplete))
+		if (this.isFunction(this.onComplete))
 			this.onComplete(this.result.getData(), this.userdata);
 		return true;
 	},
@@ -60,7 +64,7 @@ var DataParser=Class.extend({
 		var call = this.getCurrentCall();
 		if (call) {
 			var ret=call(this.getCurrentNode());
-			if ($.isFunction(this.onProgress))
+			if (this.isFunction(this.onProgress))
 				this.onProgress((this.view.tell()/this.view.byteLength)*100, this.userdata);
 			return ret;
 		}
