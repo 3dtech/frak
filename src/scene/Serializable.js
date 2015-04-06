@@ -73,7 +73,7 @@ var Serializable=Cloneable.extend({
 
 	/** Unserializes data */
 	unserialize: function(text) {
-		var data=$.parseJSON(text);
+		var data = FRAK.parseJSON(text);
 		return false;
 	},
 

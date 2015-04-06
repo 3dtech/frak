@@ -1,15 +1,6 @@
-/** Used to load shaders similar to the TexturesManager.
-	Example of usage:
-	<pre>
-	var renderingContext=new RenderingContext($('#canvas'));
-	var shadersManager=new ShadersManager(renderingContext);
-
-	// If they are already loaded, the shader will be ready automatically, otherwise it will be ready
-	// after call to load has successfully loaded.
-	// If either fragment or test shader fails to load, fallback shader is used instead from ./shaders/fallback.(vert|frag)
-	var shader=shadersManager.add('test.vert', 'test.frag');	// Request vertex/fragment shader pair.
-	</pre>
-	*/
+/**
+ * Used by AssetsManager to load shaders.
+ */
 var ShadersManager=Manager.extend({
 	/**
 	 * Constructor

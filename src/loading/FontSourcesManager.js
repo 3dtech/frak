@@ -42,7 +42,7 @@ var FontSourcesManager=Manager.extend({
 	loadResource: function(fontSourceDescriptor, fontSource, loadedCallback, failedCallback) {
 		var scope = this;
 		Logistics.getText(this.sourceCallback(fontSourceDescriptor.getFullPath(), fontSourceDescriptor), function (data) {
-			var object = JSON && JSON.parse(data) || $.parseJSON(data);
+			var object = FRAK.parseJSON(data);
 			if (!object || !object.textures || !object.data || !object.material) {
 				failedCallback(fontSourceDescriptor);
 				return;

@@ -40,9 +40,9 @@ var CameraComponent=Component.extend({
 
 	onStart: function(context, engine) {
 		if (this.camera.target instanceof TargetScreen) {
-			var pos = context.canvas.parent().position();
-			this.camera.target.setPosition(pos.left, pos.top);
-			this.camera.target.setSize(context.canvas.width(), context.canvas.height());
+			var canvas = context.canvas;
+			this.camera.target.setPosition(canvas.parentNode.offsetLeft, canvas.parentNode.offsetTop);
+			this.camera.target.setSize(canvas.width, canvas.height);
 		}
 
 		if (engine.options.renderer == 'forward') {

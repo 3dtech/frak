@@ -46,7 +46,7 @@ var MaterialSourcesManager=Manager.extend({
 		var text = this.textManager.add(descriptor.getFullPath());
 		var scope = this;
 		this.textManager.load(function() {
-			var result = $.parseJSON(text.data);
+			var result = FRAK.parseJSON(text.data);
 
 			// Create new material descriptor that will be used to load the actual material
 			var md = new MaterialDescriptor();

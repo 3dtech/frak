@@ -3,7 +3,7 @@
  */
 var Engine=Class.extend({
 	/** Constructor
-		@param canvas Canvas as jQuery element
+		@param canvas Canvas element or ID or jQuery container
 		@param options Engine options [optional]
 		@param scene Scene to render and update [optional] */
 	init: function(canvas, options, scene) {
@@ -47,7 +47,7 @@ var Engine=Class.extend({
 	},
 
 	setupInput: function(){
-		this.input = new Input(this, this.context.canvas[0]);
+		this.input = new Input(this, this.context.canvas);
 	},
 
 	/** Starts the engine. The engine will try to draw frames at the "requestedFPS" specified

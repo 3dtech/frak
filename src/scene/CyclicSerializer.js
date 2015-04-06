@@ -165,7 +165,7 @@ var CyclicSerializer=Class.extend({
 
 	/** Unserializes data */
 	unserialize: function(text) {
-		var data=$.parseJSON(text);
+		var data = FRAK.parseJSON(text);
 		this.serializables={};
 		// Unserialize all serializable objects (as much as possible)
 		this.unserializeSerializables(data['_serializables_']);

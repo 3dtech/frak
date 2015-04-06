@@ -4,25 +4,39 @@ var RenderingContext=Class.extend({
 		@param canvas The canvas element that provides rendering context
 	*/
 	init: function(canvas, contextOptions) {
-		if(!("WebGLRenderingContext" in window)) throw "Unable to create rendering context, because browser doesn't support WebGL";
-		if(!canvas || canvas.length === 0) throw "RenderingContext requires canvas element";
-		this.canvas=canvas;
+		if (!("WebGLRenderingContext" in window))
+			throw "Unable to create rendering context, because browser doesn't support WebGL";
+
+		if (typeof(canvas) === 'string') {
+			canvas = document.getElementById(canvas);
+		}
+
+		if (jQuery && canvas instanceof jQuery) {
+			canvas = canvas[0];
+		}
+
+		if (!canvas)
+			throw "RenderingContext requires a canvas element";
+
+		this.canvas = canvas;
 		contextOptions = contextOptions || { alpha: false };
 
 		// Try to get rendering context for WebGL
-		this.gl = canvas[0].getContext("webgl", contextOptions);
-		if(!this.gl) this.gl=canvas[0].getContext("experimental-webgl", contextOptions);
-		if(!this.gl) this.gl=canvas[0].getContext("moz-webgl", contextOptions);
-		if(!this.gl) this.gl=canvas[0].getContext("webkit-3d", contextOptions);
-		if(!this.gl) {
-			var offset = canvas.offset();
-			var msg = $('<div>')
-				.css('position', 'relative')
-				.css('z-index', 100)
-				.css('background-color', 'red')
-				.css('padding', 8)
-				.text("WebGL seems to be unavailable in this browser.");
-			canvas.parent().prepend(msg);
+		this.gl = this.canvas.getContext("webgl", contextOptions);
+		if (!this.gl) this.gl = this.canvas.getContext("experimental-webgl", contextOptions);
+		if (!this.gl) this.gl = this.canvas.getContext("moz-webgl", contextOptions);
+		if (!this.gl) this.gl = this.canvas.getContext("webkit-3d", contextOptions);
+
+		// Acquiring context failed
+		if (!this.gl) {
+			var msg = document.createElement("div");
+			msg.style.position = "relative";
+			msg.style.zIndex = 100;
+			msg.style.backgroundColor = "red";
+			msg.style.padding = "8px";
+			msg.textContent = "WebGL seems to be unavailable in this browser.";
+			var parent = canvas.parentNode;
+			parent.insertBefore(msg, parent.firstChild);
 			throw "Failed to acquire GL context from canvas";
 		}
 
@@ -31,20 +45,15 @@ var RenderingContext=Class.extend({
 				throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName+ JSON.stringify(args);
 			}
 
-			this.gl=WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError);
+			this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError);
 			console.warn("Using WebGLDebugUtils");
 		}
 
-		this.gl.enable(this.gl.DEPTH_TEST);
-
-		// Setup viewport
-		this.gl.viewport(0, 0, canvas.width(), canvas.height());
-
-		this.modelview=new MatrixStack();		///< Modelview matrix stack
-		this.projection=new MatrixStack();	///< Projection matrix stack
-		this.light=false; ///< Current light used for rendering (forward rendering only)
-		this.shadow=false; ///< Current shadow map (forward rendering only)
-		this.camera=false; ///< Current camera used for rendering (used to populate camera uniforms for shaders)
-		this.engine=false; ///< Current engine used for rendering
+		this.modelview = new MatrixStack();		///< Modelview matrix stack
+		this.projection = new MatrixStack();	///< Projection matrix stack
+		this.light = false; ///< Current light used for rendering (forward rendering only)
+		this.shadow = false; ///< Current shadow map (forward rendering only)
+		this.camera = false; ///< Current camera used for rendering (used to populate camera uniforms for shaders)
+		this.engine = false; ///< Current engine used for rendering
 	}
 });

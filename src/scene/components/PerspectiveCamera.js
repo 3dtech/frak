@@ -24,7 +24,7 @@ var PerspectiveCamera=CameraComponent.extend({
 
 	onStart: function(context, engine) {
 		if(!this.aspect) {
-			this.setAspectRatio(context.canvas.width()/context.canvas.height());
+			this.setAspectRatio(context.canvas.width/context.canvas.height);
 		}
 		this._super(context, engine);
 	},

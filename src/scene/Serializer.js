@@ -1,26 +1,26 @@
 /** Implements serialization of objects. Serializable objects are treated as special
-	and their included/excluded function return values are used to decide which of their fields to serialize. 
+	and their included/excluded function return values are used to decide which of their fields to serialize.
 	This Serializer does NOT serialize Serializable objects uniquely and does not support any cyclic references.
-	
+
 	Uses following reserved properties of all objects:
 	_visited_
-	
+
 	Additionally uses following reserved properties of Serializable objects:
 	_id_
 	_type_
 	_properties_
-	
+
 	*/
 var Serializer=Class.extend({
 	init: function() {
 		this.serializables={};	// All serializable objects found during serialization. These will be referenced by their respective IDs through reference type
 	},
-	
+
 	/** Constructs a serializable copy of this object */
 	serializableCopy: function(stack, value, excluded, depth, maximumDepth) {
 		var result={};
 		var fields=value.getSerializableFields(excluded);
-		
+
 		if(depth>=maximumDepth) {
 			var trace=[];
 			for(var s in stack) {
@@ -28,13 +28,13 @@ var Serializer=Class.extend({
 			}
 			throw "Reached maximum depth for serialization: "+depth+" at "+value.type();
 		}
-		
+
 		stack=stack.slice(0);
 		stack.splice(0, 0, value);
-		
+
 		for(var f in fields) {
 			var field=fields[f];
-			
+
 			if(field instanceof Serializable) result[f]=this.serializableCopy(stack, field, excluded, depth+1, maximumDepth);
 			else if(field instanceof Array || field instanceof Float32Array) {
 				var arrayResult=[];
@@ -48,10 +48,10 @@ var Serializer=Class.extend({
 			}
 			else result[f]=fields[f];
 		}
-		
+
 		return {"_type_": value.type(), "_properties_": result};
 	},
- 	
+
 	/** Serializes given object
 		@param object Object to be serialized
 		@param excluded Excluded fields for all objects
@@ -61,14 +61,14 @@ var Serializer=Class.extend({
 		var r=this.serializableCopy([], object, excluded, 0, maximumDepth);
 		return JSON.stringify({'_root_': r, '_serializables_': this.serializables}, undefined, 2);
 	},
-	
+
 	/** Unserializes all serializable objects */
 	unserializeSerializables: function(data) {
 		for(var id in data) {
 			this.serializables[id]=this.unserializeCopy(data[id]);
 		}
 	},
-	
+
 	/** Unserializes a parsed serialized object */
 	unserializeCopy: function(v) {
 		// Unserialize array
@@ -102,7 +102,7 @@ var Serializer=Class.extend({
 			return t;
 		}
 	},
-	
+
 	/** Resolve references to serializable objects */
 	resolveReferences: function(object, key) {
 		if(object[key] instanceof Array) {
@@ -122,23 +122,23 @@ var Serializer=Class.extend({
 			}
 		}
 	},
-	
+
 	/** Unserializes data */
 	unserialize: function(text) {
-		var data=$.parseJSON(text);
+		var data = FRAK.parseJSON(text);
 		this.serializables={};
 		// Unserialize all serializable objects (as much as possible)
 		this.unserializeSerializables(data['_serializables_']);
-		
+
 		// Unserialize root object
 		var unserialized=this.unserializeCopy(data['_root_']);
-		
+
 		// Resolve references to serializable objects
 		for(var i in this.serializables) {
 			this.resolveReferences(this.serializables, i);
 		}
 		this.resolveReferences(data, '_serializables_');
-		
+
 		return unserialized;
 	}
 });

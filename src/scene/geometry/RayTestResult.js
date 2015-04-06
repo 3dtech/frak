@@ -1,5 +1,5 @@
-/** Container for storing ray intersection tests. 
-	It also provides some more commonly used functions like 
+/** Container for storing ray intersection tests.
+	It also provides some more commonly used functions like
 	sorting the results and finding the nearest intersection. */
 var RayTestResult = Class.extend({
 	/** Constructor
@@ -9,7 +9,7 @@ var RayTestResult = Class.extend({
 		this.hits = [];
 		this.addCallback=false;
 	},
-	
+
 	/** Adds an intersection point to the result
 		@param point Instance of {vec3} */
 	add: function(point) {
@@ -19,17 +19,17 @@ var RayTestResult = Class.extend({
 			'submesh': false,
 			'node': false
 		};
-		if ($.isFunction(this.addCallback))
+		if (FRAK.isFunction(this.addCallback))
 			this.addCallback(item);
 		this.hits.push(item);
 	},
-	
+
 	/** Returns true if there are no intersections stored in the container.
 		@return True if there are no intersections stored in the container */
 	empty: function() {
 		return (this.hits.length==0);
 	},
-	
+
 	/** Sorts the intersections in this container from nearest to furthest. */
 	sort: function() {
 		var scope=this;
@@ -39,7 +39,7 @@ var RayTestResult = Class.extend({
 			return da-db;
 		});
 	},
-	
+
 	/** Returns the intersection point nearest to the origin of the ray.
 		@return The intersection point nearest to the origin of the ray */
 	nearest: function() {

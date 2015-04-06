@@ -1,34 +1,24 @@
-/** Shader program definition.
-	Usage:
-
-	// Fetch rendering context
-	var renderingContext=new RenderingContext($('#canvas'));
-
-	// Create shader
-	var shader=new Shader(renderingContext);
-
-	// Add subshaders
-	shader.addVertexShader("attribute vec3 aVertexPosition; void main(void) { gl_Position = vec4(aVertexPosition, 1.0); }");
-	shader.addFragmentShader("precision mediump float; void main(void) { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }");
-
-	// Start using the shader (it's linked automatically)
-	shader.use();
-*/
+/**
+ * Used to compile and link vertex and fragment shader to a shader program.
+ */
 var Shader=Serializable.extend({
 	/** Constructor
 		@param context Rendering context
 		@param descriptor Shader source descriptor normally passed to shader by ShadersManager to make it identifiable later [optional] */
 	init: function(context, descriptor) {
+		if (!context)
+			throw "Shader: RenderingContext required";
+
 		this._super();
-		if(!context) throw "RenderingContext not passed to canvas";
-		this.descriptor=descriptor;
-		this.context=context;
-		this.program=context.gl.createProgram();
-		this.shaders=[];
-		this.requirements=new ShaderRequirements();
-		this.linked=false;
-		this.failed=false;
-		this.uniformLocations={};
+
+		this.descriptor = descriptor;
+		this.context = context;
+		this.program = context.gl.createProgram();
+		this.shaders = [];
+		this.requirements = new ShaderRequirements();
+		this.linked = false;
+		this.failed = false;
+		this.uniformLocations = {};
 
 		this.explicitLocations = {
 			'position': 0,
