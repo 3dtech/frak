@@ -44,10 +44,8 @@ var Controller=Component.extend({
 	// Events
 	/** Called when starting engine */
 	onStart: function(context, engine) {
-		// Set controller to started mode
-		var me=this;
-		this.canvas = context.canvas;
-		this.buttons=[false, false, false];
+		for (var i=0; i<this.buttons.length; i++)
+			this.buttons[i]=false;
 	},
 
 	onUpdate: function(engine) {
