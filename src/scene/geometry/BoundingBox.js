@@ -300,13 +300,18 @@ var BoundingBox=BoundingVolume.extend({
 		this.encapsulatePoint(box.max);
 	},
 
-	/** Generates the 8 bounding box vertices.
-		@return The 8 bounding box vertices. */
-	getVertices: function() {
-		var vertices = [];
-		vertices.push(
-			vec3.create(), vec3.create(), vec3.create(), vec3.create(),
-			vec3.create(), vec3.create(), vec3.create(), vec3.create());
+	/**
+	 * Generates the 8 bounding box vertices.
+	 * @param vertices Array of 8 {vec3} [optional]
+	 * @return The 8 bounding box vertices.
+	 */
+	getVertices: function(vertices) {
+		if (!vertices) {
+			vertices = [
+				vec3.create(), vec3.create(), vec3.create(), vec3.create(),
+				vec3.create(), vec3.create(), vec3.create(), vec3.create()
+			];
+		}
 		vec3.add(vertices[0], this.center, [ this.extents[0],  this.extents[1],  this.extents[2]]); // RTB
 		vec3.add(vertices[1], this.center, [-this.extents[0],  this.extents[1],  this.extents[2]]); // LTB
 		vec3.add(vertices[2], this.center, [ this.extents[0], -this.extents[1],  this.extents[2]]); // RBB
