@@ -19,7 +19,7 @@ FRAK.isFunction = function(f) {
 FRAK.parseJSON = function(s) {
 	if (JSON && JSON.parse)
 		return JSON.parse(s);
-	if (jQuery && jQuery.parseJSON)
+	if (window.jQuery && jQuery.parseJSON)
 		return jQuery.parseJSON(s);
 	throw "FRAK.parseJSON: No JSON parser available.";
 }
