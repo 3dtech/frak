@@ -26,6 +26,21 @@ var BoundingBox=BoundingVolume.extend({
 		}
 	},
 
+	/** Sets the bounding box center and size */
+	set: function(center, size) {
+		if (center) {
+			if (!this.center)
+				this.center = vec3.create();
+			vec3.copy(this.center, center);
+		}
+
+		if (size)
+			vec3.copy(this.size, size);
+
+		vec3.scale(this.extents, this.size, 0.5);
+		this.recalculate();
+	},
+
 	/** Transforms this bounding box by given matrix
 		@param mat {mat4} Transformation matrix
 		@return New {BoundingBox} */
