@@ -11,11 +11,10 @@
 		<div>
 			<button onclick="toggleSoftShadows();">Soft shadows</button>
 			<button onclick="toggleDebug();">Debug</button>
-			<button onclick="pauseEngine();">PAUSE</button>
+			<button onclick="pauseEngine(this);">PAUSE</button>
 		</div>
 
 		<!-- Libraries -->
-		<script src="../lib/jquery-1.11.1.min.js"></script>
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
@@ -39,6 +38,7 @@
 				orbitController.distance = 10.0;
 				orbitController.minimumDistance = 1.0;
 				orbitController.maximumDistance = 50.0;
+				orbitController.distanceSteps = 32;
 				orbitController.maximumPitch = Math.PI/2.2;
 				orbitController.rotation[1] = 1.0;
 				orbitController.target.value = scene.root.transform;
@@ -181,11 +181,22 @@
 				mat4.fromRotationTranslation(aken.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, 3, 2.5]);
 				scene.root.addNode(aken);
 
+				var branchMaterial = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[ new Sampler("diffuse0", scene.engine.assetsManager.texturesManager.add("data/branch.png")) ]
+				);
+
+				var branch = Primitives.plane(2.0, 2.0, branchMaterial);
+				mat4.fromRotationTranslation(branch.transform.relative, quat.euler(quat.create(), 0, 45, 0), [3.5, 0, 3]);
+				scene.root.addNode(branch);
+
 				scene.engine.sceneStarted = function() {
 					redBox.onEachChild(makeTransparent);
 					blueBox.onEachChild(makeTransparent);
 					plane.onEachChild(makeTransparent);
 					aken.onEachChild(makeTransparent);
+					branch.onEachChild(makeTransparent);
 
 					model.onEachChildComponent(function (component) {
 						if (component instanceof MeshRendererComponent) {
@@ -198,8 +209,8 @@
 			}
 
 			var engine;
-			$(function() {
-				engine = new Engine($('#canvas'), {
+			window.onload = function() {
+				engine = new Engine('canvas', {
 					'requestedFPS': 60,
 					'assetsPath': '../assets/',
 					'transparencyMode': 'blended',
@@ -219,7 +230,7 @@
 				engine.assetsManager.load(function() {
 					engine.run();
 				});
-			});
+			};
 
 			function toggleDebug() {
 				var renderStage = engine.scene.camera.renderStage;
@@ -234,8 +245,12 @@
 					stage.enable();
 			}
 
-			function pauseEngine() {
+			function pauseEngine(element) {
 				engine.togglePause();
+				if (engine.running)
+					element.textContent = 'PAUSE';
+				else
+					element.textContent = 'UNPAUSE';
 			}
 		</script>
 	</body>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Deferred shadows</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+		<div>
+			<button onclick="toggleSoftShadows();">Soft shadows</button>
+			<button onclick="toggleDebug();">Debug</button>
+			<button onclick="pauseEngine(this);">PAUSE</button>
+		</div>
+
+		<script src="../builds/frak-latest.min.js"></script>
+
+		<script type="text/javascript">
+			function makeTransparent(subnode) {
+				if (subnode.getComponent(MeshRendererComponent)) {
+					var meshRendererComponent = subnode.getComponent(MeshRendererComponent);
+					meshRendererComponent.castShadows=false;
+					for (var i in meshRendererComponent.meshRenderers) {
+						meshRendererComponent.meshRenderers[i].transparent=true;
+						var material = meshRendererComponent.meshRenderers[i].material;
+						material.shader = engine.assetsManager.addShaderSource("Transparent");
+						material.shader.requirements.transparent = true;
+					}
+				}
+			};
+
+			function setupCamera(scene) {
+				scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
+				scene.cameraComponent.setClipPlanes(1.0, 200.0);
+				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.distance = 50.0;
+				orbitController.minimumDistance = 1.0;
+				orbitController.maximumDistance = 100.0;
+				orbitController.distanceSteps = 64;
+				orbitController.maximumPitch = Math.PI/2.2;
+				orbitController.rotation[0] = -0.5;
+				orbitController.rotation[1] = 1.0;
+				orbitController.target.value = scene.root.transform;
+
+				// Skybox image order: front, back, left, right, bottom, top
+				var skybox = [
+					new TextureDescriptor("data/skybox/green_front.png"),
+					new TextureDescriptor("data/skybox/green_back.png"),
+					new TextureDescriptor("data/skybox/green_left.png"),
+					new TextureDescriptor("data/skybox/green_right.png"),
+					new TextureDescriptor("data/skybox/green_bottom.png"),
+					new TextureDescriptor("data/skybox/green_top.png")
+				];
+
+				var skyboxComponent = scene.cameraNode.addComponent(new SkyboxComponent());
+				skyboxComponent.setup(engine.assetsManager, engine, skybox);
+			}
+
+			function setupLights(scene) {
+				var lights = scene.root.addNode(new Node('lights'));
+				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.8, 0.8, 0.8)));
+				var lightDirectional = scene.light;
+				lightDirectional.setLightDirection([1, 1, 1]);
+				lightDirectional.intensity = 0.8;
+				lightDirectional.shadowCasting = true;
+				// lightDirectional.shadowResolution = vec2.fromValues(128, 128);
+				// lightDirectional.shadowResolution = vec2.fromValues(256, 256);
+				// lightDirectional.shadowResolution = vec2.fromValues(512, 512);
+				// lightDirectional.shadowResolution = vec2.fromValues(1024, 1024);
+				// lightDirectional.shadowResolution = vec2.fromValues(2048, 2048);
+				// lightDirectional.shadowResolution = vec2.fromValues(4096, 4096);
+			}
+
+			function setupScene(scene) {
+				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");
+				var texNormal = scene.engine.assetsManager.texturesManager.add("data/tiles_n.png");
+
+				var material = new Material(
+					scene.engine.assetsManager.addShaderSource("normalmapped"),
+					{
+						"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
+						"specularStrength": new UniformFloat(0.8),
+						"specularPower": new UniformInt(256)
+					},
+					[
+						new Sampler("diffuse0", texColor),
+						new Sampler("normal0", texNormal)
+					]
+				);
+				material.name = 'Normalmapped';
+
+				var box = Primitives.box([0,0,0], [1.0, 1.0, 1.0], material);
+				scene.root.addNode(box);
+				mat4.fromRotationTranslation(box.transform.relative, quat.create(), [5, 0.9, 0]);
+
+				var level0 = scene.engine.assetsManager.addModel('data/demo/ground.data');
+				scene.root.addNode(level0);
+
+				scene.engine.sceneStarted = function() {
+					var transparentMaterials = [
+						'branch_summerpng',
+						'cross03png'
+					];
+
+					level0.onEachChild(function (subnode) {
+						var mrc = subnode.getComponent(MeshRendererComponent);
+						if (mrc) {
+							for (var i=0; i<mrc.meshRenderers.length; i++) {
+								if (mrc.meshRenderers[i].transparent)
+									continue;
+								if (transparentMaterials.indexOf(mrc.meshRenderers[i].material.name) != -1) {
+									mrc.meshRenderers[i].transparent = true;
+									var material = mrc.meshRenderers[i].material;
+									material.shader = engine.assetsManager.addShaderSource("transparent");
+									material.shader.requirements.transparent = true;
+								}
+							}
+						}
+					});
+				}
+			}
+
+			var engine;
+			window.onload = function() {
+				engine = new Engine('canvas', {
+					'requestedFPS': 60,
+					'assetsPath': '../assets/',
+					'transparencyMode': 'blended',
+					'antialias': true,
+					'renderer': 'deferred'
+				});
+
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+				setupCamera(engine.scene);
+				setupLights(engine.scene);
+				setupScene(engine.scene);
+
+				engine.assetsManager.load(function() {
+					engine.run();
+				});
+			};
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function toggleSoftShadows() {
+				var stage = engine.scene.camera.renderStage.generator.softShadowsStage;
+				if (stage.enabled)
+					stage.disable();
+				else
+					stage.enable();
+			}
+
+			function pauseEngine(element) {
+				engine.togglePause();
+				if (engine.running)
+					element.textContent = 'PAUSE';
+				else
+					element.textContent = 'UNPAUSE';
+			}
+		</script>
+	</body>
+</html>
