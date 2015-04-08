@@ -11,7 +11,7 @@ var DirectionalLight = Light.extend({
 		if (direction)
 			this.setLightDirection(direction);
 		this.shadowResolution = vec2.fromValues(2048, 2048);
-		this.shadowBias = 0.16;
+		this.shadowBias = 0.001; ///< Used to offset lightspace depth to avoid floating point errors in depth comparison
 
 		this.geometry = null;
 		this.material = null;
@@ -44,7 +44,7 @@ var DirectionalLight = Light.extend({
 				'lightView': new UniformMat4(mat4.create()),
 				'lightProjection': new UniformMat4(mat4.create()),
 				'useShadows': new UniformInt(0),
-				'shadowBias': new UniformFloat(1.0)
+				'shadowBias': new UniformFloat(0.001)
 			},
 			[]
 		);

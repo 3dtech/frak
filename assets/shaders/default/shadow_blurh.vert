@@ -11,7 +11,7 @@ varying vec2 uv;
 varying vec2 blurCoords[14];
 
 void main() {
-	float blurSize = 0.4;
+	float blurSize = 0.2;
 	blurCoords[ 0] = uv0 + vec2(-0.028, 0.0) * blurSize;
 	blurCoords[ 1] = uv0 + vec2(-0.024, 0.0) * blurSize;
 	blurCoords[ 2] = uv0 + vec2(-0.020, 0.0) * blurSize;

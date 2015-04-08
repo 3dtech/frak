@@ -4,11 +4,11 @@ var Light = Component.extend({
 		this._super();
 		this.color = new Color(1.0, 1.0, 1.0, 1.0);
 		this.intensity = 1.0;
+		this.shadowCasting = false;
+		this.shadowMask = 0xFFFFFFFF;
 
-		this.shadowIntensity = 0.40;
-		this.shadowBlurKernelSize=5; ///< Should always be an integer in range [1,10]
-		this.shadowCasting=false;
-		this.shadowMask=0xFFFFFFFF;
+		this.shadowIntensity = 0.40; ///< Used int fwd renderer only
+		this.shadowBlurKernelSize=5; ///< Should always be an integer in range [1,10], used in fwd renderer only
 	},
 
 	type: function() {
