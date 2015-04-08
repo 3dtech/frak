@@ -22,13 +22,26 @@ uniform int shadowOnly;
 
 varying vec2 uv;
 
-const mat4 scaleAndBias = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
+float linstep(float low, float high, float v) {
+	return clamp((v-low)/(high-low), 0.0, 1.0);
+}
+
+float VSM(vec2 moments, float compare) {
+	float p = smoothstep(compare - shadowBias, compare, moments.x);
+	float variance = max(moments.y - moments.x*moments.x, -0.001);
+	float d = compare - moments.x;
+	float p_max = linstep(0.2, 1.0, variance / (variance + d*d));
+	return clamp(max(p, p_max), 0.0, 1.0);
+}
 
 float shadowmap(vec4 worldPosition) {
-	vec4 shadowPosition = scaleAndBias * lightProjection * lightView * worldPosition;
-	vec3 shadowCoord = shadowPosition.xyz / shadowPosition.w;
-	vec4 shadowTexel = texture2D(shadow0, shadowCoord.xy);
-	return step(shadowCoord.z*shadowBias, shadowTexel.r);
+	vec4 shadowPosition = lightProjection * lightView * worldPosition;
+	vec2 shadowUV = shadowPosition.xy / shadowPosition.w;
+	shadowUV = shadowUV * 0.5 + 0.5;
+	vec4 shadowTexel = texture2D(shadow0, shadowUV);
+
+	return VSM(shadowTexel.xy, shadowPosition.z);
+	// return step(shadowPosition.z - shadowBias, shadowTexel.r);
 }
 
 void main () {

@@ -12,7 +12,8 @@ varying vec2 uv;
 
 void main() {
 	vec4 viewPosition = modelview * vec4(position, 1.0);
-	depth = (-viewPosition.z - zNear) / (zFar - zNear);
+	vec4 clipPosition = projection * viewPosition;
+	depth = clipPosition.z;
 	uv = texcoord2d0;
-	gl_Position = projection * viewPosition;
+	gl_Position = clipPosition;
 }

@@ -6,9 +6,19 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		this._super();
 		this.material = null;
 		this.directional = [];
-		this.sceneBounds = new BoundingSphere();
+
 		this.clearColor = new Color(0.0, 0.0, 0.0, 0.0);
 		this.lightPosition = vec3.create();
+		this.lightLookTarget = vec3.create();
+		this.lightUpVector = vec3.fromValues(0, 1, 0);
+		this.aabbVertices = [
+			vec3.create(), vec3.create(), vec3.create(), vec3.create(),
+			vec3.create(), vec3.create(), vec3.create(), vec3.create()
+		];
+
+		this.sceneBounds = new BoundingSphere();
+		this.sceneAABB = new BoundingBox();
+		this.lightFrustum = new BoundingBox();
 	},
 
 	onStart: function(context, engine, camera) {
@@ -41,10 +51,11 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		}
 	},
 
-	/** Computes bounding sphere containing all visible renderers */
+	/** Computes bounding box containing all visible renderers */
 	computeSceneBounds: function() {
-		vec3.set(this.sceneBounds.center, 0, 0, 0);
-		this.sceneBounds.radius = 0.0;
+		vec3.set(this.sceneAABB.center, 0, 0, 0);
+		vec3.set(this.sceneAABB.extents, 0, 0, 0);
+		this.sceneAABB.recalculate();
 
 		var opaque = this.parent.organizer.solidRenderers;
 		var transparent = this.parent.organizer.transparentRenderers;
@@ -52,25 +63,46 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		for (var i=0; i<opaque.length; i++) {
 			if (!opaque[i].castShadows)
 				continue;
-			this.sceneBounds.encapsulateSphere(opaque[i].globalBoundingSphere);
+			this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
 		}
 
 		for (var i=0; i<transparent.length; i++) {
 			if (!transparent[i].castShadows)
 				continue;
-			this.sceneBounds.encapsulateSphere(transparent[i].globalBoundingSphere);
+			this.sceneAABB.encapsulateBox(transparent[i].globalBoundingBox);
 		}
 
-		return this.sceneBounds;
+		return this.sceneAABB;
 	},
 
-	renderDirectionalLightDepth: function(context, light, size) {
-		this.material.uniforms.zNear.value = 0.1;
-		this.material.uniforms.zFar.value = size*2.0;
+	renderDirectionalLightDepth: function(context, light) {
+		vec3.copy(this.lightPosition, this.sceneAABB.center);
+		vec3.sub(this.lightLookTarget, this.lightPosition, light.direction);
+		mat4.lookAt(light.lightView, this.lightPosition, this.lightLookTarget, this.lightUpVector);
 
-		mat4.ortho(light.lightProj, -size, size, -size, size, 0.1, size*2.0);
-		vec3.scale(this.lightPosition, light.direction, size);
-		mat4.lookAt(light.lightView, this.lightPosition, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
+
+		this.sceneAABB.getVertices(this.aabbVertices);
+		for (var i=0; i<8; i++) {
+			vec3.transformMat4(this.aabbVertices[i], this.aabbVertices[i], light.lightView);
+		}
+
+		this.lightFrustum.set(this.aabbVertices[0], [0, 0, 0]);
+		for (var i=1; i<8; i++) {
+			this.lightFrustum.encapsulatePoint(this.aabbVertices[i]);
+		}
+
+		var near = this.lightFrustum.min[2];
+		var far = this.lightFrustum.max[2];
+		mat4.ortho(light.lightProj,
+			this.lightFrustum.min[0],
+			this.lightFrustum.max[0],
+			this.lightFrustum.min[1],
+			this.lightFrustum.max[1],
+			near,
+			far
+		);
+		this.material.uniforms.zNear.value = near;
+		this.material.uniforms.zFar.value = far;
 
 		context.projection.push();
 		context.projection.load(light.lightProj);
@@ -155,10 +187,11 @@ var DeferredShadowRenderStage = RenderStage.extend({
 
 	onPreRender: function(context, scene, camera) {
 		this.collectLights(scene);
-		var radius = this.computeSceneBounds().radius;
+		this.computeSceneBounds();
+		// var radius = this.computeSceneBounds().radius;
 
 		for (var i=0; i<this.directional.length; i++) {
-			this.renderDirectionalLightDepth(context, this.directional[i], radius);
+			this.renderDirectionalLightDepth(context, this.directional[i]);
 		}
 	},
 
