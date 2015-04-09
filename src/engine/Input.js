@@ -195,7 +195,7 @@ var Input = Class.extend({
 	},
 
 	sendEvent: function(funcName){
-		if (!engine.running) // Drop events if engine is paused
+		if (!this.engine.running) // Drop events if engine is paused
 			return;
 
 		var args = Array.prototype.slice.call(arguments, 0);
