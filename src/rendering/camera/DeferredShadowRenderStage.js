@@ -122,6 +122,9 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		for (var i=0; i<renderers.length; ++i) {
 			if (!(renderers[i].layer & light.shadowMask))
 				continue;
+			if (!renderers[i].castShadows)
+				continue;
+
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
 			this.material.shader.bindUniforms(renderers[i].material.uniforms);
@@ -131,7 +134,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		this.material.unbind();
 
 		// Render alpha mapped portions of opaque geometry
-		this.renderAlphaMapped(context);
+		this.renderAlphaMapped(context, light);
 
 		gl.disable(gl.DEPTH_TEST);
 
@@ -141,7 +144,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		context.projection.pop();
 	},
 
-	renderAlphaMapped: function(context) {
+	renderAlphaMapped: function(context, light) {
 		var batches = this.parent.organizer.transparentRendererBatches;
 		var shader = this.material.shader;
 		var fallbackSamplers = [this.parent.diffuseFallback];
@@ -167,6 +170,11 @@ var DeferredShadowRenderStage = RenderStage.extend({
 			shader.bindSamplers(samplers);
 
 			for (var j=0; j<batch.length; ++j) {
+				if (!(batch[j].layer & light.shadowMask))
+					continue;
+				if (!batch[j].castShadows)
+					continue;
+
 				context.modelview.push();
 				context.modelview.multiply(batch[j].matrix);
 

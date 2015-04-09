@@ -97,6 +97,26 @@
 				var level0 = scene.engine.assetsManager.addModel('data/demo/ground.data');
 				scene.root.addNode(level0);
 
+				var text0 = Primitives.text('Shadow Casting');
+				var textComponent = text0.getComponent(TextComponent);
+				textComponent.family = 'Tahoma, Geneva, sans-serif';
+				textComponent.color.set(1.0, 1.0, 1.0, 1.0);
+				textComponent.outlineColor.set(0.0, 0.0, 0.0, 1.0);
+				mat4.fromTranslation(text0.transform.relative, [-10, 1.5, 10]);
+				text0.transform.scale([5, 5, 5]);
+				scene.root.addNode(text0);
+
+				var text1 = Primitives.text('Not Shadow Casting');
+				text1.getComponent(TextRendererComponent).castShadows = false;
+				var textComponent = text1.getComponent(TextComponent);
+				textComponent.family = 'Tahoma, Geneva, sans-serif';
+				textComponent.color.set(1.0, 1.0, 1.0, 1.0);
+				textComponent.outlineColor.set(0.0, 0.0, 0.0, 1.0);
+				mat4.fromTranslation(text1.transform.relative, [10, 1.5, 10]);
+				text1.transform.scale([5, 5, 5]);
+				scene.root.addNode(text1);
+
+
 				scene.engine.sceneStarted = function() {
 					var transparentMaterials = [
 						'branch_summerpng',
