@@ -117,10 +117,14 @@ var DeferredShadowRenderStage = RenderStage.extend({
 			if (!renderers[i].castShadows)
 				continue;
 
+			var shader = this.material.shader;
+
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
-			this.material.shader.bindUniforms(renderers[i].material.uniforms);
-			renderers[i].renderGeometry(context, this.material.shader);
+
+			shader.bindUniforms(renderers[i].material.uniforms);
+			renderers[i].renderGeometry(context, shader); // This will bind all default uniforms
+
 			context.modelview.pop();
 		}
 		this.material.unbind();
@@ -145,7 +149,6 @@ var DeferredShadowRenderStage = RenderStage.extend({
 
 		// Bind shared uniforms
 		shader.bindUniforms(this.material.uniforms);
-		shader.bindUniforms(this.parent.sharedUniforms);
 
 		var samplers;
 		for (var i in batches) {
@@ -169,12 +172,6 @@ var DeferredShadowRenderStage = RenderStage.extend({
 
 				context.modelview.push();
 				context.modelview.multiply(batch[j].matrix);
-
-				// Bind renderer specific uniforms
-				this.parent.rendererUniforms.model.value = batch[j].matrix;
-				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
-				shader.bindUniforms(this.parent.rendererUniforms);
 
 				batch[j].renderGeometry(context, shader);
 

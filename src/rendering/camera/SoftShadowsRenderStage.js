@@ -131,7 +131,6 @@ var SoftShadowsRenderStage = RenderStage.extend({
 				context.modelview.multiply(renderers[j].matrix);
 				this.parent.rendererUniforms.model.value = renderers[j].matrix;
 				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
 				shader.bindUniforms(this.parent.rendererUniforms);
 			}
 

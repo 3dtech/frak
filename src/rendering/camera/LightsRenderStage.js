@@ -108,7 +108,6 @@ var LightsRenderStage = RenderStage.extend({
 
 		var shader = light.material.shader;
 		shader.use();
-		shader.bindUniforms(this.parent.sharedUniforms);
 		shader.bindUniforms(this.sharedUniforms);
 		shader.bindUniforms(light.material.uniforms);
 
@@ -128,10 +127,6 @@ var LightsRenderStage = RenderStage.extend({
 
 			if (light.isPositional()) {
 				context.modelview.multiply(renderers[j].matrix);
-				this.parent.rendererUniforms.model.value = renderers[j].matrix;
-				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
-				shader.bindUniforms(this.parent.rendererUniforms);
 			}
 
 			renderers[j].renderGeometry(context, shader);

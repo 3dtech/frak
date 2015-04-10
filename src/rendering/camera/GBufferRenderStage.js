@@ -84,7 +84,6 @@ var GBufferRenderStage = RenderStage.extend({
 
 		// Bind shared uniforms
 		shader.bindUniforms(material.uniforms);
-		shader.bindUniforms(this.parent.sharedUniforms);
 
 		for (var i in batches) {
 			var batch = batches[i];
@@ -119,15 +118,7 @@ var GBufferRenderStage = RenderStage.extend({
 			for (var j=0; j<batch.length; ++j) {
 				context.modelview.push();
 				context.modelview.multiply(batch[j].matrix);
-
-				// Bind renderer specific uniforms
-				this.parent.rendererUniforms.model.value = batch[j].matrix;
-				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
-				shader.bindUniforms(this.parent.rendererUniforms);
-
-				batch[j].renderGeometry(context, shader);
-
+				batch[j].renderGeometry(context, shader); // This will bind all default uniforms
 				context.modelview.pop();
 			}
 

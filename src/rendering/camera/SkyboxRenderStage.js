@@ -9,7 +9,6 @@ var SkyboxRenderStage = RenderStage.extend({
 		this.uniforms = {
 			'model': new UniformMat4(mat4.create()),
 			'modelview': new UniformMat4(mat4.create()),
-			'modelviewInverse': new UniformMat4(mat4.create()),
 			'projection': new UniformMat4(mat4.create()),
 			'view': new UniformMat4(mat4.create()),
 			'viewInverse': new UniformMat4(mat4.create()),

@@ -103,7 +103,6 @@ var OITRenderStage = RenderStage.extend({
 				// Bind renderer specific uniforms
 				this.parent.rendererUniforms.model.value = batch[j].matrix;
 				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
 				shader.bindUniforms(this.parent.rendererUniforms);
 
 				batch[j].renderGeometry(context, shader);
@@ -144,7 +143,6 @@ var OITRenderStage = RenderStage.extend({
 			context.modelview.multiply(renderers[i].matrix);
 			this.parent.rendererUniforms.model.value = renderers[i].matrix;
 			this.parent.rendererUniforms.modelview.value = context.modelview.top();
-			this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
 			shader.bindUniforms(this.parent.rendererUniforms);
 
 			renderers[i].renderGeometry(context, shader);

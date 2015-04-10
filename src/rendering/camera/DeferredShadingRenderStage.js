@@ -7,7 +7,6 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		this.organizer = new RendererOrganizer();
 		this.diffuseFallback = null;
 		this.size = vec2.create();
-		this.invModelview = mat4.create();
 
 		this.bindCameraTarget = {
 			started: true,
@@ -46,7 +45,6 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		this.rendererUniforms = {
 			"model": new UniformMat4(null),
 			"modelview": new UniformMat4(null),
-			"modelviewInverse": new UniformMat4(null),
 			"receiveShadows": new UniformInt(1)
 		};
 	},
@@ -61,9 +59,6 @@ var DeferredShadingRenderStage = RenderStage.extend({
 
 	/** Prepares data shared among most renderers. */
 	prepareShared: function(context) {
-		// Inverse modelview matrix
-		mat4.invert(this.invModelview, context.modelview.top());
-
 		// Prepares view and projection uniforms; these won't change during rendering.
 		mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
 		mat4.copy(this.sharedUniforms.view.value, context.camera.viewMatrix);

@@ -68,7 +68,10 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 	},
 
 	initDebugger: function(context, scene) {
-		this.debugger = {};
+		this.debugger = {
+			quads: [],
+			sampler: new Sampler('tex0', null)
+		};
 
 		function createQuad(x, y, width, height) {
 			var vertices = [x,y,0, x,y+height,0, x+width,y+height,0, x+width,y,0];
@@ -79,10 +82,6 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 		}
 
 		var buffer = this.generator.gbufferStage.buffer;
-
-
-		this.debugger.quads = [];
-
 		var size = 2/7;
 		var x = -1;
 		var y = -1;
@@ -115,6 +114,5 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 			}
 		}
 
-		this.debugger.sampler = new Sampler('tex0', null);
 	}
 });

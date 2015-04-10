@@ -108,7 +108,6 @@ var DepthRenderStage = RenderStage.extend({
 				// Bind renderer specific uniforms
 				this.parent.rendererUniforms.model.value = batch[j].matrix;
 				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				this.parent.rendererUniforms.modelviewInverse.value = this.parent.invModelview;
 				shader.bindUniforms(this.parent.rendererUniforms);
 
 				batch[j].renderGeometry(context, shader);
