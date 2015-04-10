@@ -72,7 +72,6 @@ var OITRenderStage = RenderStage.extend({
 
 		// Bind shared uniforms
 		shader.bindUniforms(material.uniforms);
-		shader.bindUniforms(this.parent.sharedUniforms);
 		if (context.light && context.light.uniforms)
 			shader.bindUniforms(context.light.uniforms);
 
@@ -99,11 +98,6 @@ var OITRenderStage = RenderStage.extend({
 			for (var j=0; j<batch.length; ++j) {
 				context.modelview.push();
 				context.modelview.multiply(batch[j].matrix);
-
-				// Bind renderer specific uniforms
-				this.parent.rendererUniforms.model.value = batch[j].matrix;
-				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				shader.bindUniforms(this.parent.rendererUniforms);
 
 				batch[j].renderGeometry(context, shader);
 
@@ -133,7 +127,6 @@ var OITRenderStage = RenderStage.extend({
 
 		var shader = this.opaqueDepthMaterial.shader;
 		shader.use();
-		shader.bindUniforms(this.parent.sharedUniforms);
 		shader.bindUniforms(this.opaqueDepthMaterial.uniforms);
 		shader.bindSamplers(this.opaqueDepthMaterial.samplers);
 
@@ -141,9 +134,6 @@ var OITRenderStage = RenderStage.extend({
 		for (var i=0; i<renderers.length; i++) {
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
-			this.parent.rendererUniforms.model.value = renderers[i].matrix;
-			this.parent.rendererUniforms.modelview.value = context.modelview.top();
-			shader.bindUniforms(this.parent.rendererUniforms);
 
 			renderers[i].renderGeometry(context, shader);
 

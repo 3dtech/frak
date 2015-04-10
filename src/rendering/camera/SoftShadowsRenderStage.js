@@ -109,7 +109,6 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		var material = light.material;
 		var shader = material.shader;
 		shader.use();
-		shader.bindUniforms(this.parent.sharedUniforms);
 		shader.bindUniforms(this.sharedUniforms);
 		shader.bindUniforms(material.uniforms);
 
@@ -129,9 +128,6 @@ var SoftShadowsRenderStage = RenderStage.extend({
 
 			if (light.isPositional()) {
 				context.modelview.multiply(renderers[j].matrix);
-				this.parent.rendererUniforms.model.value = renderers[j].matrix;
-				this.parent.rendererUniforms.modelview.value = context.modelview.top();
-				shader.bindUniforms(this.parent.rendererUniforms);
 			}
 
 			renderers[j].renderGeometry(context, shader);
