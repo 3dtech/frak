@@ -16,7 +16,6 @@ var DeferredShadowRenderStage = RenderStage.extend({
 			vec3.create(), vec3.create(), vec3.create(), vec3.create()
 		];
 
-		this.sceneBounds = new BoundingSphere();
 		this.sceneAABB = new BoundingBox();
 		this.lightFrustum = new BoundingBox();
 	},
@@ -24,12 +23,9 @@ var DeferredShadowRenderStage = RenderStage.extend({
 	onStart: function(context, engine, camera) {
 		this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives');
 
-		this.material=new Material(
+		this.material = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/deferred_shadow_directional"),
-			{
-				'zNear': new UniformFloat(0.1),
-				'zFar': new UniformFloat(1000.0)
-			},
+			{},
 			[]
 		);
 
@@ -91,18 +87,14 @@ var DeferredShadowRenderStage = RenderStage.extend({
 			this.lightFrustum.encapsulatePoint(this.aabbVertices[i]);
 		}
 
-		var near = this.lightFrustum.min[2];
-		var far = this.lightFrustum.max[2];
 		mat4.ortho(light.lightProj,
 			this.lightFrustum.min[0],
 			this.lightFrustum.max[0],
 			this.lightFrustum.min[1],
 			this.lightFrustum.max[1],
-			near,
-			far
+			this.lightFrustum.min[2],
+			this.lightFrustum.max[2]
 		);
-		this.material.uniforms.zNear.value = near;
-		this.material.uniforms.zFar.value = far;
 
 		context.projection.push();
 		context.projection.load(light.lightProj);
@@ -196,7 +188,6 @@ var DeferredShadowRenderStage = RenderStage.extend({
 	onPreRender: function(context, scene, camera) {
 		this.collectLights(scene);
 		this.computeSceneBounds();
-		// var radius = this.computeSceneBounds().radius;
 
 		for (var i=0; i<this.directional.length; i++) {
 			this.renderDirectionalLightDepth(context, this.directional[i]);

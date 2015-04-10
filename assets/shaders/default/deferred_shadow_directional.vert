@@ -4,8 +4,6 @@ attribute vec2 texcoord2d0;
 
 uniform mat4 modelview;
 uniform mat4 projection;
-uniform float zNear;
-uniform float zFar;
 
 varying float depth;
 varying vec2 uv;
