@@ -47,6 +47,11 @@ var OITRenderStage = RenderStage.extend({
 			this.transparencyWeight.setSize(camera.target.size[0], camera.target.size[1]);
 		}
 
+		context.projection.push();
+		context.projection.load(camera.projectionMatrix);
+		context.modelview.push();
+		context.modelview.load(camera.viewMatrix);
+
 		// Transparent color texture
 		this.oitClearColor.set(0.0, 0.0, 0.0, 0.0);
 		this.transparencyTarget.bind(context, false, this.oitClearColor);
@@ -62,6 +67,9 @@ var OITRenderStage = RenderStage.extend({
 		/**
 		 * TODO: the accumulation pass can be rolled into a single pass shader, but it requires MRT.
 		 */
+
+		context.modelview.pop();
+		context.projection.pop();
 	},
 
 	renderTransparentBatches: function(context, scene, camera, material) {
