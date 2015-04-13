@@ -64,5 +64,14 @@ var ForwardRenderStage = PostProcessRenderStage.extend({
 				x+=size;
 			}
 		}
+
+		// Draw OIT buffers
+		var size = 2/4;
+		var x = -1;
+		var y = -1;
+		if (this.generator.oitStage.enabled) {
+			this.debugger.quads.push({ quad: createQuad(x, y, size, size),  texture: this.generator.oitStage.transparencyTarget.texture });
+			this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.oitStage.transparencyWeight.texture });
+		}
 	}
 });
