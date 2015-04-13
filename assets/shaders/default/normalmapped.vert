@@ -22,8 +22,6 @@ varying vec4 shadowPosition;
 
 varying mat3 tbn;
 
-const mat4 scaleMatrix = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
-
 highp mat3 transpose(in highp mat3 m) {
 	highp vec3 i0 = m[0];
 	highp vec3 i1 = m[1];
@@ -43,7 +41,7 @@ void main() {
 	viewPosition = view * worldPosition;
 	viewNormal = normalize(mat3(modelview) * normal);
 
-	shadowPosition = scaleMatrix * lightProjection * lightView * worldPosition;
+	shadowPosition = lightProjection * lightView * worldPosition;
 
 	tbn[0] = normalize(vec3(model * vec4(tangent, 0.0)));
 	tbn[1] = normalize(vec3(model * vec4(bitangent, 0.0)));

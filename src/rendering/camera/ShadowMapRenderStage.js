@@ -1,93 +1,200 @@
-/** Render-stage used for generating a depth map from the first shadow-casting light's point of view */
+/**
+ * Shadow map generator for the forward renderer
+ */
 var ShadowMapRenderStage=RenderStage.extend({
 	init: function(size) {
 		this._super();
 
-		this.size = 2048;
-		if (size)
-			this.size = size;
+		this.material = null;
 
-		this.target = false; // Will be replaced by TargetTexture once we receive context
-		this.shadowSampler=false; // Will be replaced by Sampler once we receive context
-		this.material=false; // Will be replaced by Shader once we receive context
-		this.lightView = mat4.create();
-		this.lightProj = mat4.create();
-		this.active=false;
-		this.blurEnabled = false;
+		this.clearColor = new Color(0.0, 0.0, 0.0, 1.0);
+		this.lightPosition = vec3.create();
+		this.lightLookTarget = vec3.create();
+		this.lightUpVector = vec3.fromValues(0, 1, 0);
+		this.aabbVertices = [
+			vec3.create(), vec3.create(), vec3.create(), vec3.create(),
+			vec3.create(), vec3.create(), vec3.create(), vec3.create()
+		];
 
-		// internal cache
-		this.lightPosition=vec3.create();
-		this.blurProj=mat4.create();
-		this.blurView=mat4.identity(mat4.create());
+		this.sceneAABB = new BoundingBox();
+		this.lightFrustum = new BoundingBox();
 	},
 
 	onStart: function(context, engine) {
-		this.target=new TargetTexture([this.size, this.size], context, false);
-		this.shadowSampler=new Sampler('shadow0', this.target.texture);
-		this.blurSampler=new Sampler('tex0', this.target.texture);
+		var shader = 'forward_shadow';
 
-		this.helperTarget=new TargetTexture([this.size, this.size], context, false);
-		this.helperTargetSampler=new Sampler('tex0', this.helperTarget.texture);
+		this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives');
+		if (this.extStandardDerivatives)
+			shader = 'forward_shadow_vsm';
 
-		this.material=new Material(
-			engine.assetsManager.addShaderSource("DepthRGBA"),
+		this.material = new Material(
+			engine.assetsManager.addShader("shaders/default/forward_shadow.vert", "shaders/default/{0}.frag".format(shader)),
 			{
-				// "packingType": new UniformInt(1)
-				"packingType": new UniformInt(2)
+				'hasFloat': new UniformInt(1)
 			},
 			[]
 		);
 
-		this.gaussianBlurMaterial=new Material(
-			engine.assetsManager.addShaderSource("GaussianBlur"),
-			{
-				"screenWidth": new UniformFloat(1.0),
-				"screenHeight": new UniformFloat(1.0),
-				"orientation": new UniformInt(0),
-				"kernelSize": new UniformInt(5),
-				"modelview": new UniformMat4(false),
-				"projection": new UniformMat4(false)
-			}, []
-		);
-
-		var vertices = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
-		var uvs = [0,1, 0,0, 1,0, 1,1];
-		var faces = [0, 1, 2, 0, 2, 3];
-		this.quad=new TrianglesRenderBuffer(context, faces);
-		this.quad.add('position', vertices, 3);
-		this.quad.add('texcoord2d0', uvs, 2);
-
-		engine.assetsManager.load(function(){}); // Start loading, if not already loading
+		engine.assetsManager.load();
 	},
 
 	onPostRender: function(context, scene, camera) {
-		this.active=false;
-
-		if (!this.parent || !(this.parent instanceof MaterialRenderStage))
-			return;
-
-		if (!this.target || !this.material)
-			return;
-
 		var light = this.getFirstShadowCastingLight(scene);
 		if (!light)
 			return;
 
-		this.renderShadows(context, scene, light);
-		if (this.blurEnabled) {
-			this.blurShadows(context, this.helperTarget, this.blurSampler, 0, light.shadowBlurKernelSize);
-			this.blurShadows(context, this.target, this.helperTargetSampler, 1, light.shadowBlurKernelSize);
+		this.computeSceneBounds();
+		vec3.copy(this.lightPosition, this.sceneAABB.center);
+		vec3.sub(this.lightLookTarget, this.lightPosition, light.direction);
+		mat4.lookAt(light.lightView, this.lightPosition, this.lightLookTarget, this.lightUpVector);
+
+
+		this.sceneAABB.getVertices(this.aabbVertices);
+		for (var i=0; i<8; i++) {
+			vec3.transformMat4(this.aabbVertices[i], this.aabbVertices[i], light.lightView);
 		}
-		this.active=true;
+
+		this.lightFrustum.set(this.aabbVertices[0], [0, 0, 0]);
+		for (var i=1; i<8; i++) {
+			this.lightFrustum.encapsulatePoint(this.aabbVertices[i]);
+		}
+
+		mat4.ortho(light.lightProj,
+			this.lightFrustum.min[0],
+			this.lightFrustum.max[0],
+			this.lightFrustum.min[1],
+			this.lightFrustum.max[1],
+			this.lightFrustum.min[2],
+			this.lightFrustum.max[2]
+		);
+
+		if (light.shadow instanceof TargetTextureFloat)
+			this.material.uniforms.hasFloat.value = 1;
+		else
+			this.material.uniforms.hasFloat.value = 0;
+
+		context.projection.push();
+		context.projection.load(light.lightProj);
+		context.modelview.push();
+		context.modelview.load(light.lightView);
+
+		light.shadow.bind(context, false, this.clearColor);
+
+		var gl = context.gl;
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LESS);
+		gl.depthMask(true);
+		gl.colorMask(true, true, true, true);
+
+		// Render opaque geometry
+		this.material.bind();
+		var renderers = this.parent.organizer.solidRenderers;
+		for (var i=0; i<renderers.length; ++i) {
+			if (!(renderers[i].layer & light.shadowMask))
+				continue;
+			if (!renderers[i].castShadows)
+				continue;
+
+			context.modelview.push();
+			context.modelview.multiply(renderers[i].matrix);
+			this.material.shader.bindUniforms(renderers[i].material.uniforms);
+			renderers[i].renderGeometry(context, this.material.shader);
+			context.modelview.pop();
+		}
+
+		this.material.unbind();
+
+		// Render alpha mapped portions of opaque geometry
+		this.renderAlphaMapped(context, light);
+
+		gl.disable(gl.DEPTH_TEST);
+
+		light.shadow.unbind(context);
+
+		context.modelview.pop();
+		context.projection.pop();
 	},
 
+	renderAlphaMapped: function(context, light) {
+		var batches = this.parent.organizer.transparentRendererBatches;
+		var shader = this.material.shader;
+		var fallbackSamplers = [this.parent.diffuseFallback];
+
+		shader.use();
+
+		// Bind shared uniforms
+		shader.bindUniforms(this.material.uniforms);
+		shader.bindUniforms(this.parent.sharedUniforms);
+
+		var samplers;
+		for (var i in batches) {
+			var batch = batches[i];
+			var batchMaterial = batch[0].material;
+
+			if (batchMaterial.samplers.length>0)
+				samplers = batchMaterial.samplers;
+			else
+				samplers = fallbackSamplers;
+
+			// Bind material uniforms and samplers
+			shader.bindUniforms(batchMaterial.uniforms);
+			shader.bindSamplers(samplers);
+
+			for (var j=0; j<batch.length; ++j) {
+				if (!(batch[j].layer & light.shadowMask))
+					continue;
+				if (!batch[j].castShadows)
+					continue;
+
+				context.modelview.push();
+				context.modelview.multiply(batch[j].matrix);
+
+				// Bind renderer specific uniforms
+				this.parent.rendererUniforms.model.value = batch[j].matrix;
+				this.parent.rendererUniforms.modelview.value = context.modelview.top();
+				shader.bindUniforms(this.parent.rendererUniforms);
+
+				batch[j].renderGeometry(context, shader);
+
+				context.modelview.pop();
+			}
+
+			shader.unbindSamplers(samplers);
+		}
+	},
+
+	/** Computes bounding box containing all visible renderers */
+	computeSceneBounds: function() {
+		vec3.set(this.sceneAABB.center, 0, 0, 0);
+		vec3.set(this.sceneAABB.extents, 0, 0, 0);
+		this.sceneAABB.recalculate();
+
+		var opaque = this.parent.organizer.solidRenderers;
+		var transparent = this.parent.organizer.transparentRenderers;
+
+		for (var i=0; i<opaque.length; i++) {
+			if (!opaque[i].castShadows)
+				continue;
+			this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
+		}
+
+		for (var i=0; i<transparent.length; i++) {
+			if (!transparent[i].castShadows)
+				continue;
+			this.sceneAABB.encapsulateBox(transparent[i].globalBoundingBox);
+		}
+
+		return this.sceneAABB;
+	},
+
+	/** Returns the first shadow casting directional light or false. */
 	getFirstShadowCastingLight: function(scene) {
 		for (var i=0; i<scene.lights.length; i++) {
 			if (!(scene.lights[i] instanceof DirectionalLight))
 				continue;
 			if (!scene.lights[i].enabled)
 				continue;
-			if (scene.lights[i].shadowCasting===true)
+			if (scene.lights[i].shadowCasting === true)
 				return scene.lights[i];
 		}
 		return false;
@@ -128,9 +235,6 @@ var ShadowMapRenderStage=RenderStage.extend({
 
 		this.material.bind();
 
-		// gl.cullFace(gl.BACK);
-		// gl.cullFace(gl.FRONT);
-		// gl.enable(gl.CULL_FACE);
 		for (var i in this.parent.solidRenderers) {
 			if ((this.parent.solidRenderers[i].layer & light.shadowMask) &&
 				this.parent.solidRenderers[i].visible &&
@@ -144,77 +248,14 @@ var ShadowMapRenderStage=RenderStage.extend({
 				context.modelview.pop();
 			}
 		}
-		// gl.disable(gl.CULL_FACE);
-
-		// for (var i in this.parent.transparentRenderers) {
-		// 	if ((this.parent.transparentRenderers[i].layer & light.shadowMask) &&
-		// 		this.parent.transparentRenderers[i].visible &&
-		// 		this.parent.transparentRenderers[i].castShadows) {
-		// 		context.modelview.push();
-		// 		context.modelview.multiply(this.parent.transparentRenderers[i].matrix);
-		// 		this.parent.transparentRenderers[i].renderGeometry(context, this.material.shader);
-		// 		context.modelview.pop();
-		// 	}
-		// }
 
 		this.material.unbind();
 
-		gl.depthMask(true);
 		gl.disable(gl.DEPTH_TEST);
 
 		context.modelview.pop();
 		context.projection.pop();
 
 		this.target.unbind(context);
-	},
-
-	blurShadows: function(context, target, source, orientation, kernelSize) {
-		this.gaussianBlurMaterial.shader.use();
-		if (!this.gaussianBlurMaterial.shader.linked)
-			return;
-
-		var gl = context.gl;
-		var size = target.getSize();
-		mat4.ortho(this.blurProj, 0, size[0], size[1], 0, -10, 10);
-		this.gaussianBlurMaterial.uniforms["screenWidth"].value=size[0];
-		this.gaussianBlurMaterial.uniforms["screenHeight"].value=size[1];
-		this.gaussianBlurMaterial.uniforms["orientation"].value=orientation;
-		this.gaussianBlurMaterial.uniforms["kernelSize"].value=kernelSize;
-
-		context.projection.push();
-		context.projection.load(this.blurProj);
-		context.modelview.push();
-		context.modelview.load(this.blurView);
-
-		target.bind(context);
-		gl.disable(gl.DEPTH_TEST);
-		gl.disable(gl.CULL_FACE);
-		gl.clearColor(0.0, 0.0, 0.0, 0.0);
-		gl.clear(gl.COLOR_BUFFER_BIT);
-
-		this.gaussianBlurMaterial.uniforms['modelview'].value=context.modelview.top();
-		this.gaussianBlurMaterial.uniforms['projection'].value=context.projection.top();
-		this.gaussianBlurMaterial.bind({}, [source]);
-		var shader = this.gaussianBlurMaterial.shader;
-		var locations=[];
-		for(var bufferName in this.quad.buffers) {
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.quad.buffers[bufferName]);
-			var bufferLocation = shader.getAttribLocation(bufferName);
-			if (bufferLocation==-1)
-				continue;
-
-			gl.enableVertexAttribArray(bufferLocation);
-			locations.push(bufferLocation);
-			gl.vertexAttribPointer(bufferLocation, this.quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
-		}
-		this.quad.drawElements();
-		for (var i in locations)
-			gl.disableVertexAttribArray(locations[i]);
-		this.gaussianBlurMaterial.unbind();
-
-		target.unbind(context);
-
-		context.modelview.pop();
-		context.projection.pop();
 	}
 });

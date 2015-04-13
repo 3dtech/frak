@@ -42,19 +42,6 @@
 				orbitController.rotation[0] = -0.5;
 				orbitController.rotation[1] = 1.0;
 				orbitController.target.value = scene.root.transform;
-
-				// Skybox image order: front, back, left, right, bottom, top
-				var skybox = [
-					new TextureDescriptor("data/skybox/green_front.png"),
-					new TextureDescriptor("data/skybox/green_back.png"),
-					new TextureDescriptor("data/skybox/green_left.png"),
-					new TextureDescriptor("data/skybox/green_right.png"),
-					new TextureDescriptor("data/skybox/green_bottom.png"),
-					new TextureDescriptor("data/skybox/green_top.png")
-				];
-
-				var skyboxComponent = scene.cameraNode.addComponent(new SkyboxComponent());
-				skyboxComponent.setup(engine.assetsManager, engine, skybox);
 			}
 
 			function setupLights(scene) {
@@ -115,7 +102,6 @@
 				mat4.fromTranslation(text1.transform.relative, [10, 1.5, 10]);
 				text1.transform.scale([5, 5, 5]);
 				scene.root.addNode(text1);
-
 
 				scene.engine.sceneStarted = function() {
 					var transparentMaterials = [

@@ -62,7 +62,9 @@ var MaterialRenderStage=RenderStage.extend({
 		this.shadowUniforms = {
 			"lightView": new UniformMat4(mat4.create()),
 			"lightProjection": new UniformMat4(mat4.create()),
-			"shadowIntensity": new UniformFloat(0.0)
+			"shadowBias": new UniformFloat(0.001),
+			"hasFloat": new UniformInt(1),
+			"useVSM": new UniformInt(1)
 		};
 	},
 
@@ -85,26 +87,27 @@ var MaterialRenderStage=RenderStage.extend({
 			this._shadowContext = {
 				'shadow0': this.shadowFallback,
 				'lightProjection': this.shadowUniforms.lightProjection,
-				'lightView': this.shadowUniforms.lightView,
-				'shadowIntensity': this.shadowUniforms.shadowIntensity
+				'lightView': this.shadowUniforms.lightView
 			};
 		}
 
 		context.shadow = this._shadowContext;
 		context.shadow.shadow0 = this.shadowFallback;
 
-		if (!this.shadowMapStage.active)
-			return;
-
 		var light = this.shadowMapStage.getFirstShadowCastingLight(scene);
 		if (!light)
 			return;
 
-		mat4.copy(this.shadowUniforms.lightView.value, this.shadowMapStage.lightView);
-		mat4.copy(this.shadowUniforms.lightProjection.value, this.shadowMapStage.lightProj);
-		this.shadowUniforms.shadowIntensity.value = light.shadowIntensity;
+		mat4.copy(this.shadowUniforms.lightView.value, light.lightView);
+		mat4.copy(this.shadowUniforms.lightProjection.value, light.lightProj);
+		this.shadowUniforms.shadowBias.value = light.shadowBias;
+		this.shadowUniforms.hasFloat.value = (light.shadow instanceof TargetTextureFloat) ? 1 : 0;
+		if (this.shadowUniforms.hasFloat.value == 1 && this.shadowMapStage.extStandardDerivatives)
+			this.shadowUniforms.useVSM.value = 1;
+		else
+			this.shadowUniforms.useVSM.value = 0;
 
-		context.shadow.shadow0 = this.shadowMapStage.shadowSampler;
+		context.shadow.shadow0 = light.shadowSampler;
 	},
 
 	/** Prepares Light uniforms that are shared between all materials. */

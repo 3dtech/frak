@@ -89,7 +89,6 @@ var Renderer=Class.extend({
 		if (context.shadow) {
 			uniforms.lightView = context.shadow.lightView;
 			uniforms.lightProjection = context.shadow.lightProjection;
-			uniforms.shadowIntensity = context.shadow.shadowIntensity;
 		}
 
 		return uniforms;

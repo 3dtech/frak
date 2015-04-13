@@ -50,7 +50,15 @@ var DirectionalLight = Light.extend({
 		);
 
 		if (this.shadowCasting && !this.shadow) {
-			this.shadow = new TargetTextureFloat(this.shadowResolution, context, false);
+			var extHalfFloat = context.gl.getExtension('OES_texture_half_float');
+			var extFloat = context.gl.getExtension('OES_texture_float');
+
+			if (!extFloat && !extHalfFloat) {
+				this.shadow = new TargetTexture(this.shadowResolution, context, false);
+			} else {
+				this.shadow = new TargetTextureFloat(this.shadowResolution, context, false);
+			}
+
 			this.shadowSampler = new Sampler('shadow0', this.shadow.texture);
 			this.material.samplers.push(this.shadowSampler);
 		}

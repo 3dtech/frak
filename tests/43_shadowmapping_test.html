@@ -1,9 +1,8 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>3DWayfinder WebGL</title>
+		<title>Shadow mapping</title>
 		<meta charset="utf-8" />
-		<meta name="description" content="3DWayfinder WebGL" />
 		<link rel="stylesheet" href="style.css" >
 	</head>
 	<body>
@@ -11,7 +10,6 @@
 		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="800" height="800"></canvas>
 
 		<!-- Libraries -->
-		<script src="../lib/jquery-1.11.1.min.js"></script>
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
@@ -47,67 +45,32 @@
 				vec3.normalize(light.direction, light.direction);
 			}
 
-			function getShadowMapStage(camera) {
-				if (camera.renderStage instanceof MaterialRenderStage) {
-					return camera.renderStage.shadowMapStage;
-				}
-				if (camera.renderStage instanceof PostProcessRenderStage) {
-					return camera.renderStage.generator.shadowMapStage;
-				}
-				throw('Unhandled RenderStage used in Camera');
-			}
-
-			var frak=new FRAK(function() {
-				var DepthDebugCamera=PerspectiveCamera.extend({
-					type: function() { return "DepthDebugCamera"; },
-					onStart: function(context, engine) {
-						this._super(context, engine);
-						var shadowMapStage = getShadowMapStage(this.node.scene.camera);
-						var debugMaterial=new Material(
-							engine.assetsManager.addShaderSource("shaders/default/DebugPackedDepthTexture"),
-							{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
-							[ new Sampler("diffuse0", shadowMapStage.target.texture) ]
-						);
-						debugMaterial.name="DebugDepthMap";
-						debugMaterial.shader.transparent=true;
-						var debugPlane = Primitives.plane(8.0, 8.0, debugMaterial);
-						mat4.fromRotationTranslation(debugPlane.transform.relative, quat.create(), [9, 0, 0]);
-						this.node.scene.root.addNode(debugPlane);
-
-						engine.assetsManager.load();
-						this.node.scene.cameraComponent.fitNodeToView(scene.root);
-					}
+			var engine;
+			window.onload = function() {
+				engine = new Engine('canvas', {
+					'assetsPath': '../assets/',
+					'renderer': 'forward'
 				});
 
-				var engine = new Engine($('#canvas'), {
-					'assetsPath': '../assets/'
-				});
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
 				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
 
-				var scene=engine.scene;
-
-				scene.cameraNode.removeComponentsByType(PerspectiveCamera);
-				var debugCamera = new DepthDebugCamera();
-				debugCamera.setAspectRatio(1.0);
-				scene.camera=debugCamera.camera;
-				scene.cameraComponent=scene.cameraNode.addComponent(debugCamera);
-
-				scene.camera.backgroundColor=new Color(0.2, 0.2, 0.2, 1.0);
+				var scene = engine.scene;
+				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
 				setupLights(scene);
 				setupScene(scene);
 
-				var orbitController=scene.cameraNode.addComponent(new SmoothOrbitController());
-				orbitController.distance=20.0;
-				orbitController.minimumDistance=0.5;
-				orbitController.maximumDistance=100.0;
-				orbitController.target.value=scene.root.transform;
-				// orbitController.target=scene.root.findChildWithName('Plane').transform;
+				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.distance = 20.0;
+				orbitController.minimumDistance = 1.0;
+				orbitController.maximumDistance = 40.0;
+				orbitController.distanceSteps = 64;
+				orbitController.target.value = scene.root.transform;
 
 				engine.assetsManager.load(function() {
 					engine.run();
 				});
-			});
+			};
 		</script>
 	</body>
 </html>

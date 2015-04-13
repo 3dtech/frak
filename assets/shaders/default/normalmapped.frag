@@ -12,12 +12,14 @@ uniform int specularPower;
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;
-uniform float shadowIntensity;
+uniform float shadowBias;
 
 uniform sampler2D diffuse0;
 uniform sampler2D normal0;
 uniform sampler2D shadow0;
 
+uniform int hasFloat;
+uniform int useVSM;
 uniform int useShadows;
 uniform int receiveShadows;
 
@@ -35,12 +37,8 @@ float unpack(vec4 c) {
 	return dot(c, bitShifts);
 }
 
-float unpackHalf(vec2 c) {
-	return c.x + (c.y / 255.0);
-}
-
 /** Computes color and directional lighting */
-vec4 lighting() {
+vec4 lighting(float shadow) {
 	vec4 encodedNormal = texture2D(normal0, uv0);
 	// vec3 localCoords = 2.0 * encodedNormal.rgb - vec3(1.0);
 	vec3 localCoords = vec3(2.0 * encodedNormal.rg - vec2(1.0), encodedNormal.b);
@@ -59,45 +57,46 @@ vec4 lighting() {
 	vec4 diffuseColor = diffuse * diffuse * textureColor * lightColor * diffuseLight;
 	vec4 specularColor = lightColor * specularLight * specularStrength;
 
-	return ambientColor + diffuseColor + specularColor;
+	return ambientColor + (diffuseColor + specularColor) * shadow;
 }
 
-float ChebychevInequality(vec2 moments, float t) {
-	if ( t <= moments.x )
-		return 1.0;
-	float variance = moments.y - (moments.x * moments.x);
-	variance = max(variance, 0.02);
-	float d = (t - moments.x); // * shadowIntensity;
-	return variance / (variance + d * d);
-	// return variance / (variance + pow(d*d, 0.7));
+float linstep(float low, float high, float v) {
+	return clamp((v-low)/(high-low), 0.0, 1.0);
 }
 
-float VsmFixLightBleed(float pMax, float amount) {
-	return clamp((pMax - amount) / (1.0 - amount), 0.0, 1.0);
+float VSM(vec2 moments, float compare) {
+	float p = smoothstep(compare - shadowBias, compare, moments.x);
+	float variance = max(moments.y - moments.x*moments.x, -0.001);
+	float d = compare - moments.x;
+	float p_max = linstep(0.2, 1.0, variance / (variance + d*d));
+	return clamp(max(p, p_max), 0.0, 1.0);
+}
+
+float shadowmap() {
+	vec2 uv = shadowPosition.xy / shadowPosition.w;
+	uv = uv * 0.5 + 0.5;
+	vec4 shadowTexel = texture2D(shadow0, uv);
+
+	float depth;
+	if (hasFloat == 1)
+		depth = shadowTexel.r;
+	else
+		depth = unpack(shadowTexel);
+
+	float lightDepth = (shadowPosition.z + 1.0) * 0.5;
+
+	if (useVSM == 1)
+		return VSM(shadowTexel.xy, lightDepth);
+
+	return step(lightDepth - shadowBias, depth);
 }
 
 void main(void) {
-	vec4 color = lighting();
-	if (useShadows == 0 || receiveShadows == 0) {
-		gl_FragColor = color;
-		return;
+	float shadow = 1.0;
+	if (useShadows > 0 && receiveShadows > 0) {
+		shadow = shadowmap();
 	}
 
-	vec3 depth = shadowPosition.xyz / shadowPosition.w;
-	float shadow = 1.0;
-	vec4 texel = texture2D(shadow0, depth.xy);
-
-	// VSM
-	vec2 moments = vec2(unpackHalf(texel.xy), unpackHalf(texel.zw));
-	shadow = ChebychevInequality(moments, depth.z);
-	shadow = VsmFixLightBleed(shadow, 0.1);
-
-	// extra esm step to lessen the gradient near close surfaces
-	shadow = (clamp(exp(-4.0 * (depth.z - unpackHalf(texel.xy))), 0.0, 1.0) + shadow) / 2.0;
-
-	// // ESM
-	// float c = 4.0;
-	// shadow = clamp(exp(-c * (depth.z - unpack(texel))), 0.0, 1.0);
-
-	gl_FragColor = clamp(vec4(color.xyz*shadow, color.a), 0.0, 1.0);
+	vec4 color = lighting(shadow);
+	gl_FragColor = clamp(color, 0.0, 1.0);
 }
