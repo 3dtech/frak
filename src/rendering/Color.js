@@ -27,11 +27,11 @@ var Color = function(r, g, b, a) {
 	}
 
 	this.toHex=function() {
-		var componentToHex = function(v) {
-			var h = v.toString(16);
-			return h.length==1?"0"+h:h;
-		}
-		return "#" + componentToHex(this.r*255) + componentToHex(this.g*255) + componentToHex(this.b*255) + componentToHex(this.a*255);
+		return "#" +
+			("0" + Math.round(this.r*255).toString(16)).slice(-2) +
+			("0" + Math.round(this.g*255).toString(16)).slice(-2) +
+			("0" + Math.round(this.b*255).toString(16)).slice(-2) +
+			("0" + Math.round(this.a*255).toString(16)).slice(-2);
 	}
 
 	/** Returns CSS rgba representation of the color */
