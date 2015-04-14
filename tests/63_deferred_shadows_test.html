@@ -103,6 +103,18 @@
 				text1.transform.scale([5, 5, 5]);
 				scene.root.addNode(text1);
 
+				var text2 = Primitives.text('No lighting');
+				var textComponent = text2.getComponent(TextComponent);
+				textComponent.family = 'monospace';
+				textComponent.weight = 'bold';
+				textComponent.color.set(1.0, 1.0, 1.0, 1.0);
+				textComponent.outlineWidth = 0;
+				text2.getComponent(RendererComponent).lightContribution = 0.0;
+				mat4.fromTranslation(text2.transform.relative, [-15, 1.5, -3]);
+				text2.transform.scale([5, 5, 5]);
+				text2.transform.rotate(1.5*Math.PI, [0,1,0]);
+				scene.root.addNode(text2);
+
 				scene.engine.sceneStarted = function() {
 					var transparentMaterials = [
 						'branch_summerpng',

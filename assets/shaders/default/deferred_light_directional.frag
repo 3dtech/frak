@@ -63,6 +63,8 @@ void main () {
 	}
 
 	vec4 data0 = texture2D(gb0, uv); // color, specularIntensity
+	vec4 data3 = texture2D(gb3, uv); // material parameters: (lightContribution, unused, unused, unused)
+
 	vec4 data1 = texture2D(gb1, uv); // normal, depth
 
 	vec3 C = data0.xyz;
@@ -79,6 +81,8 @@ void main () {
 	vec3 diffuseColor = C * lightColor.rgb * diffuseLight * lightIntensity;
 	vec3 specularColor = lightColor.rgb * specularLight * specularIntensity;
 
-	vec3 final = shadow * (diffuseColor + specularColor);
+	vec3 lighting = diffuseColor + specularColor;
+
+	vec3 final = shadow * mix(C, lighting, data3.r);
 	gl_FragColor = vec4(final, 1.0);
 }

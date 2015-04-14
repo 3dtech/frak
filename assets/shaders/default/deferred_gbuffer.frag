@@ -7,6 +7,7 @@ uniform mat4 view;
 uniform vec4 diffuse;
 uniform float specularStrength;
 uniform int specularPower;
+uniform float lightContribution;
 uniform int useNormalmap;
 
 uniform sampler2D diffuse0;
@@ -38,5 +39,5 @@ void main() {
 	gl_FragData[0] = vec4(color.rgb, specularStrength);
 	gl_FragData[1] = vec4(N, depth);
 	gl_FragData[2] = vec4(worldPosition.xyz, float(specularPower)/255.0);
-	gl_FragData[3] = vec4(depth, depth, depth, 1.0); // unused 4
+	gl_FragData[3] = vec4(lightContribution, depth, depth, 1.0);
 }

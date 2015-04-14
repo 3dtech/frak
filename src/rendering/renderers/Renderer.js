@@ -10,6 +10,7 @@ var Renderer=Class.extend({
 		this.visible=true;											///< Usually updated automatically by the component
 		this.castShadows=true;										///< Usually updated automatically by the component
 		this.receiveShadows=true;									///< Usually updated automatically by the component
+		this.lightContribution=1.0;									///< Usually updated automatically by the component
 		this.transparent=false; 									///< Value must be set to true to have renderer passed through transparent pipeline
 
 		this.localBoundingBox=new BoundingBox();
@@ -58,6 +59,9 @@ var Renderer=Class.extend({
 
 		if ('receiveShadows' in uniforms) uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0;
 		else uniforms.receiveShadows = new UniformInt(this.receiveShadows ? 1 : 0);
+
+		if ('lightContribution' in uniforms) uniforms.lightContribution.value = this.lightContribution;
+		else uniforms.lightContribution = new UniformFloat(this.lightContribution);
 
 		// Camera uniforms
 		if (context.camera) {
