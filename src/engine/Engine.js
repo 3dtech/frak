@@ -143,7 +143,16 @@ var Engine=Class.extend({
 		}
 
 		// Renderer mode validation
+		var gl = this.options.context.gl;
 		switch (this.options.renderer) {
+			case 'auto':
+				if (gl.getExtension('WEBGL_draw_buffers') &&
+					gl.getExtension('OES_texture_float') &&
+					gl.getExtension('OES_standard_derivatives'))
+					this.options.renderer = 'deferred';
+				else
+					this.options.renderer = 'forward';
+				break;
 			case 'deferred':
 			case 'forward':
 				break;
