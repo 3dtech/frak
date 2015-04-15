@@ -21,12 +21,21 @@ var OITRenderStage = RenderStage.extend({
 		this.transparencySampler = new Sampler('oitAccum', this.transparencyTarget.texture);
 		this.transparencyWeight = new TargetTextureFloat(size, context, false);
 		this.transparencyWeightSampler = new Sampler('oitWeight', this.transparencyWeight.texture);
+
+		// Set up shared depth buffer
+		var gl = context.gl;
+		this.transparencyWeight.bind(context, true);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.transparencyTarget.depth);
+		this.transparencyWeight.unbind(context);
+		this.transparencyWeight.depth = this.transparencyTarget.depth;
+
 		this.transparencyAccum = new Material(
 			engine.assetsManager.addShaderSource("shaders/default/OITAccum"),
 			{
 				'render_mode': new UniformInt(0)
 			},
 			[]);
+
 		this.opaqueDepthMaterial = new Material(
 			engine.assetsManager.addShaderSource("diffuse"),
 			{
@@ -38,6 +47,7 @@ var OITRenderStage = RenderStage.extend({
 				this.diffuseFallback,
 				new Sampler('shadow0', engine.WhiteTexture)
 			]);
+
 		engine.assetsManager.load();
 	},
 
@@ -45,6 +55,12 @@ var OITRenderStage = RenderStage.extend({
 		if (camera.target.size[0] != this.transparencyTarget.size[0] || camera.target.size[1] != this.transparencyTarget.size[1]) {
 			this.transparencyTarget.setSize(camera.target.size[0], camera.target.size[1]);
 			this.transparencyWeight.setSize(camera.target.size[0], camera.target.size[1]);
+
+			var gl = context.gl;
+			this.transparencyWeight.bind(context, true);
+			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.transparencyTarget.depth);
+			this.transparencyWeight.unbind(context);
+			this.transparencyWeight.depth = this.transparencyTarget.depth;
 		}
 
 		context.projection.push();
@@ -55,12 +71,20 @@ var OITRenderStage = RenderStage.extend({
 		// Transparent color texture
 		this.oitClearColor.set(0.0, 0.0, 0.0, 0.0);
 		this.transparencyTarget.bind(context, false, this.oitClearColor);
+
+		// Depth only pass for opaque geometry
+		context.gl.depthMask(true);
+		context.gl.colorMask(false, false, false, false);
+		this.renderOpaque(context, scene, camera);
+		this.renderAlphaMapped(context, scene, camera);
+		context.gl.colorMask(true, true, true, true);
+
 		this.renderPass(context, scene, camera, true);
 		this.transparencyTarget.unbind(context);
 
 		// Transparent alpha amount texture
 		this.oitClearColor.set(1.0, 1.0, 1.0, 1.0);
-		this.transparencyWeight.bind(context, false, this.oitClearColor);
+		this.transparencyWeight.bind(context, false, this.oitClearColor, context.gl.COLOR_BUFFER_BIT);
 		this.renderPass(context, scene, camera, false);
 		this.transparencyWeight.unbind(context);
 
@@ -155,12 +179,6 @@ var OITRenderStage = RenderStage.extend({
 
 	renderPass: function(context, scene, camera, renderColor) {
 		var gl = context.gl;
-
-		// Depth only pass for opaque geometry
-		gl.depthMask(true);
-		gl.colorMask(false, false, false, false);
-		this.renderOpaque(context, scene, camera);
-		this.renderAlphaMapped(context, scene, camera);
 
 		// Transparency accumulation pass
 		gl.colorMask(true, true, true, true);
