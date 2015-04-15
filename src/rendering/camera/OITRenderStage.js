@@ -1,5 +1,6 @@
 /**
- * Render-stage for rendering the SkyboxComponent.
+ * Render-stage for rendering order-independent transparency.
+ * The final transparency is combined in a post process from the buffers generated here.
  */
 var OITRenderStage = RenderStage.extend({
 	init: function() {
