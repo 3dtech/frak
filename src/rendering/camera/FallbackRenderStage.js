@@ -4,14 +4,14 @@ var FallbackRenderStage=ShaderRenderStage.extend({
 		this._super(target);
 		this.shader=shader;
 	},
-	
+
 	// Events
 	/** Called after rendering substages of this render-stage */
 	onPostRender: function(context, scene, camera) {
 		this.shader.use();
 		// Cast camera frustum over scene
 		var renderers=scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask);
-		for(var i in renderers) {
+		for(var i=0; i<renderers.length; i++) {
 			renderers[i].renderGeometry(context, this.shader);
 		}
 	}
