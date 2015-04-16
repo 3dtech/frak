@@ -14,7 +14,7 @@ var DynamicSpace=Space.extend({
 	/** Removes a renderer
 		@param renderer Instance of {Renderer} */
 	removeRenderer: function(renderer) {
-		for (var i in this.renderers) {
+		for (var i=0; i<this.renderers.length; i++) {
 			if (this.renderers[i]===renderer) {
 				this.renderers.splice(i, 1);
 				return true;
@@ -32,7 +32,7 @@ var DynamicSpace=Space.extend({
 	/** Removes a collider
 		@param collider Instance of {Collider} */
 	removeCollider: function(collider) {
-		for (var i in this.colliders) {
+		for (var i=0; i<this.colliders.length; i++) {
 			if (this.colliders[i]===collider) {
 				this.colliders.splice(i, 1);
 				return true;

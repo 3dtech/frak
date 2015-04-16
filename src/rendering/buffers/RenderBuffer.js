@@ -18,8 +18,8 @@ var RenderBuffer=Class.extend({
 		this.buffers={};	// Vertex attribute buffers
 
 		this.maxFaceIndex=0;
-		for (var i in faces)
-			this.maxFaceIndex=faces[i]>this.maxFaceIndex?faces[i]:this.maxFaceIndex;
+		for (var i=0; i<faces.length; i++)
+			this.maxFaceIndex = faces[i]>this.maxFaceIndex ? faces[i] : this.maxFaceIndex;
 		this.createFacesBuffer(faces);
 	},
 

@@ -3,11 +3,11 @@ var MeshCollider=Collider.extend({
 	init: function() {
 		this._super();
 	},
-	
+
 	type: function() {
 		return "MeshCollider";
 	},
-	
+
 	/** Tests if ray collides with this collider
 		@param ray Instance of {Ray} in world space
 		@param result Instance of {RayTestResult} (optional)
@@ -16,7 +16,7 @@ var MeshCollider=Collider.extend({
 	rayTest: function(ray, result, collideInvisible) {
 		if (!this.enabled)
 			return false;
-		
+
 		var meshRendererComponent=this.node.getComponent(MeshRendererComponent);
 		if (!meshRendererComponent)
 			return false;
@@ -25,7 +25,7 @@ var MeshCollider=Collider.extend({
 		var b = vec3.create();
 		var c = vec3.create();
 		var hit = false;
-		for (var i in renderers) {
+		for (var i=0; i<renderers.length; i++) {
 			if (!collideInvisible && !renderers[i].visible)
 				continue;
 			if (ray.intersectBoundingVolume(renderers[i].globalBoundingBox)) {

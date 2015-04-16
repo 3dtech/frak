@@ -42,7 +42,7 @@ var RenderStage=Class.extend({
 				i--;
 			}
 		}
-		for (var i in removed) {
+		for (var i=0; i<removed.length; i++) {
 			removed[i].parent = false;
 		}
 		return removed;
@@ -50,7 +50,7 @@ var RenderStage=Class.extend({
 
 	/** Removes all sub-stages. */
 	clearStages: function() {
-		for (var i in this.substages) {
+		for (var i=0; i<this.substages.length; i++) {
 			this.substages[i].parent = false;
 		}
 		this.substages = [];
@@ -71,8 +71,8 @@ var RenderStage=Class.extend({
 	start: function(context, engine, camera) {
 		this.started = true;
 		this.onStart(context, engine, camera);
-		for (var stage in this.substages)
-			this.substages[stage].start(context, engine, camera);
+		for (var i=0; i<this.substages.length; i++)
+			this.substages[i].start(context, engine, camera);
 	},
 
 	/** Renders this stage and substages */

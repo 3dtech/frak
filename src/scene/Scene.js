@@ -92,7 +92,7 @@ var Scene=Serializable.extend({
 		if (!this.started) return; // Make sure we don't render before starting the scene
 		var camera = false;
 
-		for (var cameraIndex in this.cameras) {
+		for (var cameraIndex=0; cameraIndex<this.cameras.length; cameraIndex++) {
 			camera = this.cameras[cameraIndex];
 			camera.startRender(context);
 
