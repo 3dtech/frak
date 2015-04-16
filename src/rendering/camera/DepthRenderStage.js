@@ -46,6 +46,11 @@ var DepthRenderStage = RenderStage.extend({
 		this.material.uniforms.zNear.value = camera.near;
 		this.material.uniforms.zFar.value = camera.far;
 
+		context.projection.push();
+		context.projection.load(camera.projectionMatrix);
+		context.modelview.push();
+		context.modelview.load(camera.viewMatrix);
+
 		this.target.bind(context, false, this.clearColor);
 
 		var gl = context.gl;
@@ -71,6 +76,9 @@ var DepthRenderStage = RenderStage.extend({
 		gl.disable(gl.DEPTH_TEST);
 
 		this.target.unbind(context);
+
+		context.modelview.pop();
+		context.projection.pop();
 	},
 
 	renderAlphaMapped: function(context, scene, camera) {

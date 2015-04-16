@@ -73,5 +73,10 @@ var ForwardRenderStage = PostProcessRenderStage.extend({
 			this.debugger.quads.push({ quad: createQuad(x, y, size, size),  texture: this.generator.oitStage.transparencyTarget.texture });
 			this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.oitStage.transparencyWeight.texture });
 		}
+
+		// Draw depth stage, if enabled
+		if (this.generator.depthStage.enabled) {
+			this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.depthStage.target.texture });
+		}
 	}
 });

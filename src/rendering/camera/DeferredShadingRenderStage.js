@@ -73,7 +73,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		this.prepareShared(context);
 
 		var renderers = scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask);
-		this.organizer.sort(scene.engine, renderers, this.eyePosition);
+		this.organizer.sort(scene.engine, renderers);
 	},
 
 	onPostRender: function(context, scene, camera) {
