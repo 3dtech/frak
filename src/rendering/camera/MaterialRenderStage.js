@@ -179,7 +179,7 @@ var MaterialRenderStage=RenderStage.extend({
 		var globalSamplers = [context.shadow.shadow0];
 
 		var usedShader = false;
-		for (var i in batches) {
+		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
 
 			// Use shader

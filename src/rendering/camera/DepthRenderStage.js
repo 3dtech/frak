@@ -60,7 +60,7 @@ var DepthRenderStage = RenderStage.extend({
 
 		// Render opaque geometry
 		this.material.bind();
-		var renderers = this.parent.solidRenderers;
+		var renderers = this.parent.organizer.solidRenderers;
 		for (var i=0; i<renderers.length; ++i) {
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
@@ -82,7 +82,7 @@ var DepthRenderStage = RenderStage.extend({
 	},
 
 	renderAlphaMapped: function(context, scene, camera) {
-		var batches = this.parent.transparentRendererBatches;
+		var batches = this.parent.organizer.transparentBatchList;
 		var shader = this.material.shader;
 
 		shader.use();
@@ -93,7 +93,7 @@ var DepthRenderStage = RenderStage.extend({
 		if (context.light && context.light.uniforms)
 			shader.bindUniforms(context.light.uniforms);
 
-		for (var i in batches) {
+		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
 			var batchMaterial = batch[0].material;
 

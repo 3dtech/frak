@@ -7,6 +7,9 @@ var RendererOrganizer = Class.extend({
 		this.solidRenderers = [];
 		this.transparentRenderers = [];
 
+		this.opaqueBatchList = [];
+		this.transparentBatchList = [];
+
 		this.reset();
 	},
 
@@ -15,6 +18,9 @@ var RendererOrganizer = Class.extend({
 		this.transparentRendererBatches = {};
 		this.solidRenderers.length = 0;
 		this.transparentRenderers.length = 0;
+
+		this.opaqueBatchList.length = 0;
+		this.transparentBatchList.length = 0;
 
 		this.visibleSolidRenderers = 0;
 		this.visibleSolidBatches = 0;
@@ -55,6 +61,14 @@ var RendererOrganizer = Class.extend({
 				this.visibleSolidFaces += renderers[i].submesh.faces.length / 3;
 				this.solidRenderers.push(renderers[i]);
 			}
+		}
+
+		for (var id in this.solidRendererBatches) {
+			this.opaqueBatchList.push(this.solidRendererBatches[id]);
+		}
+
+		for (var id in this.transparentRendererBatches) {
+			this.transparentBatchList.push(this.transparentRendererBatches[id]);
 		}
 
 		this.visibleTransparentRenderers = this.transparentRenderers.length;

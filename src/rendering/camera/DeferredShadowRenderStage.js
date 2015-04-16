@@ -141,7 +141,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 	},
 
 	renderAlphaMapped: function(context, light) {
-		var batches = this.parent.organizer.transparentRendererBatches;
+		var batches = this.parent.organizer.transparentBatchList;
 		var shader = this.material.shader;
 		var fallbackSamplers = [this.parent.diffuseFallback];
 
@@ -151,7 +151,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		shader.bindUniforms(this.material.uniforms);
 
 		var samplers;
-		for (var i in batches) {
+		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
 			var batchMaterial = batch[0].material;
 

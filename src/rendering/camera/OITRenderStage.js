@@ -98,7 +98,6 @@ var OITRenderStage = RenderStage.extend({
 	},
 
 	renderTransparentBatches: function(context, scene, camera, material) {
-		var batches = this.parent.organizer.transparentRendererBatches;
 		var shader = material.shader;
 
 		shader.use();
@@ -108,7 +107,8 @@ var OITRenderStage = RenderStage.extend({
 		if (context.light && context.light.uniforms)
 			shader.bindUniforms(context.light.uniforms);
 
-		for (var i in batches) {
+		var batches = this.parent.organizer.transparentBatchList;
+		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
 			var batchMaterial = batch[0].material;
 

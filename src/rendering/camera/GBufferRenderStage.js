@@ -66,10 +66,10 @@ var GBufferRenderStage = RenderStage.extend({
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 
 		// Render opaque geometry to the g-buffer
-		this.renderBatches(context, scene, camera, this.parent.organizer.solidRendererBatches, this.material);
+		this.renderBatches(context, scene, camera, this.parent.organizer.opaqueBatchList, this.material);
 
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
-		this.renderBatches(context, scene, camera, this.parent.organizer.transparentRendererBatches, this.material);
+		this.renderBatches(context, scene, camera, this.parent.organizer.transparentBatchList, this.material);
 
 		gl.stencilMask(0xFF);
 		gl.disable(gl.STENCIL_TEST);
@@ -85,14 +85,14 @@ var GBufferRenderStage = RenderStage.extend({
 		// Bind shared uniforms
 		shader.bindUniforms(material.uniforms);
 
-		for (var i in batches) {
+		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
 			var batchMaterial = batch[0].material;
 
 			// Check if material has a normal-map
 			this.perBatchUniforms.useNormalmap.value = 0;
-			for (var i=0; i<batchMaterial.samplers.length; i++) {
-				if (batchMaterial.samplers[i].name == 'normal0') {
+			for (var m=0; m<batchMaterial.samplers.length; m++) {
+				if (batchMaterial.samplers[m].name == 'normal0') {
 					this.perBatchUniforms.useNormalmap.value = 1;
 					break;
 				}

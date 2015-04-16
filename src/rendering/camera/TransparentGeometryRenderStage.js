@@ -12,7 +12,7 @@ var TransparentGeometryRenderStage = RenderStage.extend({
 		gl.depthFunc(gl.LESS);
 		gl.enable(gl.DEPTH_TEST);
 
-		this.parent.renderBruteForce(context, this.parent.transparentRenderers);
+		this.parent.renderBruteForce(context, this.parent.organizer.transparentRenderers);
 
 		gl.disable(gl.BLEND);
 		gl.disable(gl.DEPTH_TEST);
