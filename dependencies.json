@@ -41,7 +41,6 @@
 	"src/rendering/camera/RenderStage.js",
 	"src/rendering/camera/MaterialRenderStage.js",
 	"src/rendering/camera/ShaderRenderStage.js",
-	"src/rendering/camera/DebugRenderStage.js",
 	"src/rendering/camera/DepthRenderStage.js",
 	"src/rendering/camera/ShadowMapRenderStage.js",
 	"src/rendering/camera/PositionBufferRenderStage.js",
