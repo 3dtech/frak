@@ -18,6 +18,7 @@ var Engine=Class.extend({
 			'transparencyMode': 'default',
 			'renderer': 'default',
 			'softShadows': false,
+			'runInBackground': false,
 			'context': false
 		}, options);
 		this.validateOptions(canvas);
@@ -43,7 +44,28 @@ var Engine=Class.extend({
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
 		this.WhiteTextureSampler =  new Sampler('tex0', this.WhiteTexture);
 
+		document.addEventListener("visibilitychange", ClassCallback(this, this.onVisibilityChange));
+
 		this.setupInput();
+	},
+
+	onVisibilityChange: function() {
+		if (!this.options.runInBackground) {
+			if (document.hidden) {
+				if (this.running === false) {
+					this._externallyPaused = true;
+					return;
+				}
+				this.pause();
+			}
+			else {
+				if (this._externallyPaused) {
+					delete this._externallyPaused;
+					return;
+				}
+				this.run();
+			}
+		}
 	},
 
 	setupInput: function(){
@@ -54,38 +76,38 @@ var Engine=Class.extend({
 		in the options that were passed to the constructor. The default value is 30fps.
 		If requestAnimationFrame function is not available then setTimeout is used. */
 	run: function() {
-		if (this.running!==false)
+		if (this.running !== false)
 			return;
 
-		this.running=true;
+		this.running = true;
 
 		var now;
-		var then = Date.now();
+		var then = FRAK.timestamp();
 		var interval = 1000/this.options.requestedFPS;
 		var delta;
 		var scope = this;
-		var requestAnimFrame = function() {
-			return window.requestAnimationFrame ||
-				window.webkitRequestAnimationFrame ||
-				window.mozRequestAnimationFrame ||
-				window.msRequestAnimationFrame ||
-				window.oRequestAnimationFrame ||
-				function(f) { window.setTimeout(f, 1000/60); };
-		}();
 
-		function draw() {
-			if (scope.running)
-				requestAnimFrame(draw);
+		function draw(timestamp) {
+			if (timestamp)
+				now = timestamp;
+			else
+				now = FRAK.timestamp();
 
-			now = Date.now();
 			delta = now - then;
 			if (delta > interval) {
 				then = now - (delta % interval);
 				scope.frame();
 			}
+
+			if (scope.running) {
+				scope._currentAnimationFrame = FRAK.requestAnimationFrame(draw);
+			}
 		}
-		this.scene.start(this.context, this);
-		requestAnimFrame(draw);
+
+		if (!this.scene.started)
+			this.scene.start(this.context, this);
+
+		this._currentAnimationFrame = FRAK.requestAnimationFrame(draw);
 	},
 
 	/**
@@ -108,7 +130,9 @@ var Engine=Class.extend({
 
 	/** Pauses the engine, call run to start it again. */
 	pause: function() {
-		this.running=false;
+		this.running = false;
+		if (this._currentAnimationFrame)
+			FRAK.cancelAnimationFrame(this._currentAnimationFrame);
 	},
 
 	/** Toggles engine pause */
