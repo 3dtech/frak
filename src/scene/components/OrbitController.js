@@ -44,8 +44,7 @@ var OrbitController=FlightController.extend({
 		this.cameraPosition=vec3.create();
 		this.targetPosition=vec3.create();
 		this.lookat=mat4.create();
-
-
+		this.tmpRotation=quat.create();
 	},
 
 	excluded: function() {
@@ -145,11 +144,11 @@ var OrbitController=FlightController.extend({
 		vec3.add(this.rotation, this.rotation, this.angularVelocity);
 
 		// Calculate desired position
-		var rotation=quat.create();
-		quat.rotateY(rotation, rotation, this.rotation[1]);
-		quat.rotateX(rotation, rotation, this.rotation[0]);
+		quat.identity(this.tmpRotation);
+		quat.rotateY(this.tmpRotation, this.tmpRotation, this.rotation[1]);
+		quat.rotateX(this.tmpRotation, this.tmpRotation, this.rotation[0]);
 		vec3.set(this.direction, 0.0, 0.0, 1.0);
-		vec3.transformQuat(this.direction, this.direction, rotation);
+		vec3.transformQuat(this.direction, this.direction, this.tmpRotation);
 		vec3.scale(this.direction, this.direction, this.distance);
 
 		mat4.translation(this.targetPosition, this.target.value.absolute);

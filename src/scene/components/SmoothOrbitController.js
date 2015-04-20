@@ -7,7 +7,6 @@ var SmoothOrbitController=OrbitController.extend({
 
 		this.currentRotation=vec2.create();
 		this.currentDistance=this.distance;
-		this.tmpRotation=quat.create();
 	},
 
 	excluded: function() {
