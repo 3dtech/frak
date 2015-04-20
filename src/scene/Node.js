@@ -42,10 +42,10 @@ var Node = EmptyNode.extend({
 		instance.removeComponentsByType(Transform);
 		instance.layer = this.layer;
 		instance.tags = this.tags.slice(0);
-		for(var n in this.subnodes) {
-			instance.addNode(this.subnodes[n].instantiate());
+		for (var i=0; i<this.subnodes.length; i++) {
+			instance.addNode(this.subnodes[i].instantiate());
 		}
-		for(var c in this.components) {
+		for (var c=0; c<this.components.length; c++) {
 			instance.addComponent(this.components[c].instantiate());
 		}
 		instance.transform = instance.getComponent(Transform);
