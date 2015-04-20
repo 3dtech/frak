@@ -10,7 +10,7 @@ var EmptyNode=Serializable.extend({
 		this.parent=false;
 		this.layer=1;
 		this.tags=[];
-		// this._super(); // FIXME: remove this or implement init() in Serializable
+		this._super();
 	},
 
 	excluded: function() {
@@ -54,14 +54,27 @@ var EmptyNode=Serializable.extend({
 
 	/** Removes given node */
 	removeNode: function(node) {
-		var me=this;
-		if(me.scene.engine) node.onEachChildComponent(function(c) { if(c.started) c.onEnd(me.scene.engine.context, me.scene.engine); c.started=false; });
+		var scope = this;
+		if (this.scene.engine) {
+			node.onEachChildComponent(function (c) {
+				if (c.started)
+					c.onEnd(scope.scene.engine.context, scope.scene.engine);
+				c.started = false;
+			});
+		}
 		node.onRemove(this);
-		if(node.scene) node.onEachChildComponent(function(c) { c.onRemoveScene(me); c.node.onRemoveComponent(c); });
-		node.onEachChild(function(n) { n.scene=false; });
-		node.parent=false;
-		for(var i in this.subnodes) {
-			if(this.subnodes[i]==node) {
+		if (node.scene) {
+			node.onEachChildComponent(function (c) {
+				c.onRemoveScene(scope);
+				c.node.onRemoveComponent(c);
+			});
+		}
+		node.onEachChild(function (n) {
+			n.scene = false;
+		});
+		node.parent = false;
+		for (var i=0; i<this.subnodes.length; i++) {
+			if (this.subnodes[i] == node) {
 				this.subnodes.splice(i, 1);
 				break;
 			}
@@ -71,9 +84,9 @@ var EmptyNode=Serializable.extend({
 
 	/** Removes all subnodes of this node */
 	removeSubnodes: function() {
-		var nodes=this.subnodes.slice(0);	// Create a temporary copy of nodes list
-		for(var n in nodes) {
-			this.removeNode(nodes[n]);
+		var nodes = this.subnodes.slice(0);	// Create a temporary copy of nodes list
+		for (var i=0; i<nodes.length; i++) {
+			this.removeNode(nodes[i]);
 		}
 	},
 
@@ -96,7 +109,7 @@ var EmptyNode=Serializable.extend({
 
 	/** Removes component from this node */
 	removeComponent: function(component) {
-		for (var c in this.components) {
+		for (var c=0; c<this.components.length; c++) {
 			if (this.components[c]===component) {
 				this.components.splice(c, 1);
 				break;
@@ -125,7 +138,7 @@ var EmptyNode=Serializable.extend({
 				i--;
 			}
 		}
-		for (var i in removed) {
+		for (var i=0; i<removed.length; i++) {
 			if(this.scene.engine && removed[i].started) {
 				removed[i].onEnd(this.scene.engine.context, this.scene.engine);
 				removed[i].started=false;
@@ -142,7 +155,7 @@ var EmptyNode=Serializable.extend({
 
 	/** Returns the first component of the given type */
 	getComponent: function(componentType) {
-		for (var c in this.components) {
+		for (var c=0; c<this.components.length; c++) {
 			if (this.components[c] instanceof componentType)
 				return this.components[c];
 		}
@@ -152,7 +165,7 @@ var EmptyNode=Serializable.extend({
 	/** Returns all components of the given type */
 	getComponents: function(componentType) {
 		var a=[];
-		for (var c in this.components) {
+		for (var c=0; c<this.components.length; c++) {
 			if (this.components[c] instanceof componentType)
 				a.push(this.components[c]);
 		}
@@ -178,10 +191,10 @@ var EmptyNode=Serializable.extend({
 		instance.isInstanced = true;
 		instance.layer = this.layer;
 		instance.tags = this.tags.slice(0);
-		for(var n in this.subnodes) {
-			instance.addNode(this.subnodes[n].instantiate());
+		for (var i=0; i<this.subnodes.length; i++) {
+			instance.addNode(this.subnodes[i].instantiate());
 		}
-		for(var c in this.components) {
+		for (var c=0; c<this.components.length; c++) {
 			instance.addComponent(this.components[c].instantiate());
 		}
 		return instance;
@@ -239,31 +252,31 @@ var EmptyNode=Serializable.extend({
 	onEachChild: function(callback) {
 		if (callback(this) === true)
 			return true;
-		for(var node in this.subnodes) {
-			if (this.subnodes[node].onEachChild(callback) === true)
+		for (var i=0; i<this.subnodes.length; i++) {
+			if (this.subnodes[i].onEachChild(callback) === true)
 				return true;
 		}
 	},
 
 	/** Calls callback method on all child nodes, but not on this node */
 	onEachChildExclusive: function(callback) {
-		for(var node in this.subnodes) {
-			if (this.subnodes[node].onEachChild(callback) === true)
+		for (var i=0; i<this.subnodes.length; i++) {
+			if (this.subnodes[i].onEachChild(callback) === true)
 				return true;
 		}
 	},
 
 	/** Calls callback method on all child nodes, but not their children */
 	onEachDirectChild: function(callback) {
-		for(var node in this.subnodes) {
-			if (callback(this.subnodes[node]) === true)
+		for (var i=0; i<this.subnodes.length; i++) {
+			if (callback(this.subnodes[i]) === true)
 				return true;
 		}
 	},
 
 	/** Calls callback method on all components of this node */
 	onEachComponent: function(callback) {
-		for(var c in this.components) {
+		for (var c=0; c<this.components.length; c++) {
 			if (callback(this.components[c]) === true)
 				return true;
 		}
@@ -311,7 +324,7 @@ var EmptyNode=Serializable.extend({
 			node = this.scene.root;
 			parts.shift();
 		}
-		for (var i in parts) {
+		for (var i=0; i<parts.length; i++) {
 			node = node.findChildWithName(parts[i]);
 			if (node===false)
 				return false;
@@ -323,7 +336,7 @@ var EmptyNode=Serializable.extend({
 		@param name The name of the subnode
 		@return Instance of {Node} or false if the target was not found */
 	findChildWithName: function(name) {
-		for (var i in this.subnodes) {
+		for (var i=0; i<this.subnodes.length; i++) {
 			if (this.subnodes[i].name===name)
 				return this.subnodes[i];
 		}
