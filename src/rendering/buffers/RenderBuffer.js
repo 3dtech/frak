@@ -30,7 +30,7 @@ var RenderBuffer=Class.extend({
 		@param itemSize Size of an item (number elements from items array, eg 3 to pass vec3 attribute) */
 	add: function(name, items, itemSize) {
 		if (items.length/itemSize <= this.maxFaceIndex)
-			throw "Buffer too small.";
+			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
 
 		var gl = this.context.gl;
 
@@ -49,12 +49,12 @@ var RenderBuffer=Class.extend({
 
 	update: function(name, items) {
 		if (!(name in this.buffers))
-			throw "Unknown buffer.";
+			throw "RenderBuffer: Unknown buffer: '{0}'".format(name);
 
 		var buf = this.buffers[name];
 
 		if (items.length/buf.itemSize <= this.maxFaceIndex)
-			throw "Buffer too small.";
+			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
 
 		if (items.length/buf.itemSize !== buf.numItems)
 			throw "Passed buffer does not match the size of the existing buffer.";
