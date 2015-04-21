@@ -12,14 +12,14 @@
 		renderBuffer.render(shader);
  */
 var TrianglesRenderBuffer=RenderBuffer.extend({
-	/** Constructor 
+	/** Constructor
 		@param context Rendering context
-		@param faces Faces buffer with size that divides with 3 [f0i, f0j, f0k, f1i, f1j, f1k, ...] 
+		@param faces Faces buffer with size that divides with 3 [f0i, f0j, f0k, f1i, f1j, f1k, ...]
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */
 	init: function(context, faces, type) {
 		this._super(context, faces, type);
 	},
-	
+
 	drawElements: function() {
 		var gl=this.context.gl;
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);

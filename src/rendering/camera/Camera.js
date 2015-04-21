@@ -10,16 +10,17 @@
 var Camera=Serializable.extend({
 	/** Constructor */
 	init: function(viewMatrix, projectionMatrix, renderStage) {
-		this.viewMatrix=viewMatrix;
-		this.viewInverseMatrix=mat4.invert(mat4.create(), this.viewMatrix);
-		this.projectionMatrix=projectionMatrix;
-		this.renderStage=renderStage;
-		this.target=new TargetScreen();
-		this.backgroundColor=new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
-		this.clearMask=false;
-		this.order=0; ///< Cameras are rendered in succession from lowest to highest order
-		this.layerMask=0xFFFFFFFF; ///< Set bits for which layers are rendered with this camera
-		this.frustum=false; // TODO: implement frustum
+		this.viewMatrix = viewMatrix;
+		this.projectionMatrix = projectionMatrix;
+		this.viewInverseMatrix = mat4.create();
+		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+		this.renderStage = renderStage;
+		this.target = new TargetScreen();
+		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
+		this.clearMask = false;
+		this.order = 0; ///< Cameras are rendered in succession from lowest to highest order
+		this.layerMask = 0xFFFFFFFF; ///< Set bits for which layers are rendered with this camera
+		this.frustum = false; // TODO: implement frustum
 	},
 
 	type: function() {
@@ -93,8 +94,7 @@ var Camera=Serializable.extend({
 	getPosition: function(out) {
 		if (!out)
 			out=vec3.create();
-		var m = mat4.invert(mat4.create(), this.viewMatrix);
-		mat4.translation(out, m);
+		mat4.translation(out, this.viewInverseMatrix);
 		return out;
 	},
 
