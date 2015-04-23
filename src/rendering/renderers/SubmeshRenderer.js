@@ -12,7 +12,13 @@ var SubmeshRenderer=Renderer.extend({
 		this.localBoundingSphere = this.submesh.boundingSphere;
 		this.updateGlobalBoundingVolumes();
 
-		this.buffer=new TrianglesRenderBuffer(context, submesh.faces);
+		try {
+			this.buffer = new TrianglesRenderBufferVAO(context, submesh.faces);
+		}
+		catch(e) {
+			this.buffer = new TrianglesRenderBuffer(context, submesh.faces);
+		}
+
 		this.buffer.add("position", submesh.positions, 3);
 		for(var texCoords1DIndex in submesh.texCoords1D) {
 			if(submesh.positions.length/3!=submesh.texCoords1D[texCoords1DIndex].length) {

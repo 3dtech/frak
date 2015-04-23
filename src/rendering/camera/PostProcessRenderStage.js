@@ -43,12 +43,7 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.material = new Material(engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"), {}, []);
 		this.material.name = 'To Screen';
 
-		var vertices = [-1,-1,0, -1,1,0, 1,1,0, 1,-1,0];
-		var uv = [0,0, 0,1, 1,1, 1,0];
-		var faces = [0, 1, 2, 0, 2, 3];
-		this.quad = new TrianglesRenderBuffer(context, faces);
-		this.quad.add('position', vertices, 3);
-		this.quad.add("uv0", uv, 2);
+		this.quad = new ScreenQuad(context);
 
 		engine.assetsManager.load();
 
@@ -102,30 +97,6 @@ var PostProcessRenderStage = RenderStage.extend({
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
-		material.bind({}, [sampler]);
-		this.renderQuad(context, material.shader, this.quad);
-		material.unbind([sampler]);
-	},
-
-	renderQuad: function(context, shader, quad) {
-		if (!shader.linked)
-			return;
-
-		var gl = context.gl;
-		var locations=[];
-		for(var bufferName in quad.buffers) {
-			gl.bindBuffer(gl.ARRAY_BUFFER, quad.buffers[bufferName]);
-			var bufferLocation = shader.getAttribLocation(bufferName);
-			if (bufferLocation==-1)
-				continue;
-
-			gl.enableVertexAttribArray(bufferLocation);
-			locations.push(bufferLocation);
-			gl.vertexAttribPointer(bufferLocation, quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
-		}
-		quad.drawElements();
-		for (var i=0; i<locations.length; i++) {
-			gl.disableVertexAttribArray(locations[i]);
-		}
+		this.quad.render(context, material, sampler);
 	}
 });

@@ -1,9 +1,5 @@
-/** Render buffer baseclass is used for to keep WebGL buffers of vertices (any vertex attribute buffers) and faces.
-
-	var renderBuffer=new RenderBuffer(context, [0, 1, 2]);
-	renderBuffer.addBuffer("position", [0.5, 0.2, 0.4, 0.1, 0.2, 0.4, 0.6, 0.1, 0.2], 3); // Add vec3 vertex attribute named position
-
-  Vertices with size that divides with 3 [v0x, v0y, v0z, v1x, v1y, v1z, ...].
+/**
+ * Render buffer (VBO) base class.
  */
 var RenderBuffer=Class.extend({
 	/** Constructor
@@ -74,7 +70,6 @@ var RenderBuffer=Class.extend({
 
 		var gl = this.context.gl;
 		var locations = [];
-		shader.requirements.apply(this);
 		for (var bufferName in this.buffers) {
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[bufferName]);
 
@@ -91,7 +86,6 @@ var RenderBuffer=Class.extend({
 		for (var i = 0, l = locations.length; i < l; i++){
 			gl.disableVertexAttribArray(locations[i]);
 		}
-
 	},
 
 	/** Generates barycentric coordinates buffer. These are used

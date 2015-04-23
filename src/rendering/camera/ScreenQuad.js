@@ -22,7 +22,14 @@ function ScreenQuad(context, x, y, width, height) {
 		x+width, y+height, 0,
 		x+width, y, 0
 	];
-	this.quad = new TrianglesRenderBuffer(context, [0, 1, 2, 0, 2, 3]);
+
+	var faces = [0, 1, 2, 0, 2, 3];
+	try {
+		this.quad = new TrianglesRenderBufferVAO(context, faces);
+	}
+	catch(e) {
+		this.quad = new TrianglesRenderBuffer(context, faces);
+	}
 	this.quad.add('position', vertices, 3);
 	this.quad.add("uv0", [0,0, 0,1, 1,1, 1,0], 2);
 }
@@ -38,26 +45,6 @@ ScreenQuad.prototype.render = function(context, material, samplerOrList) {
 	}
 
 	material.bind({}, samplers);
-	this.renderQuad(context, material.shader, this.quad);
+	this.quad.render(material.shader);
 	material.unbind(samplers);
-};
-
-ScreenQuad.prototype.renderQuad = function(context, shader, quad) {
-	if (!shader.linked)
-		return;
-	var gl = context.gl;
-	var locations = [];
-	for (var bufferName in quad.buffers) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, quad.buffers[bufferName]);
-		var bufferLocation = shader.getAttribLocation(bufferName);
-		if (bufferLocation==-1)
-			continue;
-		gl.enableVertexAttribArray(bufferLocation);
-		locations.push(bufferLocation);
-		gl.vertexAttribPointer(bufferLocation, quad.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
-	}
-	quad.drawElements();
-	for (var i=0; i<locations.length; i++) {
-		gl.disableVertexAttribArray(locations[i]);
-	}
 };

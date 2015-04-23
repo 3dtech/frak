@@ -56,7 +56,7 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 			for (var i=0; i<this.debugger.quads.length; i++) {
 				this.debugger.sampler.texture = this.debugger.quads[i].texture;
 				this.material.bind({}, [this.debugger.sampler]);
-				this.renderQuad(context, this.material.shader, this.debugger.quads[i].quad);
+				this.debugger.quads[i].quad.render(this.material.shader);
 				this.material.unbind([this.debugger.sampler]);
 			}
 			context.modelview.pop();
@@ -77,7 +77,7 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 			var vertices = [x,y,0, x,y+height,0, x+width,y+height,0, x+width,y,0];
 			var quad = new TrianglesRenderBuffer(context, [0, 1, 2, 0, 2, 3]);
 			quad.add('position', vertices, 3);
-			quad.add("uv0", [0,0, 0,1, 1,1, 1,0], 2);
+			quad.add('uv0', [0,0, 0,1, 1,1, 1,0], 2);
 			return quad;
 		}
 

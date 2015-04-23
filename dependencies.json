@@ -74,6 +74,8 @@
 
 	"src/rendering/buffers/RenderBuffer.js",
 	"src/rendering/buffers/TrianglesRenderBuffer.js",
+	"src/rendering/buffers/RenderBufferVAO.js",
+	"src/rendering/buffers/TrianglesRenderBufferVAO.js",
 	"src/rendering/buffers/QuadsRenderBuffer.js",
 
 	"src/rendering/materials/Texture.js",
