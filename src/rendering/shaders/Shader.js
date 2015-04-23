@@ -19,14 +19,6 @@ var Shader=Serializable.extend({
 		this.linked = false;
 		this.failed = false;
 		this.uniformLocations = {};
-
-		this.explicitLocations = {
-			'position': 0,
-			'normal': 1,
-			'texcoord2d0': 2,
-			'tangent': 3,
-			'bitangent': 4
-		};
 	},
 
 	excluded: function() {
@@ -67,8 +59,8 @@ var Shader=Serializable.extend({
 			this.shaders[i].compile(this.context);
 		}
 
-		for (var name in this.explicitLocations) {
-			this.context.gl.bindAttribLocation(this.program, this.explicitLocations[name], name);
+		for (var name in ExplicitAttributeLocations) {
+			this.context.gl.bindAttribLocation(this.program, ExplicitAttributeLocations[name], name);
 		}
 
 		this.uniformLocations={};
@@ -93,8 +85,8 @@ var Shader=Serializable.extend({
 	},
 
 	getAttribLocation: function(bufferName) {
-		if (bufferName in this.explicitLocations) {
-			return this.explicitLocations[bufferName];
+		if (bufferName in ExplicitAttributeLocations) {
+			return ExplicitAttributeLocations[bufferName];
 		}
 		return this.context.gl.getAttribLocation(this.program, bufferName);
 	},

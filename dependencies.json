@@ -19,6 +19,7 @@
 	"src/rendering/MatrixStack.js",
 	"src/rendering/RenderingContext.js",
 
+	"src/rendering/shaders/AttributeLocations.js",
 	"src/rendering/shaders/Subshader.js",
 	"src/rendering/shaders/VertexShader.js",
 	"src/rendering/shaders/FragmentShader.js",
