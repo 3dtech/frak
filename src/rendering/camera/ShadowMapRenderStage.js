@@ -165,6 +165,8 @@ var ShadowMapRenderStage=RenderStage.extend({
 
 	/** Computes bounding box containing all visible renderers */
 	computeSceneBounds: function() {
+		if (this.sceneAABB.center === false)
+			this.sceneAABB.center = vec3.create();
 		vec3.set(this.sceneAABB.center, 0, 0, 0);
 		vec3.set(this.sceneAABB.extents, 0, 0, 0);
 		this.sceneAABB.recalculate();
