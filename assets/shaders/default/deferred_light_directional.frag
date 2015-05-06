@@ -46,11 +46,12 @@ float shadowmap(vec4 worldPosition) {
 
 void main () {
 	vec4 data2 = texture2D(gb2, uv); // position, specularPower/255
+	vec4 data3 = texture2D(gb3, uv); // material parameters: (lightContribution, receiveShadows, unused, unused)
 	vec4 P = vec4(data2.xyz, 1.0);
 
 	float shadow = 1.0;
 
-	if (useShadows == 1) {
+	if (useShadows == 1 && data3.g > 0.0) {
 		if (useSoftShadows == 1)
 			shadow = texture2D(shadow0, uv).r;
 		else
@@ -63,7 +64,6 @@ void main () {
 	}
 
 	vec4 data0 = texture2D(gb0, uv); // color, specularIntensity
-	vec4 data3 = texture2D(gb3, uv); // material parameters: (lightContribution, unused, unused, unused)
 
 	vec4 data1 = texture2D(gb1, uv); // normal, depth
 
