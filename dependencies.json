@@ -73,6 +73,7 @@
 	"src/rendering/camera/TargetTextureMulti.js",
 
 	"src/rendering/buffers/RenderBuffer.js",
+	"src/rendering/buffers/LinesRenderBuffer.js",
 	"src/rendering/buffers/TrianglesRenderBuffer.js",
 	"src/rendering/buffers/RenderBufferVAO.js",
 	"src/rendering/buffers/TrianglesRenderBufferVAO.js",
@@ -87,6 +88,7 @@
 	"src/rendering/renderers/Renderer.js",
 	"src/rendering/renderers/PrimitiveRenderer.js",
 	"src/rendering/renderers/MeshRenderer.js",
+	"src/rendering/renderers/LineRenderer.js",
 	"src/rendering/renderers/SubmeshRenderer.js",
 	"src/rendering/renderers/FontRenderer.js",
 	"src/rendering/renderers/CubeRenderer.js",

@@ -19,6 +19,11 @@ var RenderBuffer=Class.extend({
 		this.createFacesBuffer(faces);
 	},
 
+	/** Returns true if a buffer with the given name exists in this RenderBuffer. */
+	has: function(name) {
+		return (name in this.buffers);
+	},
+
 	/** Adds a named vertex attribute buffer that will be
 		passed to glsl shader by its name. See usage example at class definition.
 		@param name Name of the buffer (passed to vertex shader as attribute)
@@ -61,6 +66,19 @@ var RenderBuffer=Class.extend({
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(items), this.type);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	},
+
+	updateFaces: function(faces) {
+		var gl = this.context.gl;
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(faces), this.type);
+		this.facesBuffer.itemSize = 1;
+		this.facesBuffer.numItems = faces.length;
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+		this.maxFaceIndex=0;
+		for (var i=0; i<faces.length; i++)
+			this.maxFaceIndex = faces[i]>this.maxFaceIndex ? faces[i] : this.maxFaceIndex;
 	},
 
 	/** Renders all elements using given shader and binds all attributes */

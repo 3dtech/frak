@@ -1,21 +1,28 @@
-/** Can be used to render lines on screen.
-	The lines are rendered with the same color for each line renderer.
+/**
+ * Can be used to render lines in 3D space.
+ * The lines are all rendered with the same color per LineRendererComponent.
  */
-var LineRendererComponent=Component.extend({
+var LineRendererComponent = RendererComponent.extend({
 	init: function(color) {
 		this._super();
 
-		this.shader=false;
-		if (color instanceof Color)
-			this.color=new UniformColor(color);
-		else
-			this.color=new UniformColor(new Color(0.5, 0.5, 0.5, 1.0));
+		this.lightContribution = 0.0; // By default we do not want lighting to affect lines
+		this.receiveShadows = false; // By default we do not want lines to receive shadows
+		this.castShadows = false; // By default we do not want lines to cast shadows
 
-		this.faces=[];
-		this.vertices=[];
-		this.buffer=false;
-		this.updateBuffer=false;
-		this.depthTest=false; ///< Set to true to enable GL_DEPTH_TEST in rendering
+		if (color instanceof Color)
+			this.color = new UniformColor(color);
+		else
+			this.color = new UniformColor(new Color(0.5, 0.5, 0.5, 1.0));
+
+		this.renderer = null;
+		this.damaged = true;
+
+		this.material = new Material(null, { 'diffuse': this.color }, []);
+		this.overlay = false; ///< If set to true the lines are rendered in onPostRender instead of the usual pipeline
+
+		this.faces = [];
+		this.vertices = [];
 	},
 
 	type: function() {
@@ -23,38 +30,97 @@ var LineRendererComponent=Component.extend({
 	},
 
 	excluded: function() {
-		return this._super().concat(["buffer", "updateBuffer"]);
+		return this._super().concat(["damaged", "renderer", "material"]);
 	},
 
-	/** Initializes LineRenderer starting to load necessary shaders and creating white texture
-		to be passed to transparency rendering shader */
-	initialize: function(context) {
-		this.shader=this.node.scene.engine.assetsManager.addShaderSource("Transparent");
-		this.node.scene.engine.assetsManager.load();
+	onStart: function(context, engine) {
+		// this.material.shader = engine.assetsManager.addShaderSource('diffuse');
+		this.material.shader = engine.assetsManager.addShaderSource('transparent');
+		this.material.samplers = [
+			new Sampler('diffuse0', engine.WhiteTexture)
+		];
 
-		var white=new Texture(context);
-		white.clearImage(context, [0xFF, 0xFF, 0xFF, 0xFF]);
-		this.samplers=[new Sampler("diffuse0", white)];
+		if (!this.renderer)
+			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
+
+		this.getScene().dynamicSpace.addRenderer(this.renderer);
 	},
 
-	/** (Re)builds buffers used for rendering. Call after adding new lines. */
-	build: function(context) {
-		if (this.vertices.length==0 || this.faces.length==0)
-			return false;
-		this.buffer=new RenderBuffer(context, this.faces, context.gl.DYNAMIC_DRAW);
-		this.buffer.add('position', this.vertices, 3);
+	onEnd: function(context) {
+		if (this.renderer)
+			this.getScene().dynamicSpace.removeRenderer(this.renderer);
+		delete this.renderer;
+		this.renderer = null;
+	},
+
+	onUpdate: function(context, engine) {
+		if (this.damaged) {
+			this.rebuild(context);
+		}
+	},
+
+	onUpdateTransform: function(absolute) {
+		if (this.renderer) {
+			this.renderer.layer = this.node.layer;
+			this.renderer.castShadows = this.castShadows;
+			this.renderer.receiveShadows = this.receiveShadows;
+			this.renderer.lightContribution = this.lightContribution;
+			this.renderer.setMatrix(absolute);
+		}
+	},
+
+	onEnable: function() {
+		if (this.renderer)
+			this.renderer.visible = true;
+	},
+
+	onDisable: function() {
+		if (this.renderer)
+			this.renderer.visible = false;
+	},
+
+	onPostRender: function(context, camera) {
+		if (!this.overlay || !this.renderer)
+			return;
+
+		context.projection.push();
+		context.modelview.push();
+
+		context.projection.load(camera.projectionMatrix);
+		context.modelview.load(camera.viewMatrix);
+		context.modelview.multiply(this.node.transform.absolute);
+
+		this.material.bind();
+		this.renderer.renderGeometry(context, this.material.shader);
+		this.material.unbind();
+
+		context.projection.pop();
+		context.modelview.pop();
+	},
+
+	rebuild: function(context) {
+		// In case we wish to build our geometry before the scene is started
+		if (!this.renderer) {
+			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
+		}
+
+		this.renderer.buffer.updateFaces(this.faces);
+
+		if (this.renderer.buffer.has('position')) {
+			this.renderer.buffer.update('position', this.vertices);
+		}
+		else {
+			this.renderer.buffer.add('position', this.vertices, 3);
+		}
+
+		this.damaged = false;
 	},
 
 	/** Clears the current vertices/faces buffers. */
 	clear: function(context) {
-		this.faces=[];
-		this.vertices=[];
-
-		// Delete RenderBuffer buffers ahead of GC (we will allocate a new RenderBuffer in the next build())
-		for (var i in this.buffer.buffers) {
-			context.gl.deleteBuffer(this.buffer.buffers[i]);
-		}
-		this.buffer=false;
+		this.faces = [];
+		this.vertices = [];
+		this.damaged = true;
 	},
 
 	/** Adds new line to line renderer
@@ -73,7 +139,7 @@ var LineRendererComponent=Component.extend({
 		has started.
 		@param line A line object previously returned from addLine method */
 	updateLine: function(line, a, b) {
-		if(!this.buffer || !this.buffer.buffers.position) return; 	// Can't update buffers, because these don't exist yet
+		// if(!this.buffer || !this.buffer.buffers.position) return; 	// Can't update buffers, because these don't exist yet
 		var setWithOffset=function(buffer, offset, vertex) {
 			buffer[offset*3+0]=vertex[0];
 			buffer[offset*3+1]=vertex[1];
@@ -88,7 +154,7 @@ var LineRendererComponent=Component.extend({
 		setWithOffset(this.vertices, line.vertexOffset+0, a);
 		setWithOffset(this.vertices, line.vertexOffset+1, b);
 
-		this.updateBuffer=true;
+		this.damaged = true;
 	},
 
 	/** Adds a triangle (lines AB, BC, CA). */
@@ -96,6 +162,8 @@ var LineRendererComponent=Component.extend({
 		this.addLine(a, b);
 		this.addLine(b, c);
 		this.addLine(c, a);
+
+		this.damaged = true;
 	},
 
 	/** Adds a box based on bounding-box
@@ -114,6 +182,8 @@ var LineRendererComponent=Component.extend({
 		this.addLine([box.max[0], box.min[1], box.max[2]], [box.max[0], box.min[1], box.min[2]]);
 		this.addLine([box.max[0], box.min[1], box.min[2]], [box.max[0], box.max[1], box.min[2]]);
 		this.addLine([box.max[0], box.max[1], box.min[2]], [box.min[0], box.max[1], box.min[2]]);
+
+		this.damaged = true;
 	},
 
 	/** Creates a grid
@@ -131,54 +201,7 @@ var LineRendererComponent=Component.extend({
 			this.addLine([-half[0]*scale[0]+center[0], center[1], i*scale[1]+center[2]],
 			             [half[0]*scale[0]+center[0], center[1], i*scale[1]+center[2]]);
 		}
-	},
 
-	onStart: function(context) {
-		this.initialize(context);
-		this.build(context);
-	},
-
-	onPostRender: function(context, camera) {
-		if(!this.enabled || this.buffer===false)
-			return;
-
-		if(this.updateBuffer) {
-			this.build(context);
-		}
-
-		var uniforms={
-			"modelview": new UniformMat4(context.modelview.top()),
-			"projection": new UniformMat4(context.projection.top()),
-			"diffuse": this.color
-		};
-		this.shader.use(uniforms);
-		this.shader.bindSamplers(this.samplers);
-		this.shader.requirements.apply(this.buffer);
-
-		var gl=context.gl;
-
-		if (this.depthTest) {
-			gl.enable(gl.DEPTH_TEST);
-			gl.depthFunc(gl.LESS);
-			gl.depthMask(true);
-		}
-
-		var locations=[];
-		for(var bufferName in this.buffer.buffers) {
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer.buffers[bufferName]);
-			var bufferLocation=gl.getAttribLocation(this.shader.program, bufferName);
-			if(bufferLocation==-1) continue;
-			gl.enableVertexAttribArray(bufferLocation);
-			locations.push(bufferLocation);
-			gl.vertexAttribPointer(bufferLocation, this.buffer.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
-		}
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffer.facesBuffer);
-		gl.drawElements(gl.LINES, this.buffer.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-		for (var i in locations)
-			gl.disableVertexAttribArray(locations[i]);
-
-		if (this.depthTest) {
-			gl.disable(gl.DEPTH_TEST);
-		}
+		this.damaged = true;
 	}
 });
