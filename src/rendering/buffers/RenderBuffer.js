@@ -57,14 +57,12 @@ var RenderBuffer=Class.extend({
 		if (items.length/buf.itemSize <= this.maxFaceIndex)
 			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
 
-		if (items.length/buf.itemSize !== buf.numItems)
-			throw "Passed buffer does not match the size of the existing buffer.";
-
 		var gl = this.context.gl;
 
 		// Bind buffer and pass data to it
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(items), this.type);
+		buf.numItems = items.length/buf.itemSize;
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	},
 

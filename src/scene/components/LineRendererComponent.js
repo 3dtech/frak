@@ -99,6 +99,9 @@ var LineRendererComponent = RendererComponent.extend({
 	},
 
 	rebuild: function(context) {
+		if (this.vertices.length == 0 || this.faces.length == 0)
+			return;
+
 		// In case we wish to build our geometry before the scene is started
 		if (!this.renderer) {
 			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
@@ -132,6 +135,7 @@ var LineRendererComponent = RendererComponent.extend({
 		var line={"vertexOffset": base};
 		this.vertices.push(a[0], a[1], a[2], b[0], b[1], b[2]);
 		this.faces.push(base, base+1);
+		this.damaged = true;
 		return line;
 	},
 
