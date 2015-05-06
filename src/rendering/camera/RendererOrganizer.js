@@ -46,7 +46,8 @@ var RendererOrganizer = Class.extend({
 					}
 				}
 				this.transparentRenderers.push(renderers[i]);
-				this.visibleTransparentFaces += renderers[i].submesh.faces.length / 3;
+				if (renderers[i] instanceof MeshRendererComponent)
+					this.visibleTransparentFaces += renderers[i].submesh.faces.length / 3;
 			}
 			else {
 				if (this.enableDynamicBatching) {
@@ -58,8 +59,9 @@ var RendererOrganizer = Class.extend({
 						this.visibleSolidBatches++;
 					}
 				}
-				this.visibleSolidFaces += renderers[i].submesh.faces.length / 3;
 				this.solidRenderers.push(renderers[i]);
+				if (renderers[i] instanceof MeshRendererComponent)
+					this.visibleSolidFaces += renderers[i].submesh.faces.length / 3;
 			}
 		}
 
