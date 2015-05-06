@@ -129,5 +129,6 @@ var RenderBuffer=Class.extend({
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(faces), this.type);
 		this.facesBuffer.itemSize=1;
 		this.facesBuffer.numItems=faces.length;
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	}
 });

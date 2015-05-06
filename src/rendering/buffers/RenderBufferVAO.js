@@ -39,6 +39,7 @@ var RenderBufferVAO = RenderBuffer.extend({
 	createFacesBuffer: function(faces) {
 		this.extVAO.bindVertexArrayOES(this.vao);
 		this._super(faces);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
 		this.extVAO.bindVertexArrayOES(null);
 
 		this.damaged = true;
