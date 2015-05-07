@@ -92,17 +92,20 @@ var EmptyNode=Serializable.extend({
 
 	/** Adds component to this node */
 	addComponent: function(component) {
-		if(!component.type()) throw "Unable to add a component that doesn't define it's type by returning it from type() method";
+		if (!component.type())
+			throw "Unable to add a component that doesn't define it's type by returning it from type() method";
+
 		this.components.push(component);
-		component.node=this;
+		component.node = this;
 		component.onAdd(this);
-		if(this.scene) {
+
+		if (this.scene) {
 			component.onAddScene(this);
 			this.onAddComponent(component);
 		}
-		if(this.scene.engine && !component.started) {
+		if (!component.started && this.scene && this.scene.engine && (this.scene.started || this.scene.starting)) {
 			component.start(this.scene.engine.context, this.scene.engine);
-			component.started=true;
+			component.started = true;
 		}
 		return component;
 	},
