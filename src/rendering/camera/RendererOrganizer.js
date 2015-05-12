@@ -46,7 +46,7 @@ var RendererOrganizer = Class.extend({
 					}
 				}
 				this.transparentRenderers.push(renderers[i]);
-				if (renderers[i] instanceof MeshRendererComponent)
+				if (renderers[i] instanceof SubmeshRenderer)
 					this.visibleTransparentFaces += renderers[i].submesh.faces.length / 3;
 			}
 			else {
@@ -60,7 +60,7 @@ var RendererOrganizer = Class.extend({
 					}
 				}
 				this.solidRenderers.push(renderers[i]);
-				if (renderers[i] instanceof MeshRendererComponent)
+				if (renderers[i] instanceof SubmeshRenderer)
 					this.visibleSolidFaces += renderers[i].submesh.faces.length / 3;
 			}
 		}

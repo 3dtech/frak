@@ -62,10 +62,13 @@ var AssetsManager=Class.extend({
 		return this.texturesManager.add(source);
 	},
 
-	/** Adds a new model to models loading queue
-		@param source Path to model (url) */
-	addModel: function(source) {
-		return this.modelsManager.add(source);
+	/**
+	 * Adds a new model to models loading queue
+	 * @param source Path to model (url)
+	 * @param format Model format ('auto', 'binary' or 'json') [optional]
+	 */
+	addModel: function(source, format) {
+		return this.modelsManager.add(source, format);
 	},
 
 	/** Adds a new GLSL shader  to shaders loading queue.

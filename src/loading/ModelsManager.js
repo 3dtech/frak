@@ -20,9 +20,9 @@ var ModelsManager=Manager.extend({
 		return progress+(this.texturesManager.getProgress()+this.shadersManager.getProgress())/2.0/this.getTotalItems();
 	},
 
-	add: function(source) {
+	add: function(source, format) {
 		source = this.sourceCallback(source);
-		return this.addDescriptor(new ModelDescriptor(source));
+		return this.addDescriptor(new ModelDescriptor(source, format));
 	},
 
 	createResource: function() {
@@ -36,39 +36,45 @@ var ModelsManager=Manager.extend({
 		@param failedCallback Callback function(descriptor) that must be called by loadResource when loading has failed */
 	loadResource: function(modelDescriptor, resource, loadedCallback, failedCallback) {
 		var descriptor = this.descriptorCallback(modelDescriptor);
-		var totalTime = 0.0;
 		var scope = this;
-		Logistics.getBinary(descriptor.getFullPath(),
-			function(binaryData) {
-				if(!binaryData || binaryData.byteLength == 0) {
-					failedCallback(descriptor);
-					return;
-				}
-				var parser = scope.createParser(
-					binaryData,
-					function(parsedData, userdata) {
-						var end = new Date().getTime();
-						var delta = end-fileStartTime;
-						totalTime+=delta;
-						// console.log('Parsed data: ', parsedData, " delta: ", delta, " time: ", totalTime);
 
-						var modelLoader = new ModelLoader(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
-						modelLoader.load(resource, parsedData);
+		if (modelDescriptor.getFormat() == 'json') {
+			Logistics.getJSON(descriptor.getFullPath(), function (data) {
+				var modelLoader = new JSONModelLoader(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
+				modelLoader.load(resource, data);
+				loadedCallback(descriptor, resource);
 
-						loadedCallback(descriptor, resource);
-
-						scope.shadersManager.load(function() {});
-						scope.texturesManager.load(function() {});
-					},
-					function(errors, userdata) {
+				scope.shadersManager.load(function() {});
+				scope.texturesManager.load(function() {});
+			});
+		}
+		else {
+			Logistics.getBinary(descriptor.getFullPath(),
+				function(binaryData) {
+					if(!binaryData || binaryData.byteLength == 0) {
 						failedCallback(descriptor);
-					},
-					function(progress, userdata) {}
-				);
-				fileStartTime=new Date().getTime();
-				parser.parse();
-			}
-		);
+						return;
+					}
+					var parser = scope.createParser(
+						binaryData,
+						function(parsedData, userdata) {
+							var modelLoader = new ModelLoader(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
+							modelLoader.load(resource, parsedData);
+
+							loadedCallback(descriptor, resource);
+
+							scope.shadersManager.load(function() {});
+							scope.texturesManager.load(function() {});
+						},
+						function(errors, userdata) {
+							failedCallback(descriptor);
+						},
+						function(progress, userdata) {}
+					);
+					parser.parse();
+				}
+			);
+		}
 	},
 
 	/** This function can be overridden to provide alternative parser instances */

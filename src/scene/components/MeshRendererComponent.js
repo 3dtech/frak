@@ -32,6 +32,10 @@ var MeshRendererComponent=RendererComponent.extend({
 						console.warn(' *** Failed to to find submesh material in node: ', component.node.name, component.node);
 						continue;
 					}
+
+					if (submesh.positions.length == 0 || submesh.faces.length == 0)
+						continue;
+
 					var submeshRenderer = scope.createRenderer(context, scope.node.transform.absolute, submesh, material);
 					scope.getScene().dynamicSpace.addRenderer(submeshRenderer);
 					scope.meshRenderers.push(submeshRenderer);

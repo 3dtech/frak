@@ -151,18 +151,6 @@ var ModelLoader=Class.extend({
 		}
 	},
 
-	getModelDirectory: function() {
-		var path=this.descriptor.source;
-		var lastIndex=path.lastIndexOf('/');
-		var dir=path.substr(0, lastIndex);
-		return dir;
-	},
-
-	getRelativePath: function(path) {
-		var lastIndex=path.lastIndexOf('/');
-		return path.substr(lastIndex+1, path.length-lastIndex-1);
-	},
-
 	loadUniforms: function(uniforms, parsedMaterial) {
 		// Color uniforms
 		if (parsedMaterial.color.ambient)

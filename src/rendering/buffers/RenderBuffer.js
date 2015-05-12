@@ -31,7 +31,7 @@ var RenderBuffer=Class.extend({
 		@param itemSize Size of an item (number elements from items array, eg 3 to pass vec3 attribute) */
 	add: function(name, items, itemSize) {
 		if (items.length/itemSize <= this.maxFaceIndex)
-			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
+			throw "RenderBuffer: Buffer '{0}' too small ({1} vertices, {2} max index).".format(name, items.length/itemSize, this.maxFaceIndex);
 
 		var gl = this.context.gl;
 
