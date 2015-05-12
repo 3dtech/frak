@@ -24,7 +24,7 @@ plan visualization and content management platform, mainly used for wayfinding a
 * Supported assets:
 	- Shaders: GLSL
 	- Textures: JPEG, PNG
-	- Models: Custom binary data format, JSON
+	- Models: Custom binary data format, [JSON](docs/JSONModelFormat.md)
 	- Fonts: Canvas text API (unicode) or BMFont fonts (deprecated)
 
 ## Architecture
