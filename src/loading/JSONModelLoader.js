@@ -68,7 +68,7 @@ var JSONModelLoader = Class.extend({
 					material.samplers=[];
 				material.samplers.push(new Sampler(textureType+i, texture));
 
-				if (textureType == 'normal') {
+				if (textureType == 'texturesNormals') {
 					material.shader = this.shadersManager.addSource('normalmapped');
 				}
 			}
