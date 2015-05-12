@@ -65,7 +65,7 @@
 		// All transformations are column-major matrices
 		"scene" : {
 			"absolute" : [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
-			"id" : 0,
+			"id" : 0, // Numerical ID (unique within this model)
 			"meshes" : [],
 			"name" : "root",
 			"relative" : [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
