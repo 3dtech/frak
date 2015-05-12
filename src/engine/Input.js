@@ -231,7 +231,14 @@ var Input = Class.extend({
 	onTap: function(event){
 		if(event){
 			var newPos = this.translateCoordinates(this.position, event.center.x, event.center.y);
-			this.sendEvent("onClick", this.position, 0, event.pointerType, event);
+			this.setMouseButtons(event.frakButtons);
+			var button;
+			for (button=0; button<this.buttons.length; button++)
+				if (this.buttons[button]) break;
+			if (button == this.buttons.length)
+				button = 0;
+			this.sendEvent("onClick", this.position, button, event.pointerType, event);
+			this.resetMouseButtons();
 		}
 	},
 
