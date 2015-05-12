@@ -184,5 +184,17 @@ var Engine=Class.extend({
 				this.options.renderer = 'forward'
 				break;
 		}
+	},
+
+	/** Helper function for displaying renderer statistics. */
+	stats: function() {
+		if (!this.scene)
+			return;
+		var organizer = this.scene.camera.renderStage.generator.organizer;
+		console.log('=============== Statistics =====================');
+		console.log('  Visible faces (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidFaces, organizer.visibleTransparentFaces));
+		console.log('  Visible renderers (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidRenderers, organizer.visibleTransparentRenderers));
+		console.log('  Visible batches (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidBatches, organizer.visibleTransparentBatches));
+		console.log('================================================');
 	}
 });
