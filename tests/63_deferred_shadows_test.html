@@ -81,7 +81,7 @@
 				scene.root.addNode(box);
 				mat4.fromRotationTranslation(box.transform.relative, quat.create(), [5, 0.9, 0]);
 
-				var level0 = scene.engine.assetsManager.addModel('data/demo/ground.data');
+				var level0 = scene.engine.assetsManager.addModel('data/demo/ground.json');
 				scene.root.addNode(level0);
 
 				var text0 = Primitives.text('Shadow Casting');

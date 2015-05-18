@@ -60,7 +60,7 @@ var JSONModelLoader = Class.extend({
 		for (var textureType in parsedMaterial.textures) {
 			var textures = parsedMaterial.textures[textureType];
 			for (var i=0; i<textures.length; i++) {
-				var textureDescriptor = new TextureDescriptor(textures[i].path);
+				var textureDescriptor = new TextureDescriptor(textures[i]);
 				textureDescriptor.parentDescriptor = this.descriptor;
 
 				var texture = this.texturesManager.addDescriptor(textureDescriptor);
