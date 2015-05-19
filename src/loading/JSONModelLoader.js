@@ -22,6 +22,8 @@ var JSONModelLoader = Class.extend({
 
 	/** Loads parsed data to scene hierarchy at given node */
 	load: function(node, parsedData) {
+		if (FRAK.isEmptyObject(parsedData))
+			return;
 		node.name = parsedData.scene.name;
 
 		this.linkReferences(parsedData);

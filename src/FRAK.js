@@ -16,6 +16,14 @@ FRAK.isFunction = function(f) {
 	return typeof(f) === 'function';
 };
 
+FRAK.isEmptyObject = function(o) {
+	for (var prop in o) {
+		if(o.hasOwnProperty(prop))
+			return false;
+	}
+	return true;
+};
+
 FRAK.parseJSON = function(s) {
 	if (window.JSON && window.JSON.parse)
 		return window.JSON.parse(s);
