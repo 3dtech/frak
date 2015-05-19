@@ -27,8 +27,12 @@ var Texture=Serializable.extend({
 	create: function(context) {
 		this.glTexture = context.gl.createTexture();
 
-		if (!context.engine.options.anisotropicFiltering)
-			this.anisotropic = false;
+		if (context.engine) {
+			if (!context.engine.options.anisotropicFiltering)
+				this.anisotropic = false;
+			else
+				this.anisotropyFilter = context.engine.options.anisotropicFiltering;
+		}
 
 		if (this.anisotropic) {
 			this.extTextureFilterAnisotropic = context.gl.getExtension('EXT_texture_filter_anisotropic');
@@ -37,7 +41,7 @@ var Texture=Serializable.extend({
 			}
 			else {
 				var maxAnisotropy = context.gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-				this.anisotropyFilter = Math.min(context.engine.options.anisotropicFiltering, maxAnisotropy);
+				this.anisotropyFilter = Math.min(this.anisotropyFilter, maxAnisotropy);
 			}
 		}
 	},
