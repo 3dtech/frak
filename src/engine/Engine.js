@@ -155,6 +155,8 @@ var Engine=Class.extend({
 		if (!this.options.context)
 			this.options.context = new RenderingContext(canvas);
 
+		var gl = this.options.context.gl;
+
 		// Transparency mode validation
 		switch (this.options.transparencyMode) {
 			case 'sorted':
@@ -165,9 +167,15 @@ var Engine=Class.extend({
 				this.options.transparencyMode = 'blended';
 				break;
 		}
+		if (this.options.transparencyMode != 'sorted') {
+			var extFloat = gl.getExtension('OES_texture_float');
+			var extHalfFloat = gl.getExtension('OES_texture_half_float');
+			if (!extFloat && !extHalfFloat) {
+				this.options.transparencyMode = 'sorted';
+			}
+		}
 
 		// Renderer mode validation
-		var gl = this.options.context.gl;
 		switch (this.options.renderer) {
 			case 'auto':
 				if (gl.getExtension('WEBGL_draw_buffers') &&

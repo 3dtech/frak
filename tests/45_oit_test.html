@@ -18,7 +18,6 @@
 			function makeTransparent(subnode) {
 				if (subnode.getComponent(MeshRendererComponent)) {
 					var meshRendererComponent = subnode.getComponent(MeshRendererComponent);
-					meshRendererComponent.castShadows=false;
 					for (var i in meshRendererComponent.meshRenderers) {
 						meshRendererComponent.meshRenderers[i].transparent=true;
 						var material = meshRendererComponent.meshRenderers[i].material;

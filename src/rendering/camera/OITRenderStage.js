@@ -16,12 +16,20 @@ var OITRenderStage = RenderStage.extend({
 	},
 
 	onStart: function(context, engine, camera) {
-		var size = camera.target.size;
-		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
-		this.transparencyTarget = new TargetTextureFloat(size, context, false);
+		try {
+			var size = camera.target.size;
+			this.transparencyTarget = new TargetTextureFloat(size, context, false);
+			this.transparencyWeight = new TargetTextureFloat(size, context, false);
+		}
+		catch (e) {
+			console.warn('OITRenderStage: ', e);
+			this.disable();
+			return;
+		}
+
 		this.transparencySampler = new Sampler('oitAccum', this.transparencyTarget.texture);
-		this.transparencyWeight = new TargetTextureFloat(size, context, false);
 		this.transparencyWeightSampler = new Sampler('oitWeight', this.transparencyWeight.texture);
+		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
 
 		// Set up shared depth buffer
 		var gl = context.gl;
