@@ -18,15 +18,16 @@
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
-			var engine = new Engine($('#canvas'), {
-				'assetsPath': '../assets/'
+			var engine = new Engine('canvas', {
+				'assetsPath': '../assets/',
+				'transparencyMode': 'sorted'
 			});
 			engine.assetsManager.modelsManager.path = './'; // Load test models locally
 
 			var scene=engine.scene;
 			var assetsManager=engine.assetsManager;
 			var node=assetsManager.addModel("data/axis_test.data");
-			scene.camera.backgroundColor = new Color(0.4, 0.4, 0.0, 1.0);
+			scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
 
 			assetsManager.load(function() {
 				scene.root.addNode(node);

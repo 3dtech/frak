@@ -9,6 +9,11 @@ var JSONModelLoader = Class.extend({
 		this.nodesByID = {};
 		this.submeshesByID = {};
 		this.submeshes = [];
+
+		this.textureUniformMap = {
+			'texturesDiffuse': 'diffuse',
+			'texturesNormals': 'normal'
+		}
 	},
 
 	createDefaultTextureSampler: function(context) {
@@ -65,10 +70,15 @@ var JSONModelLoader = Class.extend({
 				var textureDescriptor = new TextureDescriptor(textures[i]);
 				textureDescriptor.parentDescriptor = this.descriptor;
 
+				var samplerName = 'diffuse';
+				if (textureType in this.textureUniformMap)
+					samplerName = this.textureUniformMap[textureType];
+
+				console.log('Loading texture: ', textures[i], textureDescriptor.getFullPath());
 				var texture = this.texturesManager.addDescriptor(textureDescriptor);
 				if (!material.samplers)
 					material.samplers=[];
-				material.samplers.push(new Sampler(textureType+i, texture));
+				material.samplers.push(new Sampler(samplerName + i, texture));
 
 				if (textureType == 'texturesNormals') {
 					material.shader = this.shadersManager.addSource('normalmapped');
