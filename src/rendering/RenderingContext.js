@@ -3,7 +3,7 @@ var RenderingContext=Class.extend({
 	/** Constructor
 		@param canvas The canvas element that provides rendering context
 	*/
-	init: function(canvas, contextOptions) {
+	init: function(canvas, contextOptions, errorCallback) {
 		if (!("WebGLRenderingContext" in window))
 			throw "Unable to create rendering context, because browser doesn't support WebGL";
 
@@ -29,14 +29,21 @@ var RenderingContext=Class.extend({
 
 		// Acquiring context failed
 		if (!this.gl) {
-			var msg = document.createElement("div");
-			msg.style.position = "relative";
-			msg.style.zIndex = 100;
-			msg.style.backgroundColor = "red";
-			msg.style.padding = "8px";
-			msg.textContent = "WebGL seems to be unavailable in this browser.";
-			var parent = canvas.parentNode;
-			parent.insertBefore(msg, parent.firstChild);
+			var hideError = false;
+			if (FRAK.isFunction(errorCallback))
+				hideError = errorCallback();
+
+			if (!hideError) {
+				var msg = document.createElement("div");
+				msg.style.position = "relative";
+				msg.style.zIndex = 100;
+				msg.style.backgroundColor = "red";
+				msg.style.padding = "8px";
+				msg.textContent = "WebGL seems to be unavailable in this browser.";
+				var parent = canvas.parentNode;
+				parent.insertBefore(msg, parent.firstChild);
+			}
+
 			throw "Failed to acquire GL context from canvas";
 		}
 

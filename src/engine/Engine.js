@@ -19,7 +19,8 @@ var Engine=Class.extend({
 			'renderer': 'default',
 			'softShadows': false,
 			'runInBackground': false,
-			'context': false
+			'context': false,
+			'contextErrorCallback': null
 		}, options);
 		this.validateOptions(canvas);
 
@@ -153,7 +154,7 @@ var Engine=Class.extend({
 	validateOptions: function(canvas) {
 		// Create default rendering context
 		if (!this.options.context)
-			this.options.context = new RenderingContext(canvas);
+			this.options.context = new RenderingContext(canvas, null, this.options.contextErrorCallback);
 
 		var gl = this.options.context.gl;
 
