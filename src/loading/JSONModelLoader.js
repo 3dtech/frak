@@ -70,12 +70,10 @@ var JSONModelLoader = Class.extend({
 				var textureDescriptor = new TextureDescriptor(textures[i]);
 				textureDescriptor.parentDescriptor = this.descriptor;
 
+				var texture = this.texturesManager.addDescriptor(textureDescriptor);
 				var samplerName = 'diffuse';
 				if (textureType in this.textureUniformMap)
 					samplerName = this.textureUniformMap[textureType];
-
-				console.log('Loading texture: ', textures[i], textureDescriptor.getFullPath());
-				var texture = this.texturesManager.addDescriptor(textureDescriptor);
 				if (!material.samplers)
 					material.samplers=[];
 				material.samplers.push(new Sampler(samplerName + i, texture));
