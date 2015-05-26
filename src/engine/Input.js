@@ -37,6 +37,7 @@ var Input = Class.extend({
 			'alt': 18,
 			'pause': 19,
 			'caps_lock': 20,
+			'space': 32,
 			'page_up': 33,
 			'page_down': 34,
 			'end': 35,
