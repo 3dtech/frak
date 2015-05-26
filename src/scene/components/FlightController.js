@@ -13,6 +13,9 @@ var FlightController=Controller.extend({
 		this.friction=0.01;
 		this.rotationAcceleration=0.001;
 		this.rotationFriction=0.1;
+
+		this.tmpRotation = quat.create();
+		this.tmpImpulse = vec3.create();
 	},
 
 	type: function() {
@@ -25,6 +28,8 @@ var FlightController=Controller.extend({
 		this.bind('S', 'decelerate', this);
 		this.bind('A', 'strafeLeft', this);
 		this.bind('D', 'strafeRight', this);
+		this.bind('C', 'moveDown', this);
+		this.bind('space', 'moveUp', this);
 
 		this.bind('up_arrow', 'accelerate', this);
 		this.bind('down_arrow', 'decelerate', this);
@@ -53,14 +58,24 @@ var FlightController=Controller.extend({
 		this.addLocalImpulse([ this.deceleration*deltaTime, 0, 0]);
 	},
 
+	moveUp: function(deltaTime) {
+		this.addWorldImpulse([0, this.acceleration*deltaTime, 0]);
+	},
+
+	moveDown: function(deltaTime) {
+		this.addWorldImpulse([0, -this.acceleration*deltaTime, 0]);
+	},
+
+	/** Adds a world space impulse to velocity. */
+	addWorldImpulse: function(impulse) {
+		vec3.add(this.velocity, this.velocity, impulse);
+	},
+
 	/** Adds local impulse vector (will be transformed by absolute transformation) to velocity */
 	addLocalImpulse: function(impulse) {
-		var relativeImpulse=vec3.create();
-		var rotation=quat.create();
-
-		quat.fromMat4(rotation, this.node.transform.absolute);
-		vec3.transformQuat(relativeImpulse, impulse, rotation);
-		vec3.add(this.velocity, this.velocity, relativeImpulse);
+		quat.fromMat4(this.tmpRotation, this.node.transform.absolute);
+		vec3.transformQuat(this.tmpImpulse, impulse, this.tmpRotation);
+		vec3.add(this.velocity, this.velocity, this.tmpImpulse);
 	},
 
 	// Events
