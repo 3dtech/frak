@@ -127,6 +127,28 @@ var Submesh=Class.extend({
 		delete tan2;
 	},
 
+	/** Calculates barycentric coordinates. This may not be entirely correct if the mesh has shared vertices. */
+	calculateBarycentric: function() {
+		this.barycentric = new Float32Array(this.positions.length);
+		for (var i=0; i<this.faces.length; i+=3) {
+			var idx0 = this.faces[i];
+			var idx1 = this.faces[i+1];
+			var idx2 = this.faces[i+2];
+
+			this.barycentric[(idx0*3)+0] = 1.0;
+			this.barycentric[(idx0*3)+1] = 0.0;
+			this.barycentric[(idx0*3)+2] = 0.0;
+
+			this.barycentric[(idx1*3)+0] = 0.0;
+			this.barycentric[(idx1*3)+1] = 1.0;
+			this.barycentric[(idx1*3)+2] = 0.0;
+
+			this.barycentric[(idx2*3)+0] = 0.0;
+			this.barycentric[(idx2*3)+1] = 0.0;
+			this.barycentric[(idx2*3)+2] = 1.0;
+		}
+	},
+
 	/** Recalculates bounding volumes for this Submesh */
 	recalculateBounds: function() {
 		this.boundingBox=new BoundingBox();

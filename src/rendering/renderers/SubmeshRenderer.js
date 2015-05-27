@@ -66,6 +66,15 @@ var SubmeshRenderer=Renderer.extend({
 			}
 		}
 
+		if (submesh.barycentric) {
+			if(submesh.positions.length!=submesh.barycentric.length) {
+				console.warn("Wrong number of barycentric coordinates. Must be the same as positions.");
+			}
+			else {
+				this.buffer.add("barycentric", submesh.barycentric, 3);
+			}
+		}
+
 		// In case some key shader parameters are missing assign some defaults
 		// to prevent nonintuitive rendering problems
 		if (!material.uniforms.diffuse)
