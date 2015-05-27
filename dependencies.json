@@ -163,6 +163,9 @@
 	"src/scene/lights/AmbientLight.js",
 	"src/scene/lights/DirectionalLight.js",
 
+	"src/scene/terrain/TerrainMesh.js",
+	"src/scene/terrain/GPUTerrain.js",
+
 	"src/scene/descriptors/Descriptor.js",
 	"src/scene/descriptors/TextDescriptor.js",
 	"src/scene/descriptors/FontDescriptor.js",

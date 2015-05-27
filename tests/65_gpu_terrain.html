@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>GPU Terrain</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="../tests/style.css" >
+	</head>
+	<body>
+		<!-- Canvas -->
+		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+		<div>
+			<button onclick="toggleDebug();">Debug</button>
+			<button onclick="pauseEngine(this);">PAUSE</button>
+		</div>
+
+		<!-- Libraries -->
+		<script src="../builds/frak-latest.min.js"></script>
+
+		<script type="text/javascript">
+			function setupCamera(scene) {
+				scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
+				scene.cameraComponent.setClipPlanes(0.5, 2000.0);
+
+				scene.cameraNode.transform.setPosition([0, 20, 0]);
+				var flightController = scene.cameraNode.addComponent(new FlightController());
+				flightController.acceleration = flightController.deceleration = 1.0;
+			}
+
+			function setupLights(scene) {
+				var lights = scene.root.addNode(new Node('lights'));
+				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
+				var lightDirectional = scene.light;
+				lightDirectional.setLightDirection([1, 1, 1]);
+				lightDirectional.intensity = 0.7;
+				// lightDirectional.shadowCasting = true;
+				// lightDirectional.shadowResolution = vec2.fromValues(512, 512);
+				// lightDirectional.shadowResolution = vec2.fromValues(1024, 1024);
+				// lightDirectional.shadowResolution = vec2.fromValues(2048, 2048);
+				// lightDirectional.shadowResolution = vec2.fromValues(4096, 4096);
+			}
+
+			function setupScene(scene) {
+				var grid = engine.scene.root.addNode(new Node('grid'));
+				var lines = grid.addComponent(new LineRendererComponent(new Color(0.9, 0.1, 0.1, 1.0)));
+				lines.addGrid([0,0,0], [32, 32], [1, 1]);
+				lines.addGrid([0,10,0], [32, 32], [1, 1]);
+				lines.addGrid([0,20,0], [32, 32], [1, 1]);
+				lines.addGrid([0,30,0], [32, 32], [1, 1]);
+				lines.addGrid([0,40,0], [32, 32], [1, 1]);
+				lines.addGrid([0,50,0], [32, 32], [1, 1]);
+				lines.addGrid([0,60,0], [32, 32], [1, 1]);
+				lines.addGrid([0,70,0], [32, 32], [1, 1]);
+				lines.addGrid([0,80,0], [32, 32], [1, 1]);
+				lines.addGrid([0,90,0], [32, 32], [1, 1]);
+
+				var terrain = scene.root.addNode(new Node('terrain'));
+				terrain.addComponent(new GPUTerrain('data/terrain/height.png', 'data/terrain/color.png'));
+			}
+
+			var engine;
+			window.onload = function() {
+				engine = new Engine('canvas', {
+					'requestedFPS': 60,
+					'assetsPath': '../assets/',
+					'transparencyMode': 'blended',
+					'antialias': true,
+					// 'renderer': 'deferred'
+				});
+
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+				setupCamera(engine.scene);
+				setupLights(engine.scene);
+				setupScene(engine.scene);
+
+				engine.assetsManager.load(function() {
+					engine.run();
+				});
+			};
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function pauseEngine(element) {
+				engine.togglePause();
+				if (engine.running)
+					element.textContent = 'PAUSE';
+				else
+					element.textContent = 'UNPAUSE';
+			}
+		</script>
+	</body>
+</html>
