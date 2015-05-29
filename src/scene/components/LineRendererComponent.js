@@ -80,7 +80,7 @@ var LineRendererComponent = RendererComponent.extend({
 	},
 
 	onPostRender: function(context, camera) {
-		if (!this.overlay || !this.renderer)
+		if (!this.overlay || !this.renderer || !this.enabled)
 			return;
 
 		context.projection.push();
