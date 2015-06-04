@@ -146,10 +146,47 @@ var JSONModelLoader = Class.extend({
 		if (parsedSubmesh.bitangents && parsedSubmesh.bitangents.length/3 == pointCount)
 			submesh.bitangents = parsedSubmesh.bitangents;
 
+		if (parsedSubmesh.texCoords1D) {
+			for (var i=0; i<parsedSubmesh.texCoords1D.length; i++) {
+				if (parsedSubmesh.texCoords1D[i].length == pointCount)
+					submesh.texCoords1D.push(parsedSubmesh.texCoords1D[i]);
+			}
+		}
+
 		if (parsedSubmesh.texCoords2D) {
 			for (var i=0; i<parsedSubmesh.texCoords2D.length; i++) {
 				if (parsedSubmesh.texCoords2D[i].length/2 == pointCount)
 					submesh.texCoords2D.push(parsedSubmesh.texCoords2D[i]);
+			}
+		}
+		// Generates 2D texture coordiantes for models that do not specify any 2D coordinates, but do specify 3D ones.
+		else {
+			if (parsedSubmesh.texCoords3D) {
+				for (var i=0; i<parsedSubmesh.texCoords3D.length; i++) {
+					if (parsedSubmesh.texCoords3D[i].length/3 != pointCount)
+						continue;
+					var texCoords2D = [];
+					for (var j=0; j<parsedSubmesh.texCoords3D[i].length; j+=3) {
+						texCoords2D.push(parsedSubmesh.texCoords3D[i][j]);
+						texCoords2D.push(parsedSubmesh.texCoords3D[i][j+1]);
+					}
+					submesh.texCoords2D.push(texCoords2D);
+					submesh.yesIGeneratedThese = true;
+				}
+			}
+		}
+
+		if (parsedSubmesh.texCoords3D) {
+			for (var i=0; i<parsedSubmesh.texCoords3D.length; i++) {
+				if (parsedSubmesh.texCoords3D[i].length/3 == pointCount)
+					submesh.texCoords3D.push(parsedSubmesh.texCoords3D[i]);
+			}
+		}
+
+		if (parsedSubmesh.texCoords4D) {
+			for (var i=0; i<parsedSubmesh.texCoords4D.length; i++) {
+				if (parsedSubmesh.texCoords4D[i].length/4 == pointCount)
+					submesh.texCoords4D.push(parsedSubmesh.texCoords4D[i]);
 			}
 		}
 

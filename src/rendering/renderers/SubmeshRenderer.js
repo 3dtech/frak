@@ -20,27 +20,53 @@ var SubmeshRenderer=Renderer.extend({
 		}
 
 		this.buffer.add("position", submesh.positions, 3);
-		for(var texCoords1DIndex in submesh.texCoords1D) {
-			if(submesh.positions.length/3!=submesh.texCoords1D[texCoords1DIndex].length) {
-				console.warn("Wrong number of texture coordinates 1. Must be the same as positions.");
-				continue;
+
+		var pointCount = submesh.positions.length / 3;
+
+		// 1D texture coordinates
+		if (submesh.texCoords1D) {
+			for (var i=0; i<submesh.texCoords1D.length; i++) {
+				if (submesh.texCoords1D[i].length != pointCount) {
+					console.warn("Wrong number of 1D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords1D[i].length, pointCount));
+					continue;
+				}
+				this.buffer.add("texcoord1d"+i, submesh.texCoords1D[i], 1);
 			}
-			this.buffer.add("texcoord1d"+texCoords1DIndex, submesh.texCoords1D[texCoords1DIndex], 1);
 		}
-		for(var texCoords2DIndex in submesh.texCoords2D) {
-			if(submesh.positions.length/3!=submesh.texCoords2D[texCoords2DIndex].length/2) {
-				console.warn("Wrong number of texture coordinates 2 ("+submesh.texCoords2D[texCoords2DIndex].length+"). Must be the same as positions ("+submesh.positions.length+").");
-				continue;
+
+		// 2D texture coordinates
+		if (submesh.texCoords2D) {
+			for (var i=0; i<submesh.texCoords2D.length; i++) {
+				if (submesh.texCoords2D[i].length/2 != pointCount) {
+					console.warn("Wrong number of 2D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords2D[i].length/2, pointCount));
+					continue;
+				}
+				this.buffer.add("texcoord2d"+i, submesh.texCoords2D[i], 2);
 			}
-			this.buffer.add("texcoord2d"+texCoords2DIndex, submesh.texCoords2D[texCoords2DIndex], 2);
 		}
-		for(var texCoords3DIndex in submesh.texCoords3D) {
-			if(submesh.positions.length!=submesh.texCoords3D[texCoords3DIndex].length) {
-				console.warn("Wrong number of texture coordinates 3. Must be the same as positions.");
-				continue;
+
+		// 3D texture coordinates
+		if (submesh.texCoords3D) {
+			for (var i=0; i<submesh.texCoords3D.length; i++) {
+				if (submesh.texCoords3D[i].length/3 != pointCount) {
+					console.warn("Wrong number of 3D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords3D[i].length/3, pointCount));
+					continue;
+				}
+				this.buffer.add("texcoord3d"+i, submesh.texCoords3D[i], 3);
 			}
-			this.buffer.add("texcoord3d"+texCoords3DIndex, submesh.texCoords3D[texCoords3DIndex], 3);
 		}
+
+		// 4D texture coordinates
+		if (submesh.texCoords4D) {
+			for (var i=0; i<submesh.texCoords4D.length; i++) {
+				if (submesh.texCoords4D[i].length/4 != pointCount) {
+					console.warn("Wrong number of 4D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords4D[i].length/4, pointCount));
+					continue;
+				}
+				this.buffer.add("texcoord3d"+i, submesh.texCoords4D[i], 4);
+			}
+		}
+
 		if(submesh.normals) {
 			if(submesh.positions.length!=submesh.normals.length) {
 				console.warn("Wrong number of normals. Must be the same as positions.");

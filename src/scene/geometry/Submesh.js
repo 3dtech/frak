@@ -12,6 +12,7 @@ var Submesh=Class.extend({
 		this.texCoords1D=[];//< Texture coordinates as [x0, ..., xn]
 		this.texCoords2D=[];//< Texture coordinates as [x0, y0, ..., xn, yn]
 		this.texCoords3D=[];//< Texture coordinates as [x0, y0, z0, ..., xn, yn, zn]
+		this.texCoords4D=[];//< Texture coordinates as [x0, y0, z0, w0, ..., xn, yn, zn, wn]
 		this.tangents=false;//< Tangents as [x0, y0, z0, ..., xn, yn, zn]
 		this.normals=false;	//< Normals as [x0, y0, z0, ..., xn, yn, zn]
 		this.bitangents=false;	//< Bitangents as [x0, y0, z0, ..., xn, yn, zn]
