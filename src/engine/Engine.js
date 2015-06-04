@@ -10,6 +10,7 @@ var Engine=Class.extend({
 		if (!options) options={};
 		this.options = FRAK.extend({
 			'assetsPath': '',
+			'defaultRequestedFPS': 30.0,
 			'requestedFPS': 30.0,
 			'anisotropicFiltering': 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
 			'debug': false,
@@ -140,6 +141,25 @@ var Engine=Class.extend({
 	togglePause: function() {
 		if(this.running===false) this.run();
 		else this.pause();
+	},
+	/**
+		Idle rendering. Try'is to draw in low (1) fps
+		@fps {float} idle at given fps, default is 1
+	*/
+	startIdle: function(fps){
+		if(!fps) fps = 1.0;
+		this.options.requestedFPS = fps;
+		this.pause();
+		this.run();
+	},
+
+	/**
+		Stop idling and return to normal fps
+	*/
+	stopIdle: function(){
+		this.options.requestedFPS = this.options.defaultRequestedFPS;
+		this.pause();
+		this.run();
 	},
 
 	/** Runs engine to render a single frame and do an update */
