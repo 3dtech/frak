@@ -23,6 +23,7 @@ var SmoothOrbitController=OrbitController.extend({
 		if(this.target.isNull()) return; // No target, no orbit!
 
 		var dt = engine.fps.getDelta()/1000.0 * this.speed;
+		dt = Math.min(dt, 1.0);
 		this.currentRotation[0] = lerp(this.currentRotation[0], this.rotation[0], dt);
 		this.currentRotation[1] = lerp(this.currentRotation[1], this.rotation[1], dt);
 		this.currentDistance = lerp(this.currentDistance, this.distance, dt);
