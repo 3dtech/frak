@@ -60,6 +60,12 @@ var JSONModelLoader = Class.extend({
 		var shaderName = parsedMaterial.shader || 'diffuse';
 		material.name = parsedMaterial.name;
 		material.shader = this.shadersManager.addSource(shaderName);
+
+		// FIXME: shaders should always download the accompanying requirements json file and apply requirements from there
+		if (shaderName.toLowerCase() == 'transparent') {
+			material.shader.requirements.transparent = true;
+		}
+
 		material.uniforms = {};
 		this.loadUniforms(material.uniforms, parsedMaterial);
 
