@@ -45,6 +45,9 @@ var OrbitController=FlightController.extend({
 		this.targetPosition=vec3.create();
 		this.lookat=mat4.create();
 		this.tmpRotation=quat.create();
+
+		//Called when something changes
+		this.cbOnChange;
 	},
 
 	excluded: function() {
@@ -69,6 +72,12 @@ var OrbitController=FlightController.extend({
 		this.bind('Q', 'rotateDown', this);
 	},
 
+	onChange: function(action, value){
+		if(this.cbOnChange && typeof this.cbOnChange === "function"){
+			this.cbOnChange(action, value);
+		}
+	},
+
 	/** Get current zoom level */
 	getZoom: function(){
 		var relativeDistance = this.distance - this.minimumDistance;
@@ -81,10 +90,12 @@ var OrbitController=FlightController.extend({
 		percentage = Math.max(0, percentage);
 		var range = this.maximumDistance - this.minimumDistance;
 		this.distance = Math.min(this.minimumDistance + (range*percentage), this.maximumDistance);
+		this.onChange("distance", this.distance);
 	},
 
 	setDistance: function(_distance){
 		this.distance = Math.min(Math.max(_distance, this.minimumDistance), this.maximumDistance);
+		this.onChange("distance", this.distance);
 	},
 
 	/** Zooms in by moving target distance closer */
@@ -94,6 +105,7 @@ var OrbitController=FlightController.extend({
 		if(!deltaTime) deltaTime=1.0;
 		this.distance-=deltaTime*this.zoomSpeed*(this.maximumDistance-this.minimumDistance)/this.distanceSteps;
 		if(this.distance<this.minimumDistance) this.distance=this.minimumDistance;
+		this.onChange("distance", this.distance);
 	},
 
 	/** Zooms out by moving target distance farther */
@@ -103,6 +115,7 @@ var OrbitController=FlightController.extend({
 		if(!deltaTime) deltaTime=1.0;
 		this.distance+=deltaTime*this.zoomSpeed*(this.maximumDistance-this.minimumDistance)/this.distanceSteps;
 		if(this.distance>this.maximumDistance) this.distance=this.maximumDistance;
+		this.onChange("distance", this.distance);
 	},
 
 	/** Accelerates to the left */
@@ -112,7 +125,7 @@ var OrbitController=FlightController.extend({
 
 	/** Accelerates to the right */
 	rotateRight: function(deltaTime) {
-		this.accelerate([0.0,  this.rotationAcceleration, 0.0], deltaTime);
+		this.accelerate([0.0, this.rotationAcceleration, 0.0], deltaTime);
 	},
 
 	/** Accelerates up */
@@ -131,6 +144,7 @@ var OrbitController=FlightController.extend({
 			return;
 		vec3.scale(accelerationVector, accelerationVector, deltaTime);
 		vec3.add(this.angularVelocity, this.angularVelocity, accelerationVector);
+		this.onChange("accelerate", accelerationVector);
 	},
 
 	// Events
@@ -213,6 +227,7 @@ var OrbitController=FlightController.extend({
 		this.pan[0]=Math.min(this.pan[0], this.maximumPan[0]);
 		this.pan[1]=Math.min(this.pan[1], this.maximumPan[1]);
 		this.pan[2]=Math.min(this.pan[2], this.maximumPan[2]);
+		this.onChange("move", xDelta, yDelta);
 	},
 
 	onPinch: function(position, scale){
