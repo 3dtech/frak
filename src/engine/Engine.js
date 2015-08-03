@@ -48,6 +48,15 @@ var Engine=Class.extend({
 
 		document.addEventListener("visibilitychange", ClassCallback(this, this.onVisibilityChange));
 
+		if (FRAK.fullscreenEnabled) {
+			this.useUpscaling = false;
+			var fsHandler = ClassCallback(this, this.onFullscreenChange);
+			document.addEventListener("fullscreenchange", fsHandler);
+			document.addEventListener("webkitfullscreenchange", fsHandler);
+			document.addEventListener("mozfullscreenchange", fsHandler);
+			document.addEventListener("MSFullscreenChange", fsHandler);
+		}
+
 		this.setupInput();
 	},
 
@@ -66,6 +75,81 @@ var Engine=Class.extend({
 					return;
 				}
 				this.run();
+			}
+		}
+	},
+
+	onFullscreenChange: function() {
+		if (!(this.context instanceof RenderingContext))
+			return;
+
+		if (FRAK.isFullscreen()) {
+			// Save original canvas state
+			var canvas = this.context.canvas;
+			this._savedCanvasStyles = {
+				position: canvas.style.position,
+				left: canvas.style.left,
+				right: canvas.style.right,
+				top: canvas.style.top,
+				bottom: canvas.style.bottom,
+				width: canvas.style.width,
+				height: canvas.style.height,
+				canvasWidth: canvas.getAttribute('width'),
+				canvasHeight: canvas.getAttribute('height'),
+				aspectRatio: this.scene.cameraComponent.aspect
+			};
+
+			// Stretch canvas to fill the entire screen
+			canvas.style.position = 'absolute';
+			canvas.style.left = 0;
+			canvas.style.right = 0;
+			canvas.style.top = 0;
+			canvas.style.bottom = 0;
+			canvas.style.width = '100%';
+			canvas.style.height = '100%';
+
+			// We have to wait for the styles to be applied to continue
+			var scope = this;
+			setTimeout(function() {
+				// Set aspect ratio
+				var bounds = canvas.getBoundingClientRect();
+				scope.scene.cameraComponent.setAspectRatio(bounds.width/bounds.height);
+				if (scope.useUpscaling)
+					return;
+
+				// If not using upscaling then resize the RenderTarget
+				var gl = scope.context.gl;
+				var width = gl.canvas.clientWidth;
+				var height = Math.max(1, gl.canvas.clientHeight);
+				canvas.setAttribute('width', width);
+				canvas.setAttribute('height', height);
+				scope.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+			},
+			2000/this.options.requestedFPS);
+		}
+		else {
+			if (this._savedCanvasStyles) {
+				// Restore canvas size and aspect ratio for perspective cameras
+				var canvas = this.context.canvas;
+				canvas.style.position = this._savedCanvasStyles.position;
+				canvas.style.left = this._savedCanvasStyles.left;
+				canvas.style.right = this._savedCanvasStyles.right;
+				canvas.style.top = this._savedCanvasStyles.top;
+				canvas.style.bottom = this._savedCanvasStyles.bottom;
+				canvas.style.width = this._savedCanvasStyles.width;
+				canvas.style.height = this._savedCanvasStyles.height;
+				if (this._savedCanvasStyles.aspectRatio)
+					this.scene.cameraComponent.setAspectRatio(this._savedCanvasStyles.aspectRatio);
+
+				// If not using upscaling then resize the RenderTarget
+				if (!this.useUpscaling) {
+					canvas.setAttribute('width', this._savedCanvasStyles.canvasWidth);
+					canvas.setAttribute('height', this._savedCanvasStyles.canvasHeight);
+					var gl = this.context.gl;
+					this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+				}
+
+				delete this._savedCanvasStyles;
 			}
 		}
 	},
@@ -142,6 +226,26 @@ var Engine=Class.extend({
 		if(this.running===false) this.run();
 		else this.pause();
 	},
+
+	/** Requests engine to go to fullscreen */
+	requestFullscreen: function(useUpscaling) {
+		if (!FRAK.fullscreenEnabled) {
+			console.warn('FRAK: Fullscreen API is disabled in this browser.');
+			return;
+		}
+		this.useUpscaling = useUpscaling;
+		FRAK.requestFullscreen(this.context.canvas);
+	},
+
+	/** Requests engine to exit fullscreen */
+	exitFullscreen: function() {
+		if (!FRAK.fullscreenEnabled) {
+			console.warn('FRAK: Fullscreen API is disabled in this browser.');
+			return;
+		}
+		FRAK.exitFullscreen();
+	},
+
 	/**
 		Idle rendering. Try'is to draw in low (1) fps
 		@fps {float} idle at given fps, default is 1

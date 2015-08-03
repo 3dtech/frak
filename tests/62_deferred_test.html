@@ -53,7 +53,7 @@
 				];
 
 				var skyboxComponent = scene.cameraNode.addComponent(new SkyboxComponent());
-				skyboxComponent.setup(engine.assetsManager, engine, skybox);
+				skyboxComponent.setup(scene.engine.assetsManager, scene.engine, skybox);
 			}
 
 			function setupLights(scene) {
