@@ -70,6 +70,16 @@ var Camera=Serializable.extend({
 		}
 	},
 
+	renderScene: function(context, scene, preRenderCallback, postRenderCallback) {
+		if (preRenderCallback)
+			preRenderCallback(context, this);
+
+		this.renderStage.render(context, scene, this);
+
+		if (postRenderCallback)
+			postRenderCallback(context, this);
+	},
+
 	/** Ends rendering with camera popping projection and view matrices */
 	endRender: function(context) {
 		context.modelview.pop();
@@ -77,8 +87,9 @@ var Camera=Serializable.extend({
 	},
 
 	/** Renders the contents of this camera using assigned render-stage */
-	render: function(context, scene) {
+	render: function(context, scene, preRenderCallback, postRenderCallback) {
 		context.camera = this;
+		this.startRender(context);
 
 		if (this.stereo()) {
 			// TODO: shift projection matrix for parallax
@@ -90,18 +101,19 @@ var Camera=Serializable.extend({
 			this.target.viewport.size[0] = half;
 
 			this.target.viewport.position[0] = 0;
-			this.renderStage.render(context, scene, this);
+			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
 
 			this.target.viewport.position[0] = half;
-			this.renderStage.render(context, scene, this);
+			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
 
 			vec2.copy(this.target.viewport.position, this._viewportPosition);
 			vec2.copy(this.target.viewport.size, this._viewportSize);
 		}
 		else {
-			this.renderStage.render(context, scene, this);
+			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
 		}
 
+		this.endRender(context);
 		context.camera = false;
 	},
 

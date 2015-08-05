@@ -15,6 +15,33 @@ var Scene=Serializable.extend({
 		this.preRenderedComponents=[];				///< List of components that have defined onPreRender method
 		this.postRenderedComponents=[];				///< List of components that have defined onPostRender method
 		this.updatedComponents=[];				///< List of components that have defined onPostRender method
+
+		var scope = this;
+		// Pre-render components
+		this.processPreRenderList = function(context, camera) {
+			for(var i=0; i<scope.preRenderedComponents.length; i++) {
+				var component=scope.preRenderedComponents[i];
+				if (component.node.layer & camera.layerMask) {
+					context.modelview.push();
+					context.modelview.multiply(component.node.transform.absolute);
+					component.onPreRender(context, camera);
+					context.modelview.pop();
+				}
+			}
+		}
+
+		// Post-render components
+		this.processPostRenderList = function(context, camera) {
+			for(i=0; i<scope.postRenderedComponents.length; i++) {
+				var component=scope.postRenderedComponents[i];
+				if (component.node.layer & camera.layerMask) {
+					context.modelview.push();
+					context.modelview.multiply(component.node.transform.absolute);
+					component.onPostRender(context, camera);
+					context.modelview.pop();
+				}
+			}
+		}
 	},
 
 	fields: function() {
@@ -94,34 +121,7 @@ var Scene=Serializable.extend({
 
 		for (var cameraIndex=0; cameraIndex<this.cameras.length; cameraIndex++) {
 			camera = this.cameras[cameraIndex];
-			camera.startRender(context);
-
-			// Pre-render components
-			for(var i=0; i<this.preRenderedComponents.length; i++) {
-				var component=this.preRenderedComponents[i];
-				if (component.node.layer & camera.layerMask) {
-					context.modelview.push();
-					context.modelview.multiply(component.node.transform.absolute);
-					component.onPreRender(context, camera);
-					context.modelview.pop();
-				}
-			}
-
-			// Render camera
-			camera.render(context, this);
-
-			// Post-render components
-			for(i=0; i<this.postRenderedComponents.length; i++) {
-				var component=this.postRenderedComponents[i];
-				if (component.node.layer & camera.layerMask) {
-					context.modelview.push();
-					context.modelview.multiply(component.node.transform.absolute);
-					component.onPostRender(context, camera);
-					context.modelview.pop();
-				}
-			}
-
-			camera.endRender(context);
+			camera.render(context, this, this.processPreRenderList, this.processPostRenderLists);
 		}
 	},
 
