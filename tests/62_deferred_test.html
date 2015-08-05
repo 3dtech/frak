@@ -9,6 +9,9 @@
 		<!-- Canvas -->
 		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
 		<div>
+			<button onclick="engine.requestFullscreen();">Go to fullscreen</button>
+			<button onclick="engine.requestFullscreen(true);">Go to fullscreen with upscaling</button>
+			<button onclick="toggleStereoscopic();">Toggle Stereoscopic</button>
 			<button onclick="toggleSoftShadows();">Soft shadows</button>
 			<button onclick="toggleDebug();">Debug</button>
 			<button onclick="pauseEngine(this);">PAUSE</button>
@@ -234,6 +237,10 @@
 			function toggleDebug() {
 				var renderStage = engine.scene.camera.renderStage;
 				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function toggleStereoscopic() {
+				engine.scene.camera.stereo(!engine.scene.camera.stereo());
 			}
 
 			function toggleSoftShadows() {
