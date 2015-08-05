@@ -7,7 +7,7 @@
 		<link rel="stylesheet" href="style.css" >
 	</head>
 	<body>
-		<div>
+		<div style="background-color: rgba(255, 255, 255, 0.5);">
 			<div>Renderers: <span id='renderers'></span></div>
 			<div>Visible renderers: <span id='visible-renderers'></span></div>
 			<div>Visible solid renderers: <span id='solid-renderers'></span></div>
@@ -16,15 +16,16 @@
 		</div>
 
 		<!-- Canvas -->
-		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="500" height="500"></canvas>
+		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="1200" height="800"></canvas>
 
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
-			var frak=new FRAK(function() {
-				var engine = new Engine($('#canvas'), {
+			var engine;
+			window.onload = function() {
+				engine = new Engine($('#canvas'), {
 					'assetsPath': '../assets/'
 				});
 
@@ -50,8 +51,6 @@
 				var orbitController=engine.scene.cameraNode.addComponent(new OrbitController());
 				orbitController.target.value=original.transform;
 
-				// scene.light.shadowCasting=true;
-
 				engine.run();
 
 				engine.assetsManager.load(function() {
@@ -69,28 +68,26 @@
 						}
 					}
 
-					function getMaterialRenderStage(camera) {
-						if (camera.renderStage instanceof MaterialRenderStage) {
-							return camera.renderStage;
-						}
-						if (camera.renderStage instanceof PostProcessRenderStage) {
-							return camera.renderStage.generator;
+					function getOrganizer(camera) {
+						if (camera.renderStage instanceof ForwardRenderStage ||
+							camera.renderStage instanceof DeferredRenderStage) {
+							return camera.renderStage.generator.organizer;
 						}
 						throw('Unhandled RenderStage used in Camera');
 					}
 
 					var displayRenderers=null;
 					displayRenderers=function() {
-						var renderStage = getMaterialRenderStage(engine.scene.camera);
-						$('#visible-renderers').html(renderStage.visibleRenderers);
-						$('#solid-renderers').html(renderStage.visibleSolidRenderers);
-						$('#transparent-renderers').html(renderStage.visibleTransparentRenderers);
-						$('#batches').html(renderStage.visibleSolidBatches);
+						var organizer = getOrganizer(engine.scene.camera);
+						$('#visible-renderers').html(organizer.visibleRenderers);
+						$('#solid-renderers').html(organizer.visibleSolidRenderers);
+						$('#transparent-renderers').html(organizer.visibleTransparentRenderers);
+						$('#batches').html(organizer.visibleSolidBatches);
 						setTimeout(displayRenderers, 200);
 					};
 					setTimeout(displayRenderers, 200);
 				});
-			});
+			};
 		</script>
 	</body>
 </html>
