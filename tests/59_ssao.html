@@ -10,16 +10,23 @@
 		<!-- Canvas -->
 		<canvas tabindex="1" id="canvas" style="z-index: 1; border: none;" width="1200" height="800"></canvas>
 
-		<div style="position: absolute; right: 10px; top: 10px;">
+		<div>
 			<div id="fps"></div>
 			<div>SSAO</div>
 			<button id="ssao-toggle">Enabled</button>
 			<div>Only</div>
 			<button id="only-toggle">Disabled</button>
 		</div>
+		<div>
+			<button onclick="engine.requestFullscreen();">Go to fullscreen</button>
+			<button onclick="engine.requestFullscreen(true);">Go to fullscreen with upscaling</button>
+			<button onclick="toggleStereoscopic();">Toggle Stereoscopic</button>
+			<button onclick="toggleDebug();">Debug</button>
+			<button onclick="pauseEngine(this);">PAUSE</button>
+		</div>
+
 
 		<!-- Libraries -->
-		<script src="../lib/jquery-1.11.1.min.js"></script>
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
@@ -91,40 +98,37 @@
 			}
 
 			var engine;
-			var frak = new FRAK(function() {
-				$('#ssao-toggle').click(function() {
+			window.onload = function() {
+				var ssaoToggle = document.getElementById('ssao-toggle');
+				var onlyToggle = document.getElementById('only-toggle');
+
+				ssaoToggle.onclick = function() {
 					var stage = engine.scene.camera.renderStage;
 					var ss = stage.getStageByType(SSAOPostProcess);
 					if (ss.enabled) {
 						ss.disable();
-						$('#ssao-toggle').text('Disabled');
-						$('#pb-toggle').text('Disabled');
-						$('#sb-toggle').text('Disabled');
-						$('#ss-toggle').text('Disabled');
+						ssaoToggle.textContent = 'Disabled';
 					}
 					else {
 						ss.enable();
-						$('#ssao-toggle').text('Enabled');
-						$('#pb-toggle').text('Enabled');
-						$('#sb-toggle').text('Enabled');
-						$('#ss-toggle').text('Enabled');
+						ssaoToggle.textContent = 'Enabled';
 					}
-				});
+				};
 
-				$('#only-toggle').click(function() {
+				onlyToggle.onclick = function() {
 					var stage = engine.scene.camera.renderStage;
 					var ss = stage.getStageByType(SSAOPostProcess);
 					if (ss.ssaoOnly === true) {
 						ss.ssaoOnly = false;
-						$('#only-toggle').text('Disabled');
+						onlyToggle.textContent = 'Disabled';
 					}
 					else {
 						ss.ssaoOnly = true;
-						$('#only-toggle').text('Enabled');
+						onlyToggle.textContent = 'Enabled';
 					}
-				});
+				};
 
-				engine=new Engine($('#canvas'), {
+				engine = new Engine('canvas', {
 					'assetsPath': '../assets/',
 					'antialias': true,
 					'ssao': true,
@@ -138,7 +142,8 @@
 				var TestComponent = Component.extend({
 					type: function() { return "TestComponent"; },
 					onUpdate: function(pass) {
-						$('#fps').text((engine.fps.getAverage()).toFixed(3));
+						var fps = document.getElementById('fps');
+						fps.textContent = (engine.fps.getAverage()).toFixed(3);
 					}
 				});
 				engine.scene.root.addComponent(new TestComponent());
@@ -147,7 +152,24 @@
 				engine.assetsManager.load(function() {
 					engine.run();
 				});
-			});
+			};
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function toggleStereoscopic() {
+				engine.scene.camera.stereo(!engine.scene.camera.stereo());
+			}
+
+			function pauseEngine(element) {
+				engine.togglePause();
+				if (engine.running)
+					element.textContent = 'PAUSE';
+				else
+					element.textContent = 'UNPAUSE';
+			}
 		</script>
 	</body>
 </html>
