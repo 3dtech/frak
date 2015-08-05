@@ -1,4 +1,3 @@
-
 /**
  * Creates a screen-aligned rectangle for rendering. If constructed without
  * parameters a full-screen quad is created.
@@ -46,7 +45,7 @@ ScreenQuad.prototype.update = function(x, y, width, height) {
 	this.vertices[7] = y + height;
 	this.vertices[9] = x + width;
 	this.vertices[10] = y;
-	this.quad.update('position', vertices);
+	this.quad.update('position', this.vertices);
 };
 
 ScreenQuad.prototype.render = function(context, material, samplerOrList) {
