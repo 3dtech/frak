@@ -24,6 +24,6 @@ var AntiAliasPostProcess = PostProcess.extend({
 	onPreRender: function(context, scene, camera) {
 		this._super(context, scene, camera);
 
-		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.src.size[0], this.parent.src.size[1]);
+		vec2.copy(this.material.uniforms.ViewportSize.value, this.parent.src.size);
 	}
 });
