@@ -44,25 +44,12 @@ var Camera=Serializable.extend({
 		return ["renderStage", "target"];
 	},
 
-	/** Starts rendering with camera setting up projection and view matrices */
-	startRender: function(context) {
-		this.target.resetViewport();
-
-		// Uses projection matrix
-		context.projection.push();
-		context.projection.multiply(this.projectionMatrix);
-
-		// Use view matrix
-		context.modelview.push();
-		context.modelview.multiply(this.viewMatrix);
-
-		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
+	clearBuffers: function(context) {
 		context.gl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, this.backgroundColor.a);
 		context.gl.clearDepth(1.0);
 		context.gl.depthMask(true);
 
-		if(this.clearMask===false) {
+		if (this.clearMask === false) {
 			context.gl.clear(context.gl.COLOR_BUFFER_BIT | context.gl.DEPTH_BUFFER_BIT);
 		}
 		else {
@@ -70,6 +57,21 @@ var Camera=Serializable.extend({
 		}
 	},
 
+	/** Starts rendering with camera setting up projection and view matrices */
+	startRender: function(context) {
+		// Update inverse view matrix
+		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
+		// Use projection matrix
+		context.projection.push();
+		context.projection.multiply(this.projectionMatrix);
+
+		// Use view matrix
+		context.modelview.push();
+		context.modelview.multiply(this.viewMatrix);
+	},
+
+	/** Renders the contents of this camera using assigned render-stage */
 	renderScene: function(context, scene, preRenderCallback, postRenderCallback) {
 		if (preRenderCallback)
 			preRenderCallback(context, this);
@@ -86,14 +88,14 @@ var Camera=Serializable.extend({
 		context.projection.pop();
 	},
 
-	/** Renders the contents of this camera using assigned render-stage */
+	/** Main entrypoint for rendering the scene with this Camera */
 	render: function(context, scene, preRenderCallback, postRenderCallback) {
+		this.target.resetViewport();
+		this.clearBuffers(context);
+
 		context.camera = this;
-		this.startRender(context);
 
 		if (this.stereo()) {
-			// TODO: shift projection matrix for parallax
-
 			vec2.copy(this._viewportPosition, this.target.viewport.position);
 			vec2.copy(this._viewportSize, this.target.viewport.size);
 
@@ -101,19 +103,24 @@ var Camera=Serializable.extend({
 			this.target.viewport.size[0] = half;
 
 			this.target.viewport.position[0] = 0;
+			this.startRender(context);
 			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
+			this.endRender(context);
 
 			this.target.viewport.position[0] = half;
+			this.startRender(context);
 			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
+			this.endRender(context);
 
 			vec2.copy(this.target.viewport.position, this._viewportPosition);
 			vec2.copy(this.target.viewport.size, this._viewportSize);
 		}
 		else {
+			this.startRender(context);
 			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
+			this.endRender(context);
 		}
 
-		this.endRender(context);
 		context.camera = false;
 	},
 
@@ -124,7 +131,7 @@ var Camera=Serializable.extend({
 		return 2.0*Math.atan(1.0/this.projectionMatrix[5]);
 	},
 
-	/** Returns camera direction.
+	/** Returns camera direction (for perspective view).
 		@param out Instance of {vec3} (optional)
 		@return Camera direction. Instance of {vec3} */
 	getDirection: function(out) {
