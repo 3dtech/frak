@@ -130,9 +130,33 @@ var Camera=Serializable.extend({
 	getDirection: function(out) {
 		if (!out)
 			out=vec3.create();
-		out[0]=-this.viewMatrix[2];
-		out[1]=-this.viewMatrix[6];
+		out[0]=-this.viewMatrix[8];
+		out[1]=-this.viewMatrix[9];
 		out[2]=-this.viewMatrix[10];
+		return out;
+	},
+
+	/** Returns camera up vector (for perspective view).
+		@param out Instance of {vec3} (optional)
+		@return Camera up vector. Instance of {vec3} */
+	getUpVector: function(out) {
+		if (!out)
+			out=vec3.create();
+		out[0]=this.viewMatrix[0];
+		out[1]=this.viewMatrix[1];
+		out[2]=this.viewMatrix[2];
+		return out;
+	},
+
+	/** Returns camera strafe vector (for perspective view).
+		@param out Instance of {vec3} (optional)
+		@return Camera strafe vector. Instance of {vec3} */
+	getStrafeVector: function(out) {
+		if (!out)
+			out=vec3.create();
+		out[0]=this.viewMatrix[4];
+		out[1]=this.viewMatrix[5];
+		out[2]=this.viewMatrix[6];
 		return out;
 	},
 
