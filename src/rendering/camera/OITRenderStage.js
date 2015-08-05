@@ -61,6 +61,9 @@ var OITRenderStage = RenderStage.extend({
 	},
 
 	onPostRender: function(context, scene, camera) {
+		this.transparencyTarget.resetViewport();
+		this.transparencyWeight.resetViewport();
+
 		if (camera.target.size[0] != this.transparencyTarget.size[0] || camera.target.size[1] != this.transparencyTarget.size[1]) {
 			this.transparencyTarget.setSize(camera.target.size[0], camera.target.size[1]);
 			this.transparencyWeight.setSize(camera.target.size[0], camera.target.size[1]);

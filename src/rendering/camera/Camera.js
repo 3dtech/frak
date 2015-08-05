@@ -21,6 +21,19 @@ var Camera=Serializable.extend({
 		this.order = 0; ///< Cameras are rendered in succession from lowest to highest order
 		this.layerMask = 0xFFFFFFFF; ///< Set bits for which layers are rendered with this camera
 		this.frustum = false; // TODO: implement frustum
+
+		var stereo = false;
+		this.stereo = function (v) {
+			if (v)
+				stereo = true;
+			if (v === false)
+				stereo = false;
+			return stereo;
+		};
+
+		// Cache
+		this._viewportSize = vec2.create();
+		this._viewportPosition = vec2.create();
 	},
 
 	type: function() {
@@ -33,6 +46,8 @@ var Camera=Serializable.extend({
 
 	/** Starts rendering with camera setting up projection and view matrices */
 	startRender: function(context) {
+		this.target.resetViewport();
+
 		// Uses projection matrix
 		context.projection.push();
 		context.projection.multiply(this.projectionMatrix);
@@ -63,10 +78,31 @@ var Camera=Serializable.extend({
 
 	/** Renders the contents of this camera using assigned render-stage */
 	render: function(context, scene) {
-		// Render root render-stage assigned to this camera
-		context.camera=this;
-		this.renderStage.render(context, scene, this);
-		context.camera=false;
+		context.camera = this;
+
+		if (this.stereo()) {
+			// TODO: shift projection matrix for parallax
+
+			vec2.copy(this._viewportPosition, this.target.viewport.position);
+			vec2.copy(this._viewportSize, this.target.viewport.size);
+
+			var half = this._viewportSize[0] / 2.0;
+			this.target.viewport.size[0] = half;
+
+			this.target.viewport.position[0] = 0;
+			this.renderStage.render(context, scene, this);
+
+			this.target.viewport.position[0] = half;
+			this.renderStage.render(context, scene, this);
+
+			vec2.copy(this.target.viewport.position, this._viewportPosition);
+			vec2.copy(this.target.viewport.size, this._viewportSize);
+		}
+		else {
+			this.renderStage.render(context, scene, this);
+		}
+
+		context.camera = false;
 	},
 
 	/** Returns the current vertical field of view (in radians).

@@ -28,6 +28,9 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 	onPreRender: function(context, scene, camera) {
 		var cameraTarget = camera.target;
 
+		this.src.resetViewport();
+		this.dst.resetViewport();
+
 		if (this.generator.gbufferStage.damaged) {
 			var size = vec2.scale(vec2.create(), this.generator.gbufferStage.size, this.generator.gbufferStage.quality);
 			this.src.setSize(size[0], size[1]);
