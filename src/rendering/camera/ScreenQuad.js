@@ -16,12 +16,15 @@ function ScreenQuad(context, x, y, width, height) {
 	width = width || 2.0;
 	height = height || 2.0;
 
-	var vertices = [
-		x, y, 0,
-		x, y+height, 0,
-		x+width, y+height, 0,
-		x+width, y, 0
-	];
+	this.vertices = new Float32Array(12);
+	this.vertices[0] = x;
+	this.vertices[1] = y;
+	this.vertices[3] = x;
+	this.vertices[4] = y + height;
+	this.vertices[6] = x + width;
+	this.vertices[7] = y + height;
+	this.vertices[9] = x + width;
+	this.vertices[10] = y;
 
 	var faces = [0, 1, 2, 0, 2, 3];
 	try {
@@ -30,9 +33,21 @@ function ScreenQuad(context, x, y, width, height) {
 	catch(e) {
 		this.quad = new TrianglesRenderBuffer(context, faces);
 	}
-	this.quad.add('position', vertices, 3);
+	this.quad.add('position', this.vertices, 3);
 	this.quad.add("uv0", [0,0, 0,1, 1,1, 1,0], 2);
 }
+
+ScreenQuad.prototype.update = function(x, y, width, height) {
+	this.vertices[0] = x;
+	this.vertices[1] = y;
+	this.vertices[3] = x;
+	this.vertices[4] = y + height;
+	this.vertices[6] = x + width;
+	this.vertices[7] = y + height;
+	this.vertices[9] = x + width;
+	this.vertices[10] = y;
+	this.quad.update('position', vertices);
+};
 
 ScreenQuad.prototype.render = function(context, material, samplerOrList) {
 	var gl = context.gl;
