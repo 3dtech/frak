@@ -54,8 +54,7 @@ var TargetTextureMulti = RenderTarget.extend({
 			}
 		}
 
-		this.size = vec2.create();
-		if (size) vec2.copy(this.size, size);
+		this._super(size);
 
 		this.targets = [];
 		this.depth = null;
