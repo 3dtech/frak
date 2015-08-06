@@ -31,9 +31,21 @@ var Camera=Serializable.extend({
 			return stereo;
 		};
 
+		var stereoEyeDistance = 2.0;
+		this.stereoEyeDistance = function (v) {
+			if (v)
+				stereoEyeDistance = v;
+			return stereoEyeDistance;
+		};
+
 		// Cache
 		this._viewportSize = vec2.create();
 		this._viewportPosition = vec2.create();
+		this._originalViewMatrix = mat4.create();
+		this._eyeSeparation = mat4.create();
+		this._cacheQuat = quat.create();
+		this._strafe = vec3.create();
+		this._translation = vec3.create();
 	},
 
 	type: function() {
@@ -59,9 +71,6 @@ var Camera=Serializable.extend({
 
 	/** Starts rendering with camera setting up projection and view matrices */
 	startRender: function(context) {
-		// Update inverse view matrix
-		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
 		// Use projection matrix
 		context.projection.push();
 		context.projection.multiply(this.projectionMatrix);
@@ -96,26 +105,64 @@ var Camera=Serializable.extend({
 		context.camera = this;
 
 		if (this.stereo()) {
+			// Update inverse view matrix
+			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
 			vec2.copy(this._viewportPosition, this.target.viewport.position);
 			vec2.copy(this._viewportSize, this.target.viewport.size);
 
+			// Set viewport size to half the screen width
 			var half = this._viewportSize[0] / 2.0;
 			this.target.viewport.size[0] = half;
 
+			var halfEyeDistance = this.stereoEyeDistance() / 2.0;
+			this.getStrafeVector(this._strafe);
+
+			// Store original view matrix
+			mat4.copy(this._originalViewMatrix, this.viewMatrix);
+
+			// Set view matrix to left eye position
+			vec3.scale(this._translation, this._strafe, -halfEyeDistance);
+			mat4.fromRotationTranslation(this._eyeSeparation, quat.create(), this._translation);
+			mat4.mul(this.viewMatrix, this.viewMatrix, this._eyeSeparation);
+
+			// Update inverse view matrix
+			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
+			// Render left eye
 			this.target.viewport.position[0] = 0;
 			this.startRender(context);
 			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
 			this.endRender(context);
 
+			// Restore original view matrix
+			mat4.copy(this.viewMatrix, this._originalViewMatrix);
+
+			// Set view matrix to right eye position
+			vec3.scale(this._translation, this._strafe, halfEyeDistance);
+			mat4.fromRotationTranslation(this._eyeSeparation, quat.create(), this._translation);
+			mat4.mul(this.viewMatrix, this.viewMatrix, this._eyeSeparation);
+
+			// Update inverse view matrix
+			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
+			// Render right eye
 			this.target.viewport.position[0] = half;
 			this.startRender(context);
 			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
 			this.endRender(context);
 
+			// Restore original viewport
 			vec2.copy(this.target.viewport.position, this._viewportPosition);
 			vec2.copy(this.target.viewport.size, this._viewportSize);
+
+			// Restore original view matrix
+			mat4.copy(this.viewMatrix, this._originalViewMatrix);
 		}
 		else {
+			// Update inverse view matrix
+			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
 			this.startRender(context);
 			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
 			this.endRender(context);
@@ -149,9 +196,9 @@ var Camera=Serializable.extend({
 	getUpVector: function(out) {
 		if (!out)
 			out=vec3.create();
-		out[0]=this.viewMatrix[0];
-		out[1]=this.viewMatrix[1];
-		out[2]=this.viewMatrix[2];
+		out[0]=this.viewMatrix[4];
+		out[1]=this.viewMatrix[5];
+		out[2]=this.viewMatrix[6];
 		return out;
 	},
 
@@ -161,9 +208,9 @@ var Camera=Serializable.extend({
 	getStrafeVector: function(out) {
 		if (!out)
 			out=vec3.create();
-		out[0]=this.viewMatrix[4];
-		out[1]=this.viewMatrix[5];
-		out[2]=this.viewMatrix[6];
+		out[0]=this.viewMatrix[0];
+		out[1]=this.viewMatrix[1];
+		out[2]=this.viewMatrix[2];
 		return out;
 	},
 

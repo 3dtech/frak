@@ -12,13 +12,13 @@ var PerspectiveCamera=CameraComponent.extend({
 		this.far=far;
 
 		// View matrix is stored in column-major order as follows:
-		// | ux vx -nx -ex |
-		// | uy vy -ny -ey |
-		// | uz vz -nz -ez |
+		// | vx ux -nx -ex |
+		// | vy uy -ny -ey |
+		// | vz uz -nz -ez |
 		// |  0  0   0   1 |
 		//
-		// u - Up vector
 		// v - cross(u, n)
+		// u - Up vector
 		// n - Look direction vector
 		// e - Eye position vector
 
