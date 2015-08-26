@@ -173,12 +173,8 @@ var Engine=Class.extend({
 		var delta;
 		var scope = this;
 
-		function draw(timestamp) {
-			if (timestamp)
-				now = timestamp;
-			else
-				now = FRAK.timestamp();
-
+		function draw() {
+			now = FRAK.timestamp();
 			delta = now - then;
 			if (delta > interval) {
 				then = now - (delta % interval);
