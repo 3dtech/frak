@@ -15,6 +15,19 @@ function ScreenQuad(context, x, y, width, height) {
 	width = width || 2.0;
 	height = height || 2.0;
 
+	var faces = [0, 1, 2, 0, 2, 3];
+	if (context.engine && context.engine.options.useVAO === true) {
+		try {
+			this.quad = new TrianglesRenderBufferVAO(context, faces);
+		}
+		catch(e) {
+			this.quad = new TrianglesRenderBuffer(context, faces);
+		}
+	}
+	else {
+		this.quad = new TrianglesRenderBuffer(context, faces);
+	}
+
 	this.vertices = new Float32Array(12);
 	this.vertices[0] = x;
 	this.vertices[1] = y;
@@ -25,13 +38,6 @@ function ScreenQuad(context, x, y, width, height) {
 	this.vertices[9] = x + width;
 	this.vertices[10] = y;
 
-	var faces = [0, 1, 2, 0, 2, 3];
-	try {
-		this.quad = new TrianglesRenderBufferVAO(context, faces);
-	}
-	catch(e) {
-		this.quad = new TrianglesRenderBuffer(context, faces);
-	}
 	this.quad.add('position', this.vertices, 3);
 	this.quad.add("uv0", [0,0, 0,1, 1,1, 1,0], 2);
 }

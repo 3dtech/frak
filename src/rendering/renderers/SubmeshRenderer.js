@@ -12,10 +12,15 @@ var SubmeshRenderer=Renderer.extend({
 		this.localBoundingSphere = this.submesh.boundingSphere;
 		this.updateGlobalBoundingVolumes();
 
-		try {
-			this.buffer = new TrianglesRenderBufferVAO(context, submesh.faces);
+		if (context.engine && context.engine.options.useVAO === true) {
+			try {
+				this.buffer = new TrianglesRenderBufferVAO(context, submesh.faces);
+			}
+			catch(e) {
+				this.buffer = new TrianglesRenderBuffer(context, submesh.faces);
+			}
 		}
-		catch(e) {
+		else {
 			this.buffer = new TrianglesRenderBuffer(context, submesh.faces);
 		}
 

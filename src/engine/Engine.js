@@ -13,6 +13,7 @@ var Engine=Class.extend({
 			'defaultRequestedFPS': 30.0,
 			'requestedFPS': 30.0,
 			'anisotropicFiltering': 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
+			'useVAO': true, // Set to false to completely disable the usage of Vertex Array Objects
 			'debug': false,
 			'antialias': false,
 			'ssao': false,
