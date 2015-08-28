@@ -90,11 +90,7 @@
 	"src/rendering/renderers/MeshRenderer.js",
 	"src/rendering/renderers/LineRenderer.js",
 	"src/rendering/renderers/SubmeshRenderer.js",
-	"src/rendering/renderers/FontRenderer.js",
 	"src/rendering/renderers/CubeRenderer.js",
-
-	"src/rendering/text/FontData.js",
-	"src/rendering/text/Font.js",
 
 	"src/loading/DownloadBinary.js",
 	"src/loading/DataParserTypes.js",
@@ -111,8 +107,6 @@
 	"src/loading/MaterialsManager.js",
 	"src/loading/MaterialSourcesManager.js",
 	"src/loading/ModelsManager.js",
-	"src/loading/FontsManager.js",
-	"src/loading/FontSourcesManager.js",
 	"src/loading/AssetsManager.js",
 
 	"src/scene/geometry/BoundingVolume.js",
@@ -168,9 +162,6 @@
 
 	"src/scene/descriptors/Descriptor.js",
 	"src/scene/descriptors/TextDescriptor.js",
-	"src/scene/descriptors/FontDescriptor.js",
-	"src/scene/descriptors/FontSourceDescriptor.js",
-	"src/scene/descriptors/FontSource.js",
 	"src/scene/descriptors/ModelDescriptor.js",
 	"src/scene/descriptors/ShaderDescriptor.js",
 	"src/scene/descriptors/MaterialDescriptor.js",

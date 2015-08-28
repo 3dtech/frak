@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>3DWayfinder WebGL</title>
+		<title>Quads render test</title>
 		<meta charset="utf-8" />
 		<meta name="description" content="3DWayfinder WebGL" />
 		<link rel="stylesheet" href="style.css" >
@@ -11,7 +11,6 @@
 		<canvas id="canvas" style="border: none;" width="500" height="500"></canvas>
 
 		<!-- Libraries -->
-		<script src="../lib/jquery-1.11.1.min.js"></script>
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
@@ -20,7 +19,7 @@
 					var transform=new Transform();
 
 					// Fetch rendering context
-					var renderingContext=new RenderingContext($('#canvas'));
+					var renderingContext=new RenderingContext('canvas');
 					// Create shader program
 					var shader=new Shader(renderingContext);
 
@@ -32,12 +31,12 @@
 					shader.use();
 
 					// Create vertices and faces
-					var vertices=[
-												0.5, 0, 0,
-												0.1, 0.1, 0,
-												0.1, 0.5, 0,
-												0.3, 0.7, 0
-												];
+					var vertices = [
+						0.5, 0, 0,
+						0.1, 0.1, 0,
+						0.1, 0.5, 0,
+						0.3, 0.7, 0
+					];
 					var faces=[0, 1, 2, 3];
 
 					// Assign to render buffer and boom!

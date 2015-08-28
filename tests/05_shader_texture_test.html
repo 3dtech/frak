@@ -46,7 +46,7 @@
 			var frak=new FRAK(
 				function() {
 					// Fetch rendering context
-					var renderingContext=new RenderingContext($('#canvas'));
+					var renderingContext=new RenderingContext('canvas');
 
 					var texturesManager=new TexturesManager(renderingContext);
 					var texture=texturesManager.add("data/barbara.png");
