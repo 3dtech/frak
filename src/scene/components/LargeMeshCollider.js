@@ -94,7 +94,7 @@ var LargeMeshCollider=Collider.extend({
 	// 		if (this.meshes.length==0) {
 	// 			this.tree.optimize();
 	// 		} else {
-	// 			setTimeout(ClassCallback(this, this.processMeshes), 100);
+	// 			setTimeout(FrakCallback(this, this.processMeshes), 100);
 	// 		}
 	// 	}
 	// },

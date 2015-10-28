@@ -47,11 +47,11 @@ var Engine=FrakClass.extend({
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
 		this.WhiteTextureSampler =  new Sampler('tex0', this.WhiteTexture);
 
-		document.addEventListener("visibilitychange", ClassCallback(this, this.onVisibilityChange));
+		document.addEventListener("visibilitychange", FrakCallback(this, this.onVisibilityChange));
 
 		if (FRAK.fullscreenEnabled) {
 			this.useUpscaling = false;
-			var fsHandler = ClassCallback(this, this.onFullscreenChange);
+			var fsHandler = FrakCallback(this, this.onFullscreenChange);
 			document.addEventListener("fullscreenchange", fsHandler);
 			document.addEventListener("webkitfullscreenchange", fsHandler);
 			document.addEventListener("mozfullscreenchange", fsHandler);

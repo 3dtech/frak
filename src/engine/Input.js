@@ -144,20 +144,20 @@ var Input = FrakClass.extend({
 
 	registerPointerEvents: function(){
 		if(this.hammertime){
-			this.hammertime.on("pinch", ClassCallback(this, this.onPinch));
-			this.hammertime.on("pinchend", ClassCallback(this, this.onPinchEnd));
-			this.hammertime.on("tap", ClassCallback(this, this.onTap));
-			this.hammertime.on("transformstart", ClassCallback(this, this.onTransformStart));
-			this.hammertime.on("pan", ClassCallback(this, this.onPan));
-			this.hammertime.on("panstart", ClassCallback(this, this.onPanStart));
-			this.hammertime.on("panend", ClassCallback(this, this.onPanEnd));
-			this.hammertime.on("rotate", ClassCallback(this, this.onRotate));
-			this.hammertime.on("rotateend", ClassCallback(this, this.onRotateEnd));
-			this.hammertime.on("touch", ClassCallback(this, this.onTouch));
+			this.hammertime.on("pinch", FrakCallback(this, this.onPinch));
+			this.hammertime.on("pinchend", FrakCallback(this, this.onPinchEnd));
+			this.hammertime.on("tap", FrakCallback(this, this.onTap));
+			this.hammertime.on("transformstart", FrakCallback(this, this.onTransformStart));
+			this.hammertime.on("pan", FrakCallback(this, this.onPan));
+			this.hammertime.on("panstart", FrakCallback(this, this.onPanStart));
+			this.hammertime.on("panend", FrakCallback(this, this.onPanEnd));
+			this.hammertime.on("rotate", FrakCallback(this, this.onRotate));
+			this.hammertime.on("rotateend", FrakCallback(this, this.onRotateEnd));
+			this.hammertime.on("touch", FrakCallback(this, this.onTouch));
 		}
 
-		this.canvas.addEventListener("mousewheel", ClassCallback(this, this.onMouseWheel));
-		this.canvas.addEventListener("DOMMouseScroll", ClassCallback(this, this.onMouseWheelMOZ));
+		this.canvas.addEventListener("mousewheel", FrakCallback(this, this.onMouseWheel));
+		this.canvas.addEventListener("DOMMouseScroll", FrakCallback(this, this.onMouseWheelMOZ));
 
 		this.canvas.addEventListener('contextmenu', function(e) {
 			e.preventDefault();
@@ -166,8 +166,8 @@ var Input = FrakClass.extend({
 
 	registerKeyboardEvents: function(){
 		if(this.canvas){
-			this.canvas.addEventListener("keydown", ClassCallback(this, this.onKeyDown));
-			this.canvas.addEventListener("keyup", ClassCallback(this, this.onKeyUp));
+			this.canvas.addEventListener("keydown", FrakCallback(this, this.onKeyDown));
+			this.canvas.addEventListener("keyup", FrakCallback(this, this.onKeyUp));
 			if (this.canvas.focus)
 				this.canvas.focus();
 		}

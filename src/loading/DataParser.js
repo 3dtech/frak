@@ -72,7 +72,7 @@ var DataParser=FrakClass.extend({
 	},
 
 	push: function(node, call) {
-		this.stack.push({'node':node, 'call': ClassCallback(this, call)});
+		this.stack.push({'node':node, 'call': FrakCallback(this, call)});
 	},
 
 	pop: function() {

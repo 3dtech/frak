@@ -18,7 +18,7 @@ var ThreadedDataParser=DataParser.extend({
 
 	parse: function() {
 		this.push(false, this.parseHeader);
-		this.timer=setTimeout(ClassCallback(this, this.threadStep), this.inverval);
+		this.timer=setTimeout(FrakCallback(this, this.threadStep), this.inverval);
 		return true;
 	},
 
@@ -35,6 +35,6 @@ var ThreadedDataParser=DataParser.extend({
 				this.onError(this.errors, this.userdata);
 			return;
 		}
-		this.timer=setTimeout(ClassCallback(this, this.threadStep), this.inverval);
+		this.timer=setTimeout(FrakCallback(this, this.threadStep), this.inverval);
 	}
 });
