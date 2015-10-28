@@ -1,22 +1,26 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>3DWayfinder WebGL</title>
+		<title>Anti-aliasing (FXAA)</title>
 		<meta charset="utf-8" />
 		<meta name="description" content="3DWayfinder WebGL" />
 		<link rel="stylesheet" href="style.css" >
 	</head>
 	<body>
-		<!-- Canvas -->
-		<canvas id="canvas" style="z-index: 1; border: none;" width="1200" height="800"></canvas>
+		<canvas id="canvas" tabindex="1" style="z-index: 1; border: none;" width="1200" height="800"></canvas>
 
-		<div style="position: absolute; right: 10px; top: 10px;">
+		<div style="background-color: rgba(255, 255, 255, 0.5);">
 			<div id="aa-status">Anti-aliasing ENABLED</div>
 			<button id="aa-toggle">Toggle</button>
 		</div>
+		<div>
+			<button onclick="engine.requestFullscreen();">Go to fullscreen</button>
+			<button onclick="engine.requestFullscreen(true);">Go to fullscreen with upscaling</button>
+			<button onclick="toggleDebug();">Debug</button>
+			<button onclick="pauseEngine(this);">PAUSE</button>
+		</div>
 
 		<!-- Libraries -->
-		<script src="../lib/jquery-1.11.1.min.js"></script>
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
@@ -36,7 +40,7 @@
 				scene.light.shadowCasting = true;
 				scene.light.intensity = 1.5;
 
-				scene.camera.backgroundColor = new Color(0.2, 0.2, 0.2, 1.0);
+				scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
 
 				var texture = scene.engine.assetsManager.texturesManager.add("data/lena.jpg");
 				var material = new Material(
@@ -76,26 +80,33 @@
 				orbitController.distance=20.0;
 				orbitController.minimumDistance=0.5;
 				orbitController.maximumDistance=100.0;
+				orbitController.distanceSteps = 64;
 				orbitController.target.value=scene.root.transform;
 			}
 
 			var engine;
-			var frak = new FRAK(function() {
-				$('#aa-toggle').click(function() {
+			window.onload = function() {
+				var button = document.getElementById('aa-toggle');
+				button.onclick = function() {
 					var stage = engine.scene.camera.renderStage;
 					var aa = stage.getStageByType(AntiAliasPostProcess);
+					if (!aa) {
+						console.warn('No AntiAliasPostProcess found.');
+						return;
+					}
 					if (aa.enabled) {
 						aa.disable();
-						$('#aa-status').text('Anti-aliasing DISABLED');
+						document.getElementById('aa-status').textContent = 'Anti-aliasing DISABLED';
 					}
 					else {
 						aa.enable();
-						$('#aa-status').text('Anti-aliasing ENABLED');
+						document.getElementById('aa-status').textContent = 'Anti-aliasing ENABLED';
 					}
-				});
+				};
 
-				engine=new Engine($('#canvas'), {
+				engine = new Engine('canvas', {
 					'assetsPath': '../assets/',
+					// 'transparencyMode': 'sorted',
 					'antialias': true
 				});
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
@@ -105,7 +116,20 @@
 				engine.assetsManager.load(function() {
 					engine.run();
 				});
-			});
+			};
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function pauseEngine(element) {
+				engine.togglePause();
+				if (engine.running)
+					element.textContent = 'PAUSE';
+				else
+					element.textContent = 'UNPAUSE';
+			}
 		</script>
 	</body>
 </html>

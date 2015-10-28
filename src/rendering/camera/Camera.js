@@ -21,6 +21,31 @@ var Camera=Serializable.extend({
 		this.order = 0; ///< Cameras are rendered in succession from lowest to highest order
 		this.layerMask = 0xFFFFFFFF; ///< Set bits for which layers are rendered with this camera
 		this.frustum = false; // TODO: implement frustum
+
+		var stereo = false;
+		this.stereo = function (v) {
+			if (v)
+				stereo = true;
+			if (v === false)
+				stereo = false;
+			return stereo;
+		};
+
+		var stereoEyeDistance = 2.0;
+		this.stereoEyeDistance = function (v) {
+			if (v)
+				stereoEyeDistance = v;
+			return stereoEyeDistance;
+		};
+
+		// Cache
+		this._viewportSize = vec2.create();
+		this._viewportPosition = vec2.create();
+		this._originalViewMatrix = mat4.create();
+		this._eyeSeparation = mat4.create();
+		this._cacheQuat = quat.create();
+		this._strafe = vec3.create();
+		this._translation = vec3.create();
 	},
 
 	type: function() {
@@ -31,28 +56,39 @@ var Camera=Serializable.extend({
 		return ["renderStage", "target"];
 	},
 
+	clearBuffers: function(context) {
+		context.gl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, this.backgroundColor.a);
+		context.gl.clearDepth(1.0);
+		context.gl.depthMask(true);
+
+		if (this.clearMask === false) {
+			context.gl.clear(context.gl.COLOR_BUFFER_BIT | context.gl.DEPTH_BUFFER_BIT);
+		}
+		else {
+			context.gl.clear(this.clearMask);
+		}
+	},
+
 	/** Starts rendering with camera setting up projection and view matrices */
 	startRender: function(context) {
-		// Uses projection matrix
+		// Use projection matrix
 		context.projection.push();
 		context.projection.multiply(this.projectionMatrix);
 
 		// Use view matrix
 		context.modelview.push();
 		context.modelview.multiply(this.viewMatrix);
+	},
 
-		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+	/** Renders the contents of this camera using assigned render-stage */
+	renderScene: function(context, scene, preRenderCallback, postRenderCallback) {
+		if (preRenderCallback)
+			preRenderCallback(context, this);
 
-		context.gl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, this.backgroundColor.a);
-		context.gl.clearDepth(1.0);
-		context.gl.depthMask(true);
+		this.renderStage.render(context, scene, this);
 
-		if(this.clearMask===false) {
-			context.gl.clear(context.gl.COLOR_BUFFER_BIT | context.gl.DEPTH_BUFFER_BIT);
-		}
-		else {
-			context.gl.clear(this.clearMask);
-		}
+		if (postRenderCallback)
+			postRenderCallback(context, this);
 	},
 
 	/** Ends rendering with camera popping projection and view matrices */
@@ -61,12 +97,78 @@ var Camera=Serializable.extend({
 		context.projection.pop();
 	},
 
-	/** Renders the contents of this camera using assigned render-stage */
-	render: function(context, scene) {
-		// Render root render-stage assigned to this camera
-		context.camera=this;
-		this.renderStage.render(context, scene, this);
-		context.camera=false;
+	/** Main entrypoint for rendering the scene with this Camera */
+	render: function(context, scene, preRenderCallback, postRenderCallback) {
+		this.target.resetViewport();
+		this.clearBuffers(context);
+
+		context.camera = this;
+
+		if (this.stereo()) {
+			// Update inverse view matrix
+			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
+			vec2.copy(this._viewportPosition, this.target.viewport.position);
+			vec2.copy(this._viewportSize, this.target.viewport.size);
+
+			// Set viewport size to half the screen width
+			var half = this._viewportSize[0] / 2.0;
+			this.target.viewport.size[0] = half;
+
+			var halfEyeDistance = this.stereoEyeDistance() / 2.0;
+			this.getStrafeVector(this._strafe);
+
+			// Store original view matrix
+			mat4.copy(this._originalViewMatrix, this.viewMatrix);
+
+			// Set view matrix to left eye position
+			vec3.scale(this._translation, this._strafe, -halfEyeDistance);
+			mat4.fromRotationTranslation(this._eyeSeparation, quat.create(), this._translation);
+			mat4.mul(this.viewMatrix, this.viewMatrix, this._eyeSeparation);
+
+			// Update inverse view matrix
+			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
+			// Render left eye
+			this.target.viewport.position[0] = 0;
+			this.startRender(context);
+			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
+			this.endRender(context);
+
+			// Restore original view matrix
+			mat4.copy(this.viewMatrix, this._originalViewMatrix);
+
+			// Set view matrix to right eye position
+			vec3.scale(this._translation, this._strafe, halfEyeDistance);
+			mat4.fromRotationTranslation(this._eyeSeparation, quat.create(), this._translation);
+			mat4.mul(this.viewMatrix, this.viewMatrix, this._eyeSeparation);
+
+			// Update inverse view matrix
+			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
+			// Render right eye
+			this.target.viewport.position[0] = half;
+			this.startRender(context);
+			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
+			this.endRender(context);
+
+			// Restore original viewport
+			vec2.copy(this.target.viewport.position, this._viewportPosition);
+			vec2.copy(this.target.viewport.size, this._viewportSize);
+
+			// Restore original view matrix
+			mat4.copy(this.viewMatrix, this._originalViewMatrix);
+		}
+		else {
+			// Update inverse view matrix
+			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+
+			this.startRender(context);
+			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
+			this.endRender(context);
+		}
+
+		context.camera = false;
 	},
 
 	/** Returns the current vertical field of view (in radians).
@@ -76,15 +178,39 @@ var Camera=Serializable.extend({
 		return 2.0*Math.atan(1.0/this.projectionMatrix[5]);
 	},
 
-	/** Returns camera direction.
+	/** Returns camera direction (for perspective view).
 		@param out Instance of {vec3} (optional)
 		@return Camera direction. Instance of {vec3} */
 	getDirection: function(out) {
 		if (!out)
 			out=vec3.create();
-		out[0]=-this.viewMatrix[2];
-		out[1]=-this.viewMatrix[6];
+		out[0]=-this.viewMatrix[8];
+		out[1]=-this.viewMatrix[9];
 		out[2]=-this.viewMatrix[10];
+		return out;
+	},
+
+	/** Returns camera up vector (for perspective view).
+		@param out Instance of {vec3} (optional)
+		@return Camera up vector. Instance of {vec3} */
+	getUpVector: function(out) {
+		if (!out)
+			out=vec3.create();
+		out[0]=this.viewMatrix[4];
+		out[1]=this.viewMatrix[5];
+		out[2]=this.viewMatrix[6];
+		return out;
+	},
+
+	/** Returns camera strafe vector (for perspective view).
+		@param out Instance of {vec3} (optional)
+		@return Camera strafe vector. Instance of {vec3} */
+	getStrafeVector: function(out) {
+		if (!out)
+			out=vec3.create();
+		out[0]=this.viewMatrix[0];
+		out[1]=this.viewMatrix[1];
+		out[2]=this.viewMatrix[2];
 		return out;
 	},
 

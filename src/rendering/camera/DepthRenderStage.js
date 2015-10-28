@@ -35,6 +35,8 @@ var DepthRenderStage = RenderStage.extend({
 	},
 
 	onPreRender: function(context, scene, camera) {
+		this.target.resetViewport();
+
 		if (camera.target.size[0] != this.size[0] || camera.target.size[1] != this.size[1]) {
 			var size = camera.target.size;
 			vec2.copy(this.size, size);

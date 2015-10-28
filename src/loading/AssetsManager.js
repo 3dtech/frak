@@ -50,10 +50,6 @@ var AssetsManager=FrakClass.extend({
 		addManager(this.textManager=new TextManager(this.assetsPath));
 		addManager(this.materialsManager=new MaterialsManager(renderingContext, this.assetsPath, this.shadersManager, this.texturesManager));
 		addManager(this.materialSourcesManager=new MaterialSourcesManager(renderingContext, this.assetsPath, this.materialsManager, this.textManager));
-
-		// Deprecated
-		// addManager(this.fontsManager=new FontsManager(renderingContext, this.materialSourcesManager, this.materialsManager, this.texturesManager, this.textManager));
-		// addManager(this.fontSourcesManager=new FontSourcesManager(renderingContext, this.fontsManager, this.textManager));
 	},
 
 	/** Adds a new texture to textures loading queue
@@ -95,13 +91,6 @@ var AssetsManager=FrakClass.extend({
 		@param source Path to material source */
 	addMaterial: function(source) {
 		return this.materialSourcesManager.add(source);
-	},
-
-	/** Adds font source to font sources loading queue
-		@param source Path to font source
-		@return Instance of FontSource */
-	addFont: function(source) {
-		return this.fontSourcesManager.add(source);
 	},
 
 	/** Returns true if the asstesmanager has anything in its loading queue. */

@@ -11,8 +11,21 @@ var PerspectiveCamera=CameraComponent.extend({
 		this.near=near;
 		this.far=far;
 
+		// View matrix is stored in column-major order as follows:
+		// | vx ux -nx -ex |
+		// | vy uy -ny -ey |
+		// | vz uz -nz -ez |
+		// |  0  0   0   1 |
+		//
+		// v - cross(u, n)
+		// u - Up vector
+		// n - Look direction vector
+		// e - Eye position vector
+
 		var lookAt=mat4.create();
 		mat4.lookAt(lookAt, [0.0, 0.0, -100.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
+
+
 		this._super(lookAt, this.calculatePerspective());
 		this.camera.near = this.near;
 		this.camera.far = this.far;

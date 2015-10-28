@@ -21,15 +21,15 @@ var TargetTextureFloat = TargetTexture.extend({
 
 	getDataType: function(context) {
 		if (this.extHalfFloat) {
-			if (navigator && navigator.platform) {
+			if (!this.extFloat)
+				return this.extHalfFloat.HALF_FLOAT_OES;
+
+			if (navigator) {
 				switch (navigator.platform) {
 					case 'iPad':
 					case 'iPod':
 					case 'iPhone':
 						return this.extHalfFloat.HALF_FLOAT_OES;
-
-					default:
-						return context.gl.FLOAT;
 				}
 			}
 		}

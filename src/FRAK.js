@@ -59,3 +59,48 @@ FRAK.cancelAnimationFrame = function() {
 		return function() { return caf.apply(window, arguments); };
 	return clearTimeout;
 }();
+
+FRAK.fullscreenEnabled = function() {
+	return document.fullscreenEnabled ||
+		document.webkitFullscreenEnabled ||
+		document.mozFullScreenEnabled ||
+		document.msFullscreenEnabled;
+}();
+
+FRAK.requestFullscreen = function(element) {
+	(element.requestFullscreen ||
+	element.requestFullScreen ||
+	element.webkitRequestFullscreen ||
+	element.webkitRequestFullScreen ||
+	element.mozRequestFullscreen ||
+	element.mozRequestFullScreen ||
+	element.msRequestFullscreen ||
+	element.msRequestFullScreen ||
+	function(){})
+	.call(element);
+};
+
+FRAK.exitFullscreen = function() {
+	(document.exitFullscreen ||
+	document.exitFullScreen ||
+	document.webkitExitFullscreen ||
+	document.webkitExitFullScreen ||
+	document.mozExitFullscreen ||
+	document.mozExitFullScreen ||
+	document.msExitFullscreen ||
+	document.msExitFullScreen ||
+	function(){})
+	.call(document);
+};
+
+FRAK.isFullscreen = function() {
+	return (document.isFullScreen ||
+		document.isFullscreen ||
+		document.webkitIsFullscreen ||
+		document.webkitIsFullScreen ||
+		document.mozIsFullscreen ||
+		document.mozIsFullScreen ||
+		document.msIsFullscreen ||
+		document.msIsFullScreen);
+};
+

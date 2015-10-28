@@ -11,7 +11,8 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.dst = false; ///< TargetTexture, once we receive context
 		this.srcSampler = false; ///< Sampler for src
 		this.dstSampler = false; ///< Sampler for dst
-		this.quad = false; ///< Quad used to render textures
+		this.textureQuad = false; ///< Quad used to render textures
+		this.screenQuad = false; ///< Quad used to render to screen
 		this.material = false; ///< Material used to render the final image
 
 		this.generator = this.getGeneratorStage();
@@ -43,7 +44,8 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.material = new Material(engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"), {}, []);
 		this.material.name = 'To Screen';
 
-		this.quad = new ScreenQuad(context);
+		this.textureQuad = new ScreenQuad(context);
+		this.screenQuad = new ScreenQuad(context);
 
 		engine.assetsManager.load();
 
@@ -52,6 +54,9 @@ var PostProcessRenderStage = RenderStage.extend({
 
 	onPreRender: function(context, scene, camera) {
 		var cameraTarget = camera.target;
+
+		this.src.resetViewport();
+		this.dst.resetViewport();
 
 		if (cameraTarget.size[0] != this.src.size[0] || cameraTarget.size[1] != this.src.size[1]) {
 			this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
@@ -62,6 +67,7 @@ var PostProcessRenderStage = RenderStage.extend({
 		if (this.substages.length>0) {
 			camera.target = this.src;
 		}
+
 		this.generator.render(context, scene, camera);
 		camera.target = cameraTarget;
 	},
@@ -76,8 +82,11 @@ var PostProcessRenderStage = RenderStage.extend({
 			camera.target.unbind(context);
 		}
 		else {
-			this.renderEffect(context, this.material, this.srcSampler);
+			camera.target.bind(context);
+			this.renderEffect(context, this.material, this.srcSampler, true);
+			camera.target.unbind(context);
 		}
+
 		this.swapBuffers();
 	},
 
@@ -90,13 +99,16 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.dstSampler = tmpSampler;
 	},
 
-	renderEffect: function(context, material, sampler) {
+	renderEffect: function(context, material, sampler, renderToScreen) {
 		var gl = context.gl;
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.CULL_FACE);
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
-		this.quad.render(context, material, sampler);
+		if (renderToScreen === true)
+			this.screenQuad.render(context, material, sampler);
+		else
+			this.textureQuad.render(context, material, sampler);
 	}
 });

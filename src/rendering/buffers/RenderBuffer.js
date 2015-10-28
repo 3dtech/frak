@@ -35,12 +35,16 @@ var RenderBuffer=FrakClass.extend({
 
 		var gl = this.context.gl;
 
+		// Convert items to typed array if needed
+		if (!(items instanceof Float32Array))
+			items = new Float32Array(items);
+
 		// Create buffer
 		this.buffers[name] = gl.createBuffer();
 
 		// Bind buffer and pass data to it
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[name]);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(items), this.type);
+		gl.bufferData(gl.ARRAY_BUFFER, items, this.type);
 
 		// Set buffer item size and count of items in it
 		this.buffers[name].itemSize = itemSize;
@@ -57,11 +61,15 @@ var RenderBuffer=FrakClass.extend({
 		if (items.length/buf.itemSize <= this.maxFaceIndex)
 			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
 
+		// Convert items to typed array if needed
+		if (!(items instanceof Float32Array))
+			items = new Float32Array(items);
+
 		var gl = this.context.gl;
 
 		// Bind buffer and pass data to it
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(items), this.type);
+		gl.bufferData(gl.ARRAY_BUFFER, items, this.type);
 		buf.numItems = items.length/buf.itemSize;
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	},
