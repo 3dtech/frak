@@ -1,6 +1,6 @@
 /** Generic manager class extended by all other manager classes
 	except for AssetsManager that groups together instances of other managers. */
-var Manager=Class.extend({
+var Manager=FrakClass.extend({
 	/**
 	 * Constructor
 	 * @param assetsPath Default search path for any assets requested

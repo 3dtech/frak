@@ -13,7 +13,7 @@ assetsManager.load(function() {
 
 </pre>
 	*/
-var AssetsManager=Class.extend({
+var AssetsManager=FrakClass.extend({
 	/**
 	 * Constructor
 	 * @param renderingContext Instance of RenderingContext

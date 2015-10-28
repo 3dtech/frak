@@ -1,7 +1,7 @@
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
  */
-var Engine=Class.extend({
+var Engine=FrakClass.extend({
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
 		@param options Engine options [optional]

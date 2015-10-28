@@ -1,5 +1,5 @@
 /** Base-class for classes that know their own type and can be cloned. */
-var Cloneable=Class.extend({
+var Cloneable=FrakClass.extend({
 	/** @return Type of object. Default returns false. */
 	type: function() {
 		return false;

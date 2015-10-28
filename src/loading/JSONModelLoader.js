@@ -1,5 +1,5 @@
 /** Loads models to scene hierarchy from JSON data */
-var JSONModelLoader = Class.extend({
+var JSONModelLoader = FrakClass.extend({
 	init: function(context, descriptor, shadersManager, texturesManager) {
 		this.descriptor = descriptor;
 		this.shadersManager = shadersManager;

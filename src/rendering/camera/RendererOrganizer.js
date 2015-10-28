@@ -1,7 +1,7 @@
 /**
  * Utility class for pre-organizing renderers for the rendering pipeline.
  */
-var RendererOrganizer = Class.extend({
+var RendererOrganizer = FrakClass.extend({
 	init: function() {
 		this.enableDynamicBatching = true; ///< Set to false to turn off dynamic batching of renderers by material.
 		this.solidRenderers = [];

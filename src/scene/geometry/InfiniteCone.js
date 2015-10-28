@@ -1,5 +1,5 @@
 /** An infinite cone */
-var InfiniteCone=Class.extend({
+var InfiniteCone=FrakClass.extend({
 	/** Constructor
 		@param ray Ray containing origin of frustum and direction of frustum
 		@param delta Growth of cone radius per unit */

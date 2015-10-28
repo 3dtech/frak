@@ -1,5 +1,5 @@
 /** Wraps webgl rendering context of canvas */
-var RenderingContext=Class.extend({
+var RenderingContext=FrakClass.extend({
 	/** Constructor
 		@param canvas The canvas element that provides rendering context
 	*/

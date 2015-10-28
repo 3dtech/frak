@@ -1,5 +1,5 @@
 /** Ray class */
-var Ray = Class.extend({
+var Ray = FrakClass.extend({
 	/** Constructor
 		@param origin The origin point of the ray {vec3}
 		@param destination The destination point of the ray {vec3} */

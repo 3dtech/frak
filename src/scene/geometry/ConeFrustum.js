@@ -1,5 +1,5 @@
 /** A cone frustum */
-var ConeFrustum=Class.extend({
+var ConeFrustum=FrakClass.extend({
 	/** Constructor
 		@param cone Instance of InfiniteCone
 		@param nearDistance Near-plane distance of cone-frustum

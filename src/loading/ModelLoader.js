@@ -1,5 +1,5 @@
 /** Loads models to scene hierarchy from given parsed data */
-var ModelLoader=Class.extend({
+var ModelLoader=FrakClass.extend({
 	init: function(context, descriptor, shadersManager, texturesManager) {
 		this.descriptor=descriptor;
 		this.shadersManager=shadersManager;

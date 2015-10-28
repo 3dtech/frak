@@ -1,7 +1,7 @@
 /** Container for storing ray intersection tests.
 	It also provides some more commonly used functions like
 	sorting the results and finding the nearest intersection. */
-var RayTestResult = Class.extend({
+var RayTestResult = FrakClass.extend({
 	/** Constructor
 		@param ray Instance of {Ray}. The given ray is cloned internally. */
 	init: function(ray) {

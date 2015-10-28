@@ -1,6 +1,6 @@
 /** Subshader is the baseclass that keeps the code that can be linked to shader program later.
 	Use VertexShader and FragmentShader to create appropriate types of shaders for ShaderProgram. */
-var Subshader=Class.extend({
+var Subshader=FrakClass.extend({
 	init: function(shader, code, type) {
 		this.shader=shader;
 		this.context=shader.context;

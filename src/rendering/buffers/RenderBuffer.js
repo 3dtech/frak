@@ -1,7 +1,7 @@
 /**
  * Render buffer (VBO) base class.
  */
-var RenderBuffer=Class.extend({
+var RenderBuffer=FrakClass.extend({
 	/** Constructor
 		@param context Rendering context
 		@param faces Faces buffer with size that divides with 3 [f0i, f0j, f0k, f1i, f1j, f1k, ...]

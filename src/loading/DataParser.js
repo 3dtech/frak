@@ -1,7 +1,7 @@
 /**
  * 3DTech DATA format parser
  **/
-var DataParser=Class.extend({
+var DataParser=FrakClass.extend({
 	/**
 	 * Constructor
 	 * @param data - The binary data of the model file

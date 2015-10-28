@@ -1,7 +1,7 @@
 /**
  * Matrix stack for managing relative transformation trees.
  */
-var MatrixStack=Class.extend({
+var MatrixStack=FrakClass.extend({
 	/** Constructor */
 	init: function() {
 		this.stack=[mat4.identity(mat4.create())];	///< Matrix stack

@@ -1,6 +1,6 @@
 /** Renderer baseclass. Essentially Renderer classes are for containing ready-made buffers
   that are used straight for rendering. To render many at once add them to DynamicSpace. */
-var Renderer=Class.extend({
+var Renderer=FrakClass.extend({
 	/** Constructor
 		@param matrix Matrix applied to anything rendered
 		*/

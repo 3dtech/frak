@@ -1,7 +1,7 @@
 /**
 	Input handles user input (touch, mouse, keyboard).
 */
-var Input = Class.extend({
+var Input = FrakClass.extend({
 	init: function(engine, canvas){
 		this.controllers = []; //Holds all Controllers
 		this.engine = engine;

@@ -15,7 +15,7 @@
 	_serializables_
 
 	*/
-var CyclicSerializer=Class.extend({
+var CyclicSerializer=FrakClass.extend({
 	init: function() {
 		this.serializables={};	// All serializable objects found during serialization. These will be referenced by their respective IDs through reference type
 		this.visited=[];

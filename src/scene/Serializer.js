@@ -11,7 +11,7 @@
 	_properties_
 
 	*/
-var Serializer=Class.extend({
+var Serializer=FrakClass.extend({
 	init: function() {
 		this.serializables={};	// All serializable objects found during serialization. These will be referenced by their respective IDs through reference type
 	},

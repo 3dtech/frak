@@ -1,6 +1,6 @@
 /** Font class is used to keep font textures, data and material. Essentially everything 
 	that is loaded and required to draw the font on GPU. */
-var Font=Class.extend({
+var Font=FrakClass.extend({
 	/** Constructor 
 		@param materialSource Material used to render the font. Material textures are automatically replaced by appropriate font textures while rendering
 		@param descriptor FontDescriptor, if provided [optional] */

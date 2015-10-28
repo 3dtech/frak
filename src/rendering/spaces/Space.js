@@ -1,5 +1,5 @@
 /** Space contains renderable geometry that can be queried. Space! Wanna go to space! */
-var Space=Class.extend({
+var Space=FrakClass.extend({
 	init: function() {},
 
 	/** Casts a frustum over geometry

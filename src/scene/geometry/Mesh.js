@@ -1,4 +1,4 @@
-var Mesh=Class.extend({
+var Mesh=FrakClass.extend({
 	init: function() {
 		this.submeshes=[];
 		this.materials=[];

@@ -3,7 +3,7 @@
 	@param faces All available faces
 
 */
-var Submesh=Class.extend({
+var Submesh=FrakClass.extend({
 	/** Constructor */
 	init: function() {
 		this.materialIndex=-1;

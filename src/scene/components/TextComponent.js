@@ -20,6 +20,7 @@ var TextComponent=MeshComponent.extend({
 		this.outline = true; ///< Set to true if text outline is desired
 		this.outlineColor = new Color(1.0, 1.0, 1.0, 1.0); ///< Color of the text outline
 		this.outlineWidth = 5; ///< Outline width
+		this.textLength = 0;
 
 		this.setText(text);
 	},
@@ -64,6 +65,8 @@ var TextComponent=MeshComponent.extend({
 		var canvas = document.createElement("canvas");
 		var ctx = canvas.getContext("2d");
 		this.applyTextStyles(ctx);
+		
+		this.textLength = ctx.measureText(this.text).width;
 
 		canvas.width = nextHighestPowerOfTwo(ctx.measureText(this.text).width);
 		canvas.height = nextHighestPowerOfTwo(2.0 * this.fontSize);

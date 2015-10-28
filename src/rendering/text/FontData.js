@@ -1,5 +1,5 @@
 /** FontData class is used to keep font data */
-var FontData=Class.extend({
+var FontData=FrakClass.extend({
 	/** Constructor
 		@param xmlData Parsed XML data from bmfont output (Andreas Jönsson - http://www.angelcode.com/products/bmfont/) */
 	init: function(xmlData) {

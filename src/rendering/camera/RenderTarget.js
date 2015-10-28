@@ -1,5 +1,5 @@
 /** Render-target class */
-var RenderTarget=Class.extend({
+var RenderTarget=FrakClass.extend({
 	init: function(size) {
 		this.size=vec2.create();
 		if (size) vec2.copy(this.size, size);

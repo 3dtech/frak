@@ -1,7 +1,7 @@
 /**
  * Helper class for constructing the parser result.
  **/
-var DataParserResult=Class.extend({
+var DataParserResult=FrakClass.extend({
 	init: function() {
 		this.data={
 			'meshes': [],

@@ -2,7 +2,7 @@
 	Its instance is accessible from Engine where it is used
 	to measure time spent on drawing a frame and weighted average frames
 	per second. */
-var FPS=Class.extend({
+var FPS=FrakClass.extend({
 	init: function() {
 		this.frametime=0.0;														// Average frametime is 0 at first
 		this.lastMeasurement=(new Date()).getTime();	// Store current time

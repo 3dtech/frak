@@ -1,5 +1,5 @@
 /** An infinite plane in 3D space */
-var Plane=Class.extend({
+var Plane=FrakClass.extend({
 	/** Constructor */
 	init: function() {
 		this.normal = vec3.create();

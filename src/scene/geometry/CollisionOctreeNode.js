@@ -1,4 +1,4 @@
-var CollisionOctreeNode=Class.extend({
+var CollisionOctreeNode=FrakClass.extend({
 	/** Constructor
 		@param center The center of the node. Instance of {vec3}
 		@param size The size of the node. {number}

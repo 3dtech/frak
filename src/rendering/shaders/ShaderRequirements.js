@@ -1,6 +1,6 @@
 /** Attributes required by the shader for executing. These are mostly used to generate
 	missing tangents, bitangents or barycentric coordinates as required by shader. */
-var ShaderRequirements=Class.extend({
+var ShaderRequirements=FrakClass.extend({
 	/** Constructor */
 	init: function() {
 		this.barycentric=false;

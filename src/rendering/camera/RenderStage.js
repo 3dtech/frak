@@ -2,7 +2,7 @@
 	They are recursive - each render-stage can have be composed of sub render-stages.
 	This allows for creating combined render-stages that use results of child-render
 	stages to provide output. */
-var RenderStage=Class.extend({
+var RenderStage=FrakClass.extend({
 	/** Constructor */
 	init: function() {
 		this.parent = false; ///< Parent RenderStage
