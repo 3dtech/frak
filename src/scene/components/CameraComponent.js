@@ -177,6 +177,21 @@ var CameraComponent=Component.extend({
 		return false;
 	},
 
+	worldToScreenPoint: function(point, out) {
+		if (!out)
+			out = vec2.create();
+		var size = this.camera.target.getSize();
+		var viewProj = mat4.mul(mat4.create(), this.camera.projectionMatrix, this.camera.viewMatrix);
+		var projected = vec4.fromValues(point[0], point[1], point[2], 1.0);
+		vec4.transformMat4(projected, projected, viewProj);
+		projected[0] /= projected[3];
+		projected[1] /= projected[3];
+		projected[2] /= projected[3];
+		out[0] = Math.round( ((projected[0] + 1.0) / 2.0) * size[0] );
+		out[1] = Math.round( ((1.0 - projected[1]) / 2.0) * size[1] );
+		return out;
+	},
+
 	/** Uses camera view matrix for absolute transform matrix and calculates relative transform, if parent node is available */
 	useCameraViewMatrix: function() {
 		if(!this.node.transform) return;
