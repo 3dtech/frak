@@ -1,7 +1,7 @@
 /** 3x3 matrix uniform */
 var UniformMat3=Uniform.extend({
 	bind: function(context, uniformLocation) {
-		context.gl.uniformMatrix3fv(uniformLocation, 0, this.value);
+		context.gl.uniformMatrix3fv(uniformLocation, false, this.value);
 	},
 
 	type: function() {
