@@ -1,16 +1,20 @@
-/** Texture instance. */
-var Texture=Serializable.extend({
-	/** Creates a texture
-		@param context Instance of RenderingContext (optional) */
+/**
+ * 2D texture instance.
+ */
+var Texture = BaseTexture.extend({
+	/**
+	 * Constructor
+	 * @param context RenderingContext (optional)
+	 */
 	init: function(context) {
-		this.glTexture = false;
+		this._super(context);
+
+		this.glTexture = null; ///< GL texture ID
 		this.name = false;		///< Texture name assigned by manager
-		this.size = false;		///< Texture size
 		this.mipmapped = true;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
 		this.clampToEdge = false;
 		this.anisotropic = true;
 		this.anisotropyFilter = 4; // 4x filtering by default
-		this.loaded = false;
 
 		if (context)
 			this.create(context);
@@ -21,33 +25,34 @@ var Texture=Serializable.extend({
 	},
 
 	excluded: function() {
-		return this._super().concat(["glTexture", "context", "loaded", "size"]);
+		return this._super().concat(["glTexture"]);
+	},
+
+	bind: function(context) {
+		if (!this.loaded) {
+			context.gl.bindTexture(context.gl.TEXTURE_2D, null);
+			return;
+		}
+		context.gl.bindTexture(context.gl.TEXTURE_2D, this.glTexture);
+	},
+
+	unbind: function(context) {
+		context.gl.bindTexture(context.gl.TEXTURE_2D, null);
 	},
 
 	create: function(context) {
+		this.anisotropy(context);
 		this.glTexture = context.gl.createTexture();
-
-		if (context.engine) {
-			if (!context.engine.options.anisotropicFiltering)
-				this.anisotropic = false;
-			else
-				this.anisotropyFilter = context.engine.options.anisotropicFiltering;
-		}
-
-		if (this.anisotropic) {
-			this.extTextureFilterAnisotropic = context.gl.getExtension('EXT_texture_filter_anisotropic');
-			if (!this.extTextureFilterAnisotropic) {
-				this.anisotropic = false;
-			}
-			else {
-				var maxAnisotropy = context.gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-				this.anisotropyFilter = Math.min(this.anisotropyFilter, maxAnisotropy);
-			}
-		}
 	},
 
+	/**
+	 * Sets the texture to a solid color, (size x size)
+	 * @param context RenderingContext
+	 * @param color Color of the image
+	 * @param size {number} The size of the texture side in pixels
+	 */
 	clearImage: function(context, color, size) {
-		if(this.glTexture===false)
+		if(this.glTexture === null)
 			this.create(context);
 		size = size || 1;
 		var gl = context.gl;
@@ -63,7 +68,7 @@ var Texture=Serializable.extend({
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.bindTexture(context.gl.TEXTURE_2D, null);
-		this.size = [size, size];
+		vec2.set(this.size, size, size);
 		this.loaded = true;
 	},
 
@@ -72,29 +77,37 @@ var Texture=Serializable.extend({
 		@param position Offset where to copy the given image as instance of vec2
 		@param image Image or canvas element */
 	pasteImage: function(context, position, image) {
-		if(!this.loaded) return;
-		var gl=context.gl;
+		if (!this.loaded)
+			return;
 		this.bind(context);
-		gl.texSubImage2D(gl.TEXTURE_2D, 0, position[0]*this.size[0], position[1]*this.size[1],
-                       gl.RGBA, gl.UNSIGNED_BYTE, image);
-		if(this.mipmapped) gl.generateMipmap(gl.TEXTURE_2D);
+		var gl = context.gl;
+		gl.texSubImage2D(gl.TEXTURE_2D, 0,
+			position[0]*this.size[0], position[1]*this.size[1],
+			gl.RGBA, gl.UNSIGNED_BYTE, image);
+		if (this.mipmapped)
+			gl.generateMipmap(gl.TEXTURE_2D);
 		this.unbind(context);
-		this.loaded=true;
+		this.loaded = true;
 	},
 
 
 	/** Updates texture by uploading new image
 		@param context RenderingContext instance
 		@param inputImage Image or canvas element */
-	setImage: function(context, inputImage) {
-		if (this.glTexture===false)
+	setImage: function(context, inputImage, noResize) {
+		if (this.glTexture === false)
 			this.create(context);
-		if(!this.glTexture) throw "Unable to update texture. glTexture not available.";
-		var gl=context.gl;
-		context.gl.bindTexture(context.gl.TEXTURE_2D, this.glTexture);
-		var image=this.resizeToPowerOfTwo(inputImage);
-		this.size=[image.width, image.height];
 
+		if (!this.glTexture)
+			throw "Unable to update texture. glTexture not available.";
+
+		var image = inputImage;
+		if (!noResize)
+			image = this.resizeToPowerOfTwo(inputImage);
+		vec2.set(this.size, image.width, image.height);
+
+		var gl = context.gl;
+		gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
@@ -104,7 +117,7 @@ var Texture=Serializable.extend({
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		}
 
-		// Apply mipmapping settings
+		// Apply mipmapping and filtering settings
 		if (this.mipmapped) {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
@@ -118,9 +131,16 @@ var Texture=Serializable.extend({
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		}
 
-		context.gl.bindTexture(context.gl.TEXTURE_2D, null);
-		if(image!=inputImage) delete image;
-		this.loaded=true;
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		if (image != inputImage)
+			delete image;
+		this.loaded = true;
+
+		if ((this.size[0] & (this.size[0] - 1)) != 0 ||
+			(this.size[1] & (this.size[1] - 1)) != 0) {
+			console.warn('Created a not power of 2 texture: {0} ({1}x{2})'
+				.format(this.name, this.size[0], this.size[1]));
+		}
 	},
 
 	/** @return WebGLUnsignedByteArray with contents of texture */
@@ -133,43 +153,5 @@ var Texture=Serializable.extend({
 		context.gl.readPixels(0, 0, this.size[0], this.size[1], gl.RGBA, gl.UNSIGNED_BYTE, result);
 		targetTexture.unbind(context);
 		return result;
-	},
-
-	bind: function(context) {
-		if(!this.loaded) return;
-		if((this.size[0] & (this.size[0] - 1)) != 0 || (this.size[1] & (this.size[1] - 1)) != 0) {
-			// NOT power of two!
-			console.warn('Binding not power of 2 texture: {0} ({1}x{2})'.format(this.name, this.size[0], this.size[1]));
-		}
-		context.gl.bindTexture(context.gl.TEXTURE_2D, this.glTexture);
-	},
-
-	unbind: function(context) {
-		if(!this.loaded) return;
-		context.gl.bindTexture(context.gl.TEXTURE_2D, null);
-	},
-
-	resizeToPowerOfTwo: function(image) {
-		function isPowerOfTwo(x) {
-				return (x & (x - 1)) == 0;
-		}
-
-		function nextHighestPowerOfTwo(x) {
-			return Math.max(Math.min(Math.pow(2, Math.ceil(Math.log(x)/Math.log(2))), 2048), 1);
-		}
-
-		function nextLowestPowerOfTwo(x) {
-			return Math.max(Math.min(Math.pow(2, Math.floor(Math.log(x)/Math.log(2))), 2048), 1);
-		}
-
-		if(!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height)) {
-			var canvas = document.createElement("canvas");
-			canvas.width = nextLowestPowerOfTwo(image.width);
-			canvas.height = nextLowestPowerOfTwo(image.height);
-			var ctx = canvas.getContext("2d");
-			ctx.drawImage(image, 0, 0, image.width, image.height, 0.0, 0.0, canvas.width, canvas.height);
-			image = canvas;
-		}
-		return image;
 	}
 });

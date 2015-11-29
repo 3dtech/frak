@@ -32,6 +32,8 @@
 	"src/rendering/shaders/UniformVec3.js",
 	"src/rendering/shaders/UniformVec4.js",
 	"src/rendering/shaders/UniformColor.js",
+	"src/rendering/shaders/UniformMat2.js",
+	"src/rendering/shaders/UniformMat3.js",
 	"src/rendering/shaders/UniformMat4.js",
 	"src/rendering/shaders/Sampler.js",
 
@@ -79,7 +81,9 @@
 	"src/rendering/buffers/TrianglesRenderBufferVAO.js",
 	"src/rendering/buffers/QuadsRenderBuffer.js",
 
+	"src/rendering/materials/BaseTexture.js",
 	"src/rendering/materials/Texture.js",
+	"src/rendering/materials/CubeTexture.js",
 	"src/rendering/materials/Material.js",
 
 	"src/rendering/spaces/Space.js",
@@ -168,6 +172,7 @@
 	"src/scene/descriptors/MaterialSource.js",
 	"src/scene/descriptors/MaterialSourceDescriptor.js",
 	"src/scene/descriptors/TextureDescriptor.js",
+	"src/scene/descriptors/CubeTextureDescriptor.js",
 
 	"src/scene/EmptyNode.js",
 	"src/scene/Node.js",
