@@ -43,10 +43,10 @@ var CubeTexture = BaseTexture.extend({
 	getGLCubeFace: function(context, face) {
 		var gl = context.gl;
 		switch (face) {
-			case CubeTexture.FRONT:  return gl.TEXTURE_CUBE_MAP_NEGATIVE_Z;
-			case CubeTexture.BACK:   return gl.TEXTURE_CUBE_MAP_POSITIVE_Z;
-			case CubeTexture.RIGHT:  return gl.TEXTURE_CUBE_MAP_NEGATIVE_X;
-			case CubeTexture.LEFT:   return gl.TEXTURE_CUBE_MAP_POSITIVE_X;
+			case CubeTexture.FRONT:  return gl.TEXTURE_CUBE_MAP_NEGATIVE_X;
+			case CubeTexture.BACK:   return gl.TEXTURE_CUBE_MAP_POSITIVE_X;
+			case CubeTexture.LEFT:   return gl.TEXTURE_CUBE_MAP_NEGATIVE_Z;
+			case CubeTexture.RIGHT:  return gl.TEXTURE_CUBE_MAP_POSITIVE_Z;
 			case CubeTexture.TOP:    return gl.TEXTURE_CUBE_MAP_NEGATIVE_Y;
 			case CubeTexture.BOTTOM: return gl.TEXTURE_CUBE_MAP_POSITIVE_Y;
 		}
