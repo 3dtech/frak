@@ -4,7 +4,6 @@
  */
 
 var fs = require('fs');
-var sys = require('sys')
 var exec = require('child_process').exec;
 
 require('./src/Version.js');
@@ -14,7 +13,7 @@ var outputFilename = "frak-"+frakVersion+".min.js";
 var outputFile = "builds/"+outputFilename;
 
 function success(error, stdout, stderr){
-	sys.puts(stderr);
+	console.error(stderr);
 	if (error) {
 		console.log(error, stderr);
 	}

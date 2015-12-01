@@ -3,6 +3,10 @@ var SkyboxComponent = Component.extend({
 		this._super();
 	},
 
+	type: function() {
+		return "SkyboxComponent";
+	},
+
 	setup: function(assetsManager, engine, images) {
 		this.meshNode = new Node("Skybox");
 
@@ -110,9 +114,5 @@ var SkyboxComponent = Component.extend({
 		meshRenderer.castShadows=false;
 		meshRenderer.disable();
 		meshRenderer.addRenderers(engine.context, engine);
-	},
-
-	type: function() {
-		return "SkyboxComponent";
 	}
 });

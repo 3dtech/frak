@@ -15,6 +15,9 @@ var ShadersManager=Manager.extend({
 			'diffuse': 'shaders/default/diffuse',
 			'normalmapped': 'shaders/default/normalmapped',
 			'transparent': 'shaders/default/transparent',
+			'reflective': 'shaders/default/reflective',
+
+			// The following are deprecated:
 			'test': 'shaders/default/test',
 			'fallback': 'shaders/default/fallback',
 			'depthrgba': 'shaders/default/DepthRGBA',

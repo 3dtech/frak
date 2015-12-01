@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Cubemap textures</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+		<div>
+			<button onclick="engine.requestFullscreen();">Go to fullscreen</button>
+			<button onclick="engine.requestFullscreen(true);">Go to fullscreen with upscaling</button>
+			<button onclick="toggleDebug();">Debug</button>
+			<button onclick="pauseEngine(this);">PAUSE</button>
+		</div>
+
+		<script src="../builds/frak-latest.min.js"></script>
+
+		<script type="text/javascript">
+			var ClickController = Controller.extend({
+				init: function() {
+					this._super();
+					this.marker = new Node('marker');
+					this.markers = new Node('markers');
+					this.RADIUS = 0.05;
+					this.LENGTH = 0.6;
+				},
+
+				type: function() {
+					return "ClickController";
+				},
+
+				onStart: function(context, engine) {
+					var material = new Material(
+						engine.assetsManager.addShaderSource("transparent"),
+						{
+							"diffuse": new UniformColor({r:1.0, g:1.0, b:0.0, a:0.5})
+						},
+						[]
+					);
+
+					var cone = Primitives.cone(this.RADIUS, this.LENGTH, 16, material);
+					// cone.transform.setPosition([0, -0.1, 0]);
+					this.marker.addNode(cone);
+
+					this.node.addNode(this.markers);
+				},
+
+				onClick: function(position, button) {
+					if (button != 0)
+						return;
+
+					var ray = this.node.scene.cameraComponent.screenPointToRay(position);
+					if (ray) {
+						var result = this.node.scene.dynamicSpace.rayCast(ray, 0xFFFFFFFF);
+						var nearest = result.nearest();
+						if (nearest) {
+							var instance = this.marker.instantiate();
+							instance.transform.setPosition(nearest.point);
+							var cone = instance.findChildWithName('Cone');
+							var original = vec3.fromValues(0, 1, 0);
+							var direction = ray.getDirection();
+							var costheta = vec3.dot(original, direction);
+							var theta = Math.acos(costheta);
+							var axis = vec3.cross(vec3.create(), original, direction);
+							vec3.normalize(axis, axis);
+							var rotation = quat.create();
+							quat.setAxisAngle(rotation, axis, theta);
+							var position = vec3.scale(direction, direction, -0.5 * this.LENGTH);
+							mat4.fromRotationTranslation(cone.transform.relative, rotation, position);
+							this.markers.addNode(instance);
+						}
+					}
+				}
+			});
+
+			var Rotator = Component.extend({
+				init: function() {
+					this._super();
+					this.SPEED = 0.001;
+					this.PITCH = 0.0;
+					this.YAW = 45.0;
+					this.ROLL = 0.0;
+
+					this.rotation = quat.create();
+					this.targetRotation = quat.create();
+					this.position = vec3.create();
+					this.scale = vec3.create();
+				},
+
+				type: function() {
+					return "Rotator";
+				},
+
+				onUpdate: function(engine) {
+					var speed = this.SPEED * engine.fps.getDelta();
+					quat.fromMat4(this.rotation, this.node.transform.relative);
+					quat.euler(this.targetRotation, this.PITCH, this.YAW, this.ROLL);
+					quat.multiply(this.targetRotation, this.rotation, this.targetRotation);
+					quat.slerp(this.rotation, this.rotation, this.targetRotation, speed);
+					quat.normalize(this.rotation, this.rotation);
+					mat4.translation(this.position, this.node.transform.relative);
+					mat4.getScale(this.scale, this.node.transform.relative);
+					mat4.fromRotationTranslationScale(
+						this.node.transform.relative,
+						this.rotation,
+						this.position,
+						this.scale);
+				}
+			});
+
+			function setupCamera(scene) {
+				scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
+				scene.cameraComponent.setClipPlanes(1.0, 200.0);
+
+				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.distance = 10.0;
+				orbitController.minimumDistance = 1.0;
+				orbitController.maximumDistance = 100.0;
+				orbitController.distanceSteps = 64;
+				orbitController.maximumPitch = Math.PI/2.2;
+				orbitController.rotation[0] = -0.5;
+				orbitController.rotation[1] = 0.0;
+				// orbitController.rotation[1] = 1.0;
+				orbitController.target.value = scene.root.transform;
+
+				var skybox = [
+					new TextureDescriptor("data/skybox/yokohama/negx.jpg"),
+					new TextureDescriptor("data/skybox/yokohama/posx.jpg"),
+					new TextureDescriptor("data/skybox/yokohama/negz.jpg"),
+					new TextureDescriptor("data/skybox/yokohama/posz.jpg"),
+					new TextureDescriptor("data/skybox/yokohama/negy.jpg"),
+					new TextureDescriptor("data/skybox/yokohama/posy.jpg")
+				];
+				var skyboxComponent = scene.cameraNode.addComponent(new SkyboxComponent());
+				skyboxComponent.setup(scene.engine.assetsManager, scene.engine, skybox);
+			}
+
+			function setupLights(scene) {
+				var lights = scene.root.addNode(new Node('lights'));
+				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.8, 0.8, 0.8)));
+				var lightDirectional = scene.light;
+				lightDirectional.setLightDirection([1, 1, 1]);
+				lightDirectional.intensity = 0.8;
+			}
+
+			function setupScene(scene) {
+				scene.root.addComponent(new ClickController());
+
+				var sources = [
+					"data/skybox/yokohama/negz.jpg",
+					"data/skybox/yokohama/posz.jpg",
+					"data/skybox/yokohama/posx.jpg",
+					"data/skybox/yokohama/negx.jpg",
+					"data/skybox/yokohama/negy.jpg",
+					"data/skybox/yokohama/posy.jpg",
+				];
+				var cube = engine.assetsManager.texturesManager.addCube(sources);
+
+				var reflective = new Material(
+					engine.assetsManager.addShaderSource("reflective"),
+					{
+						'diffuse': new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
+						// 'useLighting': new UniformInt(1)
+					},
+					[
+						new Sampler('env0', cube)
+					]
+				);
+
+				var teapot = scene.engine.assetsManager.addModel('data/teapot.json');
+				teapot.addComponent(new Rotator());
+				scene.root.addNode(teapot);
+
+				var box = Primitives.box([0, 0, 0], [1, 1, 1], reflective);
+				mat4.fromRotationTranslation(box.transform.relative, quat.create(), [4, 0, 0]);
+				scene.root.addNode(box);
+
+				var sphere = Primitives.sphere(1.0, 16, 16, reflective);
+				mat4.fromRotationTranslation(sphere.transform.relative, quat.create(), [-4, 0, 0]);
+				scene.root.addNode(sphere);
+
+				scene.engine.sceneStarted = function() {
+					teapot.onEachChildComponent(function (component) {
+						if (component instanceof MeshRendererComponent) {
+							for (var i=0; i<component.meshRenderers.length; i++) {
+								component.meshRenderers[i].material = reflective;
+							}
+						}
+					});
+				}
+
+				// var grid = engine.scene.root.addNode(new Node('grid'));
+				// var lines = grid.addComponent(new LineRendererComponent(new Color(0.5, 0.5, 0.5, 1.0)));
+				// lines.addGrid([0,0,0], [100, 100], [1.0, 1.0]);
+			}
+
+			var engine;
+			window.onload = function() {
+				engine = new Engine('canvas', {
+					'requestedFPS': 60,
+					'assetsPath': '../assets/',
+					'transparencyMode': 'blended',
+					'antialias': true
+				});
+
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+				setupCamera(engine.scene);
+				setupLights(engine.scene);
+				setupScene(engine.scene);
+
+				engine.assetsManager.load(function() {
+					engine.run();
+				});
+			};
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function pauseEngine(element) {
+				engine.togglePause();
+				if (engine.running)
+					element.textContent = 'PAUSE';
+				else
+					element.textContent = 'UNPAUSE';
+			}
+		</script>
+	</body>
+</html>
