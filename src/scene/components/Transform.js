@@ -50,6 +50,12 @@ var Transform=Component.extend({
 		return mat4.translation(out, this.absolute);
 	},
 
+	getRelativePosition: function(out) {
+		if (!out)
+			out=vec3.create();
+		return mat4.translation(out, this.relative);
+	},
+
 	/** Sets relative position of transform
 		@param position Position as vec3 */
 	setPosition: function(position) {

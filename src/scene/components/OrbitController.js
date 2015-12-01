@@ -200,6 +200,7 @@ var OrbitController=FlightController.extend({
 		vec3.add(this.rotation, this.rotation, impulse);
 		this.rotation[0]=Math.max(this.minimumPitch, this.rotation[0]);
 		this.rotation[0]=Math.min(this.maximumPitch, this.rotation[0]);
+		this.onChange("rotate", xDelta, yDelta);
 	},
 
 	move: function(xDelta, yDelta) {
@@ -238,6 +239,7 @@ var OrbitController=FlightController.extend({
 	onRotate: function(position, rotation, type, event){
 		var rad = (rotation * (Math.PI / 180));
 		this.rotation[1] = this.rotation[1] + rad;
+		this.onChange("rotate", rotation);
 	},
 
 	onMouseWheel: function(position, delta, direction, type, event){
