@@ -35,7 +35,7 @@ var AssetsManager=FrakClass.extend({
 				if(me.loadingCount<=0) {
 					var callbacks=me.loadedCallbacks.slice(0);
 					me.loadedCallbacks=[];
-					for(i in callbacks) {
+					for(var i=0; i<callbacks.length; i++) {
 						var c=callbacks[i];
 						c();
 					}
@@ -120,9 +120,8 @@ var AssetsManager=FrakClass.extend({
 		if (!this.hasItemsInQueue()) {
 			var callbacks=this.loadedCallbacks.slice(0);
 			this.loadedCallbacks=[];
-			for(i in callbacks) {
-				var c=callbacks[i];
-				c();
+			for(var j=0; j < callbacks.length; j++) {
+				callbacks[j]();
 			}
 			return;
 		}
@@ -131,12 +130,17 @@ var AssetsManager=FrakClass.extend({
 			if (!progressCallback)
 				return;
 			var progress = 0.0;
-			for (var i in me.managers)
-				progress+=me.managers[i].getProgress();
+			for (var i=0; i < me.managers.length; i++){
+				if(me.managers[i]){
+					progress+=me.managers[i].getProgress();
+				}			
+				else
+					progress+=1.0;
+			}
 			progressCallback(progress/me.managers.length);
 		}
 
-		for(var m in this.managers) {
+		for(var m = 0; m < this.managers.length; m++) {
 			this.managers[m].load(function() {}, onProgress);
 		}
 	}

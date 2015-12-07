@@ -133,7 +133,7 @@ var Manager=FrakClass.extend({
 	/** Keeps loading from queue */
 	keepLoading: function() {
 		// Call progress callbacks
-		for(var i in this.progressCallbacks) {
+		for(var i = 0; i < this.progressCallbacks.length; i++) {
 			this.progressCallbacks[i](this.getProgress());
 		}
 
@@ -179,7 +179,7 @@ var Manager=FrakClass.extend({
 	callDoneCallbacks: function() {
 		var doneCallbacks=this.callbacks;
 		this.callbacks=[];
-		for(var c in doneCallbacks) {
+		for(var c = 0; c < doneCallbacks.length; c++) {
 			doneCallbacks[c]();
 		}
 	},
