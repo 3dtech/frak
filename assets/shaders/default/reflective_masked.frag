@@ -17,6 +17,7 @@ uniform float shadowBias;
 uniform sampler2D diffuse0;
 uniform sampler2D shadow0;
 uniform samplerCube env0;
+uniform sampler2D mask;
 
 uniform float materialBlend;
 
@@ -101,14 +102,15 @@ void main(void) {
 		shadow = shadowmap();
 	}
 
+	float maskValue = texture2D(mask, uv0).r;
 	vec4 color = reflection();
 
 	if (useLighting == 1) {
-		color = mix(color, lighting(shadow), materialBlend);
+		color = mix(color, lighting(shadow), maskValue * materialBlend);
 	}
 	else {
 		vec4 textureColor = texture2D(diffuse0, uv0);
-		color = mix(color, diffuse * textureColor, materialBlend);
+		color = mix(color, diffuse * textureColor, maskValue * materialBlend);
 	}
 	gl_FragColor = clamp(color, 0.0, 1.0);
 }
