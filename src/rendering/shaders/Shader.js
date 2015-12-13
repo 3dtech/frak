@@ -120,16 +120,15 @@ var Shader=Serializable.extend({
 		@param samplers Array of named texture samplers (values must be instances
 		                of of Sampler). Eg [new Sampler("texture1", texture)] */
 	bindSamplers: function(samplers) {
-		if(!samplers || samplers.length==0) return;
-		if(!this.linked) return;
-
+		if (!samplers || samplers.length == 0 || !this.linked)
+			return;
 		var gl=this.context.gl;
 		var slotIndex=0;
 		for (var i=0; i<samplers.length; i++) {
-			var sampler=samplers[i];
-
-			var uniformLocation=this.getUniformLocation(sampler.name);
-			if(uniformLocation==-1) continue;
+			var sampler = samplers[i];
+			var uniformLocation = this.getUniformLocation(sampler.name);
+			if (uniformLocation == -1)
+				continue;
 			sampler.bind(this.context, uniformLocation, slotIndex);
 			slotIndex++;
 		}
@@ -140,14 +139,15 @@ var Shader=Serializable.extend({
 		@param samplers Array of named texture samplers (values must be instances
 		                of of Sampler). Eg [new Sampler("texture1", texture)] */
 	unbindSamplers: function(samplers) {
-		if(!samplers || samplers.length==0) return;
-		if(!this.linked) return;
+		if (!samplers || samplers.length == 0 || !this.linked)
+			return;
 		var gl=this.context.gl;
 		var slotIndex=0;
 		for (var i=0; i<samplers.length; i++) {
-			var sampler=samplers[i];
-			var uniformLocation=this.getUniformLocation(sampler.name);
-			if(uniformLocation==-1) continue;
+			var sampler = samplers[i];
+			var uniformLocation = this.getUniformLocation(sampler.name);
+			if(uniformLocation == -1)
+				continue;
 			sampler.unbind(this.context, uniformLocation, slotIndex);
 			slotIndex++;
 		}

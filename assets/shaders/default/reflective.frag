@@ -41,8 +41,8 @@ float unpack(vec4 c) {
 vec4 reflection() {
 	vec3 eyeDirection = normalize(-viewPosition.xyz);
 	vec3 worldEyeDirection = normalize(mat3(viewInverse) * eyeDirection);
-    vec3 lookup = reflect(worldEyeDirection, worldNormal) * vec3(-1.0, 1.0, 1.0);
-    vec4 color = textureCube(env0, lookup);
+	vec3 lookup = reflect(worldEyeDirection, worldNormal) * vec3(-1.0, 1.0, 1.0);
+	vec4 color = textureCube(env0, lookup);
 	return color;
 }
 
