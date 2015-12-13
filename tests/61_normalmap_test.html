@@ -10,6 +10,13 @@
 		<!-- Canvas -->
 		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
 
+		<div>
+			<button onclick="engine.requestFullscreen();">Go to fullscreen</button>
+			<button onclick="engine.requestFullscreen(true);">Go to fullscreen with upscaling</button>
+			<button onclick="toggleDebug();">Debug</button>
+			<button onclick="pauseEngine(this);">PAUSE</button>
+		</div>
+
 		<!-- Libraries -->
 		<script src="../lib/jquery-1.11.1.min.js"></script>
 		<script src="../builds/frak-latest.min.js"></script>
@@ -69,7 +76,8 @@
 					'assetsPath': '../assets/',
 					'transparencyMode': 'blended',
 					'antialias': true,
-					'ssao': true
+					'ssao': true,
+					'renderer': 'deferred'
 				});
 
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
@@ -80,6 +88,19 @@
 					engine.run();
 				});
 			});
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function pauseEngine(element) {
+				engine.togglePause();
+				if (engine.running)
+					element.textContent = 'PAUSE';
+				else
+					element.textContent = 'UNPAUSE';
+			}
 		</script>
 	</body>
 </html>
