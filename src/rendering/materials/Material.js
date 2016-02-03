@@ -65,7 +65,8 @@ var Material=Serializable.extend({
 
 		var samplers = [];
 		for (var i in this.samplers) {
-			samplers.push(this.samplers[i].clone());
+			if(typeof this.samplers[i] == "object")
+				samplers.push(this.samplers[i].clone());
 		}
 
 		var copy = new Material(this.shader, uniforms, samplers, this.descriptor);

@@ -115,7 +115,7 @@ var OrbitController=FlightController.extend({
 		if(!deltaTime) deltaTime=1.0;
 		this.distance+=deltaTime*this.zoomSpeed*(this.maximumDistance-this.minimumDistance)/this.distanceSteps;
 		if(this.distance>this.maximumDistance) this.distance=this.maximumDistance;
-		this.onChange("distance", this.distance);
+		this.onChange("distance", this.distance, deltaTime*this.zoomSpeed*(this.maximumDistance-this.minimumDistance)/this.distanceSteps);
 	},
 
 	/** Accelerates to the left */

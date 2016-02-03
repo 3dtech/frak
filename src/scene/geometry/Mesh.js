@@ -2,8 +2,8 @@ var Mesh=FrakClass.extend({
 	init: function() {
 		this.submeshes=[];
 		this.materials=[];
-		this.boundingBox=new BoundingBox();
-		this.boundingSphere=new BoundingSphere();
+		this.boundingBox = new BoundingBox();
+		this.boundingSphere = new BoundingSphere();
 	},
 
 	/** Adds new submesh optionally with a new material
