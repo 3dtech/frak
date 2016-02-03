@@ -114,14 +114,13 @@
 				scene.cameraComponent.setClipPlanes(1.0, 200.0);
 
 				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
-				orbitController.distance = 10.0;
+				orbitController.distance = 12.0;
 				orbitController.minimumDistance = 1.0;
 				orbitController.maximumDistance = 100.0;
 				orbitController.distanceSteps = 64;
 				orbitController.maximumPitch = Math.PI/2.2;
 				orbitController.rotation[0] = -0.5;
 				orbitController.rotation[1] = 0.0;
-				// orbitController.rotation[1] = 1.0;
 				orbitController.target.value = scene.root.transform;
 
 				var skybox = [
@@ -156,17 +155,80 @@
 					"data/skybox/yokohama/posy.jpg",
 				];
 				var cube = engine.assetsManager.texturesManager.addCube(sources);
+				var texture = scene.engine.assetsManager.addTexture("data/pattern_2.jpg");
+				var mask = scene.engine.assetsManager.addTexture("data/check-128.png");
 
 				var reflective = new Material(
 					engine.assetsManager.addShaderSource("reflective"),
 					{
 						'diffuse': new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
-						// 'useLighting': new UniformInt(1)
+						'useLighting': new UniformInt(0),
+						'materialBlend': new UniformFloat(0.0)
 					},
 					[
-						new Sampler('env0', cube)
+						new Sampler('env0', cube),
+						new Sampler('diffuse0', texture)
 					]
 				);
+				reflective.name = 'reflective';
+
+				var reflectiveLit = new Material(
+					engine.assetsManager.addShaderSource("reflective"),
+					{
+						'diffuse': new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
+						'useLighting': new UniformInt(1),
+						'materialBlend': new UniformFloat(0.5)
+					},
+					[
+						new Sampler('env0', cube),
+						new Sampler('diffuse0', texture)
+					]
+				);
+				reflectiveLit.name = 'reflectiveLit';
+
+				var reflectiveTextured = new Material(
+					engine.assetsManager.addShaderSource("reflective"),
+					{
+						'diffuse': new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
+						'useLighting': new UniformInt(0),
+						'materialBlend': new UniformFloat(0.5)
+					},
+					[
+						new Sampler('env0', cube),
+						new Sampler('diffuse0', texture)
+					]
+				);
+				reflectiveTextured.name = 'reflectiveTextured';
+
+				var reflectiveMasked = new Material(
+					engine.assetsManager.addShaderSource("reflective_masked"),
+					{
+						'diffuse': new UniformColor({r:0.56, g:0.7, b:0.1, a:1.0}),
+						'useLighting': new UniformInt(0),
+						'materialBlend': new UniformFloat(1.0)
+					},
+					[
+						new Sampler('env0', cube),
+						new Sampler('mask', mask),
+						new Sampler('diffuse0', texture)
+					]
+				);
+				reflectiveMasked.name = 'reflectiveMasked';
+
+				var reflectiveMaskedTexturedAndLit = new Material(
+					engine.assetsManager.addShaderSource("reflective_masked"),
+					{
+						'diffuse': new UniformColor({r:0.56, g:0.7, b:0.1, a:1.0}),
+						'useLighting': new UniformInt(1),
+						'materialBlend': new UniformFloat(0.5)
+					},
+					[
+						new Sampler('env0', cube),
+						new Sampler('mask', mask),
+						new Sampler('diffuse0', texture)
+					]
+				);
+				reflectiveMaskedTexturedAndLit.name = 'reflectiveMaskedTexturedAndLit';
 
 				var teapot = scene.engine.assetsManager.addModel('data/teapot.json');
 				teapot.addComponent(new Rotator());
@@ -176,9 +238,25 @@
 				mat4.fromRotationTranslation(box.transform.relative, quat.create(), [4, 0, 0]);
 				scene.root.addNode(box);
 
+				var boxMaskedLit = Primitives.box([0, 0, 0], [1, 1, 1], reflectiveMaskedTexturedAndLit);
+				mat4.fromRotationTranslation(boxMaskedLit.transform.relative, quat.create(), [4, 3, 0]);
+				scene.root.addNode(boxMaskedLit);
+
+				var boxMasked = Primitives.box([0, 0, 0], [1, 1, 1], reflectiveMasked);
+				mat4.fromRotationTranslation(boxMasked.transform.relative, quat.create(), [4, -3, 0]);
+				scene.root.addNode(boxMasked);
+
 				var sphere = Primitives.sphere(1.0, 16, 16, reflective);
 				mat4.fromRotationTranslation(sphere.transform.relative, quat.create(), [-4, 0, 0]);
 				scene.root.addNode(sphere);
+
+				var sphereTextured = Primitives.sphere(1.0, 16, 16, reflectiveTextured);
+				mat4.fromRotationTranslation(sphereTextured.transform.relative, quat.create(), [-4, 3, 0]);
+				scene.root.addNode(sphereTextured);
+
+				var sphereLit = Primitives.sphere(1.0, 16, 16, reflectiveLit);
+				mat4.fromRotationTranslation(sphereLit.transform.relative, quat.create(), [-4, -3, 0]);
+				scene.root.addNode(sphereLit);
 
 				scene.engine.sceneStarted = function() {
 					teapot.onEachChildComponent(function (component) {
@@ -189,10 +267,6 @@
 						}
 					});
 				}
-
-				// var grid = engine.scene.root.addNode(new Node('grid'));
-				// var lines = grid.addComponent(new LineRendererComponent(new Color(0.5, 0.5, 0.5, 1.0)));
-				// lines.addGrid([0,0,0], [100, 100], [1.0, 1.0]);
 			}
 
 			var engine;
@@ -201,7 +275,8 @@
 					'requestedFPS': 60,
 					'assetsPath': '../assets/',
 					'transparencyMode': 'blended',
-					'antialias': true
+					'antialias': true,
+					// 'renderer': 'deferred'
 				});
 
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally

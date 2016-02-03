@@ -22,10 +22,23 @@ var Input = FrakClass.extend({
 		this.hammertime = HammerWF(this.canvas);
 		this.hammertime.get('pinch').set({ enable: true });
 		this.hammertime.get('rotate').set({ enable: true });
-		this.hammertime.get('pan').set({ threshold: 0, pointers: 0 });
+		this.hammertime.get('pan').set({ threshold: 0, pointers: 0});
+
+
+		this.singlepan = new HammerWF.Pan({
+		  event: 'pan',
+		  direction: Hammer.DIRECTION_ALL,
+		  threshold: 5,
+		  pointers: 1
+		});
+
+		this.hammertime.add(this.singlepan);
+
+
 
 		this.bindings = {};
 		this.keyStates = {};
+		this.wfPanEnabled = false;
 
 		this.keymap = {
 			'enter': 13,
@@ -148,12 +161,13 @@ var Input = FrakClass.extend({
 			this.hammertime.on("pinchend", FrakCallback(this, this.onPinchEnd));
 			this.hammertime.on("tap", FrakCallback(this, this.onTap));
 			this.hammertime.on("transformstart", FrakCallback(this, this.onTransformStart));
-			this.hammertime.on("pan", FrakCallback(this, this.onPan));
+			//this.hammertime.on("pan", FrakCallback(this, this.onPan));
 			this.hammertime.on("panstart", FrakCallback(this, this.onPanStart));
 			this.hammertime.on("panend", FrakCallback(this, this.onPanEnd));
 			this.hammertime.on("rotate", FrakCallback(this, this.onRotate));
 			this.hammertime.on("rotateend", FrakCallback(this, this.onRotateEnd));
 			this.hammertime.on("touch", FrakCallback(this, this.onTouch));
+			this.hammertime.on("panleft panright panup pandown", FrakCallback(this, this.onPan));
 		}
 
 		this.canvas.addEventListener("mousewheel", FrakCallback(this, this.onMouseWheel));
@@ -285,7 +299,7 @@ var Input = FrakClass.extend({
 	},
 
 	onTouch: function(){
-		//console.info("onTouch");
+		console.info("onTouch in frak");
 	},
 
 	onTransformStart: function(event){
@@ -329,6 +343,7 @@ var Input = FrakClass.extend({
 
 
 	onMultiDrag: function(event){
+		console.log("Multi drag in frak");
 
 	},
 

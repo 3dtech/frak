@@ -16,6 +16,7 @@ var ShadersManager=Manager.extend({
 			'normalmapped': 'shaders/default/normalmapped',
 			'transparent': 'shaders/default/transparent',
 			'reflective': 'shaders/default/reflective',
+			'reflective_masked': 'shaders/default/reflective_masked',
 
 			// The following are deprecated:
 			'test': 'shaders/default/test',

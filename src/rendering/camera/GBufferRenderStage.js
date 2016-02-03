@@ -11,7 +11,8 @@ var GBufferRenderStage = RenderStage.extend({
 		this.damaged = true;
 
 		this.perBatchUniforms = {
-			'useNormalmap': new UniformInt(0)
+			'useNormalmap': new UniformInt(0),
+			'useReflection': new UniformInt(0),
 		};
 	},
 
@@ -35,6 +36,13 @@ var GBufferRenderStage = RenderStage.extend({
 				'zFar': new UniformFloat(1000.0)
 			},
 			[]);
+
+		this.normalmapFallback =  new Sampler('normal0');
+		this.maskFallback =  new Sampler('mask');
+		this.envFallback =  new Sampler('env0');
+		this.envFallback.createFallbackCubeTexture(context);
+		this.envFallback.texture = fallbackCubeTexture;
+
 
 		engine.assetsManager.load();
 	},
@@ -91,10 +99,20 @@ var GBufferRenderStage = RenderStage.extend({
 
 			// Check if material has a normal-map
 			this.perBatchUniforms.useNormalmap.value = 0;
+			this.perBatchUniforms.useReflection.value = 0;
+			var hasMask = false;
 			for (var m=0; m<batchMaterial.samplers.length; m++) {
 				if (batchMaterial.samplers[m].name == 'normal0') {
 					this.perBatchUniforms.useNormalmap.value = 1;
-					break;
+					continue;
+				}
+				if (batchMaterial.samplers[m].name == 'env0') {
+					this.perBatchUniforms.useReflection.value = 1;
+					continue;
+				}
+				if (batchMaterial.samplers[m].name == 'mask') {
+					hasMask = true;
+					continue;
 				}
 			}
 
@@ -103,11 +121,23 @@ var GBufferRenderStage = RenderStage.extend({
 				samplers = material.samplers.concat(batchMaterial.samplers);
 			}
 			else {
-				samplers = batchMaterial.samplers;
+				samplers = batchMaterial.samplers.slice();
 			}
 
 			if (batchMaterial.samplers.length == 0) {
 				samplers.push(this.parent.diffuseFallback);
+			}
+
+			if (this.perBatchUniforms.useNormalmap.value == 0) {
+				samplers.push(this.normalmapFallback);
+			}
+
+			if (this.perBatchUniforms.useReflection.value == 0) {
+				samplers.push(this.envFallback);
+				samplers.push(this.maskFallback);
+			}
+			else if (this.perBatchUniforms.useReflection.value == 1 && !hasMask) {
+				samplers.push(this.maskFallback);
 			}
 
 			// Bind material uniforms and samplers

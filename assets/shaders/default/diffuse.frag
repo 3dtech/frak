@@ -46,7 +46,7 @@ vec4 lighting(float shadow) {
 	specularLight = pow(specularLight, float(specularPower));
 
 	vec4 ambientColor = ambient * textureColor;
-	vec4 diffuseColor = diffuse * diffuse * textureColor * lightColor * diffuseLight;
+	vec4 diffuseColor = diffuse * textureColor * lightColor * diffuseLight;
 	vec4 specularColor = lightColor * specularLight * specularStrength;
 
 	return ambientColor + (diffuseColor + specularColor) * shadow;
