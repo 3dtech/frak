@@ -2,12 +2,14 @@
 var TextComponent=MeshComponent.extend({
 	/** Constructor
 		@param text Default text to display */
-	init: function(text) {
+	init: function(text, wrap) {
 		this._super(new Mesh());
 		this.context = false;
 		this.material = false;
 		this.texture = false;
+		this.wrap = wrap ? 0 : wrap;
 		this.sampler = new Sampler('diffuse0', null);
+		this.lines = [];
 
 		// Text properties
 		this.color = new Color(0.0, 0.0, 0.0, 1.0); ///< Color of the text
@@ -65,8 +67,12 @@ var TextComponent=MeshComponent.extend({
 		var canvas = document.createElement("canvas");
 		var ctx = canvas.getContext("2d");
 		this.applyTextStyles(ctx);
-		
-		this.textLength = ctx.measureText(this.text).width;
+
+		if(this.wrap)
+			this.lines = this.getLines(this.text);
+		else
+			this.textLength = ctx.measureText(this.text).width;
+
 
 		canvas.width = nextHighestPowerOfTwo(ctx.measureText(this.text).width);
 		canvas.height = nextHighestPowerOfTwo(2.0 * this.fontSize);
@@ -146,5 +152,33 @@ var TextComponent=MeshComponent.extend({
 	setText: function(text) {
 		this.text = String(text);
 		this.updateText();
+	},
+
+	getLines: function(text, linesCount) {
+	    var words = text.split(" ");
+	    var lines = [];
+	    var currentLine = words[0];
+
+	    if(linesCount <= 0)
+	    	return words;
+
+	    if(words.length <= linesCount)
+	    	return words;
+
+
+
+	    for (var i = 1; i < words.length; i++) {
+	    	if(currentLine.length > text.length / linesCount){
+	    		lines.push(currentLine);
+	    		currentLine = "";
+	    	}
+	    	else {
+	    		currentLine += " "+words[i];
+	    	}
+	    }
+	    
+	    lines.push(currentLine);
+
+    	return lines;
 	}
 });

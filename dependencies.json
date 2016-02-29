@@ -136,8 +136,10 @@
 	"src/scene/components/MeshRendererComponent.js",
 	"src/scene/components/SkyboxComponent.js",
 	"src/scene/components/TextRendererComponent.js",
+	"src/scene/components/CanvasBoardRendererComponent.js",
 	"src/scene/components/TextComponent.js",
 	"src/scene/components/LineRendererComponent.js",
+	"src/scene/components/CanvasBoardComponent.js",
 
 	"src/scene/components/Controller.js",
 	"src/scene/components/FlightController.js",

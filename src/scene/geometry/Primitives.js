@@ -341,11 +341,23 @@ var Primitives = {
 
 	/** Generates a text object (planar mesh in XY-axis with the text texture)
 		@param s {String} The initial text to display. Can be zero length.
+		@param wrap {Boolean} Should it wrap text by the longest word
 		@return {Node} that has the generated geometry attached to it */
-	text: function(s) {
+	text: function(s, wrap) {
 		var node = new Node('Text');
-		node.addComponent(new TextComponent(s));
+		node.addComponent(new TextComponent(s, wrap));
 		node.addComponent(new TextRendererComponent());
+		return node;
+	},
+
+	/** Generates a text object (planar mesh in XY-axis with the text texture)
+		@param s {String} The initial text to display. Can be zero length.
+		@param wrap {Boolean} Should it wrap text by the longest word
+		@return {Node} that has the generated geometry attached to it */
+	canvasBoard: function(width, height) {
+		var node = new Node('Text');
+		node.addComponent(new CanvasBoardComponent(width, height));
+		node.addComponent(new CanvasBoardRendererComponent());
 		return node;
 	}
 };
