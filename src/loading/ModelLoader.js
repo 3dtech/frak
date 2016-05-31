@@ -156,7 +156,7 @@ var ModelLoader=FrakClass.extend({
 		if (parsedMaterial.color.ambient)
 			uniforms["ambient"] = new UniformColor(parsedMaterial.color.ambient);
 		else
-			uniforms["ambient"] = new UniformColor(new Color(0.2, 0.2, 0.2, 1.0));
+			uniforms["ambient"] = new UniformColor(new Color(0.8, 0.8, 0.8, 1.0));
 
 		if (parsedMaterial.color.diffuse)
 			uniforms["diffuse"] = new UniformColor(parsedMaterial.color.diffuse);
