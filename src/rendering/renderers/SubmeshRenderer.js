@@ -4,28 +4,44 @@
 var SubmeshRenderer=Renderer.extend({
 	init: function(context, matrix, submesh, material) {
 		this._super(matrix);
-		this.submesh=submesh;
-		this.material=material;
-		this.buffer=[];
-
+		this.submesh = submesh;
+		this.material = material;
+		this.buffer = [];
+		this.failed = false;
+		this.transparent = false;
 		this.localBoundingBox = this.submesh.boundingBox;
 		this.localBoundingSphere = this.submesh.boundingSphere;
 		this.updateGlobalBoundingVolumes();
 
+		this.build(context);
+	},
+
+	allocBuffer: function(context) {
+		if (!this.submesh)
+			throw Error("SubmeshRenderer.allocBuffer: No submesh set");
+
 		if (context.engine && context.engine.options.useVAO === true) {
 			try {
-				this.buffer = new TrianglesRenderBufferVAO(context, submesh.faces);
+				this.buffer = new TrianglesRenderBufferVAO(context, this.submesh.faces);
 			}
 			catch(e) {
-				this.buffer = new TrianglesRenderBuffer(context, submesh.faces);
+				this.buffer = new TrianglesRenderBuffer(context, this.submesh.faces);
 			}
 		}
 		else {
-			this.buffer = new TrianglesRenderBuffer(context, submesh.faces);
+			this.buffer = new TrianglesRenderBuffer(context, this.submesh.faces);
 		}
+	},
+
+	build: function(context) {
+		if (this.buffer)
+			delete this.buffer;
+
+		this.allocBuffer(context);
+
+		var submesh = this.submesh;
 
 		this.buffer.add("position", submesh.positions, 3);
-
 		var pointCount = submesh.positions.length / 3;
 
 		// 1D texture coordinates
@@ -106,6 +122,8 @@ var SubmeshRenderer=Renderer.extend({
 			}
 		}
 
+		var material = this.material;
+
 		// In case some key shader parameters are missing assign some defaults
 		// to prevent nonintuitive rendering problems
 		if (!material.uniforms.diffuse)
@@ -122,7 +140,7 @@ var SubmeshRenderer=Renderer.extend({
 			(material.uniforms['diffuse'] && material.uniforms['diffuse'].value[3]<1.0) ||
 			(material.uniforms['ambient'] && material.uniforms['ambient'].value[3]<1.0);
 
-		this.failed=false;
+		this.failed = false;
 	},
 
 	/** Renders mesh geometry with material */
@@ -140,5 +158,9 @@ var SubmeshRenderer=Renderer.extend({
 		}
 		shader.bindUniforms(this._cache);
 		this.buffer.render(shader);
+	},
+
+	onContextRestored: function(context) {
+		this.build(context);
 	}
 });

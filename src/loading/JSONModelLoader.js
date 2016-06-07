@@ -20,9 +20,11 @@ var JSONModelLoader = FrakClass.extend({
 		if (this.defaultTexture)
 			return;
 
-		this.defaultTexture=new Texture(context);
-		this.defaultTexture.clearImage(context, [0xFF, 0xFF, 0xFF, 0xFF]);
-		this.defaultSampler=new Sampler("diffuse0", this.defaultTexture);
+		if (!context.engine)
+			return;
+
+		this.defaultTexture = context.engine.WhiteTexture;
+		this.defaultSampler = new Sampler("diffuse0", this.defaultTexture);
 	},
 
 	/** Loads parsed data to scene hierarchy at given node */

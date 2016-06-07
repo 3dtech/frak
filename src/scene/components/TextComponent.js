@@ -155,30 +155,37 @@ var TextComponent=MeshComponent.extend({
 	},
 
 	getLines: function(text, linesCount) {
-	    var words = text.split(" ");
-	    var lines = [];
-	    var currentLine = words[0];
+		var words = text.split(" ");
+		var lines = [];
+		var currentLine = words[0];
 
-	    if(linesCount <= 0)
-	    	return words;
+		if(linesCount <= 0)
+			return words;
 
-	    if(words.length <= linesCount)
-	    	return words;
+		if(words.length <= linesCount)
+			return words;
 
+		for (var i = 1; i < words.length; i++) {
+			if(currentLine.length > text.length / linesCount){
+				lines.push(currentLine);
+				currentLine = "";
+			}
+			else {
+				currentLine += " "+words[i];
+			}
+		}
 
+		lines.push(currentLine);
 
-	    for (var i = 1; i < words.length; i++) {
-	    	if(currentLine.length > text.length / linesCount){
-	    		lines.push(currentLine);
-	    		currentLine = "";
-	    	}
-	    	else {
-	    		currentLine += " "+words[i];
-	    	}
-	    }
-	    
-	    lines.push(currentLine);
+		return lines;
+	},
 
-    	return lines;
+	onContextRestored: function(context) {
+		if (this.texture)
+			delete this.texture;
+		this.texture = new Texture(context);
+		this.texture.mipmapped = true;
+		this.texture.clampToEdge = true;
+		this.sampler.texture = this.texture;
 	}
 });

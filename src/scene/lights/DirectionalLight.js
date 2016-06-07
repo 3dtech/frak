@@ -17,6 +17,7 @@ var DirectionalLight = Light.extend({
 		this.material = null;
 
 		this.shadow = null;
+		this.shadowSampler = null;
 		this.lightView = mat4.create();
 		this.lightProj = mat4.create();
 	},
@@ -105,8 +106,14 @@ var DirectionalLight = Light.extend({
 		if (this.shadowCasting) {
 			if (!this.shadow) {
 				this.shadow = new TargetTextureFloat(this.shadowResolution, engine.context, false);
-				this.shadowSampler = new Sampler('shadow0', this.shadow.texture);
-				this.material.samplers.push(this.shadowSampler);
+				if (!this.shadowSampler) {
+					this.shadowSampler = new Sampler('shadow0', this.shadow.texture);
+					this.material.samplers.push(this.shadowSampler);
+				}
+				else {
+					this.shadowSampler.texture = this.shadow.texture;
+				}
+
 			}
 
 			mat4.copy(this.material.uniforms.lightView.value, this.lightView);
@@ -116,5 +123,10 @@ var DirectionalLight = Light.extend({
 
 	getGeometryRenderers: function() {
 		return this.geometry.getComponent(MeshRendererComponent).meshRenderers;
+	},
+
+	onContextRestored: function(context) {
+		delete this.shadow;
+		this.shadow = null;
 	}
 });

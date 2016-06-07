@@ -15,6 +15,7 @@ var CubeTexture = BaseTexture.extend({
 		this.clampToEdge = true;
 		this.anisotropic = true;
 		this.anisotropyFilter = 4; // 4x filtering by default
+		this.images = {};
 
 		if (context)
 			this.create(context);
@@ -88,13 +89,18 @@ var CubeTexture = BaseTexture.extend({
 			this.create(context);
 
 		if (!this.glTexture)
-			throw "Unable to update texture. glTexture not available.";
+			throw "Unable to update cube texture. glTexture not available.";
+
+		var image = inputImage;
+		if (face in this.images) {
+			delete this.images[face].image;
+		}
+		this.images[face] = { image: image, noResize: !!noResize };
 
 		face = this.getGLCubeFace(context, face);
 		if (!face)
 			throw "Not a valid CubeTexture face.";
 
-		var image = inputImage;
 		if (!noResize)
 			image = this.resizeToPowerOfTwo(inputImage);
 		vec2.set(this.size, image.width, image.height);
@@ -106,12 +112,20 @@ var CubeTexture = BaseTexture.extend({
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 
 		this.loaded = true;
-		if (image != inputImage)
-			delete image;
 		if ((this.size[0] & (this.size[0] - 1)) != 0 ||
 			(this.size[1] & (this.size[1] - 1)) != 0) {
 			console.warn('Created a not power of 2 texture: {0} ({1}x{2})'
 				.format(this.name, this.size[0], this.size[1]));
+		}
+	},
+
+	onContextRestored: function(context) {
+		this.glTexture = null;
+		this.create(context);
+		this.loaded = false;
+		for (var face in this.images) {
+			var item = this.images[face];
+			this.setFace(context, parseInt(face), item.image, item.noResize);
 		}
 	}
 });

@@ -39,31 +39,7 @@ var CameraComponent=Component.extend({
 	},
 
 	onStart: function(context, engine) {
-		if (this.camera.target instanceof TargetScreen) {
-			var canvas = context.canvas;
-			this.camera.target.setSize(canvas.width, canvas.height);
-		}
-
-		if (engine.options.renderer == 'forward') {
-			if (engine.options.transparencyMode == 'blended' || engine.options.transparencyMode == 'stochastic') {
-				this.camera.renderStage.addStage(new OITPostProcess());
-			}
-
-			if (engine.options.ssao === true) {
-				this.camera.renderStage.addStage(new SSAOPostProcess());
-			}
-		}
-		else if (engine.options.renderer == 'deferred') {
-			delete this.camera.renderStage;
-			this.camera.renderStage = new DeferredRenderStage();
-			this.camera.renderStage.addStage(new OITPostProcess());
-		}
-
-		if (engine.options.antialias === true) {
-			this.camera.renderStage.addStage(new AntiAliasPostProcess());
-		}
-
-		this.camera.renderStage.start(context, engine, this.camera);
+		this.initRenderStage(context, engine);
 	},
 
 	/** Set actual camera matrix
@@ -200,5 +176,38 @@ var CameraComponent=Component.extend({
 
 		// Calculate new relative transform matrix based on parent absolute and this node absolute matrix
 		this.node.calculateRelativeFromAbsolute();
+	},
+
+	initRenderStage: function(context, engine) {
+		if (this.camera.target instanceof TargetScreen) {
+			var canvas = context.canvas;
+			this.camera.target.setSize(canvas.width, canvas.height);
+		}
+
+		if (engine.options.renderer == 'forward') {
+			if (engine.options.transparencyMode == 'blended' || engine.options.transparencyMode == 'stochastic') {
+				this.camera.renderStage.addStage(new OITPostProcess());
+			}
+
+			if (engine.options.ssao === true) {
+				this.camera.renderStage.addStage(new SSAOPostProcess());
+			}
+		}
+		else if (engine.options.renderer == 'deferred') {
+			delete this.camera.renderStage;
+			this.camera.renderStage = new DeferredRenderStage();
+			this.camera.renderStage.addStage(new OITPostProcess());
+		}
+
+		if (engine.options.antialias === true) {
+			this.camera.renderStage.addStage(new AntiAliasPostProcess());
+		}
+
+		this.camera.renderStage.start(context, engine, this.camera);
+	},
+
+	onContextRestored: function(context) {
+		this.camera.renderStage = new ForwardRenderStage();
+		this.initRenderStage(context, context.engine);
 	}
 });

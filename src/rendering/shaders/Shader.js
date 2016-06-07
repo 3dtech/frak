@@ -63,12 +63,14 @@ var Shader=Serializable.extend({
 			this.context.gl.bindAttribLocation(this.program, ExplicitAttributeLocations[name], name);
 		}
 
-		this.uniformLocations={};
-		this.linked=true;
+		this.uniformLocations = {};
+		this.linked = true;
 		this.context.gl.linkProgram(this.program);
-		if (!this.context.gl.getProgramParameter(this.program, this.context.gl.LINK_STATUS)) {
-			this.linked=false;
-			this.failed=true;
+		var status = this.context.gl.getProgramParameter(this.program, this.context.gl.LINK_STATUS);
+		if (!status) {
+			console.error('Shader linking failed: ', this.context.gl.getProgramInfoLog(this.program));
+			this.linked = false;
+			this.failed = true;
 		}
 	},
 
@@ -152,5 +154,17 @@ var Shader=Serializable.extend({
 			slotIndex++;
 		}
 		gl.activeTexture(gl.TEXTURE0);
+	},
+
+	onContextRestored: function(context) {
+		this.context = context;
+		this.program = context.gl.createProgram();
+		this.uniformLocations = {};
+		this.failed = false;
+		this.linked = false;
+		for (var i=0; i<this.shaders.length; ++i) {
+			this.shaders[i].onContextRestored(context);
+		}
+		this.link();
 	}
 });

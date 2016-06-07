@@ -10,10 +10,11 @@
 		<div>
 			<button onclick="toggleDebug();">Debug</button>
 			<button onclick="pauseEngine(this);">PAUSE</button>
-			<button onclick="engine.context.canvas.loseContext();">Lose context</button>
+			<button onclick="loseContext();">Lose context</button>
+			<button onclick="restoreContext();">Restore context</button>
 		</div>
 
-		<script src="webgl-debug.js"></script>
+		<!-- <script src="webgl-debug.js"></script> -->
 		<script src="../builds/frak-latest.min.js"></script>
 
 		<script type="text/javascript">
@@ -108,19 +109,18 @@
 			}
 
 			var engine;
+			var loseContextExtension;
+
 			window.onload = function() {
 				engine = new Engine('canvas', {
 					'requestedFPS': 60,
 					'assetsPath': '../assets/',
-
-					// disabling all fancy
-					'transparencyMode': 'sorted',
-					'antialias': false,
-					'renderer': 'forward',
-
-					// 'transparencyMode': 'blended',
-					// 'antialias': true
+					'renderer': 'deferred',
+					'transparencyMode': 'blended',
+					'antialias': true
 				});
+
+				loseContextExtension = engine.context.gl.getExtension('WEBGL_lose_context');
 
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
 				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
@@ -145,6 +145,18 @@
 					element.textContent = 'PAUSE';
 				else
 					element.textContent = 'UNPAUSE';
+			}
+
+			function loseContext() {
+				if (!loseContextExtension)
+					return;
+				loseContextExtension.loseContext();
+			}
+
+			function restoreContext() {
+				if (!loseContextExtension)
+					return;
+				loseContextExtension.restoreContext();
 			}
 		</script>
 	</body>
