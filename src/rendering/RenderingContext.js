@@ -19,6 +19,12 @@ var RenderingContext=FrakClass.extend({
 			throw "RenderingContext requires a canvas element";
 
 		this.canvas = canvas;
+
+		if (typeof(WebGLDebugUtils) != 'undefined') {
+			this.canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
+			this.canvas.setRestoreTimeout(2000);
+		}
+
 		contextOptions = contextOptions || { alpha: false };
 
 		// Try to get rendering context for WebGL
@@ -47,7 +53,7 @@ var RenderingContext=FrakClass.extend({
 			throw "Failed to acquire GL context from canvas";
 		}
 
-		if(typeof WebGLDebugUtils != 'undefined') {
+		if (typeof(WebGLDebugUtils) != 'undefined') {
 			function throwOnGLError(err, funcName, args) {
 				throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName+ JSON.stringify(args);
 			}
@@ -62,5 +68,76 @@ var RenderingContext=FrakClass.extend({
 		this.shadow = false; ///< Current shadow map (forward rendering only)
 		this.camera = false; ///< Current camera used for rendering (used to populate camera uniforms for shaders)
 		this.engine = false; ///< Current engine used for rendering
+	},
+
+	error: function() {
+		if (this.isContextLost())
+			throw Error("Context lost");
+		var err = this.gl.getError();
+		if (err > 0 && typeof(WebGLDebugUtils) != 'undefined') {
+			throw Error("GL_ERROR: " + WebGLDebugUtils.glEnumToString(err));
+		}
+		return err;
+	},
+
+	isContextLost: function() {
+		if (!this.gl)
+			return true;
+		return this.gl.isContextLost();
+	},
+
+	/** Tries to restore the GL state in fresh context. Requires this.engine to be set. */
+	restore: function() {
+		if (!this.engine)
+			return false;
+
+		var contextLost = this.gl.getError(); // Remove the GL_CONTEXT_LOST_WEBGL error
+		var ctx = this;
+		var engine = this.engine;
+
+		// Restore shaders
+		var texturesManager = engine.assetsManager.texturesManager;
+		for (var i in texturesManager.cache) {
+			var texture = texturesManager.cache[i];
+			texture.onContextRestored(ctx);
+		}
+
+		// Restore geometry
+		var rootNode = engine.scene.root;
+		rootNode.onEachChildComponent(function (component) {
+			if (component instanceof RendererComponent ||
+				component instanceof TextComponent)
+				component.onContextRestored(ctx);
+		});
+
+		// Restore lights
+		for (var i=0; i<engine.scene.lights.length; ++i) {
+			engine.scene.lights[i].onContextRestored(ctx);
+		}
+
+		// Restore fallback textures
+		engine.WhiteTexture.glTexture = null;
+		engine.WhiteTexture.loaded = false;
+		engine.WhiteTexture.clearImage(ctx, [0xFF, 0xFF, 0xFF, 0xFF]);
+
+		// Reset global fallback textures
+		if (fallbackTexture)
+			fallbackTexture.onContextRestored(ctx);
+
+		if (fallbackCubeTexture)
+			fallbackCubeTexture.onContextRestored(ctx);
+
+		// Restore render targets and render stages
+		if (engine.scene && engine.scene.cameraComponent)
+			engine.scene.cameraComponent.onContextRestored(ctx);
+
+		// Restore shaders
+		var shadersManager = engine.assetsManager.shadersManager;
+		for (var i in shadersManager.cache) {
+			var shader = shadersManager.cache[i];
+			shader.onContextRestored(ctx);
+		}
+
+		return true;
 	}
 });
