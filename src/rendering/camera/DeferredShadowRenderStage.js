@@ -137,6 +137,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		gl.disable(gl.DEPTH_TEST);
 
 		light.shadow.unbind(context);
+		light.updateSamplers(context);
 
 		context.modelview.pop();
 		context.projection.pop();

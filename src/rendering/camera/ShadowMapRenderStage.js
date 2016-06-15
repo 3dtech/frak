@@ -109,6 +109,8 @@ var ShadowMapRenderStage=RenderStage.extend({
 		gl.disable(gl.DEPTH_TEST);
 
 		light.shadow.unbind(context);
+		light.updateSamplers();
+		this.parent.prepareShadowContext(context, scene);
 
 		context.modelview.pop();
 		context.projection.pop();
