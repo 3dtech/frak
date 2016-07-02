@@ -43,35 +43,40 @@ var BoundingBox=BoundingVolume.extend({
 
 	/** Transforms this bounding box by given matrix
 		@param mat {mat4} Transformation matrix
+		@param out {BoundingBox} The AABB to use as output
 		@return New {BoundingBox} */
-	transform: function(mat) {
-		var box = new BoundingBox();
-		if (!this.center)
-			return box;
+	transform: function(mat, out) {
+		if (!out)
+			out = new BoundingBox();
 
-		var a=0.0, b=0.0;
-		mat4.translation(box.min, mat);
-		mat4.translation(box.max, mat);
+		if (!this.center)
+			return out;
+
+		var a = 0.0, b = 0.0;
+		mat4.translation(out.min, mat);
+		mat4.translation(out.max, mat);
 
 		for (var j=0; j<3; j++ ) {
 			for (var i=0; i<3; i++ ) {
 				a = mat[i*4+j] * this.min[i];
 				b = mat[i*4+j] * this.max[i];
 				if(a < b) {
-					box.min[j] += a;
-					box.max[j] += b;
+					out.min[j] += a;
+					out.max[j] += b;
 				}
 				else {
-					box.min[j] += b;
-					box.max[j] += a;
+					out.min[j] += b;
+					out.max[j] += a;
 				}
 			}
 		}
 
-		vec3.subtract(box.size, box.max, box.min);
-		vec3.scale(box.extents, box.size, 0.5);
-		box.center = vec3.add(vec3.create(), box.min, box.extents);
-		return box;
+		vec3.subtract(out.size, out.max, out.min);
+		vec3.scale(out.extents, out.size, 0.5);
+		if (!out.center)
+			out.center = vec3.create();
+		vec3.add(out.center, out.min, out.extents);
+		return out;
 	},
 
 	/** Returns true if the box has 0 size.

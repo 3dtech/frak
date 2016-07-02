@@ -172,7 +172,7 @@ var Engine=FrakClass.extend({
 		}
 	},
 
-	setupInput: function(){
+	setupInput: function() {
 		this.input = new Input(this, this.context.canvas);
 	},
 

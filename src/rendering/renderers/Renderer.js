@@ -114,8 +114,8 @@ var Renderer=FrakClass.extend({
 
 	/** Updates global bounding volumes */
 	updateGlobalBoundingVolumes: function() {
-		this.globalBoundingBox=this.localBoundingBox.transform(this.matrix);
-		this.globalBoundingSphere=this.localBoundingSphere.transform(this.matrix);
+		this.localBoundingBox.transform(this.matrix, this.globalBoundingBox);
+		this.localBoundingSphere.transform(this.matrix, this.globalBoundingSphere);
 	},
 
 	// Events
