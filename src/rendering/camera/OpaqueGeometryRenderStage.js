@@ -2,17 +2,29 @@
  * Render-stage for rendering opaque geometry.
  */
 var OpaqueGeometryRenderStage = RenderStage.extend({
+	init: function() {
+		this._super();
+		this.activeLights = [];
+	},
 
 	getDirectionalLights: function(scene) {
-		var lights = [];
-		for (var i=0; i<scene.lights.length; i++) {
-			if (!(scene.lights[i] instanceof DirectionalLight))
+		if (this.activeLights.length < scene.lights.length)
+			this.activeLights.length = scene.lights.length;
+
+		var index = 0;
+		var light;
+		for (var i = 0; i < scene.lights.length; ++i) {
+			light = scene.lights[i];
+			if (!(light instanceof DirectionalLight))
 				continue;
-			if (!scene.lights[i].enabled)
+			if (!light.enabled)
 				continue;
-			lights.push(scene.lights[i]);
+			this.activeLights[index++] = light;
 		}
-		return lights;
+
+		for (var i = index; i < scene.lights.length; ++i)
+			this.activeLights[i] = null;
+		return this.activeLights;
 	},
 
 	onPostRender: function(context, scene, camera) {
@@ -24,7 +36,7 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 		gl.depthMask(true);
 
 		// Render solid renderers with the first light
-		if (lights.length>0)
+		if (lights.length > 0 && lights[0])
 			context.light = lights[0];
 
 		if (this.parent.organizer.enableDynamicBatching) {
@@ -35,15 +47,17 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 		}
 
 		// Render solid geometry with the rest of the lights
-		if (lights.length>1) {
+		if (lights.length > 1 && lights[1]) {
 			gl.depthMask(false);
 			gl.depthFunc(gl.LEQUAL);
 			gl.blendFunc(gl.ONE, gl.ONE);
 			gl.enable(gl.BLEND);
 			// Note: Fordward renderer only supports directional lighting at this point
 			for (var l=1; l<lights.length; l++) {
-				context.light = lights[l];
+				if (!lights[l])
+					break;
 
+				context.light = lights[l];
 				if (this.parent.organizer.enableDynamicBatching) {
 					this.parent.renderBatched(context, this.parent.organizer.opaqueBatchList);
 				}

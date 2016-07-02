@@ -1,27 +1,72 @@
+/** Transparency sorting function */
+function TransparencySort(a, b) {
+	if (!a && !b)
+		return 0;
+	if (a && !b)
+		return -1;
+	if (!a && b)
+		return 1
+	var d1 = vec3.squaredDistance(TransparencySort.cmpValue, a.globalBoundingSphere.center);
+	var d2 = vec3.squaredDistance(TransparencySort.cmpValue, b.globalBoundingSphere.center);
+	if (d1>d2) return -1;
+	if (d1<d2) return 1;
+	return 0;
+}
+
+TransparencySort.cmpValue = vec3.create();
+
+/** Renderer batch that indexes directly into a renderer list */
+function Batch(list) {
+	this.indices = new Array();
+	this.length = 0;
+
+	var scope = this;
+
+	this.clear = function() {
+		for (var i=0; i<scope.indices.length; ++i)
+			scope.indices[i] = -1;
+		scope.length = 0;
+	};
+
+	this.add = function(index) {
+		if (scope.indices.indexOf(index) != -1)
+			return;
+		scope.indices[scope.length++] = index;
+	};
+
+	this.get = function(index) {
+		if (index >= 0 && index < scope.indices.length) {
+			var listIndex = scope.indices[index];
+			if (listIndex >= 0 && listIndex < list.length)
+				return list[listIndex];
+		}
+	};
+}
+
 /**
  * Utility class for pre-organizing renderers for the rendering pipeline.
  */
 var RendererOrganizer = FrakClass.extend({
 	init: function() {
 		this.enableDynamicBatching = true; ///< Set to false to turn off dynamic batching of renderers by material.
+
 		this.solidRenderers = [];
 		this.transparentRenderers = [];
 
 		this.opaqueBatchList = [];
 		this.transparentBatchList = [];
+		this.batchIndex = {};
 
-		this.reset();
-	},
+		this.renderers = new CollectionReference([]);
+		this.viewSolidRenderers = new CollectionView(this.renderers, function(renderer) {
+			return !renderer.transparent;
+		});
+		this.viewTransparentRenderers = new CollectionView(this.renderers, function(renderer) {
+			return renderer.transparent;
+		});
 
-	reset: function() {
-		this.solidRendererBatches = {};
-		this.transparentRendererBatches = {};
-		this.solidRenderers.length = 0;
-		this.transparentRenderers.length = 0;
-
-		this.opaqueBatchList.length = 0;
-		this.transparentBatchList.length = 0;
-
+		// Stats
+		this.visibleRenderers = 0;
 		this.visibleSolidRenderers = 0;
 		this.visibleSolidBatches = 0;
 		this.visibleSolidFaces = 0;
@@ -30,68 +75,61 @@ var RendererOrganizer = FrakClass.extend({
 		this.visibleTransparentBatches = 0;
 	},
 
-	sort: function(engine, renderers, eyePosition) {
-		this.reset();
+	updateStats: function() {
+		this.visibleSolidRenderers = this.viewSolidRenderers.length;
+		this.visibleTransparentRenderers = this.viewTransparentRenderers.length;
+		this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers;
+		// FIXME: visible batches should only be updated when the info is required
+	},
 
-		this.visibleRenderers = 0;
+	batch: function(batchList, renderers) {
+		// Clears existing batches
+		var batch;
+		for (var i = 0; i < batchList.length; ++i) {
+			batchList[i].clear();
+		}
+
+		// Batch renderers
 		var renderer;
-		for (var i=0; i < renderers.length; i++) {
+		for (var i = 0; i < renderers.length; ++i) {
 			renderer = renderers[i];
 			if (!renderer)
-				continue;
-
-			this.visibleRenderers++;
-
-			if (renderer.transparent) {
-				if (this.enableDynamicBatching && engine.options.transparencyMode != 'sorted') {
-					if (renderer.material.id in this.transparentRendererBatches) {
-						this.transparentRendererBatches[renderer.material.id].push(renderer);
-					}
-					else {
-						this.transparentRendererBatches[renderer.material.id] = [renderer];
-						this.visibleTransparentBatches++;
-					}
-				}
-				this.transparentRenderers.push(renderer);
-				if (renderer instanceof SubmeshRenderer)
-					this.visibleTransparentFaces += renderer.submesh.faces.length / 3;
+				break;
+			if (renderer.material.id in this.batchIndex) {
+				batch = batchList[this.batchIndex[renderer.material.id]];
 			}
 			else {
-				if (this.enableDynamicBatching) {
-					if (renderer.material.id in this.solidRendererBatches) {
-						this.solidRendererBatches[renderer.material.id].push(renderer);
-					}
-					else {
-						this.solidRendererBatches[renderer.material.id] = [renderer];
-						this.visibleSolidBatches++;
-					}
-				}
-				this.solidRenderers.push(renderer);
-				if (renderer instanceof SubmeshRenderer)
-					this.visibleSolidFaces += renderer.submesh.faces.length / 3;
+				batch = new Batch(renderers);
+				batchList.push(batch);
+				this.batchIndex[renderer.material.id] = batchList.length - 1;
 			}
+			batch.add(i);
 		}
+	},
 
-		for (var id in this.solidRendererBatches) {
-			this.opaqueBatchList.push(this.solidRendererBatches[id]);
+	sort: function(engine, renderers, eyePosition) {
+		this.renderers.list = renderers;
+
+		this.viewSolidRenderers.filter();
+		this.viewTransparentRenderers.filter();
+
+		this.solidRenderers = this.viewSolidRenderers.view;
+		this.transparentRenderers = this.viewTransparentRenderers.view;
+
+		// Batch renderers by material.id
+		if (this.enableDynamicBatching) {
+			if (engine.options.transparencyMode != 'sorted') {
+				this.batch(this.transparentBatchList, this.transparentRenderers);
+			}
+			this.batch(this.opaqueBatchList, this.solidRenderers);
 		}
-
-		for (var id in this.transparentRendererBatches) {
-			this.transparentBatchList.push(this.transparentRendererBatches[id]);
-		}
-
-		this.visibleTransparentRenderers = this.transparentRenderers.length;
-		this.visibleSolidRenderers = this.solidRenderers.length;
 
 		// Sort transparent renderers
 		if (engine.options.transparencyMode == 'sorted' && eyePosition) {
-			this.transparentRenderers.sort(function(a, b) {
-				var d1 = vec3.squaredDistance(eyePosition, a.globalBoundingSphere.center);
-				var d2 = vec3.squaredDistance(eyePosition, b.globalBoundingSphere.center);
-				if (d1>d2) return -1;
-				if (d1<d2) return 1;
-				return 0;
-			});
+			vec3.copy(TransparencySort.cmpValue, eyePosition);
+			this.transparentRenderers.sort(TransparencySort);
 		}
+
+		this.updateStats();
 	}
 });

@@ -95,7 +95,9 @@ var GBufferRenderStage = RenderStage.extend({
 
 		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
-			var batchMaterial = batch[0].material;
+			if (batch.length == 0)
+				continue;
+			var batchMaterial = batch.get(0).material;
 
 			// Check if material has a normal-map
 			this.perBatchUniforms.useNormalmap.value = 0;
@@ -145,10 +147,12 @@ var GBufferRenderStage = RenderStage.extend({
 			shader.bindUniforms(batchMaterial.uniforms);
 			shader.bindSamplers(samplers);
 
+			var renderer;
 			for (var j=0; j<batch.length; ++j) {
+				renderer = batch.get(j);
 				context.modelview.push();
-				context.modelview.multiply(batch[j].matrix);
-				batch[j].renderGeometry(context, shader); // This will bind all default uniforms
+				context.modelview.multiply(renderer.matrix);
+				renderer.renderGeometry(context, shader); // This will bind all default uniforms
 				context.modelview.pop();
 			}
 

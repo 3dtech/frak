@@ -121,7 +121,9 @@ var OITRenderStage = RenderStage.extend({
 		var batches = this.parent.organizer.transparentBatchList;
 		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
-			var batchMaterial = batch[0].material;
+			if (batch.length == 0)
+				continue;
+			var batchMaterial = batch.get(0).material;
 
 			var samplers;
 			if (material.samplers.length>0) {
@@ -139,11 +141,13 @@ var OITRenderStage = RenderStage.extend({
 			shader.bindUniforms(batchMaterial.uniforms);
 			shader.bindSamplers(samplers);
 
+			var renderer;
 			for (var j=0; j<batch.length; ++j) {
+				renderer = batch.get(j);
 				context.modelview.push();
-				context.modelview.multiply(batch[j].matrix);
+				context.modelview.multiply(renderer.matrix);
 
-				batch[j].renderGeometry(context, shader);
+				renderer.renderGeometry(context, shader);
 
 				context.modelview.pop();
 			}
@@ -175,7 +179,9 @@ var OITRenderStage = RenderStage.extend({
 		shader.bindSamplers(this.opaqueDepthMaterial.samplers);
 
 		var renderers = this.parent.organizer.solidRenderers;
-		for (var i=0; i<renderers.length; i++) {
+		for (var i=0; i<renderers.length; ++i) {
+			if (!renderers[i])
+				break;
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
 

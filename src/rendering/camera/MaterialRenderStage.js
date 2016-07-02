@@ -183,7 +183,7 @@ var MaterialRenderStage=RenderStage.extend({
 			var batch = batches[i];
 
 			// Use shader
-			var material = batch[0].material;
+			var material = batch.get(0).material;
 			var shader = material.shader;
 			if (shader != usedShader) {
 				shader.use();
@@ -211,18 +211,20 @@ var MaterialRenderStage=RenderStage.extend({
 			// Bind material uniforms
 			shader.bindUniforms(material.uniforms);
 
-			for(var j=0; j<batch.length; ++j) {
+			var renderer;
+			for (var j=0; j<batch.length; ++j) {
+				renderer = batch.get(j);
 				context.modelview.push();
-				context.modelview.multiply(batch[j].matrix);
+				context.modelview.multiply(renderer.matrix);
 
 				// Bind renderer specific uniforms
-				this.rendererUniforms.model.value = batch[j].matrix;
+				this.rendererUniforms.model.value = renderer.matrix;
 				this.rendererUniforms.modelview.value = context.modelview.top();
-				this.rendererUniforms.receiveShadows.value = batch[j].receiveShadows;
+				this.rendererUniforms.receiveShadows.value = renderer.receiveShadows;
 
 				shader.bindUniforms(this.rendererUniforms);
 
-				batch[j].render(context);
+				renderer.render(context);
 
 				context.modelview.pop();
 			}
@@ -238,6 +240,9 @@ var MaterialRenderStage=RenderStage.extend({
 
 		for (var j=0; j<renderers.length; ++j) {
 			var renderer=renderers[j];
+			if (!renderer)
+				break;
+
 			context.modelview.push();
 			context.modelview.multiply(renderer.matrix);
 
