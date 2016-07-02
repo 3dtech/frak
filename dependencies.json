@@ -15,6 +15,7 @@
 	"src/scene/CyclicSerializer.js",
 	"src/scene/TypeReference.js",
 
+	"src/rendering/CollectionUtils.js",
 	"src/rendering/Color.js",
 	"src/rendering/MatrixStack.js",
 	"src/rendering/RenderingContext.js",
