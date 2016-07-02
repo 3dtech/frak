@@ -12,10 +12,17 @@ var Material=Serializable.extend({
 		this.uniforms = uniforms; ///< Shader uniforms as described by Shader
 		this.samplers = samplers; ///< Shader samplers list
 		this.descriptor = descriptor;
+
+		this.boundSamplers = new Array();
+		this.numBoundSamplers = 0;
 	},
 
 	type: function() {
 		return "Material";
+	},
+
+	internalBindSampler: function(sampler) {
+		this.boundSamplers[this.numBoundSamplers++] = sampler;
 	},
 
 	/** Binds material
@@ -30,31 +37,33 @@ var Material=Serializable.extend({
 
 		if ((!this.samplers || this.samplers.length == 0) && (!samplers || samplers.length == 0)) {
 			if (this.shader.context.engine)
-				this.shader.bindSamplers([this.shader.context.engine.WhiteTextureSampler]);
+				this.internalBindSampler(this.shader.context.engine.WhiteTextureSampler);
 		}
 		else {
-			if (samplers)
-				this.shader.bindSamplers(this.samplers.concat(samplers));
-			else
-				this.shader.bindSamplers(this.samplers);
+			if (samplers) {
+				for (var i=0; i<samplers.length; ++i)
+					this.internalBindSampler(samplers[i]);
+			}
+
+			for (var i=0; i<this.samplers.length; ++i)
+				this.internalBindSampler(this.samplers[i]);
 		}
+
+		this.shader.bindSamplers(this.boundSamplers);
 	},
 
 	/** Unbinds material
 		@param samplers Optional extra samplers to go with the material (the same that were passed to bind()) */
 	unbind: function(samplers) {
-		if(!this.shader) return;
+		if (!this.shader)
+			return;
 
-		if ((!this.samplers || this.samplers.length == 0) && (!samplers || samplers.length == 0)) {
-			if (this.shader.context.engine)
-				this.shader.unbindSamplers([this.shader.context.engine.WhiteTextureSampler]);
+		this.shader.unbindSamplers(this.boundSamplers);
+
+		for (var i=0; i<this.boundSamplers.length; ++i) {
+			this.boundSamplers[i] = null;
 		}
-		else {
-			if (samplers)
-				this.shader.unbindSamplers(this.samplers.concat(samplers));
-			else
-				this.shader.unbindSamplers(this.samplers);
-		}
+		this.numBoundSamplers = 0;
 	},
 
 	instantiate: function() {
