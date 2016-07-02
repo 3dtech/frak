@@ -42,8 +42,9 @@ var Renderer=FrakClass.extend({
 	 * @param uniforms Optional previously allocated uniforms object that the values will be written to.
 	 */
 	getDefaultUniforms: function(context, uniforms) {
-		if (!uniforms)
+		if (!uniforms) {
 			uniforms = {};
+		}
 
 		if ('model' in uniforms) mat4.copy(uniforms.model.value, this.matrix);
 		else uniforms.model = new UniformMat4(this.matrix);

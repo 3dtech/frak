@@ -66,6 +66,8 @@ var MaterialRenderStage=RenderStage.extend({
 			"hasFloat": new UniformInt(1),
 			"useVSM": new UniformInt(1)
 		};
+
+		this.cachedUniforms = null;
 	},
 
 	onStart: function(context, engine, camera) {
@@ -254,7 +256,8 @@ var MaterialRenderStage=RenderStage.extend({
 				samplers = globalSamplers.concat([this.diffuseFallback]);
 			}
 
-			renderer.material.bind(renderer.getDefaultUniforms(context), samplers);
+			this.cachedUniforms = renderer.getDefaultUniforms(context, this.cachedUniforms);
+			renderer.material.bind(this.cachedUniforms, samplers);
 			renderer.render(context);
 			renderer.material.unbind(samplers);
 
