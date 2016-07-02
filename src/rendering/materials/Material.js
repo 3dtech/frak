@@ -13,16 +13,11 @@ var Material=Serializable.extend({
 		this.samplers = samplers; ///< Shader samplers list
 		this.descriptor = descriptor;
 
-		this.boundSamplers = new Array();
-		this.numBoundSamplers = 0;
+		this.boundSamplers = new SamplerAccumulator();
 	},
 
 	type: function() {
 		return "Material";
-	},
-
-	internalBindSampler: function(sampler) {
-		this.boundSamplers[this.numBoundSamplers++] = sampler;
 	},
 
 	/** Binds material
@@ -40,36 +35,31 @@ var Material=Serializable.extend({
 		for (var i = 1; i < arguments.length; ++i) {
 			var arg = arguments[i];
 			if (arg instanceof Sampler) {
-				this.internalBindSampler(arg);
+				this.boundSamplers.add(arg);
 			}
 			else if (arg instanceof Array) {
 				for (var j = 0; j < arg.length; ++j) {
-					this.internalBindSampler(arg[j]);
+					this.boundSamplers.add(arg[j]);
 				}
 			}
 		}
 
 		for (var i=0; i<this.samplers.length; ++i)
-			this.internalBindSampler(this.samplers[i]);
+			this.boundSamplers.add(this.samplers[i]);
 
-		if (this.numBoundSamplers == 0 && this.shader.context.engine) {
-			this.internalBindSampler(this.shader.context.engine.DiffuseFallbackSampler);
+		if (this.boundSamplers.length == 0 && this.shader.context.engine) {
+			this.boundSamplers.add(this.shader.context.engine.DiffuseFallbackSampler);
 		}
 
-		this.shader.bindSamplers(this.boundSamplers);
+		this.shader.bindSamplers(this.boundSamplers.samplers);
 	},
 
 	/** Unbinds material */
 	unbind: function() {
 		if (!this.shader)
 			return;
-
-		this.shader.unbindSamplers(this.boundSamplers);
-
-		for (var i=0; i<this.boundSamplers.length; ++i) {
-			this.boundSamplers[i] = null;
-		}
-		this.numBoundSamplers = 0;
+		this.shader.unbindSamplers(this.boundSamplers.samplers);
+		this.boundSamplers.clear();
 	},
 
 	instantiate: function() {
