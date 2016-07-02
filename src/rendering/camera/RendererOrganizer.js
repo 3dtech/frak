@@ -33,35 +33,42 @@ var RendererOrganizer = FrakClass.extend({
 	sort: function(engine, renderers, eyePosition) {
 		this.reset();
 
-		this.visibleRenderers = renderers.length;
+		this.visibleRenderers = 0;
+		var renderer;
 		for (var i=0; i < renderers.length; i++) {
-			if (renderers[i].transparent) {
+			renderer = renderers[i];
+			if (!renderer)
+				continue;
+
+			this.visibleRenderers++;
+
+			if (renderer.transparent) {
 				if (this.enableDynamicBatching && engine.options.transparencyMode != 'sorted') {
-					if (renderers[i].material.id in this.transparentRendererBatches) {
-						this.transparentRendererBatches[renderers[i].material.id].push(renderers[i]);
+					if (renderer.material.id in this.transparentRendererBatches) {
+						this.transparentRendererBatches[renderer.material.id].push(renderer);
 					}
 					else {
-						this.transparentRendererBatches[renderers[i].material.id] = [renderers[i]];
+						this.transparentRendererBatches[renderer.material.id] = [renderer];
 						this.visibleTransparentBatches++;
 					}
 				}
-				this.transparentRenderers.push(renderers[i]);
-				if (renderers[i] instanceof SubmeshRenderer)
-					this.visibleTransparentFaces += renderers[i].submesh.faces.length / 3;
+				this.transparentRenderers.push(renderer);
+				if (renderer instanceof SubmeshRenderer)
+					this.visibleTransparentFaces += renderer.submesh.faces.length / 3;
 			}
 			else {
 				if (this.enableDynamicBatching) {
-					if (renderers[i].material.id in this.solidRendererBatches) {
-						this.solidRendererBatches[renderers[i].material.id].push(renderers[i]);
+					if (renderer.material.id in this.solidRendererBatches) {
+						this.solidRendererBatches[renderer.material.id].push(renderer);
 					}
 					else {
-						this.solidRendererBatches[renderers[i].material.id] = [renderers[i]];
+						this.solidRendererBatches[renderer.material.id] = [renderer];
 						this.visibleSolidBatches++;
 					}
 				}
-				this.solidRenderers.push(renderers[i]);
-				if (renderers[i] instanceof SubmeshRenderer)
-					this.visibleSolidFaces += renderers[i].submesh.faces.length / 3;
+				this.solidRenderers.push(renderer);
+				if (renderer instanceof SubmeshRenderer)
+					this.visibleSolidFaces += renderer.submesh.faces.length / 3;
 			}
 		}
 

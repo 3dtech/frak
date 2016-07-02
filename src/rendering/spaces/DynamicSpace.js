@@ -1,14 +1,16 @@
 /** Dynamic space contains submesh renderers that can be moved around and the changes will be reflected in queries. Wanna go to space! */
 var DynamicSpace=Space.extend({
 	init: function() {
-		this.renderers=[];
-		this.colliders=[];
+		this.renderers = [];
+		this.colliders = [];
+		this.filteredRenderers = [];
 	},
 
 	/** Add new renderer
 		@param renderer Instance of {Renderer} */
 	addRenderer: function(renderer) {
 		this.renderers.push(renderer);
+		this.filteredRenderers.push(null);
 	},
 
 	/** Removes a renderer
@@ -17,6 +19,7 @@ var DynamicSpace=Space.extend({
 		for (var i=0; i<this.renderers.length; i++) {
 			if (this.renderers[i]===renderer) {
 				this.renderers.splice(i, 1);
+				this.filteredRenderers.pop();
 				return true;
 			}
 		}
@@ -47,12 +50,18 @@ var DynamicSpace=Space.extend({
 		@param layerMask Layer mask (int)
 		@return An array of geometry inside the frustum or intersecting it (elements of array are of type Renderer) */
 	frustumCast: function(frustum, layerMask) {
-		var ret = [];
-		for (var i=0; i<this.renderers.length; i++) {
-			if (this.renderers[i].visible && (this.renderers[i].layer & layerMask))
-				ret.push(this.renderers[i]);
+		var renderer;
+		var index = 0;
+		for (var i = 0; i < this.renderers.length; ++i) {
+			renderer = this.renderers[i];
+			if (renderer.visible && (renderer.layer & layerMask)) {
+				this.filteredRenderers[index++] = renderer;
+			}
 		}
-		return ret;
+		for (var i = index; i < this.filteredRenderers.length; ++i) {
+			this.filteredRenderers[i] = null;
+		}
+		return this.filteredRenderers;
 	},
 
 	/** Casts a ray over the colliders in this space
