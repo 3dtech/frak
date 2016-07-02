@@ -27,34 +27,40 @@ var Material=Serializable.extend({
 
 	/** Binds material
 		@param uniforms Optional extra uniforms to go with the material
-		@param samplers Optional extra samplers to go with the material */
-	bind: function(uniforms, samplers) {
-		if (!this.shader) return;
+		@param ... All the rest of the arguments are treated as optional
+		extra samplers or lists of samplers to go with the material */
+	bind: function(uniforms) {
+		if (!this.shader)
+			return;
 
 		this.shader.use(this.uniforms);
 		if (uniforms)
 			this.shader.bindUniforms(uniforms);
 
-		if ((!this.samplers || this.samplers.length == 0) && (!samplers || samplers.length == 0)) {
-			if (this.shader.context.engine)
-				this.internalBindSampler(this.shader.context.engine.WhiteTextureSampler);
-		}
-		else {
-			if (samplers) {
-				for (var i=0; i<samplers.length; ++i)
-					this.internalBindSampler(samplers[i]);
+		for (var i = 1; i < arguments.length; ++i) {
+			var arg = arguments[i];
+			if (arg instanceof Sampler) {
+				this.internalBindSampler(arg);
 			}
+			else if (arg instanceof Array) {
+				for (var j = 0; j < arg.length; ++j) {
+					this.internalBindSampler(arg[j]);
+				}
+			}
+		}
 
-			for (var i=0; i<this.samplers.length; ++i)
-				this.internalBindSampler(this.samplers[i]);
+		for (var i=0; i<this.samplers.length; ++i)
+			this.internalBindSampler(this.samplers[i]);
+
+		if (this.numBoundSamplers == 0 && this.shader.context.engine) {
+			this.internalBindSampler(this.shader.context.engine.DiffuseFallbackSampler);
 		}
 
 		this.shader.bindSamplers(this.boundSamplers);
 	},
 
-	/** Unbinds material
-		@param samplers Optional extra samplers to go with the material (the same that were passed to bind()) */
-	unbind: function(samplers) {
+	/** Unbinds material */
+	unbind: function() {
 		if (!this.shader)
 			return;
 

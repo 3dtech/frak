@@ -238,8 +238,6 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Renders without dynamic batching */
 	renderBruteForce: function(context, renderers) {
-		var globalSamplers = [context.shadow.shadow0];
-
 		for (var j=0; j<renderers.length; ++j) {
 			var renderer=renderers[j];
 			if (!renderer)
@@ -248,18 +246,13 @@ var MaterialRenderStage=RenderStage.extend({
 			context.modelview.push();
 			context.modelview.multiply(renderer.matrix);
 
-			var samplers;
-			if (renderer.material.samplers.length > 0) {
-				samplers = globalSamplers;
-			}
-			else {
-				samplers = globalSamplers.concat([this.diffuseFallback]);
-			}
-
 			this.cachedUniforms = renderer.getDefaultUniforms(context, this.cachedUniforms);
-			renderer.material.bind(this.cachedUniforms, samplers);
+			renderer.material.bind(
+				this.cachedUniforms,
+				context.shadow.shadow0
+			);
 			renderer.render(context);
-			renderer.material.unbind(samplers);
+			renderer.material.unbind();
 
 			context.modelview.pop();
 		}

@@ -46,6 +46,7 @@ var Engine=FrakClass.extend({
 		this.WhiteTexture.mipmapped = false;
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
 		this.WhiteTextureSampler =  new Sampler('tex0', this.WhiteTexture);
+		this.DiffuseFallbackSampler =  new Sampler('diffuse0', this.WhiteTexture);
 
 		document.addEventListener("visibilitychange", FrakCallback(this, this.onVisibilityChange));
 
