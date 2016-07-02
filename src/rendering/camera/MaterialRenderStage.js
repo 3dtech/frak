@@ -180,8 +180,6 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Renders renderers in batches by material */
 	renderBatched: function(context, batches) {
-		this.samplerAccum.add(context.shadow.shadow0);
-
 		var usedShader = false;
 		for (var i=0; i<batches.length; ++i) {
 			var batch = batches[i];
@@ -206,6 +204,7 @@ var MaterialRenderStage=RenderStage.extend({
 			}
 
 			// Bind samplers
+			this.samplerAccum.add(context.shadow.shadow0);
 			for (var j = 0; j < material.samplers.length; ++j) {
 				this.samplerAccum.add(material.samplers[j]);
 			}
