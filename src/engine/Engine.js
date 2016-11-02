@@ -333,6 +333,16 @@ var Engine=FrakClass.extend({
 		}
 	},
 
+	resize: function(){
+		if (this.context instanceof RenderingContext) {
+			var gl = this.context.gl;
+			var width = gl.canvas.clientWidth;
+			var height = Math.max(1, gl.canvas.clientHeight);
+			this.scene.cameraComponent.setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
+			this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+		}
+	},
+
 	/** Helper function for displaying renderer statistics. */
 	stats: function() {
 		if (!this.scene)
