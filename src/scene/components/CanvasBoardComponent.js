@@ -63,7 +63,6 @@ var CanvasBoardComponent = MeshComponent.extend({
 	},
 
 	updateImage: function(){
-		console.log("updateImage", this.canvasContext.getImageData(0, 0, 256, 256));
 		this.texture.setImage(this.context, this.canvas);
 	},
 

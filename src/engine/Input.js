@@ -27,14 +27,12 @@ var Input = FrakClass.extend({
 
 		this.singlepan = new HammerWF.Pan({
 		  event: 'pan',
-		  direction: Hammer.DIRECTION_ALL,
+		  direction: HammerWF.DIRECTION_ALL,
 		  threshold: 5,
 		  pointers: 1
 		});
 
 		this.hammertime.add(this.singlepan);
-
-
 
 		this.bindings = {};
 		this.keyStates = {};

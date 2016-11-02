@@ -121,8 +121,8 @@ var CollisionOctreeNode=FrakClass.extend({
 			for (var i in this.subnodes)
 				this.subnodes[i].optimize();
 
-			var empty=0;
-			for (var i in this.subnodes) {
+			var empty = 0;
+			for (var i = 0; i < this.subnodes.length; i++) {
 				if (!this.subnodes[i].hasGeometry() && this.subnodes[i].isLeaf())
 					empty++;
 			}
@@ -288,7 +288,7 @@ var CollisionOctreeNode=FrakClass.extend({
 				list.splice(i, 0, {'t': t, 'octreeNode': this});
 			}
 			if (!this.isLeaf()) {
-				for (var i in this.subnodes)
+				for (var i = 0; i < this.subnodes.length; i++)
 					this.subnodes[i].getNodesWithGeometry(ray, list);
 			}
 		}

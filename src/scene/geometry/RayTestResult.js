@@ -47,7 +47,7 @@ var RayTestResult = FrakClass.extend({
 			return false;
 		var minDist = Infinity;
 		var minIndex = 0;
-		for (var i in this.hits) {
+		for (var i=0; i < this.hits.length; i++) {
 			var d = vec3.sqrDist(this.ray.origin, this.hits[i].point);
 			if (d<minDist) {
 				minDist=d;

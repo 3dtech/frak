@@ -25,7 +25,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		var scope = this;
 		this.node.onEachComponent(function(component) {
 			if (component instanceof MeshComponent) {
-				for (var submeshIndex in component.mesh.submeshes) {
+				for (var submeshIndex=0; submeshIndex < component.mesh.submeshes.length; submeshIndex++) {
 					var submesh = component.mesh.submeshes[submeshIndex];
 					var material = component.mesh.getMaterial(submesh.materialIndex);
 					if (!material) {
