@@ -15,6 +15,7 @@ var Texture = BaseTexture.extend({
 		this.clampToEdge = false;
 		this.anisotropic = true;
 		this.anisotropyFilter = 4; // 4x filtering by default
+		this.image = null;
 
 		if (context)
 			this.create(context);
@@ -66,7 +67,7 @@ var Texture = BaseTexture.extend({
 		}
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.bindTexture(context.gl.TEXTURE_2D, null);
 		vec2.set(this.size, size, size);
 		this.loaded = true;
@@ -95,7 +96,7 @@ var Texture = BaseTexture.extend({
 		@param context RenderingContext instance
 		@param inputImage Image or canvas element */
 	setImage: function(context, inputImage, noResize) {
-		if (this.glTexture === false)
+		if (!this.glTexture)
 			this.create(context);
 
 		if (!this.glTexture)
@@ -132,8 +133,7 @@ var Texture = BaseTexture.extend({
 		}
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		if (image != inputImage)
-			delete image;
+		this.image = image;
 		this.loaded = true;
 
 		if ((this.size[0] & (this.size[0] - 1)) != 0 ||
@@ -153,5 +153,13 @@ var Texture = BaseTexture.extend({
 		context.gl.readPixels(0, 0, this.size[0], this.size[1], gl.RGBA, gl.UNSIGNED_BYTE, result);
 		targetTexture.unbind(context);
 		return result;
+	},
+
+	onContextRestored: function(context) {
+		this.glTexture = null;
+		this.loaded = false;
+		if (this.image) {
+			this.setImage(context, this.image);
+		}
 	}
 });

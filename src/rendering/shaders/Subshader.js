@@ -31,11 +31,18 @@ var Subshader=FrakClass.extend({
 		this.context.gl.shaderSource(this.compiledShader, this.code);
 		this.context.gl.compileShader(this.compiledShader);
 
-		if (!this.context.gl.getShaderParameter(this.compiledShader, this.context.gl.COMPILE_STATUS)) {
+		var status = this.context.gl.getShaderParameter(this.compiledShader, this.context.gl.COMPILE_STATUS);
+		if (!status) {
 			if(!this.failedCompilation) {
 				this.failedCompilation=true;
 				throw "Shader '"+this.getFilename()+"' failed to compile: "+this.context.gl.getShaderInfoLog(this.compiledShader);
 			}
 		}
+	},
+
+	onContextRestored: function(context) {
+		this.failedCompilation = false;
+		this.context = context;
+		this.attach();
 	}
 });

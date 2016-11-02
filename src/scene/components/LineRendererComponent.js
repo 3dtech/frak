@@ -34,7 +34,6 @@ var LineRendererComponent = RendererComponent.extend({
 	},
 
 	onStart: function(context, engine) {
-		// this.material.shader = engine.assetsManager.addShaderSource('diffuse');
 		this.material.shader = engine.assetsManager.addShaderSource('transparent');
 		this.material.samplers = [
 			new Sampler('diffuse0', engine.WhiteTexture)
@@ -207,5 +206,16 @@ var LineRendererComponent = RendererComponent.extend({
 		}
 
 		this.damaged = true;
+	},
+
+	onContextRestored: function(context) {
+		this._super(context);
+
+		if (this.renderer) {
+			this.damaged = true;
+			delete this.renderer.buffer;
+			this.renderer.buffer = new LinesRenderBuffer(context);
+			this.rebuild(context);
+		}
 	}
 });

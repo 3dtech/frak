@@ -16,5 +16,7 @@ var RendererComponent=Component.extend({
 		instance.receiveShadows = this.receiveShadows;
 		instance.lightContribution = this.lightContribution;
 		return instance;
-	}
+	},
+
+	onContextRestored: function(context) {}
 });

@@ -22,7 +22,6 @@ var ShadowMapRenderStage=RenderStage.extend({
 
 	onStart: function(context, engine) {
 		var shader = 'forward_shadow';
-
 		this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives');
 		if (this.extStandardDerivatives)
 			shader = 'forward_shadow_vsm';
@@ -110,6 +109,8 @@ var ShadowMapRenderStage=RenderStage.extend({
 		gl.disable(gl.DEPTH_TEST);
 
 		light.shadow.unbind(context);
+		light.updateSamplers();
+		this.parent.prepareShadowContext(context, scene);
 
 		context.modelview.pop();
 		context.projection.pop();

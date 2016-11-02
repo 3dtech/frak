@@ -32,5 +32,7 @@ var Light = Component.extend({
 
 	isPositional: function() {
 		return false;
-	}
+	},
+
+	onContextRestored: function(context) {}
 });

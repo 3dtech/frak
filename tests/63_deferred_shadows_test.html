@@ -15,6 +15,8 @@
 			<button onclick="toggleSoftShadows();">Soft shadows</button>
 			<button onclick="toggleDebug();">Debug</button>
 			<button onclick="pauseEngine(this);">PAUSE</button>
+			<button onclick="loseContext();">Lose context</button>
+			<button onclick="restoreContext();">Restore context</button>
 		</div>
 
 		<script src="../builds/frak-latest.min.js"></script>
@@ -143,6 +145,8 @@
 			}
 
 			var engine;
+			var loseContextExtension;
+
 			window.onload = function() {
 				engine = new Engine('canvas', {
 					'requestedFPS': 60,
@@ -151,6 +155,8 @@
 					'antialias': true,
 					'renderer': 'deferred'
 				});
+
+				loseContextExtension = engine.context.gl.getExtension('WEBGL_lose_context');
 
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
 				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
@@ -187,6 +193,18 @@
 					element.textContent = 'PAUSE';
 				else
 					element.textContent = 'UNPAUSE';
+			}
+
+			function loseContext() {
+				if (!loseContextExtension)
+					return;
+				loseContextExtension.loseContext();
+			}
+
+			function restoreContext() {
+				if (!loseContextExtension)
+					return;
+				loseContextExtension.restoreContext();
 			}
 		</script>
 	</body>

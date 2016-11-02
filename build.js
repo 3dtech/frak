@@ -3,6 +3,9 @@
  * node build.js [debug]
  */
 
+var UGLIFYJS = 'uglifyjs';
+//var UGLIFYJS = 'node_modules/.bin/uglifyjs';
+
 var fs = require('fs');
 var exec = require('child_process').exec;
 
@@ -23,10 +26,10 @@ function success(error, stdout, stderr){
 	}
 }
 
-var command = "uglifyjs -m -c -o "+outputFile+" --stats ";
+var command = UGLIFYJS + " -m -c -o "+outputFile+" --stats ";
 if (process.argv.length>=3) {
 	if (process.argv[2] == 'debug') {
-		command = "uglifyjs -b -o "+outputFile+" --stats ";
+		command = UGLIFYJS + " -b -o "+outputFile+" --stats ";
 		console.log('WARNING: Building DEBUG build of FRAK library.');
 	}
 

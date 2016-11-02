@@ -49,6 +49,10 @@ var Engine=FrakClass.extend({
 
 		document.addEventListener("visibilitychange", FrakCallback(this, this.onVisibilityChange));
 
+		// Register context lost and restored event handlers
+		this.context.canvas.addEventListener("webglcontextlost", FrakCallback(this, this.onContextLost), false);
+		this.context.canvas.addEventListener("webglcontextrestored", FrakCallback(this, this.onContextRestored), false);
+
 		if (FRAK.fullscreenEnabled) {
 			this.useUpscaling = false;
 			var fsHandler = FrakCallback(this, this.onFullscreenChange);
@@ -59,6 +63,19 @@ var Engine=FrakClass.extend({
 		}
 
 		this.setupInput();
+	},
+
+	onContextLost: function(event) {
+		console.log('FRAK: Rendering context lost');
+		event.preventDefault();
+		this.pause();
+	},
+
+	onContextRestored: function(event) {
+		console.log('FRAK: Rendering context restored');
+		this.context.engine = this;
+		this.context.restore();
+		this.run();
 	},
 
 	onVisibilityChange: function() {

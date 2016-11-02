@@ -205,6 +205,7 @@ var MaterialRenderStage=RenderStage.extend({
 			if (material.samplers.length == 0) {
 				samplers.push(this.diffuseFallback);
 			}
+
 			shader.bindSamplers(samplers);
 
 			// Bind material uniforms

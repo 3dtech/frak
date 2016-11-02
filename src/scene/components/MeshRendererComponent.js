@@ -122,5 +122,12 @@ var MeshRendererComponent=RendererComponent.extend({
 				return this.meshRenderers[i];
 		}
 		return false;
+	},
+
+	onContextRestored: function(context) {
+		this._super(context);
+		for (var i=0; i<this.meshRenderers.length; ++i) {
+			this.meshRenderers[i].onContextRestored(context);
+		}
 	}
 });
