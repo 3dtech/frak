@@ -1,0 +1,32 @@
+{
+  "name": "frak",
+  "version": "1.3.8",
+  "description": "FRAK engine is a JavaScript library/API for creating interactive 3D applications using WebGL. The purpose of the library is to provide a framework for simplifying the creation of complex interactive 3D applications.",
+  "main": "node build.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3dtech/frak.git"
+  },
+  "keywords": [
+    "webgl",
+    "3d",
+    "engine",
+    "javascript"
+  ],
+  "author": "3D Technologies R&D AS",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/3dtech/frak/issues"
+  },
+  "homepage": "https://github.com/3dtech/frak#readme",
+  "dependencies": {
+    "uglifyjs": "^2.4.10"
+  }
+}
