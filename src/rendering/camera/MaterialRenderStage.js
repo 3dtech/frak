@@ -1,30 +1,32 @@
 /** Render-stage that uses forward rendering to render meshes with materials and directional lighting */
-var MaterialRenderStage=RenderStage.extend({
-	init: function() {
+var MaterialRenderStage = RenderStage.extend({
+	init: function () {
 		this._super();
 		this.organizer = new RendererOrganizer();
 
-		this.solidRenderers=[];
-		this.solidRendererBatches={};
+		this.solidRenderers = [];
+		this.solidRendererBatches = {};
 
-		this.transparentRenderers=[];
-		this.transparentRendererBatches={};
+		this.transparentRenderers = [];
+		this.transparentRendererBatches = {};
 
 		this.shadowFallback = null;
 		this.diffuseFallback = null;
 
 		this.bindCameraTarget = {
 			started: true,
-			start: function() {},
-			render: function(context, scene, camera) {
+			start: function () {
+			},
+			render: function (context, scene, camera) {
 				camera.target.bind(context);
 			}
 		};
 
 		this.unbindCameraTarget = {
 			started: true,
-			start: function() {},
-			render: function(context, scene, camera) {
+			start: function () {
+			},
+			render: function (context, scene, camera) {
 				camera.target.unbind(context);
 			}
 		};
@@ -72,7 +74,7 @@ var MaterialRenderStage=RenderStage.extend({
 		this.samplerAccum = new SamplerAccumulator();
 	},
 
-	onStart: function(context, engine, camera) {
+	onStart: function (context, engine, camera) {
 		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
 		this.shadowFallback = new Sampler('shadow0', engine.WhiteTexture);
 
@@ -86,7 +88,7 @@ var MaterialRenderStage=RenderStage.extend({
 	},
 
 	/** Prepares shadow-mapping uniforms that are shared between all materials. */
-	prepareShadowContext: function(context, scene) {
+	prepareShadowContext: function (context, scene) {
 		if (!this._shadowContext) {
 			this._shadowContext = {
 				'shadow0': this.shadowFallback,
@@ -115,8 +117,8 @@ var MaterialRenderStage=RenderStage.extend({
 	},
 
 	/** Prepares Light uniforms that are shared between all materials. */
-	prepareLightContext: function(context, scene) {
-		for (var i=0; i<scene.lights.length; i++) {
+	prepareLightContext: function (context, scene) {
+		for (var i = 0; i < scene.lights.length; i++) {
 			var light = scene.lights[i];
 			if (!(light instanceof DirectionalLight))
 				continue;
@@ -144,7 +146,7 @@ var MaterialRenderStage=RenderStage.extend({
 	},
 
 	/** Prepares data shared among most renderers. */
-	prepareShared: function(context) {
+	prepareShared: function (context) {
 		// Inverse modelview matrix and eye position
 		mat4.invert(this.invModelview, context.modelview.top());
 		mat4.translation(this.eyePosition, this.invModelview);
@@ -156,7 +158,7 @@ var MaterialRenderStage=RenderStage.extend({
 	},
 
 	/** Acquires and organizes the visible renderers. */
-	onPreRender: function(context, scene, camera) {
+	onPreRender: function (context, scene, camera) {
 		// Prepare shared uniforms
 		this.prepareShared(context);
 
@@ -172,92 +174,90 @@ var MaterialRenderStage=RenderStage.extend({
 		this.prepareShadowContext(context, scene);
 	},
 
-	onPostRender: function(context, scene, camera) {
+	onPostRender: function (context, scene, camera) {
 		// Remove stage data from context
 		context.shadow = false;
 		context.light = false;
 	},
 
 	/** Renders renderers in batches by material */
-	renderBatched: function(context, batches) {
-		console.log("RenderBatched", context, batches);
+	renderBatched: function (context, batches) {
+		//console.log("RenderBatched", context, batches);
 		var usedShader = false;
-		for (var i=0; i<batches.length; ++i) {
+		for (var i = 0; i < batches.length; ++i) {
 			var batch = batches[i];
 
 			// Use shader
-			console.log(batch.get(0));
-			if (batch.get(0)){
+			if (batch.get(0)) {
+				var material = batch.get(0).material;
+				var shader = material.shader;
+				if (shader != usedShader) {
+					shader.use();
+					usedShader = shader;
 
+					// Bind shadow uniforms
+					if (context.shadow)
+						shader.bindUniforms(this.shadowUniforms);
 
-			var material = batch.get(0).material;
-			var shader = material.shader;
-			if (shader != usedShader) {
-				shader.use();
-				usedShader = shader;
+					// Bind shared uniforms
+					shader.bindUniforms(this.sharedUniforms);
 
-				// Bind shadow uniforms
-				if (context.shadow)
-					shader.bindUniforms(this.shadowUniforms);
+					// Bind light uniforms to shader
+					if (context.light && context.light.uniforms)
+						shader.bindUniforms(context.light.uniforms);
+				}
 
-				// Bind shared uniforms
-				shader.bindUniforms(this.sharedUniforms);
+				// Bind samplers
+				this.samplerAccum.add(context.shadow.shadow0);
+				for (var j = 0; j < material.samplers.length; ++j) {
+					this.samplerAccum.add(material.samplers[j]);
+				}
+				if (this.samplerAccum.length == 0) {
+					this.samplerAccum.add(this.diffuseFallback);
+				}
 
-				// Bind light uniforms to shader
-				if (context.light && context.light.uniforms)
-					shader.bindUniforms(context.light.uniforms);
-			}
+				shader.bindSamplers(this.samplerAccum.samplers);
 
-			// Bind samplers
-			this.samplerAccum.add(context.shadow.shadow0);
-			for (var j = 0; j < material.samplers.length; ++j) {
-				this.samplerAccum.add(material.samplers[j]);
-			}
-			if (this.samplerAccum.length == 0) {
-				this.samplerAccum.add(this.diffuseFallback);
-			}
+				// Bind material uniforms
+				shader.bindUniforms(material.uniforms);
 
-			shader.bindSamplers(this.samplerAccum.samplers);
+				var renderer;
+				for (var j = 0; j < batch.length; ++j) {
+					renderer = batch.get(j);
+					context.modelview.push();
+					context.modelview.multiply(renderer.matrix);
 
-			// Bind material uniforms
-			shader.bindUniforms(material.uniforms);
+					// Bind renderer specific uniforms
+					this.rendererUniforms.model.value = renderer.matrix;
+					this.rendererUniforms.modelview.value = context.modelview.top();
+					this.rendererUniforms.receiveShadows.value = renderer.receiveShadows;
 
-			var renderer;
-			for (var j=0; j<batch.length; ++j) {
-				renderer = batch.get(j);
-				context.modelview.push();
-				context.modelview.multiply(renderer.matrix);
+					shader.bindUniforms(this.rendererUniforms);
 
-				// Bind renderer specific uniforms
-				this.rendererUniforms.model.value = renderer.matrix;
-				this.rendererUniforms.modelview.value = context.modelview.top();
-				this.rendererUniforms.receiveShadows.value = renderer.receiveShadows;
+					renderer.render(context);
 
-				shader.bindUniforms(this.rendererUniforms);
+					context.modelview.pop();
+				}
 
-				renderer.render(context);
-
-				context.modelview.pop();
-			}
-
-			// Unbind shader
-			shader.unbindSamplers(this.samplerAccum.samplers);
-			this.samplerAccum.clear();
+				// Unbind shader
+				shader.unbindSamplers(this.samplerAccum.samplers);
+				this.samplerAccum.clear();
 			}
 		}
 	},
 
 	/** Renders without dynamic batching */
-	renderBruteForce: function(context, renderers) {
-		for (var j=0; j<renderers.length; ++j) {
+	renderBruteForce: function (context, renderers) {
+		for (var j = 0; j < renderers.length; ++j) {
 			var renderer = renderers[j];
 			if (!renderer)
 				break;
 
 			context.modelview.push();
 			context.modelview.multiply(renderer.matrix);
-
-			this.cachedUniforms = renderer.getDefaultUniforms(context, this.cachedUniforms);
+			
+			this.cachedUniforms = renderer.getDefaultUniforms(context, null);
+			//this.cachedUniforms = renderer.getDefaultUniforms(context, this.cachedUniforms);
 			renderer.material.bind(
 				this.cachedUniforms,
 				context.shadow.shadow0
