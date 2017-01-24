@@ -64,6 +64,8 @@ var DepthRenderStage = RenderStage.extend({
 		this.material.bind();
 		var renderers = this.parent.organizer.solidRenderers;
 		for (var i=0; i<renderers.length; ++i) {
+			if (!renderers[i])
+				break;
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
 			this.material.shader.bindUniforms(renderers[i].material.uniforms);
@@ -97,7 +99,9 @@ var DepthRenderStage = RenderStage.extend({
 
 		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
-			var batchMaterial = batch[0].material;
+			if (batch.length == 0)
+				continue;
+			var batchMaterial = batch.get(0).material;
 
 			var samplers;
 			if (this.material.samplers.length>0) {
@@ -111,16 +115,18 @@ var DepthRenderStage = RenderStage.extend({
 			shader.bindUniforms(batchMaterial.uniforms);
 			shader.bindSamplers(samplers);
 
+			var renderer;
 			for (var j=0; j<batch.length; ++j) {
+				renderer = batch.get(j);
 				context.modelview.push();
-				context.modelview.multiply(batch[j].matrix);
+				context.modelview.multiply(renderer.matrix);
 
 				// Bind renderer specific uniforms
-				this.parent.rendererUniforms.model.value = batch[j].matrix;
+				this.parent.rendererUniforms.model.value = renderer.matrix;
 				this.parent.rendererUniforms.modelview.value = context.modelview.top();
 				shader.bindUniforms(this.parent.rendererUniforms);
 
-				batch[j].renderGeometry(context, shader);
+				renderer.renderGeometry(context, shader);
 
 				context.modelview.pop();
 			}

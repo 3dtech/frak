@@ -7,6 +7,7 @@ var Engine=FrakClass.extend({
 		@param options Engine options [optional]
 		@param scene Scene to render and update [optional] */
 	init: function(canvas, options, scene) {
+		console.log("Engine");
 		if (!options) options={};
 		this.options = FRAK.extend({
 			'assetsPath': '',
@@ -46,6 +47,7 @@ var Engine=FrakClass.extend({
 		this.WhiteTexture.mipmapped = false;
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
 		this.WhiteTextureSampler =  new Sampler('tex0', this.WhiteTexture);
+		this.DiffuseFallbackSampler =  new Sampler('diffuse0', this.WhiteTexture);
 
 		document.addEventListener("visibilitychange", FrakCallback(this, this.onVisibilityChange));
 
@@ -172,7 +174,7 @@ var Engine=FrakClass.extend({
 		}
 	},
 
-	setupInput: function(){
+	setupInput: function() {
 		this.input = new Input(this, this.context.canvas);
 	},
 

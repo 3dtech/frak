@@ -12,6 +12,8 @@ var Material=Serializable.extend({
 		this.uniforms = uniforms; ///< Shader uniforms as described by Shader
 		this.samplers = samplers; ///< Shader samplers list
 		this.descriptor = descriptor;
+
+		this.boundSamplers = new SamplerAccumulator();
 	},
 
 	type: function() {
@@ -20,41 +22,44 @@ var Material=Serializable.extend({
 
 	/** Binds material
 		@param uniforms Optional extra uniforms to go with the material
-		@param samplers Optional extra samplers to go with the material */
-	bind: function(uniforms, samplers) {
-		if (!this.shader) return;
+		@param ... All the rest of the arguments are treated as optional
+		extra samplers or lists of samplers to go with the material */
+	bind: function(uniforms) {
+		if (!this.shader)
+			return;
 
 		this.shader.use(this.uniforms);
 		if (uniforms)
 			this.shader.bindUniforms(uniforms);
 
-		if ((!this.samplers || this.samplers.length == 0) && (!samplers || samplers.length == 0)) {
-			if (this.shader.context.engine)
-				this.shader.bindSamplers([this.shader.context.engine.WhiteTextureSampler]);
+		for (var i = 1; i < arguments.length; ++i) {
+			var arg = arguments[i];
+			if (arg instanceof Sampler) {
+				this.boundSamplers.add(arg);
+			}
+			else if (arg instanceof Array) {
+				for (var j = 0; j < arg.length; ++j) {
+					this.boundSamplers.add(arg[j]);
+				}
+			}
 		}
-		else {
-			if (samplers)
-				this.shader.bindSamplers(this.samplers.concat(samplers));
-			else
-				this.shader.bindSamplers(this.samplers);
+
+		for (var i=0; i<this.samplers.length; ++i)
+			this.boundSamplers.add(this.samplers[i]);
+
+		if (this.boundSamplers.length == 0 && this.shader.context.engine) {
+			this.boundSamplers.add(this.shader.context.engine.DiffuseFallbackSampler);
 		}
+
+		this.shader.bindSamplers(this.boundSamplers.samplers);
 	},
 
-	/** Unbinds material
-		@param samplers Optional extra samplers to go with the material (the same that were passed to bind()) */
-	unbind: function(samplers) {
-		if(!this.shader) return;
-
-		if ((!this.samplers || this.samplers.length == 0) && (!samplers || samplers.length == 0)) {
-			if (this.shader.context.engine)
-				this.shader.unbindSamplers([this.shader.context.engine.WhiteTextureSampler]);
-		}
-		else {
-			if (samplers)
-				this.shader.unbindSamplers(this.samplers.concat(samplers));
-			else
-				this.shader.unbindSamplers(this.samplers);
-		}
+	/** Unbinds material */
+	unbind: function() {
+		if (!this.shader)
+			return;
+		this.shader.unbindSamplers(this.boundSamplers.samplers);
+		this.boundSamplers.clear();
 	},
 
 	instantiate: function() {

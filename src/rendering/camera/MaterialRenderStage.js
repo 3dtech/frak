@@ -66,6 +66,10 @@ var MaterialRenderStage=RenderStage.extend({
 			"hasFloat": new UniformInt(1),
 			"useVSM": new UniformInt(1)
 		};
+
+		this.cachedUniforms = null;
+
+		this.samplerAccum = new SamplerAccumulator();
 	},
 
 	onStart: function(context, engine, camera) {
@@ -176,21 +180,20 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Renders renderers in batches by material */
 	renderBatched: function(context, batches) {
-		var globalSamplers = [context.shadow.shadow0];
-
 		var usedShader = false;
-		for (var i=0; i<batches.length; i++) {
+		for (var i=0; i<batches.length; ++i) {
 			var batch = batches[i];
 
 			// Use shader
-			var material = batch[0].material;
+			var material = batch.get(0).material;
 			var shader = material.shader;
 			if (shader != usedShader) {
 				shader.use();
 				usedShader = shader;
 
 				// Bind shadow uniforms
-				if(context.shadow) shader.bindUniforms(this.shadowUniforms);
+				if (context.shadow)
+					shader.bindUniforms(this.shadowUniforms);
 
 				// Bind shared uniforms
 				shader.bindUniforms(this.sharedUniforms);
@@ -201,57 +204,60 @@ var MaterialRenderStage=RenderStage.extend({
 			}
 
 			// Bind samplers
-			var samplers=globalSamplers.concat(material.samplers);
-			if (material.samplers.length == 0) {
-				samplers.push(this.diffuseFallback);
+			this.samplerAccum.add(context.shadow.shadow0);
+			for (var j = 0; j < material.samplers.length; ++j) {
+				this.samplerAccum.add(material.samplers[j]);
+			}
+			if (this.samplerAccum.length == 0) {
+				this.samplerAccum.add(this.diffuseFallback);
 			}
 
-			shader.bindSamplers(samplers);
+			shader.bindSamplers(this.samplerAccum.samplers);
 
 			// Bind material uniforms
 			shader.bindUniforms(material.uniforms);
 
-			for(var j=0; j<batch.length; ++j) {
+			var renderer;
+			for (var j=0; j<batch.length; ++j) {
+				renderer = batch.get(j);
 				context.modelview.push();
-				context.modelview.multiply(batch[j].matrix);
+				context.modelview.multiply(renderer.matrix);
 
 				// Bind renderer specific uniforms
-				this.rendererUniforms.model.value = batch[j].matrix;
+				this.rendererUniforms.model.value = renderer.matrix;
 				this.rendererUniforms.modelview.value = context.modelview.top();
-				this.rendererUniforms.receiveShadows.value = batch[j].receiveShadows;
+				this.rendererUniforms.receiveShadows.value = renderer.receiveShadows;
 
 				shader.bindUniforms(this.rendererUniforms);
 
-				batch[j].render(context);
+				renderer.render(context);
 
 				context.modelview.pop();
 			}
 
 			// Unbind shader
-			shader.unbindSamplers(samplers);
+			shader.unbindSamplers(this.samplerAccum.samplers);
+			this.samplerAccum.clear();
 		}
 	},
 
 	/** Renders without dynamic batching */
 	renderBruteForce: function(context, renderers) {
-		var globalSamplers = [context.shadow.shadow0];
-
 		for (var j=0; j<renderers.length; ++j) {
-			var renderer=renderers[j];
+			var renderer = renderers[j];
+			if (!renderer)
+				break;
+
 			context.modelview.push();
 			context.modelview.multiply(renderer.matrix);
 
-			var samplers;
-			if (renderer.material.samplers.length > 0) {
-				samplers = globalSamplers;
-			}
-			else {
-				samplers = globalSamplers.concat([this.diffuseFallback]);
-			}
-
-			renderer.material.bind(renderer.getDefaultUniforms(context), samplers);
+			this.cachedUniforms = renderer.getDefaultUniforms(context, this.cachedUniforms);
+			renderer.material.bind(
+				this.cachedUniforms,
+				context.shadow.shadow0
+			);
 			renderer.render(context);
-			renderer.material.unbind(samplers);
+			renderer.material.unbind();
 
 			context.modelview.pop();
 		}

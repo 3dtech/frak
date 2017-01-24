@@ -4,6 +4,8 @@ var MeshRenderer=Renderer.extend({
 		this._super(matrix);
 		this.mesh=mesh;
 		this.buffers=[];
+		this._cache = null;
+
 		for(var submeshIndex in this.mesh.submeshes) {
 			var submesh=this.mesh.submeshes[submeshIndex];
 			var renderBuffer=new TrianglesRenderBuffer(context, submesh.faces);
@@ -28,13 +30,13 @@ var MeshRenderer=Renderer.extend({
 	/** Renders mesh geometry with materials */
 
 	onRender: function(context) {
-		var uniforms = this.getDefaultUniforms(context);
+		this._cache = this.getDefaultUniforms(context, this._cache);
 		for(var submeshIndex in this.mesh.submeshes) {
 			var submesh=this.mesh.submeshes[submeshIndex];
 			var material = this.mesh.getMaterial(submesh.materialIndex);
 			if (!material)
 				continue;
-			material.bind(uniforms);
+			material.bind(this._cache);
 			this.buffers[submeshIndex].render(material.shader);
 			material.unbind();
 		}
@@ -42,7 +44,8 @@ var MeshRenderer=Renderer.extend({
 
 	/** Renders only mesh geometry without material switches with given shader */
 	onRenderGeometry: function(context, shader) {
-		shader.bindUniforms(this.getDefaultUniforms(context));
+		this._cache = this.getDefaultUniforms(context, this._cache);
+		shader.bindUniforms(this._cache);
 		for(var i in this.buffers) {
 			this.buffers[i].render(shader);
 		}

@@ -89,6 +89,9 @@ var ShadowMapRenderStage=RenderStage.extend({
 		this.material.bind();
 		var renderers = this.parent.organizer.solidRenderers;
 		for (var i=0; i<renderers.length; ++i) {
+			if (!renderers[i])
+				break;
+
 			if (!(renderers[i].layer & light.shadowMask))
 				continue;
 			if (!renderers[i].castShadows)
@@ -130,7 +133,9 @@ var ShadowMapRenderStage=RenderStage.extend({
 		var samplers;
 		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
-			var batchMaterial = batch[0].material;
+			if (batch.length == 0)
+				continue;
+			var batchMaterial = batch.get(0).material;
 
 			if (batchMaterial.samplers.length>0)
 				samplers = batchMaterial.samplers;
@@ -141,21 +146,23 @@ var ShadowMapRenderStage=RenderStage.extend({
 			shader.bindUniforms(batchMaterial.uniforms);
 			shader.bindSamplers(samplers);
 
+			var renderer;
 			for (var j=0; j<batch.length; ++j) {
-				if (!(batch[j].layer & light.shadowMask))
+				renderer = batch.get(j);
+				if (!(renderer.layer & light.shadowMask))
 					continue;
-				if (!batch[j].castShadows)
+				if (!renderer.castShadows)
 					continue;
 
 				context.modelview.push();
-				context.modelview.multiply(batch[j].matrix);
+				context.modelview.multiply(renderer.matrix);
 
 				// Bind renderer specific uniforms
-				this.parent.rendererUniforms.model.value = batch[j].matrix;
+				this.parent.rendererUniforms.model.value = renderer.matrix;
 				this.parent.rendererUniforms.modelview.value = context.modelview.top();
 				shader.bindUniforms(this.parent.rendererUniforms);
 
-				batch[j].renderGeometry(context, shader);
+				renderer.renderGeometry(context, shader);
 
 				context.modelview.pop();
 			}
@@ -176,12 +183,16 @@ var ShadowMapRenderStage=RenderStage.extend({
 		var transparent = this.parent.organizer.transparentRenderers;
 
 		for (var i=0; i<opaque.length; i++) {
+			if (!opaque[i])
+				break;
 			if (!opaque[i].castShadows)
 				continue;
 			this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
 		}
 
 		for (var i=0; i<transparent.length; i++) {
+			if (!transparent[i])
+				break;
 			if (!transparent[i].castShadows)
 				continue;
 			this.sceneAABB.encapsulateBox(transparent[i].globalBoundingBox);

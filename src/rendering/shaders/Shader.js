@@ -124,10 +124,12 @@ var Shader=Serializable.extend({
 	bindSamplers: function(samplers) {
 		if (!samplers || samplers.length == 0 || !this.linked)
 			return;
-		var gl=this.context.gl;
-		var slotIndex=0;
-		for (var i=0; i<samplers.length; i++) {
+		var gl = this.context.gl;
+		var slotIndex = 0;
+		for (var i = 0; i < samplers.length; ++i) {
 			var sampler = samplers[i];
+			if (!sampler)
+				break;
 			var uniformLocation = this.getUniformLocation(sampler.name);
 			if (uniformLocation == -1)
 				continue;
@@ -143,10 +145,12 @@ var Shader=Serializable.extend({
 	unbindSamplers: function(samplers) {
 		if (!samplers || samplers.length == 0 || !this.linked)
 			return;
-		var gl=this.context.gl;
-		var slotIndex=0;
-		for (var i=0; i<samplers.length; i++) {
+		var gl = this.context.gl;
+		var slotIndex = 0;
+		for (var i = 0; i < samplers.length; ++i) {
 			var sampler = samplers[i];
+			if (!sampler)
+				break;
 			var uniformLocation = this.getUniformLocation(sampler.name);
 			if(uniformLocation == -1)
 				continue;

@@ -15,10 +15,12 @@
 	"src/scene/CyclicSerializer.js",
 	"src/scene/TypeReference.js",
 
+	"src/rendering/CollectionUtils.js",
 	"src/rendering/Color.js",
 	"src/rendering/MatrixStack.js",
 	"src/rendering/RenderingContext.js",
 
+	"src/rendering/shaders/SamplerAccumulator.js",
 	"src/rendering/shaders/AttributeLocations.js",
 	"src/rendering/shaders/Subshader.js",
 	"src/rendering/shaders/VertexShader.js",

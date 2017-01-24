@@ -59,12 +59,16 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		var transparent = this.parent.organizer.transparentRenderers;
 
 		for (var i=0; i<opaque.length; i++) {
+			if (!opaque[i])
+				break;
 			if (!opaque[i].castShadows)
 				continue;
 			this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
 		}
 
 		for (var i=0; i<transparent.length; i++) {
+			if (!transparent[i])
+				break;
 			if (!transparent[i].castShadows)
 				continue;
 			this.sceneAABB.encapsulateBox(transparent[i].globalBoundingBox);
@@ -114,6 +118,9 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		this.material.bind();
 		var renderers = this.parent.organizer.solidRenderers;
 		for (var i=0; i<renderers.length; ++i) {
+			if (!renderers[i])
+				break;
+
 			if (!(renderers[i].layer & light.shadowMask))
 				continue;
 			if (!renderers[i].castShadows)
@@ -156,7 +163,9 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		var samplers;
 		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
-			var batchMaterial = batch[0].material;
+			if (batch.length == 0)
+				continue;
+			var batchMaterial = batch.get(0).material;
 
 			if (batchMaterial.samplers.length>0)
 				samplers = batchMaterial.samplers;
@@ -167,16 +176,18 @@ var DeferredShadowRenderStage = RenderStage.extend({
 			shader.bindUniforms(batchMaterial.uniforms);
 			shader.bindSamplers(samplers);
 
+			var renderer;
 			for (var j=0; j<batch.length; ++j) {
-				if (!(batch[j].layer & light.shadowMask))
+				var renderer = batch.get(j);
+				if (!(renderer.layer & light.shadowMask))
 					continue;
-				if (!batch[j].castShadows)
+				if (!renderer.castShadows)
 					continue;
 
 				context.modelview.push();
-				context.modelview.multiply(batch[j].matrix);
+				context.modelview.multiply(renderer.matrix);
 
-				batch[j].renderGeometry(context, shader);
+				renderer.renderGeometry(context, shader);
 
 				context.modelview.pop();
 			}

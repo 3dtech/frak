@@ -25,6 +25,13 @@ var ForwardRenderStage = PostProcessRenderStage.extend({
 				this.debugger.quads[i].quad.render(this.material.shader);
 				this.material.unbind([this.debugger.sampler]);
 			}
+
+			this.debugger.sampler.texture = this.debugger.vsyncTextures[0];
+			this.material.bind({}, [this.debugger.sampler]);
+			this.debugger.vsyncQuad.render(this.material.shader);
+			this.material.unbind([this.debugger.sampler]);
+			this.debugger.vsyncTextures.reverse();
+
 			context.modelview.pop();
 		}
 	},
@@ -34,9 +41,22 @@ var ForwardRenderStage = PostProcessRenderStage.extend({
 	},
 
 	initDebugger: function(context, scene) {
+
+		var texRed = new Texture(context);
+		texRed.name = "Red";
+		texRed.mipmapped = false;
+		texRed.clearImage(context, [0xFF, 0x00, 0x00, 0xFF]);
+
+		var texCyan = new Texture(context);
+		texCyan.name = "Red";
+		texCyan.mipmapped = false;
+		texCyan.clearImage(context, [0x00, 0xFF, 0xFF, 0xFF]);
+
 		this.debugger = {
 			quads: [],
-			sampler: new Sampler('tex0', null)
+			sampler: new Sampler('tex0', null),
+			vsyncQuad: createQuad(0.85, 0.85, 0.1, 0.1),
+			vsyncTextures: [ texRed, texCyan ]
 		};
 
 		function createQuad(x, y, width, height) {
