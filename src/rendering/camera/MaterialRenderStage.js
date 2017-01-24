@@ -180,11 +180,16 @@ var MaterialRenderStage=RenderStage.extend({
 
 	/** Renders renderers in batches by material */
 	renderBatched: function(context, batches) {
+		console.log("RenderBatched", context, batches);
 		var usedShader = false;
 		for (var i=0; i<batches.length; ++i) {
 			var batch = batches[i];
 
 			// Use shader
+			console.log(batch.get(0));
+			if (batch.get(0)){
+
+
 			var material = batch.get(0).material;
 			var shader = material.shader;
 			if (shader != usedShader) {
@@ -238,6 +243,7 @@ var MaterialRenderStage=RenderStage.extend({
 			// Unbind shader
 			shader.unbindSamplers(this.samplerAccum.samplers);
 			this.samplerAccum.clear();
+			}
 		}
 	},
 
