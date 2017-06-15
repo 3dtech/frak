@@ -26,10 +26,10 @@ function success(error, stdout, stderr){
 	}
 }
 
-var command = UGLIFYJS + " -m -c -o "+outputFile+" --stats ";
+var command = UGLIFYJS + " -m -c -o "+outputFile+" --timings -- ";
 if (process.argv.length>=3) {
 	if (process.argv[2] == 'debug') {
-		command = UGLIFYJS + " -b -o "+outputFile+" --stats ";
+		command = UGLIFYJS + " -b -o "+outputFile+" --timings -- ";
 		console.log('WARNING: Building DEBUG build of FRAK library.');
 	}
 
@@ -38,4 +38,5 @@ if (process.argv.length>=3) {
 		console.log('WARNING: Building SOURCE MAPPED build of FRAK library.');
 	}
 }
+//console.log(command+files.join(' '));
 exec(command + files.join(' '), {"maxBuffer": 1024*1024}, success);
