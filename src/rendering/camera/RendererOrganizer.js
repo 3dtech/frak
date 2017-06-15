@@ -96,23 +96,30 @@ var RendererOrganizer = FrakClass.extend({
 			if (!renderer)
 				break;
 			if (renderer.material.id in this.batchIndex) {
+				//console.log("if batch form list ",renderer.material.id,this.batchIndex[renderer.material.id], batchList[this.batchIndex[renderer.material.id]]);
 				batch = batchList[this.batchIndex[renderer.material.id]];
 			}
 			else {
+				//console.log("else new batch");
 				batch = new Batch(renderers);
 				batchList.push(batch);
 				this.batchIndex[renderer.material.id] = batchList.length - 1;
 			}
-			batch.add(i);
+			if (batch)
+				batch.add(i);
+			else {
+				//console.log("else new batch");
+				batch = new Batch(renderers);
+				batchList.push(batch);
+				this.batchIndex[renderer.material.id] = batchList.length - 1;
+			}
 		}
 	},
 
 	sort: function(engine, renderers, eyePosition) {
 		this.renderers.list = renderers;
-
 		this.viewSolidRenderers.filter();
 		this.viewTransparentRenderers.filter();
-
 		this.solidRenderers = this.viewSolidRenderers.view;
 		this.transparentRenderers = this.viewTransparentRenderers.view;
 
