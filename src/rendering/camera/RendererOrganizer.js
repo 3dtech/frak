@@ -23,14 +23,23 @@ function Batch(list) {
 	var scope = this;
 
 	this.clear = function() {
-		for (var i=0; i<scope.indices.length; ++i)
+		for (var i=0, l = scope.indices.length; i < l; ++i)
 			scope.indices[i] = -1;
 		scope.length = 0;
 	};
 
 	this.add = function(index) {
-		if (scope.indices.indexOf(index) != -1)
-			return;
+		function indexOfFor(ar,v){
+			for (var i = 0, l=ar.length; i < l; i++) {
+				if (ar[i] === v) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		if (indexOfFor(scope.indices, index)) return;
+
 		scope.indices[scope.length++] = index;
 	};
 

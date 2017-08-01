@@ -62,7 +62,7 @@ var MeshRendererComponent=RendererComponent.extend({
 	},
 
 	onUpdateTransform: function(absolute) {
-		for (var i=0; i<this.meshRenderers.length; i++) {
+		for (var i=0, l = this.meshRenderers.length; i < l; i++) {
 			this.meshRenderers[i].layer = this.node.layer;
 			this.meshRenderers[i].castShadows = this.castShadows;
 			this.meshRenderers[i].receiveShadows = this.receiveShadows;

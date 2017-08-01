@@ -184,7 +184,7 @@ var MaterialRenderStage = RenderStage.extend({
 	renderBatched: function (context, batches) {
 		//console.log("RenderBatched", context, batches);
 		var usedShader = false;
-		for (var i = 0; i < batches.length; ++i) {
+		for (var i = 0, l = batches.length; i < l; ++i) {
 			var batch = batches[i];
 
 			// Use shader
@@ -209,7 +209,7 @@ var MaterialRenderStage = RenderStage.extend({
 
 				// Bind samplers
 				this.samplerAccum.add(context.shadow.shadow0);
-				for (var j = 0; j < material.samplers.length; ++j) {
+				for (var j = 0, msl = material.samplers.length; j < msl; ++j) {
 					this.samplerAccum.add(material.samplers[j]);
 				}
 				if (this.samplerAccum.length == 0) {
@@ -222,7 +222,7 @@ var MaterialRenderStage = RenderStage.extend({
 				shader.bindUniforms(material.uniforms);
 
 				var renderer;
-				for (var j = 0; j < batch.length; ++j) {
+				for (var j = 0, bl = batch.length; j < bl; ++j) {
 					renderer = batch.get(j);
 					context.modelview.push();
 					context.modelview.multiply(renderer.matrix);
