@@ -17,7 +17,24 @@ var Renderer=FrakClass.extend({
 		this.localBoundingSphere=new BoundingSphere();
 		this.globalBoundingBox=new BoundingBox();
 		this.globalBoundingSphere=new BoundingSphere();
-		this.cacheMatrix=mat4.create();
+		this.cacheMatrix = mat4.create();
+		this.cacheUniforms = {
+			model: new UniformMat4(mat4.create()),
+			modelview: new UniformMat4(mat4.create()),
+			projection: new UniformMat4(mat4.create()),
+			receiveShadows: new UniformFloat(0),
+			lightContribution: new UniformFloat(0),
+			view: new UniformMat4(mat4.create()),
+			viewInverse: new UniformMat4(mat4.create()),
+			zNear: new UniformFloat(0),
+			zFar: new UniformFloat(0),
+			lightDirection: new UniformVec3(vec3.create()),
+			lightColor: new UniformColor(new Color()),
+			lightIntensity: new UniformFloat(1.0),
+			useShadows: new UniformInt(0),
+			lightView: new UniformMat4(mat4.create()),
+			lightProjection: new UniformMat4(mat4.create())
+		}
 	},
 
 	// Methods
@@ -41,43 +58,82 @@ var Renderer=FrakClass.extend({
 	 * @param context Instance of RenderingContext
 	 * @param uniforms Optional previously allocated uniforms object that the values will be written to.
 	 */
+
 	getDefaultUniforms: function(context, uniforms) {
-		if (!uniforms) {
+		if (typeof uniforms !== 'object' || uniforms === null) {
+			uniforms = Object.assign({}, this.cacheUniforms);
+		}
+
+		mat4.copy(uniforms.model.value, this.matrix);
+		mat4.copy(uniforms.modelview.value, context.modelview.top());
+		mat4.copy(uniforms.projection.value, context.projection.top());
+		uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0;
+		uniforms.lightContribution.value = this.lightContribution;
+		mat4.copy(uniforms.view.value, context.camera.viewMatrix);
+		mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix);
+		
+		if (context.camera.near) {
+			uniforms.zNear.value = context.camera.near;
+		}
+
+		if (context.camera.far) {
+			uniforms.zFar.value = context.camera.far;
+		}
+
+		// Light uniforms
+		if (context.light && context.light.uniforms) {
+			uniforms.lightDirection = context.light.uniforms.lightDirection;
+			uniforms.lightColor = context.light.uniforms.lightColor;
+			uniforms.lightIntensity = context.light.uniforms.lightIntensity;
+			uniforms.useShadows = context.light.uniforms.useShadows;
+		}
+
+		// Shadow uniforms
+		if (context.shadow) {
+			uniforms.lightView = context.shadow.lightView;
+			uniforms.lightProjection = context.shadow.lightProjection;
+		}
+
+		return uniforms;
+	},
+
+	getDefaultUniformsOld: function(context, uniforms) {
+		if (typeof uniforms !== 'object' || uniforms === null) {
 			uniforms = {};
 		}
 
-		if ('model' in uniforms) mat4.copy(uniforms.model.value, this.matrix);
+		if (uniforms.hasOwnProperty('model')) mat4.copy(uniforms.model.value, this.matrix);
 		else uniforms.model = new UniformMat4(this.matrix);
 
-		if ('modelview' in uniforms) mat4.copy(uniforms.modelview.value, context.modelview.top());
+		if (uniforms.hasOwnProperty('modelview')) mat4.copy(uniforms.modelview.value, context.modelview.top());
 		else uniforms.modelview = new UniformMat4(context.modelview.top());
 
-		if ('projection' in uniforms) mat4.copy(uniforms.projection.value, context.projection.top());
+		if (uniforms.hasOwnProperty('projection')) mat4.copy(uniforms.projection.value, context.projection.top());
 		else uniforms.projection = new UniformMat4(context.projection.top());
 
 		// if ('castShadows' in uniforms) uniforms.castShadows.value = this.castShadows ? 1 : 0;
 		// else uniforms.castShadows = new UniformInt(this.castShadows ? 1 : 0);
 
-		if ('receiveShadows' in uniforms) uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0;
+		if (uniforms.hasOwnProperty('receiveShadows')) uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0;
 		else uniforms.receiveShadows = new UniformInt(this.receiveShadows ? 1 : 0);
 
-		if ('lightContribution' in uniforms) uniforms.lightContribution.value = this.lightContribution;
+		if (uniforms.hasOwnProperty('lightContribution')) uniforms.lightContribution.value = this.lightContribution;
 		else uniforms.lightContribution = new UniformFloat(this.lightContribution);
 
 		// Camera uniforms
 		if (context.camera) {
-			if ('view' in uniforms) mat4.copy(uniforms.view.value, context.camera.viewMatrix);
+			if (uniforms.hasOwnProperty('view')) mat4.copy(uniforms.view.value, context.camera.viewMatrix);
 			else uniforms.view = new UniformMat4(context.camera.viewMatrix);
 
-			if ('viewInverse' in uniforms) mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix);
+			if (uniforms.hasOwnProperty('viewInverse')) mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix);
 			else uniforms.viewInverse = new UniformMat4(context.camera.viewInverseMatrix);
 
 			if (context.camera.near) {
-				if ('zNear' in uniforms) uniforms.zNear.value = context.camera.near;
+				if (uniforms.hasOwnProperty('zNear')) uniforms.zNear.value = context.camera.near;
 				else uniforms.zNear = new UniformFloat(context.camera.near);
 			}
 			if (context.camera.far) {
-				if ('zFar' in uniforms) uniforms.zFar.value = context.camera.far;
+				if (uniforms.hasOwnProperty('zFar')) uniforms.zFar.value = context.camera.far;
 				else uniforms.zFar = new UniformFloat(context.camera.far);
 			}
 		}

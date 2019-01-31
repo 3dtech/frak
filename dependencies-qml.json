@@ -1,13 +1,10 @@
 [
 	"lib/gl-matrix.js",
 	"lib/gl-matrix-3dtech-ext.js",
-	"lib/jdataview.js",
 	"lib/classExtend.js",
 	"lib/polyfills.js",
 	"lib/Logistics.js",
-	"lib/hammer.min.js",
 
-	"src/Version.js",
 	"src/FRAK.js",
 	"src/scene/Cloneable.js",
 	"src/scene/Serializable.js",
@@ -185,6 +182,5 @@
 
 	"src/engine/FPS.js",
 	"src/engine/Engine.js",
-	"src/engine/Input.js",
-	"src/rendering/shaders/BuiltInShaders.js"
+	"src/engine/Input.js"
 ]

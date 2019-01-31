@@ -1,8 +1,8 @@
 /**
 	Input handles user input (touch, mouse, keyboard).
-*/
-var Input = FrakClass.extend({
-	init: function(engine, canvas){
+	*/
+	var Input = FrakClass.extend({
+		init: function(engine, canvas){
 		this.controllers = []; //Holds all Controllers
 		this.engine = engine;
 		this.canvas = canvas;
@@ -19,20 +19,22 @@ var Input = FrakClass.extend({
 
 		this.scrollDelta = 0;
 
-		this.hammertime = HammerWF(this.canvas);
-		this.hammertime.get('pinch').set({ enable: true });
-		this.hammertime.get('rotate').set({ enable: true });
-		this.hammertime.get('pan').set({ threshold: 0, pointers: 0});
+		if(typeof HammerWF) {
+			this.hammertime = HammerWF(this.canvas);
+			this.hammertime.get('pinch').set({ enable: true });
+			this.hammertime.get('rotate').set({ enable: true });
+			this.hammertime.get('pan').set({ threshold: 0, pointers: 0});
 
 
-		this.singlepan = new HammerWF.Pan({
-		  event: 'pan',
-		  direction: HammerWF.DIRECTION_ALL,
-		  threshold: 5,
-		  pointers: 1
-		});
+			this.singlepan = new HammerWF.Pan({
+				event: 'pan',
+				direction: HammerWF.DIRECTION_ALL,
+				threshold: 5,
+				pointers: 1
+			});
 
-		this.hammertime.add(this.singlepan);
+			this.hammertime.add(this.singlepan);
+		}
 
 		this.bindings = {};
 		this.keyStates = {};
@@ -433,20 +435,21 @@ var Input = FrakClass.extend({
 });
 
 //Hack for Hammer.js to enable other mouse buttons
-HammerWF.MouseInput.prototype.handler = function(ev) {
-	if (ev.type == 'mousedown') {
-		this.pressed = true;
-	}
+if(typeof HammerWF !== "undefined") {
+	HammerWF.MouseInput.prototype.handler = function(ev) {
+		if (ev.type == 'mousedown') {
+			this.pressed = true;
+		}
 
 
-	if (!this.pressed || !this.allow)
-		return;
+		if (!this.pressed || !this.allow)
+			return;
 
-	if (ev.type == 'mouseup') {
-		this.pressed = false;
-	}
+		if (ev.type == 'mouseup') {
+			this.pressed = false;
+		}
 
-	var buttons = [false, false, false];
+		var buttons = [false, false, false];
 
 	// Detect button the Microsoft/Mozilla way
 	if ('buttons' in ev) {
@@ -551,18 +554,20 @@ HammerWF.PointerEventInput.prototype.handler = function(ev) {
 		!!(ev.buttons & 1), // left
 		!!(ev.buttons & 4), // middle
 		!!(ev.buttons & 2)  // right
-	];
+		];
 
-	this.callback(this.manager, eventType, {
-		pointers: store,
-		changedPointers: [ev],
-		pointerType: pointerType,
-		srcEvent: ev,
-		frakButtons: buttons
-	});
+		this.callback(this.manager, eventType, {
+			pointers: store,
+			changedPointers: [ev],
+			pointerType: pointerType,
+			srcEvent: ev,
+			frakButtons: buttons
+		});
 
-	if (removePointer) {
+		if (removePointer) {
 		// remove from the store
 		store.splice(storeIndex, 1);
 	}
 };
+
+}

@@ -39,14 +39,16 @@ var CollisionOctreeNode=FrakClass.extend({
 
 		if (this.nodes) {
 			copy.nodes = {};
-			for (var nodeID in this.nodes)
+			for (var nodeID in this.nodes) {
 				copy.nodes[nodeID] = this.nodes[nodeID];
+			}
 		}
 
 		if (this.submeshes) {
 			copy.submeshes = {};
-			for (var meshID in this.submeshes)
+			for (var meshID in this.submeshes) {
 				copy.submeshes[meshID] = this.submeshes[meshID];
+			}
 		}
 
 		copy.faces = this.faces; // XXX: saves memory, but might cause problems with shared data

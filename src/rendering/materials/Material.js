@@ -29,22 +29,26 @@ var Material=Serializable.extend({
 			return;
 
 		this.shader.use(this.uniforms);
-		if (uniforms)
+		if (uniforms) {
 			this.shader.bindUniforms(uniforms);
+		}
 
-		for (var i = 1; i < arguments.length; ++i) {
-			var arg = arguments[i];
+		var arg;
+
+		for (var i = 1, l = arguments.length; i < l; ++i) {
+			arg = arguments[i];
+
 			if (arg instanceof Sampler) {
 				this.boundSamplers.add(arg);
 			}
 			else if (arg instanceof Array) {
-				for (var j = 0; j < arg.length; ++j) {
+				for (var j = 0, l2 = arg.length; j < l2; ++j) {
 					this.boundSamplers.add(arg[j]);
 				}
 			}
 		}
 
-		for (var i=0; i<this.samplers.length; ++i)
+		for (var i=0, l3 = this.samplers.length; i < l3; ++i)
 			this.boundSamplers.add(this.samplers[i]);
 
 		if (this.boundSamplers.length == 0 && this.shader.context.engine) {

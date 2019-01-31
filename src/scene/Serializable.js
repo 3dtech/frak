@@ -25,7 +25,7 @@ var Serializable=Cloneable.extend({
 	/** @return An object with keys as field names that must be serialized */
 	getSerializableFields: function(extraExcluded) {
 		var included=this.included();
-		excluded=this.excluded();
+		var excluded=this.excluded();
 
 		if(included===true && excluded===true) throw "Quantum classes not allowed. A subclass of Serializable tries to both include and exclude all fields.";
 		if(included===false && excluded===false) throw "Quantum classes not allowed. A subclass of Serializable tries both not to include and not to exclude all fields.";

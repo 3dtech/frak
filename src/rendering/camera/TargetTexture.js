@@ -14,7 +14,8 @@ var TargetTexture = RenderTarget.extend({
 		if (this.useDepthTexture) {
 			var depthTextureExt = (
 				context.gl.getExtension('WEBGL_depth_texture') ||
-				context.gl.getExtension('WEBKIT_WEBGL_depth_texture')
+				context.gl.getExtension('WEBKIT_WEBGL_depth_texture') ||
+				context.gl.UNSIGNED_INT_24_8
 			);
 			if (!depthTextureExt)
 				throw('TargetTexture: Depth texture reqeusted, but not available.');
@@ -46,7 +47,7 @@ var TargetTexture = RenderTarget.extend({
 
 		// Setup primary color buffer, if not provided
 		if(!this.texture) {
-			this.texture=new Texture(context);
+			this.texture = new Texture(context);
 			gl.bindTexture(gl.TEXTURE_2D, this.texture.glTexture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -58,7 +59,7 @@ var TargetTexture = RenderTarget.extend({
 
 		// Setup buffer for depth
 		if (this.useDepthTexture) {
-			this.depth=new Texture(context);
+			this.depth = new Texture(context);
 			gl.bindTexture(gl.TEXTURE_2D, this.depth.glTexture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -110,15 +111,15 @@ var TargetTexture = RenderTarget.extend({
 			case gl.FRAMEBUFFER_COMPLETE:
 				return true;
 			case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-				throw("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+				throw("TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
 			case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-				throw("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+				throw("TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
 			case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-				throw("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+				throw("TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
 			case gl.FRAMEBUFFER_UNSUPPORTED:
-				throw("Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
+				throw("TargetTexture: Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
 			default:
-				throw("Incomplete framebuffer: " + status);
+				throw("TargetTexture: Incomplete framebuffer: " + status);
 		}
 	},
 

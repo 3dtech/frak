@@ -19,18 +19,18 @@ var Node = EmptyNode.extend({
 	// --------- Methods ---------
 	/** Calculates axis-aligned bounding-box of this node and all its subnodes */
 	getBoundingBox: function(excludeInvisible) {
-		var bb=new BoundingBox();
-		this.onEachChildComponent(function(c) {
-			if(c instanceof MeshRendererComponent) bb.encapsulateBox(c.getBoundingBox(excludeInvisible));
+		var bb = new BoundingBox();
+		this.onEachChildComponent(function (c) {
+			if (c instanceof MeshRendererComponent) bb.encapsulateBox(c.getBoundingBox(excludeInvisible));
 		});
 		return bb;
 	},
 
 	/** Calculates bounding-sphere of this node and all its subnodes */
 	getBoundingSphere: function(excludeInvisible) {
-		var bb=new BoundingSphere();
-		this.onEachChildComponent(function(c) {
-			if(c instanceof MeshRendererComponent) bb.encapsulateSphere(c.getBoundingSphere(excludeInvisible));
+		var bb = new BoundingSphere();
+		this.onEachChildComponent(function (c) {
+			if (c instanceof MeshRendererComponent) bb.encapsulateSphere(c.getBoundingSphere(excludeInvisible));
 		});
 		return bb;
 	},
@@ -55,18 +55,18 @@ var Node = EmptyNode.extend({
 
 	/** Updates absolute transforms of all child-nodes */
 	updateChildTransforms: function() {
-		var index, c;
+		var index, c, l1, l2, subnode;
 		var absolute = this.transform.absolute;
 		var subnodes = this.subnodes;
-		for (index=0; index<subnodes.length; index++) {
-			var subnode=subnodes[index];
+		for (index = 0, l1 = subnodes.length; index < l1; index++) {
+			subnode = subnodes[index];
 			if(!subnode.transform) continue;
 
 			mat4.multiply(subnode.transform.absolute, absolute, subnode.transform.relative);
 			subnode.updateChildTransforms();
 		}
 
-		for (c=0; c<this.components.length; c++) {
+		for (c = 0, l2 = this.components.length; c < l2; c++) {
 			this.components[c].onUpdateTransform(absolute);
 		}
 	},

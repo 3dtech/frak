@@ -184,13 +184,15 @@ var MaterialRenderStage = RenderStage.extend({
 	renderBatched: function (context, batches) {
 		//console.log("RenderBatched", context, batches);
 		var usedShader = false;
+		var material, batch, shader, renderer;
 		for (var i = 0, l = batches.length; i < l; ++i) {
-			var batch = batches[i];
+			batch = batches[i];
 
 			// Use shader
 			if (batch.get(0)) {
-				var material = batch.get(0).material;
-				var shader = material.shader;
+				material = batch.get(0).material;
+				shader = material.shader;
+
 				if (shader != usedShader) {
 					shader.use();
 					usedShader = shader;
@@ -212,7 +214,7 @@ var MaterialRenderStage = RenderStage.extend({
 				for (var j = 0, msl = material.samplers.length; j < msl; ++j) {
 					this.samplerAccum.add(material.samplers[j]);
 				}
-				if (this.samplerAccum.length == 0) {
+				if (this.samplerAccum.length === 0) {
 					this.samplerAccum.add(this.diffuseFallback);
 				}
 
@@ -221,7 +223,6 @@ var MaterialRenderStage = RenderStage.extend({
 				// Bind material uniforms
 				shader.bindUniforms(material.uniforms);
 
-				var renderer;
 				for (var j = 0, bl = batch.length; j < bl; ++j) {
 					renderer = batch.get(j);
 					context.modelview.push();

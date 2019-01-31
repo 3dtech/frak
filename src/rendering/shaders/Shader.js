@@ -109,10 +109,10 @@ var Shader=Serializable.extend({
 		if(!uniforms) return;
 		if(!this.linked) return;
 		for(var uniformName in uniforms) {
-			var uniformLocation=this.getUniformLocation(uniformName);
+			var uniformLocation = this.getUniformLocation(uniformName);
 
-			if(!uniformLocation || uniformLocation==-1) continue;
-			var uniform=uniforms[uniformName];
+			if(!uniformLocation || uniformLocation == -1) continue;
+			var uniform = uniforms[uniformName];
 			if(!uniform) throw "Uniform '"+uniformName+"' is undefined.";
 			uniform.bind(this.context, uniformLocation);
 		}

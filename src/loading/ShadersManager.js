@@ -10,6 +10,7 @@ var ShadersManager=Manager.extend({
 	init: function(context, assetsPath) {
 		this._super(assetsPath);
 		this.context = context;
+		this.builtin = BuiltInShaders;
 
 		this.aliases = {
 			'diffuse': 'shaders/default/diffuse',
@@ -50,20 +51,31 @@ var ShadersManager=Manager.extend({
 
 	loadResource: function(shaderDescriptor, shaderResource, loadedCallback, failedCallback) {
 		var descriptor = this.descriptorCallback(shaderDescriptor);
-		var vertexShader = this.textManager.add(descriptor.getVertexShaderPath());
-		var fragmentShader = this.textManager.add(descriptor.getFragmentShaderPath());
-		this.textManager.load(function() {
-			if(!vertexShader.data) {
-				failedCallback(descriptor);
-				return;
-			}
-			if(!fragmentShader.data) {
-				failedCallback(descriptor);
-				return;
-			}
-			shaderResource.addVertexShader(vertexShader.data);
-			shaderResource.addFragmentShader(fragmentShader.data);
+
+		//this shader is builtin so load it from memory
+		console.log('ShaderManager.loadResource3', typeof this.builtin[descriptor.vertexSource], typeof this.builtin[descriptor.fragmentSource], descriptor.vertexSource, descriptor.fragmentSource);
+		if (this.builtin[descriptor.vertexSource] && this.builtin[descriptor.fragmentSource]) {
+			shaderResource.addVertexShader(this.builtin[descriptor.vertexSource]);
+			shaderResource.addFragmentShader(this.builtin[descriptor.fragmentSource]);
 			loadedCallback(descriptor, shaderResource);
-		});
+		}
+		else {
+			var vertexShader = this.textManager.add(this.path + descriptor.getVertexShaderPath());
+			var fragmentShader = this.textManager.add(this.path + descriptor.getFragmentShaderPath());
+			this.textManager.load(function() {
+				if(!vertexShader.data) {
+					failedCallback(descriptor);
+					return;
+				}
+				if(!fragmentShader.data) {
+					failedCallback(descriptor);
+					return;
+				}
+				shaderResource.addVertexShader(vertexShader.data);
+				shaderResource.addFragmentShader(fragmentShader.data);
+				loadedCallback(descriptor, shaderResource);
+			});
+		}
+		
 	}
 });

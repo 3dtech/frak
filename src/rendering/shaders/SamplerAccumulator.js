@@ -1,5 +1,5 @@
 function SamplerAccumulator() {
-	this.samplers = new Array();
+	this.samplers = [];
 	this.length = 0;
 
 	var scope = this;
@@ -9,7 +9,7 @@ function SamplerAccumulator() {
 	};
 
 	this.clear = function() {
-		for (var i=0; i<scope.samplers.length; ++i) {
+		for (var i = 0, l = scope.samplers.length; i < l; ++i) {
 			scope.samplers[i] = null;
 		}
 		scope.length = 0;

@@ -25,7 +25,7 @@ var TargetTextureMulti = RenderTarget.extend({
 
 		// Test for depth texture, if needed
 		if (this.options.depth) {
-			var ext = context.gl.getExtension('WEBGL_depth_texture');
+			var ext = context.gl.getExtension('WEBGL_depth_texture') || context.gl.depthTextureExt;
 			if (!ext) ext = context.gl.getExtension('WEBKIT_WEBGL_depth_texture');
 			if (!ext)
 				throw('TargetTextureMulti: Depth texture reqeusted, but not available.');
@@ -40,8 +40,17 @@ var TargetTextureMulti = RenderTarget.extend({
 
 		// Test for floating point support
 		if (this.options.dataType == 'float') {
-			this.extTextureFloat = context.gl.getExtension('OES_texture_float');
-			this.extTextureHalfFloat = context.gl.getExtension('OES_texture_half_float');
+
+			if (context.version === 2) {
+				this.extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
+				this.extTextureHalfFloat = context.gl.HALF_FLOAT;
+				this.extTextureFloat = context.gl.FLOAT;
+			}
+			else {
+				this.extTextureHalfFloat = context.gl.getExtension('OES_texture_half_float');
+				this.extTextureFloat = context.gl.getExtension('OES_texture_float');	
+			}
+
 			if (!this.extTextureFloat && !this.extTextureHalfFloat)
 				throw('TargetTextureMulti: Floating point textures are not supported on this system.');
 
@@ -79,8 +88,11 @@ var TargetTextureMulti = RenderTarget.extend({
 
 		if (this.extTextureHalfFloat) {
 			// System only supports half precision floating point textures
-			if (!this.extTextureFloat) {
-				return this.extTextureHalfFloat.HALF_FLOAT_OES;
+			if (context.version === 2) {
+				return context.gl.HALF_FLOAT;
+			}
+			else if (!this.extTextureFloat) {
+				return this.extHalfFloat.HALF_FLOAT_OES;
 			}
 
 			// iOS says it supports FLOAT, but in reality it requires it to be HALF_FLOAT
@@ -185,15 +197,15 @@ var TargetTextureMulti = RenderTarget.extend({
 			case gl.FRAMEBUFFER_COMPLETE:
 				return true;
 			case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-				throw("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+				throw("TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
 			case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-				throw("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+				throw("TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
 			case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-				throw("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+				throw("TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
 			case gl.FRAMEBUFFER_UNSUPPORTED:
-				throw("Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
+				throw("TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
 			default:
-				throw("Incomplete framebuffer: " + status);
+				throw("TargetTextureMulti: Incomplete framebuffer: " + status);
 		}
 	},
 

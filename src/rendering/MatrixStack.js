@@ -17,7 +17,9 @@ var MatrixStack=FrakClass.extend({
 	/** Pushes matrix on top of the stack that is duplicate of
 		the matrix currently on top of the stack */
 	push: function() {
-		if(this.allocated.length==0) this.allocated.push(mat4.create());
+		if(this.allocated.length == 0) {
+			this.allocated.push(mat4.create());
+		}
 		this.stack.push(mat4.copy(this.allocated.pop(), this.stack[this.stack.length-1]));
 	},
 

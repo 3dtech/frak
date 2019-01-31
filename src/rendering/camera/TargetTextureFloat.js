@@ -1,8 +1,16 @@
 var TargetTextureFloat = TargetTexture.extend({
 	init: function(sizeOrTexture, context, useDepthTexture, useNearestFiltering) {
-		this.extHalfFloat = context.gl.getExtension('OES_texture_half_float');
-		this.extFloat = context.gl.getExtension('OES_texture_float');
-		if (!this.extFloat && !this.extHalfFloat)
+		if (context.version === 2) {
+			this.extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
+			this.extHalfFloat = context.gl.HALF_FLOAT;
+			this.extFloat = context.gl.FLOAT;
+		}
+		else {
+			this.extHalfFloat = context.gl.getExtension('OES_texture_half_float');
+			this.extFloat = context.gl.getExtension('OES_texture_float');	
+		}
+
+		if (!this.extFloat && !this.extHalfFloat && !(context.version === 2 && this.extColorFloat))
 			throw('TargetTextureFloat: Floating point textures are not supported on this system.');
 
 		this.linearFloat = null;
@@ -21,9 +29,15 @@ var TargetTextureFloat = TargetTexture.extend({
 
 	getDataType: function(context) {
 		if (this.extHalfFloat) {
-			if (!this.extFloat)
-				return this.extHalfFloat.HALF_FLOAT_OES;
-
+			if (!this.extFloat) {
+				if (context.version === 2) {
+					return gl.UNSIGNED_BYTE;
+				}
+				else {
+					return this.extHalfFloat.HALF_FLOAT_OES;
+				}
+			}
+				
 			if (navigator) {
 				switch (navigator.platform) {
 					case 'iPad':
@@ -33,7 +47,7 @@ var TargetTextureFloat = TargetTexture.extend({
 				}
 			}
 		}
-		return context.gl.FLOAT;
+		return context.version === 2 ? context.gl.UNSIGNED_BYTE : context.gl.FLOAT;
 	},
 
 	getTextureFilter: function(context) {
@@ -45,7 +59,6 @@ var TargetTextureFloat = TargetTexture.extend({
 	build: function(context) {
 		var gl = context.gl;
 		this.frameBuffer = gl.createFramebuffer();
-
 		// Setup primary color buffer, if not provided
 		if (!this.texture) {
 			this.texture = new Texture(context);
@@ -60,7 +73,7 @@ var TargetTextureFloat = TargetTexture.extend({
 
 		// Setup buffer for depth
 		if (this.useDepthTexture) {
-			this.depth=new Texture(context);
+			this.depth = new Texture(context);
 			gl.bindTexture(gl.TEXTURE_2D, this.depth.glTexture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -89,6 +102,6 @@ var TargetTextureFloat = TargetTexture.extend({
 		this.checkStatus(context);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-		this.texture.loaded=true;
+		this.texture.loaded = true;
 	}
 });

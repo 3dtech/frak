@@ -62,12 +62,19 @@ var MeshRendererComponent=RendererComponent.extend({
 	},
 
 	onUpdateTransform: function(absolute) {
+		var renderer;
+		var castShadows = this.castShadows;
+		var layer = this.node.layer;
+		var receiveShadows = this.receiveShadows;
+		var lightContribution = this.lightContribution;
+
 		for (var i=0, l = this.meshRenderers.length; i < l; i++) {
-			this.meshRenderers[i].layer = this.node.layer;
-			this.meshRenderers[i].castShadows = this.castShadows;
-			this.meshRenderers[i].receiveShadows = this.receiveShadows;
-			this.meshRenderers[i].lightContribution = this.lightContribution;
-			this.meshRenderers[i].setMatrix(absolute);
+			renderer = this.meshRenderers[i];
+			renderer.layer = layer;
+			renderer.castShadows = castShadows;
+			renderer.receiveShadows = receiveShadows;
+			renderer.lightContribution = lightContribution;
+			renderer.setMatrix(absolute);
 		}
 	},
 

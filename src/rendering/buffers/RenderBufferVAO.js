@@ -7,11 +7,18 @@ var RenderBufferVAO = RenderBuffer.extend({
 		@param faces Faces buffer with size that divides with 3 [f0i, f0j, f0k, f1i, f1j, f1k, ...]
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */
 	init: function(context, faces, type) {
-		this.extVAO = context.gl.getExtension("OES_vertex_array_object");
-		if (!this.extVAO)
-			throw "RenderBufferVAO: Vertex array objects not supported on this device.";
+		if (context.version === 2) { // Create WebGL2 VAO
+			this.createVAO = context.gl.createVertexArray;
+			this.bindVAO = context.gl.bindVertexArray;
+		} else {
+			var v = context.gl.getExtension("OES_vertex_array_object");
+			if (!v) throw "RenderBufferVAO: Vertex array objects not supported on this device.";
+			this.createVAO = v.createVertexArrayOES;
+			this.bindVAO = this.extVAO.bindVertexArrayOES;
+		}
 
-		this.vao = this.extVAO.createVertexArrayOES();
+		this.vao = this.createVAO();
+
 		if (!this.vao)
 			throw "RenderBufferVAO: Unable to create vertex array object.";
 
@@ -29,18 +36,19 @@ var RenderBufferVAO = RenderBuffer.extend({
 		if (items.length/itemSize <= this.maxFaceIndex)
 			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
 
-		this.extVAO.bindVertexArrayOES(this.vao);
+		this.bindVAO(this.vao);
 		this._super(name, items, itemSize);
-		this.extVAO.bindVertexArrayOES(null);
+		this.bindVAO(null);
 
 		this.damaged = true;
 	},
 
 	createFacesBuffer: function(faces) {
-		this.extVAO.bindVertexArrayOES(this.vao);
+		var gl = this.context.gl;
+		this.bindVAO(this.vao);
 		this._super(faces);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
-		this.extVAO.bindVertexArrayOES(null);
+		this.bindVAO(null);
 
 		this.damaged = true;
 	},
@@ -52,7 +60,7 @@ var RenderBufferVAO = RenderBuffer.extend({
 	bindLocations: function(shader) {
 		var gl = this.context.gl;
 
-		this.extVAO.bindVertexArrayOES(this.vao);
+		this.bindVAO(this.vao);
 
 		// Attribute buffers
 		var bufferLocation;
@@ -73,7 +81,7 @@ var RenderBufferVAO = RenderBuffer.extend({
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 		// Finised setting up VAO
-		this.extVAO.bindVertexArrayOES(null);
+		this.bindVAO(null);
 
 		this.damaged = false;
 	},
@@ -87,8 +95,8 @@ var RenderBufferVAO = RenderBuffer.extend({
 			this.bindLocations();
 		}
 
-		this.extVAO.bindVertexArrayOES(this.vao);
+		this.bindVAO(this.vao);
 		this.drawElements();
-		this.extVAO.bindVertexArrayOES(null);
+		this.bindVAO(null);
 	}
 });

@@ -1,4 +1,4 @@
-var Component=Serializable.extend({
+var Component = Serializable.extend({
 	/** Constructor. NOTE! When overriding the constructor of Component ALWAYS call this._super() to
 		call parent constructor, because otherwise for example onStart/onEnd methods won't work as
 		expected and other functionality may be broken. */

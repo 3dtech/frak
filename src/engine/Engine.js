@@ -7,12 +7,11 @@ var Engine=FrakClass.extend({
 		@param options Engine options [optional]
 		@param scene Scene to render and update [optional] */
 	init: function(canvas, options, scene) {
-		console.log("Engine");
 		if (!options) options={};
 		this.options = FRAK.extend({
 			'assetsPath': '',
-			'defaultRequestedFPS': 30.0,
-			'requestedFPS': 30.0,
+			'defaultRequestedFPS': 60.0,
+			'requestedFPS': 60.0,
 			'anisotropicFiltering': 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
 			'useVAO': true, // Set to false to completely disable the usage of Vertex Array Objects
 			'debug': false,
@@ -23,7 +22,8 @@ var Engine=FrakClass.extend({
 			'softShadows': false,
 			'runInBackground': false,
 			'context': false,
-			'contextErrorCallback': null
+			'contextErrorCallback': null,
+			'captureScreenshot': false,
 		}, options);
 		this.validateOptions(canvas);
 
@@ -31,13 +31,15 @@ var Engine=FrakClass.extend({
 		this.context.engine = this;
 
 		if (!scene)
-			scene=new DefaultScene();
+			scene = new DefaultScene();
 
 		this.scene = scene;
 		this.scene.engine = this;
 		this.fps = new FPS();
 		this.running = false;
 		this.input = false;
+		this.screenshot = false;
+		this.onScreenshotCaptured = false;
 
 		this.assetsManager = new AssetsManager(this.context, this.options.assetsPath);
 
@@ -289,6 +291,9 @@ var Engine=FrakClass.extend({
 		this.scene.update(this);
 		this.scene.render(this.context);
 		this.fps.measure();
+		if(this.options.captureScreenshot) {
+			this._captureScreenshot();
+		}
 	},
 
 	validateOptions: function(canvas) {
@@ -355,5 +360,20 @@ var Engine=FrakClass.extend({
 		console.log('  Visible renderers (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidRenderers, organizer.visibleTransparentRenderers));
 		console.log('  Visible batches (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidBatches, organizer.visibleTransparentBatches));
 		console.log('================================================');
+	},
+
+	_captureScreenshot: function () {
+		var shot = this.context.gl.canvas.toDataURL();
+		if (shot && this.onScreenshotCaptured) {
+			this.options.captureScreenshot = false;
+			this.onScreenshotCaptured(shot);
+		}
+	},
+
+	captureScreenshot: function (callback) {
+		if(typeof callback === 'function') {
+			this.options.captureScreenshot = true;
+			this.onScreenshotCaptured = callback;
+		}	
 	}
 });

@@ -22,7 +22,7 @@ var SubmeshRenderer=Renderer.extend({
 		if (!this.submesh)
 			throw Error("SubmeshRenderer.allocBuffer: No submesh set");
 
-		if (context.engine && context.engine.options.useVAO === true) {
+		if (context.engine && context.engine.options.useVAO === true && context.version === 2) {
 			try {
 				this.buffer = new TrianglesRenderBufferVAO(context, this.submesh.faces);
 			}

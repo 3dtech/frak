@@ -4,14 +4,15 @@ var RenderingContext=FrakClass.extend({
 		@param canvas The canvas element that provides rendering context
 	*/
 	init: function(canvas, contextOptions, errorCallback) {
-		if (!("WebGLRenderingContext" in window))
+		this.version = 0;
+		if (typeof window !== "undefined" && !("WebGLRenderingContext" in window))
 			throw "Unable to create rendering context, because browser doesn't support WebGL";
 
-		if (typeof(canvas) === 'string') {
+		if (typeof canvas === 'string' && typeof document !== "undefined") {
 			canvas = document.getElementById(canvas);
 		}
 
-		if (window.jQuery && canvas instanceof jQuery) {
+		if (typeof window !== "undefined" && window.jQuery && canvas instanceof jQuery) {
 			canvas = canvas[0];
 		}
 
@@ -20,7 +21,7 @@ var RenderingContext=FrakClass.extend({
 
 		this.canvas = canvas;
 
-		if (typeof(WebGLDebugUtils) != 'undefined') {
+		if (typeof WebGLDebugUtils !== 'undefined') {
 			this.canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
 			this.canvas.setRestoreTimeout(2000);
 		}
@@ -28,7 +29,10 @@ var RenderingContext=FrakClass.extend({
 		contextOptions = contextOptions || { alpha: false };
 
 		// Try to get rendering context for WebGL
-		this.gl = this.canvas.getContext("webgl", contextOptions);
+		this.gl = this.canvas.getContext("webgl2", contextOptions);
+		this.version = this.gl ? 2 : 1;
+
+		if (!this.gl) this.gl = this.canvas.getContext("webgl", contextOptions);
 		if (!this.gl) this.gl = this.canvas.getContext("experimental-webgl", contextOptions);
 		if (!this.gl) this.gl = this.canvas.getContext("moz-webgl", contextOptions);
 		if (!this.gl) this.gl = this.canvas.getContext("webkit-3d", contextOptions);
@@ -39,7 +43,7 @@ var RenderingContext=FrakClass.extend({
 			if (FRAK.isFunction(errorCallback))
 				hideError = errorCallback();
 
-			if (!hideError) {
+			if (!hideError && typeof document !== "undefined") {
 				var msg = document.createElement("div");
 				msg.style.position = "relative";
 				msg.style.zIndex = 100;
@@ -53,7 +57,7 @@ var RenderingContext=FrakClass.extend({
 			throw "Failed to acquire GL context from canvas";
 		}
 
-		if (typeof(WebGLDebugUtils) != 'undefined') {
+		if (typeof(WebGLDebugUtils) !== 'undefined') {
 			function throwOnGLError(err, funcName, args) {
 				throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName+ JSON.stringify(args);
 			}
@@ -74,7 +78,7 @@ var RenderingContext=FrakClass.extend({
 		if (this.isContextLost())
 			throw Error("Context lost");
 		var err = this.gl.getError();
-		if (err > 0 && typeof(WebGLDebugUtils) != 'undefined') {
+		if (err > 0 && typeof(WebGLDebugUtils) !== 'undefined') {
 			throw Error("GL_ERROR: " + WebGLDebugUtils.glEnumToString(err));
 		}
 		return err;

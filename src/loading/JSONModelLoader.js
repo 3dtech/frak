@@ -32,9 +32,7 @@ var JSONModelLoader = FrakClass.extend({
 		if (FRAK.isEmptyObject(parsedData))
 			return;
 		node.name = parsedData.scene.name;
-
 		this.linkReferences(parsedData);
-
 		this.loadMaterials(parsedData.materials);
 		this.loadSubmeshes(parsedData.meshes);
 		this.loadNode(node, parsedData.scene);
@@ -42,16 +40,20 @@ var JSONModelLoader = FrakClass.extend({
 	},
 
 	linkReferences: function(data) {
-		for (var i=0; i<data.meshes.length; i++) {
-			if (data.meshes[i].materialIndex>=0 && data.meshes[i].materialIndex<data.materials.length)
-				data.meshes[i].material = data.materials[data.meshes[i].materialIndex];
+		var mesh;
+		var matLen = data.materials.length;
+		for (var i=0, l = data.meshes.length; i < l; i++) {
+			mesh = data.meshes[i];
+			if (mesh.materialIndex >= 0 && mesh.materialIndex < matLen)
+				mesh.material = data.materials[mesh.materialIndex];
 		}
 	},
 
 	/** Loads all material instances. */
 	loadMaterials: function(parsedMaterials) {
-		for (var i=0; i<parsedMaterials.length; i++) {
-			var material = parsedMaterials[i];
+		var material;
+		for (var i = 0, l = parsedMaterials.length; i < l; i++) {
+			material = parsedMaterials[i];
 			material.instance = new Material();
 			this.loadMaterial(material.instance, material);
 		}
@@ -127,10 +129,12 @@ var JSONModelLoader = FrakClass.extend({
 
 	/** Loads submeshes */
 	loadSubmeshes: function(meshes) {
-		for (var i=0; i<meshes.length; i++) {
+		var mesh;
+		for (var i = 0, l = meshes.length; i < l; i++) {
+			var mesh = meshes[i];
 			var submesh = new Submesh();
-			this.loadSubmesh(submesh, meshes[i]);
-			this.submeshesByID[i]={'submesh': submesh, 'material': meshes[i].material.instance};
+			this.loadSubmesh(submesh, mesh);
+			this.submeshesByID[i] = {'submesh': submesh, 'material': mesh.material.instance};
 		}
 	},
 
@@ -139,9 +143,10 @@ var JSONModelLoader = FrakClass.extend({
 			return;
 		if (!parsedSubmesh.vertices || parsedSubmesh.vertices.length == 0)
 			return;
-
 		submesh.faces = parsedSubmesh.faces;
 		submesh.positions = parsedSubmesh.vertices;
+
+		var _parsedSubMesh;
 
 		var pointCount = parsedSubmesh.vertices.length / 3;
 
@@ -155,49 +160,57 @@ var JSONModelLoader = FrakClass.extend({
 			submesh.bitangents = parsedSubmesh.bitangents;
 
 		if (parsedSubmesh.texCoords1D) {
-			for (var i=0; i<parsedSubmesh.texCoords1D.length; i++) {
-				if (parsedSubmesh.texCoords1D[i].length == pointCount)
-					submesh.texCoords1D.push(parsedSubmesh.texCoords1D[i]);
+			for (var i=0, l = parsedSubmesh.texCoords1D.length; i < l; i++) {
+				_parsedSubMesh = parsedSubmesh.texCoords1D[i];
+				if (_parsedSubMesh.length == pointCount)
+					submesh.texCoords1D.push(_parsedSubMesh);
 			}
 		}
 
 		if (parsedSubmesh.texCoords2D) {
-			for (var i=0; i<parsedSubmesh.texCoords2D.length; i++) {
-				if (parsedSubmesh.texCoords2D[i].length/2 == pointCount)
-					submesh.texCoords2D.push(parsedSubmesh.texCoords2D[i]);
+			for (var i=0, l1 = parsedSubmesh.texCoords2D.length; i < l1; i++) {
+				_parsedSubMesh = parsedSubmesh.texCoords2D[i];
+				if (_parsedSubMesh.length/2 == pointCount) {
+					submesh.texCoords2D.push(_parsedSubMesh);
+				}
 			}
 		}
 		// Generates 2D texture coordiantes for models that do not specify any 2D coordinates, but do specify 3D ones.
 		else {
 			if (parsedSubmesh.texCoords3D) {
-				for (var i=0; i<parsedSubmesh.texCoords3D.length; i++) {
-					if (parsedSubmesh.texCoords3D[i].length/3 != pointCount)
+				var texCoords;
+				for (var i=0, l2 = parsedSubmesh.texCoords3D.length; i < l2; i++) {
+					_parsedSubMesh = parsedSubmesh.texCoords3D[i];
+					if (_parsedSubMesh.length/3 !== pointCount)
 						continue;
 					var texCoords2D = [];
-					for (var j=0; j<parsedSubmesh.texCoords3D[i].length; j+=3) {
-						texCoords2D.push(parsedSubmesh.texCoords3D[i][j]);
-						texCoords2D.push(parsedSubmesh.texCoords3D[i][j+1]);
+					for (var j=0; j < _parsedSubMesh.length; j+=3) {
+						texCoords2D.push(_parsedSubMesh[j]);
+						texCoords2D.push(_parsedSubMesh[j+1]);
 					}
-					submesh.texCoords2D.push(texCoords2D);
+					submesh.texCoords2D.push(_parsedSubMesh);
 					submesh.yesIGeneratedThese = true;
 				}
 			}
 		}
 
 		if (parsedSubmesh.texCoords3D) {
-			for (var i=0; i<parsedSubmesh.texCoords3D.length; i++) {
-				if (parsedSubmesh.texCoords3D[i].length/3 == pointCount)
-					submesh.texCoords3D.push(parsedSubmesh.texCoords3D[i]);
+			for (var i=0, l3 = parsedSubmesh.texCoords3D.length; i < l3; i++) {
+				_parsedSubMesh = parsedSubmesh.texCoords3D[i];
+				if (_parsedSubMesh.length/3 == pointCount) {
+					submesh.texCoords3D.push(_parsedSubMesh);
+				}
 			}
 		}
 
 		if (parsedSubmesh.texCoords4D) {
-			for (var i=0; i<parsedSubmesh.texCoords4D.length; i++) {
-				if (parsedSubmesh.texCoords4D[i].length/4 == pointCount)
-					submesh.texCoords4D.push(parsedSubmesh.texCoords4D[i]);
+			for (var i = 0, l4 = parsedSubmesh.texCoords4D.length; i < l4; i++) {
+				_parsedSubMesh = parsedSubmesh.texCoords4D[i];
+				if (_parsedSubMesh.length/4 == pointCount) {
+					submesh.texCoords4D.push(_parsedSubMesh);
+				}
 			}
 		}
-
 		submesh.recalculateBounds();
 	},
 
@@ -210,9 +223,11 @@ var JSONModelLoader = FrakClass.extend({
 		node.transform.relative = parsedNode.relative;
 		this.loadMesh(node, parsedNode.meshes);
 
-		for (var i=0; i<parsedNode.subnodes.length; i++) {
-			var subnode = new Node(parsedNode.subnodes[i].name);
-			this.loadNode(subnode, parsedNode.subnodes[i]);
+		var _subnode;
+		for (var i = 0, l = parsedNode.subnodes.length; i < l; i++) {
+			_subnode = parsedNode.subnodes[i];
+			var subnode = new Node(_subnode.name);
+			this.loadNode(subnode, _subnode);
 			node.addNode(subnode);
 		}
 	},

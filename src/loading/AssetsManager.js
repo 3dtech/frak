@@ -111,16 +111,16 @@ var AssetsManager=FrakClass.extend({
 		@param callback Callback that is called when all added sources have been loaded
 		@param progressCallback Callback that is called when either all shaders, all textures or all models have been loaded */
 	load: function(callback, progressCallback) {
-		var me=this;
+		var me = this;
 
 		if(callback) {
 			this.loadedCallbacks.push(callback);
 		}
 
 		if (!this.hasItemsInQueue()) {
-			var callbacks=this.loadedCallbacks.slice(0);
-			this.loadedCallbacks=[];
-			for(var j=0; j < callbacks.length; j++) {
+			var callbacks = this.loadedCallbacks.slice(0);
+			this.loadedCallbacks = [];
+			for(var j = 0; j < callbacks.length; j++) {
 				callbacks[j]();
 			}
 			return;
@@ -132,10 +132,10 @@ var AssetsManager=FrakClass.extend({
 			var progress = 0.0;
 			for (var i=0; i < me.managers.length; i++){
 				if(me.managers[i]){
-					progress+=me.managers[i].getProgress();
+					progress += me.managers[i].getProgress();
 				}			
 				else
-					progress+=1.0;
+					progress += 1.0;
 			}
 			progressCallback(progress/me.managers.length);
 		}

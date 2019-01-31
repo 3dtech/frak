@@ -10,16 +10,9 @@ var fs = require('fs');
 var exec = require('child_process').exec;
 
 var frakVersion = require('./src/Version.js');
-var files = require('./dependencies.json');
-var type = "min";
+var files = require('./dependencies-qml.json');
 
-if (process.argv.length >= 3 && process.argv[2] == 'debug') {
-	type = "debug";
-}
-
-console.log('type', type, process.argv);
-
-var outputFilename = "frak-"+frakVersion.version+"." + type + ".js";
+var outputFilename = "frak-"+frakVersion.version+".qml.js";
 var outputFile = "builds/"+outputFilename;
 
 function success(error, stdout, stderr){
@@ -28,12 +21,12 @@ function success(error, stdout, stderr){
 		console.log(error, stderr);
 	}
 	else {
-		console.log('Copying %s to builds/frak-latest.min.js', outputFile);
-		fs.createReadStream(outputFile).pipe(fs.createWriteStream('builds/frak-latest.' + type + '.js'));
+		console.log('Copying %s to builds/frak-latest.qml.js', outputFile);
+		fs.createReadStream(outputFile).pipe(fs.createWriteStream('builds/frak-latest.qml.js'));
 	}
 }
 
-var command = UGLIFYJS + " -m -c -o "+outputFile+" --timings -- ";
+var command = UGLIFYJS + " -b -o "+outputFile+" --timings -- ";
 if (process.argv.length>=3) {
 	if (process.argv[2] == 'debug') {
 		command = UGLIFYJS + " -b -o "+outputFile+" --timings -- ";

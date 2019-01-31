@@ -119,21 +119,21 @@ var OITRenderStage = RenderStage.extend({
 			shader.bindUniforms(context.light.uniforms);
 
 		var batches = this.parent.organizer.transparentBatchList;
-		for (var i=0; i<batches.length; i++) {
+		for (var i = 0, l = batches.length; i < l; i++) {
 			var batch = batches[i];
 			if (batch.length == 0)
 				continue;
 			var batchMaterial = batch.get(0).material;
 
 			var samplers;
-			if (material.samplers.length>0) {
+			if (material.samplers.length > 0) {
 				samplers = material.samplers.concat(batchMaterial.samplers);
 			}
 			else {
 				samplers = batchMaterial.samplers;
 			}
 
-			if (batchMaterial.samplers.length == 0) {
+			if (batchMaterial.samplers.length === 0) {
 				samplers.push(this.diffuseFallback);
 			}
 
@@ -142,7 +142,7 @@ var OITRenderStage = RenderStage.extend({
 			shader.bindSamplers(samplers);
 
 			var renderer;
-			for (var j=0; j<batch.length; ++j) {
+			for (var j = 0, l2 = batch.length; j < l2; ++j) {
 				renderer = batch.get(j);
 				context.modelview.push();
 				context.modelview.multiply(renderer.matrix);

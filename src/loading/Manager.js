@@ -24,7 +24,7 @@ var Manager=FrakClass.extend({
 
 		/* Set source callback to overwrite any source before it is used to create a descriptor. */
 		this.sourceCallback = function(source) {
-			return scope.path + source;
+			return source;
 		};
 
 		/* Set descriptor callback to overwrite any descriptor parameters before it is requested. */
@@ -61,13 +61,14 @@ var Manager=FrakClass.extend({
 		@return Resource described by the descriptor that will eventually be loaded */
 	addDescriptor: function(descriptor) {
 		// Search for resource in cache
-		var resource=this.cache[descriptor.serialize(['id'])];
+		var resource = this.cache[descriptor.serialize(['id'])];
 		if(resource) {
 			return resource;
 		}
 
 		// Search for resource in loading queue or in waiting queue
-		resource=this.getLoadingResource(descriptor);
+		resource = this.getLoadingResource(descriptor);
+
 		if(resource) {
 			return resource;
 		}
@@ -75,7 +76,8 @@ var Manager=FrakClass.extend({
 		this.onAddToQueue(descriptor);
 
 		// Resource not found in cache or loading queue. Add it to waiting queue.
-		resource=this.createResource(descriptor);
+		resource = this.createResource(descriptor);
+		
 		this.queue.push([descriptor, descriptor.serialize(['id']), resource]);
 		return resource;
 	},
@@ -116,10 +118,12 @@ var Manager=FrakClass.extend({
 		if(progressCallback) {
 			this.progressCallbacks.push(progressCallback);
 		}
+
+		
 		if(callback) {
 			this.callbacks.push(callback);
-			if(this.callbacks.length>1) {
-				if(this.queue.length==0) {
+			if (this.callbacks.length > 1) {
+				if(this.queue.length == 0) {
 					this.callDoneCallbacks();
 				}
 				return;	// Already loading
@@ -152,7 +156,7 @@ var Manager=FrakClass.extend({
 			next[0],
 			next[2],
 			function(d, r) {
-				me.cache[d.serialize(['id'])]=r;	// Cache resource
+				me.cache[d.serialize(['id'])] = r;	// Cache resource
 				me.cacheSize++;							// Remember that we have more items cached now (for getProgress)
 				me.removeLoadedResource(d);
 				me.onLoaded(d);
@@ -162,7 +166,7 @@ var Manager=FrakClass.extend({
 				console.warn("Failed to load resource with descriptor: ", d.serialize(['id']));
 				me.removeLoadedResource(d);
 				me.onLoaded(d);
-				if(d.getFullPath) console.warn('Full path: ', d.getFullPath());
+				if (d.getFullPath) console.warn('Full path: ', d.getFullPath());
 				me.keepLoading(); // Continue loading despite errors
 			});
 	},
