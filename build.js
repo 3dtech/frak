@@ -11,16 +11,14 @@ var exec = require('child_process').exec;
 
 var frakVersion = require('./src/Version.js');
 var files = require('./dependencies.json');
-var type = "min";
+var type = 'min';
 
 if (process.argv.length >= 3 && process.argv[2] == 'debug') {
-	type = "debug";
+	type = 'debug';
 }
 
-console.log('type', type, process.argv);
-
-var outputFilename = "frak-"+frakVersion.version+"." + type + ".js";
-var outputFile = "builds/"+outputFilename;
+var outputFilename = 'frak-' + frakVersion.version + '.' + type + '.js';
+var outputFile = 'builds/' + outputFilename;
 
 function success(error, stdout, stderr){
 	console.error(stderr);
@@ -33,17 +31,17 @@ function success(error, stdout, stderr){
 	}
 }
 
-var command = UGLIFYJS + " -m -c -o "+outputFile+" --timings -- ";
+var command = UGLIFYJS + ' -m -c -o ' + outputFile + ' --timings -- ';
 if (process.argv.length>=3) {
 	if (process.argv[2] == 'debug') {
-		command = UGLIFYJS + " -b -o "+outputFile+" --timings -- ";
+		command = UGLIFYJS + ' -b -o ' + outputFile + ' --timings -- ';
 		console.log('WARNING: Building DEBUG build of FRAK library.');
 	}
-
-	else if (process.argv[2] == "mapped") {
-		command += "--source-map frak.map --source-map-url 'http://localhost:8001/frak.map' ";
+	else if (process.argv[2] == 'mapped') {
+		command += '--source-map frak.map --source-map-url "http://localhost:8001/frak.map" ';
 		console.log('WARNING: Building SOURCE MAPPED build of FRAK library.');
 	}
 }
+
 //console.log(command+files.join(' '));
-exec(command + files.join(' '), {"maxBuffer": 1024*1024}, success);
+exec(command + files.join(' '), {'maxBuffer': 1024*1024}, success);
