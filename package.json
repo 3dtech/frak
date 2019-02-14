@@ -26,7 +26,8 @@
     "url": "https://github.com/3dtech/frak/issues"
   },
   "homepage": "https://github.com/3dtech/frak#readme",
-  "dependencies": {
-    "uglifyjs": "^2.4.10"
+  "dependencies": {},
+  "devDependencies": {
+    "uglify-js": "^3.4.9"
   }
 }
