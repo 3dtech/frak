@@ -3,8 +3,8 @@
  * node build.js [debug]
  */
 
-var UGLIFYJS = 'uglifyjs';
-//var UGLIFYJS = 'node_modules/.bin/uglifyjs';
+// var UGLIFYJS = 'uglifyjs';
+var UGLIFYJS = 'node_modules/.bin/uglifyjs';
 
 var fs = require('fs');
 var exec = require('child_process').exec;
