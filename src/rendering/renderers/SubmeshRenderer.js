@@ -1,7 +1,7 @@
 /** Renders submeshes dynamically. The transform value may change between calls to onRender.
 	Its technically a render-buffer with attached material reference.
  */
-var SubmeshRenderer=Renderer.extend({
+var SubmeshRenderer = Renderer.extend({
 	init: function(context, matrix, submesh, material) {
 		this._super(matrix);
 		this.submesh = submesh;
@@ -22,7 +22,7 @@ var SubmeshRenderer=Renderer.extend({
 		if (!this.submesh)
 			throw Error("SubmeshRenderer.allocBuffer: No submesh set");
 
-		if (context.engine && context.engine.options.useVAO === true && context.version === 2) {
+		if (context.engine && (context.engine.options.useVAO === true || context.version === 'webgl2')) {
 			try {
 				this.buffer = new TrianglesRenderBufferVAO(context, this.submesh.faces);
 			}
@@ -48,66 +48,66 @@ var SubmeshRenderer=Renderer.extend({
 
 		// 1D texture coordinates
 		if (submesh.texCoords1D) {
-			for (var i=0; i<submesh.texCoords1D.length; i++) {
+			for (var i = 0; i < submesh.texCoords1D.length; ++i) {
 				if (submesh.texCoords1D[i].length != pointCount) {
 					console.warn("Wrong number of 1D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords1D[i].length, pointCount));
 					continue;
 				}
-				this.buffer.add("texcoord1d"+i, submesh.texCoords1D[i], 1);
+				this.buffer.add("texcoord1d" + i, submesh.texCoords1D[i], 1);
 			}
 		}
 
 		// 2D texture coordinates
 		if (submesh.texCoords2D) {
-			for (var i=0; i<submesh.texCoords2D.length; i++) {
-				if (submesh.texCoords2D[i].length/2 != pointCount) {
-					console.warn("Wrong number of 2D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords2D[i].length/2, pointCount));
+			for (var i = 0; i < submesh.texCoords2D.length; ++i) {
+				if (submesh.texCoords2D[i].length / 2 != pointCount) {
+					console.warn("Wrong number of 2D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords2D[i].length / 2, pointCount));
 					continue;
 				}
-				this.buffer.add("texcoord2d"+i, submesh.texCoords2D[i], 2);
+				this.buffer.add("texcoord2d" + i, submesh.texCoords2D[i], 2);
 			}
 		}
 
 		// 3D texture coordinates
 		if (submesh.texCoords3D) {
-			for (var i=0; i<submesh.texCoords3D.length; i++) {
-				if (submesh.texCoords3D[i].length/3 != pointCount) {
-					console.warn("Wrong number of 3D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords3D[i].length/3, pointCount));
+			for (var i = 0; i < submesh.texCoords3D.length; ++i) {
+				if (submesh.texCoords3D[i].length / 3 != pointCount) {
+					console.warn("Wrong number of 3D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords3D[i].length / 3, pointCount));
 					continue;
 				}
-				this.buffer.add("texcoord3d"+i, submesh.texCoords3D[i], 3);
+				this.buffer.add("texcoord3d" + i, submesh.texCoords3D[i], 3);
 			}
 		}
 
 		// 4D texture coordinates
 		if (submesh.texCoords4D) {
-			for (var i=0; i<submesh.texCoords4D.length; i++) {
-				if (submesh.texCoords4D[i].length/4 != pointCount) {
-					console.warn("Wrong number of 4D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords4D[i].length/4, pointCount));
+			for (var i = 0; i < submesh.texCoords4D.length; ++i) {
+				if (submesh.texCoords4D[i].length / 4 != pointCount) {
+					console.warn("Wrong number of 4D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords4D[i].length / 4, pointCount));
 					continue;
 				}
-				this.buffer.add("texcoord3d"+i, submesh.texCoords4D[i], 4);
+				this.buffer.add("texcoord4d" + i, submesh.texCoords4D[i], 4);
 			}
 		}
 
-		if(submesh.normals) {
-			if(submesh.positions.length!=submesh.normals.length) {
+		if (submesh.normals) {
+			if(submesh.positions.length != submesh.normals.length) {
 				console.warn("Wrong number of normals. Must be the same as positions.");
 			}
 			else {
 				this.buffer.add("normal", submesh.normals, 3);
 			}
 		}
-		if(submesh.tangents) {
-			if(submesh.positions.length!=submesh.tangents.length) {
+		if (submesh.tangents) {
+			if (submesh.positions.length != submesh.tangents.length) {
 				console.warn("Wrong number of tangents. Must be the same as positions.");
 			}
 			else {
 				this.buffer.add("tangent", submesh.tangents, 3);
 			}
 		}
-		if(submesh.bitangents) {
-			if(submesh.positions.length!=submesh.bitangents.length) {
+		if (submesh.bitangents) {
+			if (submesh.positions.length != submesh.bitangents.length) {
 				console.warn("Wrong number of bitangents. Must be the same as positions.");
 			}
 			else {
@@ -116,7 +116,7 @@ var SubmeshRenderer=Renderer.extend({
 		}
 
 		if (submesh.barycentric) {
-			if(submesh.positions.length!=submesh.barycentric.length) {
+			if(submesh.positions.length != submesh.barycentric.length) {
 				console.warn("Wrong number of barycentric coordinates. Must be the same as positions.");
 			}
 			else {
@@ -139,8 +139,8 @@ var SubmeshRenderer=Renderer.extend({
 
 		// Set this renderer to transparent, if its material is transparent or if diffuse color or ambient color has alpha less than 1
 		this.transparent = material.shader.requirements.transparent ||
-			(material.uniforms['diffuse'] && material.uniforms['diffuse'].value[3]<1.0) ||
-			(material.uniforms['ambient'] && material.uniforms['ambient'].value[3]<1.0);
+			(material.uniforms['diffuse'] && material.uniforms['diffuse'].value[3] < 1.0) ||
+			(material.uniforms['ambient'] && material.uniforms['ambient'].value[3] < 1.0);
 
 		this.failed = false;
 	},

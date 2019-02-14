@@ -7,20 +7,20 @@ var RenderBufferVAO = RenderBuffer.extend({
 		@param faces Faces buffer with size that divides with 3 [f0i, f0j, f0k, f1i, f1j, f1k, ...]
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */
 	init: function(context, faces, type) {
-		if (context.version === 2) { // Create WebGL2 VAO
+		if (context.version === 'webgl2') {
 			this.createVAO = context.gl.createVertexArray;
 			this.bindVAO = context.gl.bindVertexArray;
 		} else {
-			var v = context.gl.getExtension("OES_vertex_array_object");
-			if (!v) throw "RenderBufferVAO: Vertex array objects not supported on this device.";
-			this.createVAO = v.createVertexArrayOES;
-			this.bindVAO = this.extVAO.bindVertexArrayOES;
+			var extVAO = context.gl.getExtension('OES_vertex_array_object');
+			if (!extVAO)
+				throw 'RenderBufferVAO: Vertex array objects not supported on this device.';
+			this.createVAO = extVAO.createVertexArrayOES;
+			this.bindVAO = extVAO.bindVertexArrayOES;
 		}
 
 		this.vao = this.createVAO();
-
 		if (!this.vao)
-			throw "RenderBufferVAO: Unable to create vertex array object.";
+			throw 'RenderBufferVAO: Unable to create vertex array object.';
 
 		this.damaged = true;
 
@@ -33,7 +33,7 @@ var RenderBufferVAO = RenderBuffer.extend({
 		@param items Items to be passed to vertex buffer
 		@param itemSize Size of an item (number elements from items array, eg 3 to pass vec3 attribute) */
 	add: function(name, items, itemSize) {
-		if (items.length/itemSize <= this.maxFaceIndex)
+		if (items.length / itemSize <= this.maxFaceIndex)
 			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
 
 		this.bindVAO(this.vao);

@@ -1,13 +1,14 @@
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
  */
-var Engine=FrakClass.extend({
+
+var Engine = FrakClass.extend({
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
 		@param options Engine options [optional]
 		@param scene Scene to render and update [optional] */
 	init: function(canvas, options, scene) {
-		if (!options) options={};
+		if (!options) options = {};
 		this.options = FRAK.extend({
 			'assetsPath': '',
 			'defaultRequestedFPS': 60.0,
@@ -24,6 +25,7 @@ var Engine=FrakClass.extend({
 			'context': false,
 			'contextErrorCallback': null,
 			'captureScreenshot': false,
+			'webGLVersion': 'auto'
 		}, options);
 		this.validateOptions(canvas);
 
@@ -45,25 +47,25 @@ var Engine=FrakClass.extend({
 
 		// Universal 1x1 opaque white texture
 		this.WhiteTexture = new Texture(this.context);
-		this.WhiteTexture.name = "WhiteTexture";
+		this.WhiteTexture.name = 'WhiteTexture';
 		this.WhiteTexture.mipmapped = false;
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
-		this.WhiteTextureSampler =  new Sampler('tex0', this.WhiteTexture);
-		this.DiffuseFallbackSampler =  new Sampler('diffuse0', this.WhiteTexture);
+		this.WhiteTextureSampler = new Sampler('tex0', this.WhiteTexture);
+		this.DiffuseFallbackSampler = new Sampler('diffuse0', this.WhiteTexture);
 
-		document.addEventListener("visibilitychange", FrakCallback(this, this.onVisibilityChange));
+		document.addEventListener('visibilitychange', FrakCallback(this, this.onVisibilityChange));
 
 		// Register context lost and restored event handlers
-		this.context.canvas.addEventListener("webglcontextlost", FrakCallback(this, this.onContextLost), false);
-		this.context.canvas.addEventListener("webglcontextrestored", FrakCallback(this, this.onContextRestored), false);
+		this.context.canvas.addEventListener('webglcontextlost', FrakCallback(this, this.onContextLost), false);
+		this.context.canvas.addEventListener('webglcontextrestored', FrakCallback(this, this.onContextRestored), false);
 
 		if (FRAK.fullscreenEnabled) {
 			this.useUpscaling = false;
 			var fsHandler = FrakCallback(this, this.onFullscreenChange);
-			document.addEventListener("fullscreenchange", fsHandler);
-			document.addEventListener("webkitfullscreenchange", fsHandler);
-			document.addEventListener("mozfullscreenchange", fsHandler);
-			document.addEventListener("MSFullscreenChange", fsHandler);
+			document.addEventListener('fullscreenchange', fsHandler);
+			document.addEventListener('webkitfullscreenchange', fsHandler);
+			document.addEventListener('mozfullscreenchange', fsHandler);
+			document.addEventListener('MSFullscreenChange', fsHandler);
 		}
 
 		this.setupInput();
@@ -105,9 +107,10 @@ var Engine=FrakClass.extend({
 		if (!(this.context instanceof RenderingContext))
 			return;
 
+		var canvas;
 		if (FRAK.isFullscreen()) {
 			// Save original canvas state
-			var canvas = this.context.canvas;
+			canvas = this.context.canvas;
 			this._savedCanvasStyles = {
 				position: canvas.style.position,
 				left: canvas.style.left,
@@ -135,7 +138,7 @@ var Engine=FrakClass.extend({
 			setTimeout(function() {
 				// Set aspect ratio
 				var bounds = canvas.getBoundingClientRect();
-				scope.scene.cameraComponent.setAspectRatio(bounds.width/bounds.height);
+				scope.scene.cameraComponent.setAspectRatio(bounds.width / bounds.height);
 				if (scope.useUpscaling)
 					return;
 
@@ -147,12 +150,12 @@ var Engine=FrakClass.extend({
 				canvas.setAttribute('height', height);
 				scope.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 			},
-			2000/this.options.requestedFPS);
+			2000 / this.options.requestedFPS);
 		}
 		else {
 			if (this._savedCanvasStyles) {
 				// Restore canvas size and aspect ratio for perspective cameras
-				var canvas = this.context.canvas;
+				canvas = this.context.canvas;
 				canvas.style.position = this._savedCanvasStyles.position;
 				canvas.style.left = this._savedCanvasStyles.left;
 				canvas.style.right = this._savedCanvasStyles.right;
@@ -191,7 +194,7 @@ var Engine=FrakClass.extend({
 
 		var now;
 		var then = FRAK.timestamp();
-		var interval = 1000/this.options.requestedFPS;
+		var interval = 1000 / this.options.requestedFPS;
 		var delta;
 		var scope = this;
 
@@ -220,16 +223,14 @@ var Engine=FrakClass.extend({
 
 		XXX: It would probably make more sense to have this callback in the Scene class.
 	*/
-	sceneStarted: function(){
-
-	},
+	sceneStarted: function() {},
 
 	/** Stops the engine by pausing the engine and calling Scene.end() method.
 		Component.onEnd(context,engine) method will be called for all components.
 		Subsequent call to run() will start the engine again. */
 	stop: function() {
 		this.pause();
-		if(this.scene.started) this.scene.end(this.context);
+		if (this.scene.started) this.scene.end(this.context);
 	},
 
 	/** Pauses the engine, call run to start it again. */
@@ -241,7 +242,7 @@ var Engine=FrakClass.extend({
 
 	/** Toggles engine pause */
 	togglePause: function() {
-		if(this.running===false) this.run();
+		if (this.running===false) this.run();
 		else this.pause();
 	},
 
@@ -269,7 +270,7 @@ var Engine=FrakClass.extend({
 		@fps {float} idle at given fps, default is 1
 	*/
 	startIdle: function(fps){
-		if(!fps) fps = 1.0;
+		if (!fps) fps = 1.0;
 		this.options.requestedFPS = fps;
 		this.pause();
 		this.run();
@@ -278,7 +279,7 @@ var Engine=FrakClass.extend({
 	/**
 		Stop idling and return to normal fps
 	*/
-	stopIdle: function(){
+	stopIdle: function() {
 		this.options.requestedFPS = this.options.defaultRequestedFPS;
 		this.pause();
 		this.run();
@@ -299,7 +300,7 @@ var Engine=FrakClass.extend({
 	validateOptions: function(canvas) {
 		// Create default rendering context
 		if (!this.options.context)
-			this.options.context = new RenderingContext(canvas, null, this.options.contextErrorCallback);
+			this.options.context = new RenderingContext(canvas, null, this.options.contextErrorCallback, this.options.webGLVersion);
 
 		var gl = this.options.context.gl;
 
@@ -324,6 +325,7 @@ var Engine=FrakClass.extend({
 		// Renderer mode validation
 		switch (this.options.renderer) {
 			case 'auto':
+				// TODO: draw buffers is enabled by default in WebGL2
 				if (gl.getExtension('WEBGL_draw_buffers') &&
 					gl.getExtension('OES_texture_float') &&
 					gl.getExtension('OES_standard_derivatives'))
@@ -343,8 +345,8 @@ var Engine=FrakClass.extend({
 	resize: function(){
 		if (this.context instanceof RenderingContext) {
 			var gl = this.context.gl;
-			var width = gl.canvas.clientWidth;
-			var height = Math.max(1, gl.canvas.clientHeight);
+			// var width = gl.canvas.clientWidth;
+			// var height = Math.max(1, gl.canvas.clientHeight);
 			this.scene.cameraComponent.setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
 			this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 		}
@@ -374,6 +376,6 @@ var Engine=FrakClass.extend({
 		if(typeof callback === 'function') {
 			this.options.captureScreenshot = true;
 			this.onScreenshotCaptured = callback;
-		}	
+		}
 	}
 });
