@@ -9,9 +9,9 @@ FRAK.extend = function() {
 		for (var key in arguments[i]) {
 			if (arguments[i].hasOwnProperty(key))
 				arguments[0][key] = arguments[i][key];
-			return arguments[0];
 		}
 	}
+	return arguments[0];
 };
 
 FRAK.isFunction = function(f) {
