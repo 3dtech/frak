@@ -2,22 +2,21 @@ var TargetTextureFloat = TargetTexture.extend({
 	init: function(sizeOrTexture, context, useDepthTexture, useNearestFiltering) {
 		if (context.isWebGL2()) {
 			this.extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
-			this.extHalfFloat = context.gl.HALF_FLOAT;
-			this.extFloat = context.gl.FLOAT;
+			if (!this.extColorFloat)
+				throw('TargetTextureFloat: Floating point COLOR textures are not supported on this system.');
 		}
 		else {
 			this.extHalfFloat = context.gl.getExtension('OES_texture_half_float');
 			this.extFloat = context.gl.getExtension('OES_texture_float');
-		}
+			if (!this.extFloat && !this.extHalfFloat)
+				throw('TargetTextureFloat: Floating point textures are not supported on this system.');
 
-		if (!this.extFloat && !this.extHalfFloat && !(context.isWebGL2() && this.extColorFloat))
-			throw('TargetTextureFloat: Floating point textures are not supported on this system.');
-
-		this.linearFloat = null;
-		this.linearHalf = null;
-		if (!useNearestFiltering) {
-			this.linearFloat = context.gl.getExtension('OES_texture_float_linear');
-			this.linearHalf = context.gl.getExtension('OES_texture_half_float_linear');
+			this.linearFloat = null;
+			this.linearHalf = null;
+			if (!useNearestFiltering) {
+				this.linearFloat = context.gl.getExtension('OES_texture_float_linear');
+				this.linearHalf = context.gl.getExtension('OES_texture_half_float_linear');
+			}
 		}
 
 		this._super(sizeOrTexture, context, useDepthTexture);
@@ -28,15 +27,13 @@ var TargetTextureFloat = TargetTexture.extend({
 	},
 
 	getDataType: function(context) {
+		if (context.isWebGL2()) {
+			return context.gl.FLOAT;
+		}
+
 		if (this.extHalfFloat) {
-			if (!this.extFloat) {
-				if (context.isWebGL2()) {
-					return gl.UNSIGNED_BYTE;
-				}
-				else {
-					return this.extHalfFloat.HALF_FLOAT_OES;
-				}
-			}
+			if (!this.extFloat)
+				return this.extHalfFloat.HALF_FLOAT_OES;
 
 			if (navigator) {
 				switch (navigator.platform) {
@@ -47,7 +44,13 @@ var TargetTextureFloat = TargetTexture.extend({
 				}
 			}
 		}
-		return context.isWebGL2() ? context.gl.UNSIGNED_BYTE : context.gl.FLOAT;
+		return context.gl.FLOAT;
+	},
+
+	getInternalFormat: function(context) {
+		if (context.isWebGL2())
+			return context.gl.RGBA32F;
+		return context.gl.RGBA;
 	},
 
 	getTextureFilter: function(context) {
@@ -67,7 +70,7 @@ var TargetTextureFloat = TargetTexture.extend({
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.getTextureFilter(context));
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.getTextureFilter(context));
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.size[0], this.size[1], 0, gl.RGBA, this.getDataType(context), null);
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.getInternalFormat(context), this.size[0], this.size[1], 0, gl.RGBA, this.getDataType(context), null);
 			gl.bindTexture(gl.TEXTURE_2D, null);
 		}
 

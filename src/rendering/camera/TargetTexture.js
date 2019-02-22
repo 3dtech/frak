@@ -11,7 +11,7 @@ var TargetTexture = RenderTarget.extend({
 
 		this._super(size);
 
-		if (this.useDepthTexture) {
+		if (this.useDepthTexture && !context.isWebGL2()) {
 			var depthTextureExt = (
 				context.gl.getExtension('WEBGL_depth_texture') ||
 				context.gl.getExtension('WEBKIT_WEBGL_depth_texture') ||
@@ -37,6 +37,10 @@ var TargetTexture = RenderTarget.extend({
 		return context.gl.UNSIGNED_BYTE;
 	},
 
+	getInternalFormat: function(context) {
+		return context.gl.RGBA;
+	},
+
 	getTextureFilter: function(context) {
 		return context.gl.NEAREST;
 	},
@@ -46,14 +50,14 @@ var TargetTexture = RenderTarget.extend({
 		this.frameBuffer = gl.createFramebuffer();
 
 		// Setup primary color buffer, if not provided
-		if(!this.texture) {
+		if (!this.texture) {
 			this.texture = new Texture(context);
 			gl.bindTexture(gl.TEXTURE_2D, this.texture.glTexture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.getTextureFilter(context));
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.getTextureFilter(context));
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.size[0], this.size[1], 0, gl.RGBA, this.getDataType(context), null);
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.getInternalFormat(context), this.size[0], this.size[1], 0, gl.RGBA, this.getDataType(context), null);
 			gl.bindTexture(gl.TEXTURE_2D, null);
 		}
 
