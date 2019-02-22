@@ -140,7 +140,7 @@ var BuiltInShaders = {
 			gl_Position = clipPosition; \
 		}",
 	"shaders/default/forward_shadow_vsm.frag": " \
-		#extension GL_OES_standard_derivatives : require \ns\
+		#extension GL_OES_standard_derivatives : require \n\
 		\
 		precision highp float; \
 		\
