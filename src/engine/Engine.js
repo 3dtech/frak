@@ -314,7 +314,7 @@ var Engine = FrakClass.extend({
 				this.options.transparencyMode = 'blended';
 				break;
 		}
-		if (this.options.transparencyMode != 'sorted') {
+		if (this.options.transparencyMode != 'sorted' && !this.options.context.isWebGL2()) {
 			var extFloat = gl.getExtension('OES_texture_float');
 			var extHalfFloat = gl.getExtension('OES_texture_half_float');
 			if (!extFloat && !extHalfFloat) {
@@ -325,10 +325,9 @@ var Engine = FrakClass.extend({
 		// Renderer mode validation
 		switch (this.options.renderer) {
 			case 'auto':
-				// TODO: draw buffers is enabled by default in WebGL2
-				if (gl.getExtension('WEBGL_draw_buffers') &&
+				if (this.options.context.isWebGL2() || (gl.getExtension('WEBGL_draw_buffers') &&
 					gl.getExtension('OES_texture_float') &&
-					gl.getExtension('OES_standard_derivatives'))
+					gl.getExtension('OES_standard_derivatives')))
 					this.options.renderer = 'deferred';
 				else
 					this.options.renderer = 'forward';
