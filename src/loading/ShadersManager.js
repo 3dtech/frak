@@ -52,9 +52,9 @@ var ShadersManager=Manager.extend({
 	loadResource: function(shaderDescriptor, shaderResource, loadedCallback, failedCallback) {
 		var descriptor = this.descriptorCallback(shaderDescriptor);
 
-		//this shader is builtin so load it from memory
-		console.log('ShaderManager.loadResource3', typeof this.builtin[descriptor.vertexSource], typeof this.builtin[descriptor.fragmentSource], descriptor.vertexSource, descriptor.fragmentSource);
+		// this shader is builtin so load it from memory
 		if (this.builtin[descriptor.vertexSource] && this.builtin[descriptor.fragmentSource]) {
+			console.log('Built in shader loaded:', descriptor.vertexSource, descriptor.fragmentSource);
 			shaderResource.addVertexShader(this.builtin[descriptor.vertexSource]);
 			shaderResource.addFragmentShader(this.builtin[descriptor.fragmentSource]);
 			loadedCallback(descriptor, shaderResource);
@@ -76,6 +76,6 @@ var ShadersManager=Manager.extend({
 				loadedCallback(descriptor, shaderResource);
 			});
 		}
-		
+
 	}
 });
