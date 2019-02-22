@@ -19,12 +19,14 @@ var TargetTextureMulti = RenderTarget.extend({
 			throw('TargetTextureMulti: Must have at least one color target.');
 
 		// Test for draw_buffers
-		this.extDrawBuffers = context.gl.getExtension('WEBGL_draw_buffers');
-		if (!this.extDrawBuffers)
-			throw('TargetTextureMulti: WEBGL_draw_buffers not available.');
+		if (!context.isWebGL2()) {
+			this.extDrawBuffers = context.gl.getExtension('WEBGL_draw_buffers');
+			if (!this.extDrawBuffers)
+				throw('TargetTextureMulti: WEBGL_draw_buffers not available.');
+		}
 
 		// Test for depth texture, if needed
-		if (this.options.depth) {
+		if (this.options.depth && !context.isWebGL2()) {
 			var ext = context.gl.getExtension('WEBGL_depth_texture') || context.gl.depthTextureExt;
 			if (!ext) ext = context.gl.getExtension('WEBKIT_WEBGL_depth_texture');
 			if (!ext)
@@ -32,25 +34,23 @@ var TargetTextureMulti = RenderTarget.extend({
 		}
 
 		// Check draw buffer limits
-		this.maxColorAttachments = context.gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL);
-		this.maxDrawBuffers = context.gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_WEBGL);
+		if (context.isWebGL2()) {
+			this.maxColorAttachments = context.gl.getParameter(context.gl.MAX_COLOR_ATTACHMENTS);
+			this.maxDrawBuffers = context.gl.getParameter(context.gl.MAX_DRAW_BUFFERS);
+		}
+		else {
+			this.maxColorAttachments = context.gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL);
+			this.maxDrawBuffers = context.gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_WEBGL);
+		}
+
 		if (this.options.numTargets > this.maxDrawBuffers) {
 			throw('TargetTextureMulti: Too many targets requested. System only supports {0} draw buffers.'.format(this.maxDrawBuffers));
 		}
 
 		// Test for floating point support
-		if (this.options.dataType == 'float') {
-
-			if (context.isWebGL2()) {
-				this.extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
-				this.extTextureHalfFloat = context.gl.HALF_FLOAT;
-				this.extTextureFloat = context.gl.FLOAT;
-			}
-			else {
-				this.extTextureHalfFloat = context.gl.getExtension('OES_texture_half_float');
-				this.extTextureFloat = context.gl.getExtension('OES_texture_float');
-			}
-
+		if (this.options.dataType == 'float' && !context.isWebGL2()) {
+			this.extTextureFloat = context.gl.getExtension('OES_texture_float');
+			this.extTextureHalfFloat = context.gl.getExtension('OES_texture_half_float');
 			if (!this.extTextureFloat && !this.extTextureHalfFloat)
 				throw('TargetTextureMulti: Floating point textures are not supported on this system.');
 
@@ -85,14 +85,14 @@ var TargetTextureMulti = RenderTarget.extend({
 		if (this.options.dataType == 'unsigned')
 			return context.gl.UNSIGNED_BYTE;
 
+		if (context.isWebGL2()) {
+			return context.gl.FLOAT;
+		}
 
 		if (this.extTextureHalfFloat) {
 			// System only supports half precision floating point textures
-			if (context.isWebGL2()) {
-				return context.gl.HALF_FLOAT;
-			}
-			else if (!this.extTextureFloat) {
-				return this.extHalfFloat.HALF_FLOAT_OES;
+			if (!this.extTextureFloat) {
+				return this.extTextureHalfFloat.HALF_FLOAT_OES;
 			}
 
 			// iOS says it supports FLOAT, but in reality it requires it to be HALF_FLOAT
@@ -110,9 +110,15 @@ var TargetTextureMulti = RenderTarget.extend({
 		return context.gl.FLOAT;
 	},
 
+	getInternalFormat: function(context) {
+		if (context.isWebGL2() && this.options.dataType == 'float')
+			return context.gl.RGBA32F;
+		return context.gl.RGBA;
+	},
+
 	getTextureFilter: function(context) {
 		if (this.options.dataType == 'float') {
-			if (this.extTextureFloatLinear || this.extTextureHalfFloatLinear)
+			if (context.isWebGL2() || this.extTextureFloatLinear || this.extTextureHalfFloatLinear)
 				return context.gl.LINEAR;
 			return context.gl.NEAREST;
 		}
@@ -129,15 +135,16 @@ var TargetTextureMulti = RenderTarget.extend({
 		if (!dataType)
 			dataType = this.getDataType(context);
 
-		if (!format)
+		if (!format) {
 			format = gl.RGBA;
+		}
 
 		gl.bindTexture(gl.TEXTURE_2D, texture.glTexture);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filtering);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filtering);
-		gl.texImage2D(gl.TEXTURE_2D, 0, format, this.size[0], this.size[1], 0, format, dataType, null);
+		gl.texImage2D(gl.TEXTURE_2D, 0, this.getInternalFormat(context), this.size[0], this.size[1], 0, format, dataType, null);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		texture.loaded = true;
 		return texture;
@@ -162,10 +169,11 @@ var TargetTextureMulti = RenderTarget.extend({
 
 		// Setup color attachments
 		var buffers = [];
+		var COLOR_ATTACHMENT0 = context.isWebGL2() ? context.gl.COLOR_ATTACHMENT0 : this.extDrawBuffers.COLOR_ATTACHMENT0_WEBGL;
 		for (var i=0; i<this.options.numTargets; i++) {
 			var texture = this.createBuffer(context);
 			this.targets.push(texture);
-			buffers.push(this.extDrawBuffers.COLOR_ATTACHMENT0_WEBGL + i);
+			buffers.push(COLOR_ATTACHMENT0 + i);
 		}
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
@@ -182,11 +190,16 @@ var TargetTextureMulti = RenderTarget.extend({
 
 		// Attach color
 		for (var i=0; i<this.targets.length; i++) {
-			gl.framebufferTexture2D(gl.FRAMEBUFFER, this.extDrawBuffers.COLOR_ATTACHMENT0_WEBGL + i, gl.TEXTURE_2D, this.targets[i].glTexture, 0);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, this.targets[i].glTexture, 0);
 		}
 
 		this.checkStatus(context);
-		this.extDrawBuffers.drawBuffersWEBGL(buffers);
+		if (context.isWebGL2()) {
+			gl.drawBuffers(buffers);
+		}
+		else {
+			this.extDrawBuffers.drawBuffersWEBGL(buffers);
+		}
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	},
 
