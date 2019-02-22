@@ -7,7 +7,6 @@ var CubeTexture = BaseTexture.extend({
 	 * @param context RenderingContext (optional)
 	 */
 	init: function(context) {
-		console.log('CubeTexture')
 		this._super(context);
 
 		this.glTexture = null;

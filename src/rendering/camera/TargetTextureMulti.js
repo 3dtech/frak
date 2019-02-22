@@ -41,14 +41,14 @@ var TargetTextureMulti = RenderTarget.extend({
 		// Test for floating point support
 		if (this.options.dataType == 'float') {
 
-			if (context.version === 2) {
+			if (context.isWebGL2()) {
 				this.extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
 				this.extTextureHalfFloat = context.gl.HALF_FLOAT;
 				this.extTextureFloat = context.gl.FLOAT;
 			}
 			else {
 				this.extTextureHalfFloat = context.gl.getExtension('OES_texture_half_float');
-				this.extTextureFloat = context.gl.getExtension('OES_texture_float');	
+				this.extTextureFloat = context.gl.getExtension('OES_texture_float');
 			}
 
 			if (!this.extTextureFloat && !this.extTextureHalfFloat)
@@ -88,7 +88,7 @@ var TargetTextureMulti = RenderTarget.extend({
 
 		if (this.extTextureHalfFloat) {
 			// System only supports half precision floating point textures
-			if (context.version === 2) {
+			if (context.isWebGL2()) {
 				return context.gl.HALF_FLOAT;
 			}
 			else if (!this.extTextureFloat) {

@@ -1,16 +1,16 @@
 var TargetTextureFloat = TargetTexture.extend({
 	init: function(sizeOrTexture, context, useDepthTexture, useNearestFiltering) {
-		if (context.version === 2) {
+		if (context.isWebGL2()) {
 			this.extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
 			this.extHalfFloat = context.gl.HALF_FLOAT;
 			this.extFloat = context.gl.FLOAT;
 		}
 		else {
 			this.extHalfFloat = context.gl.getExtension('OES_texture_half_float');
-			this.extFloat = context.gl.getExtension('OES_texture_float');	
+			this.extFloat = context.gl.getExtension('OES_texture_float');
 		}
 
-		if (!this.extFloat && !this.extHalfFloat && !(context.version === 2 && this.extColorFloat))
+		if (!this.extFloat && !this.extHalfFloat && !(context.isWebGL2() && this.extColorFloat))
 			throw('TargetTextureFloat: Floating point textures are not supported on this system.');
 
 		this.linearFloat = null;
@@ -30,14 +30,14 @@ var TargetTextureFloat = TargetTexture.extend({
 	getDataType: function(context) {
 		if (this.extHalfFloat) {
 			if (!this.extFloat) {
-				if (context.version === 2) {
+				if (context.isWebGL2()) {
 					return gl.UNSIGNED_BYTE;
 				}
 				else {
 					return this.extHalfFloat.HALF_FLOAT_OES;
 				}
 			}
-				
+
 			if (navigator) {
 				switch (navigator.platform) {
 					case 'iPad':
@@ -47,7 +47,7 @@ var TargetTextureFloat = TargetTexture.extend({
 				}
 			}
 		}
-		return context.version === 2 ? context.gl.UNSIGNED_BYTE : context.gl.FLOAT;
+		return context.isWebGL2() ? context.gl.UNSIGNED_BYTE : context.gl.FLOAT;
 	},
 
 	getTextureFilter: function(context) {

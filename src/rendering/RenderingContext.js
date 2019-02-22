@@ -4,10 +4,6 @@ var RenderingContext = FrakClass.extend({
 		@param canvas The canvas element that provides rendering context
 	*/
 	init: function(canvas, contextOptions, errorCallback, version) {
-		// this.version = 0;
-		// if (typeof window !== 'undefined' && !('WebGLRenderingContext' in window))
-		// 	throw 'Unable to create rendering context, because browser doesn\'t support WebGL';
-
 		if (typeof canvas === 'string' && typeof document !== 'undefined') {
 			canvas = document.getElementById(canvas);
 		}
@@ -20,7 +16,8 @@ var RenderingContext = FrakClass.extend({
 		if (this.version === 'auto') {
 			if ('WebGL2RenderingContext' in window) {
 				this.version = 'webgl2';
-			} else {
+			}
+			else {
 				this.version = 'webgl';
 				if (!('WebGLRenderingContext' in window)) {
 					throw 'Unable to create rendering context, because browser doesn\'t support WebGL';
@@ -43,20 +40,16 @@ var RenderingContext = FrakClass.extend({
 		// Try to get rendering context for WebGL
 		if (this.version === 'webgl2') {
 			this.gl = this.canvas.getContext('webgl2', contextOptions);
-			if (!this.gl && version === 'auto') this.version = 'webgl';
+			if (!this.gl && version === 'auto')
+				this.version = 'webgl';
 		}
+
 		if (this.version === 'webgl') {
 			this.gl = this.canvas.getContext('webgl', contextOptions);
 			if (!this.gl) this.gl = this.canvas.getContext('experimental-webgl', contextOptions);
 			if (!this.gl) this.gl = this.canvas.getContext('moz-webgl', contextOptions);
 			if (!this.gl) this.gl = this.canvas.getContext('webkit-3d', contextOptions);
 		}
-		// this.gl = this.canvas.getContext("webgl2", contextOptions);
-		// this.version = this.gl ? 2 : 1;
-		// if (!this.gl) this.gl = this.canvas.getContext("webgl", contextOptions);
-		// if (!this.gl) this.gl = this.canvas.getContext("experimental-webgl", contextOptions);
-		// if (!this.gl) this.gl = this.canvas.getContext("moz-webgl", contextOptions);
-		// if (!this.gl) this.gl = this.canvas.getContext("webkit-3d", contextOptions);
 
 		// Acquiring context failed
 		if (!this.gl) {
@@ -110,6 +103,10 @@ var RenderingContext = FrakClass.extend({
 		if (!this.gl)
 			return true;
 		return this.gl.isContextLost();
+	},
+
+	isWebGL2: function() {
+		return (this.version == 'webgl2');
 	},
 
 	/** Tries to restore the GL state in fresh context. Requires this.engine to be set. */

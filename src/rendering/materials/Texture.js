@@ -7,7 +7,6 @@ var Texture = BaseTexture.extend({
 	 * @param context RenderingContext (optional)
 	 */
 	init: function(context) {
-		console.log('Texture')
 		this._super(context);
 
 		this.glTexture = null; ///< GL texture ID
