@@ -25,7 +25,8 @@ var DepthRenderStage = RenderStage.extend({
 		}
 
 		this.material=new Material(
-			engine.assetsManager.addShaderSource("shaders/default/depth"),
+			// engine.assetsManager.addShaderSource("shaders/default/depth"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('depth')),
 			{
 				'zNear': new UniformFloat(0.1),
 				'zFar': new UniformFloat(1000.0)

@@ -8,7 +8,8 @@ var AntiAliasPostProcess = PostProcess.extend({
 
 	onStart: function(context, engine) {
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/postprocess_fxaa"),
+			// engine.assetsManager.addShaderSource("shaders/default/postprocess_fxaa"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('postprocess_fxaa')),
 			{
 				"ViewportSize": new UniformVec2(vec2.clone(this.parent.src.size)),
 				"reduce_min": new UniformFloat(1.0 / 16.0),

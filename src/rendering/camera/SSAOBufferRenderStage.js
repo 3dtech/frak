@@ -23,7 +23,8 @@ var SSAOBufferRenderStage = RenderStage.extend({
 		this.target = new TargetTextureFloat([engine.scene.camera.target.size[0], engine.scene.camera.target.size[1]], context, false);
 
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/ssao"),
+			// engine.assetsManager.addShaderSource("shaders/default/ssao"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('ssao')),
 			{
 				"ViewportSize": new UniformVec2(vec2.clone(engine.scene.camera.target.size)),
 				"ssaoGDisplace": new UniformFloat((engine.options.ssaoGDisplace) ? engine.options.ssaoGDisplace : 6.0),

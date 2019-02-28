@@ -48,7 +48,8 @@ var LightsRenderStage = RenderStage.extend({
 		this.sharedSamplers.push(new Sampler('gb3', gb.targets[3]));
 
 		this.backgroundMaterial = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/deferred_background"),
+			// engine.assetsManager.addShaderSource("shaders/default/deferred_background"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_background')),
 			{
 				'color': new UniformColor(new Color(1.0, 1.0, 1.0, 1.0))
 			},

@@ -30,7 +30,8 @@ var GBufferRenderStage = RenderStage.extend({
 		this.buffer = new TargetTextureMulti(context, size, { numTargets: 4, stencil: true });
 
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/deferred_gbuffer"),
+			// engine.assetsManager.addShaderSource("shaders/default/deferred_gbuffer"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_gbuffer')),
 			{
 				'zNear': new UniformFloat(0.1),
 				'zFar': new UniformFloat(1000.0)

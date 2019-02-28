@@ -6,7 +6,8 @@ var SSAOPostProcess = PostProcess.extend({
 
 	onStart: function(context, engine) {
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/postprocess_ssao"),
+			// engine.assetsManager.addShaderSource("shaders/default/postprocess_ssao"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('postprocess_ssao')),
 			{
 				"ViewportSize": new UniformVec2(vec2.clone(this.parent.src.size)),
 				"ssaoOnly": new UniformInt((this.ssaoOnly === true) ? 1 : 0),

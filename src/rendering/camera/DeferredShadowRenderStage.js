@@ -21,10 +21,11 @@ var DeferredShadowRenderStage = RenderStage.extend({
 	},
 
 	onStart: function(context, engine, camera) {
-		this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives');
+		this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives'); // FIXME
 
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/deferred_shadow_directional"),
+			// engine.assetsManager.addShaderSource("shaders/default/deferred_shadow_directional"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_shadow_directional')),
 			{},
 			[]
 		);

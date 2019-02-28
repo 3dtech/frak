@@ -39,7 +39,8 @@ var OITRenderStage = RenderStage.extend({
 		this.transparencyWeight.depth = this.transparencyTarget.depth;
 
 		this.transparencyAccum = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/OITAccum"),
+			// engine.assetsManager.addShaderSource("shaders/default/OITAccum"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('OITAccum')),
 			{
 				'render_mode': new UniformInt(0)
 			},

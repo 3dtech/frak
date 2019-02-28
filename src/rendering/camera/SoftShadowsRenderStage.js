@@ -53,8 +53,24 @@ var SoftShadowsRenderStage = RenderStage.extend({
 		this.blurTarget = new TargetTexture(this.parent.size, context, false);
 		this.blurSampler = new Sampler('src', this.target.texture);
 
-		this.blurHorizontal = new Material(engine.assetsManager.addShader("shaders/default/shadow_blurh.vert", "shaders/default/shadow_blur.frag"), {},[]);
-		this.blurVertical = new Material(engine.assetsManager.addShader("shaders/default/shadow_blurv.vert", "shaders/default/shadow_blur.frag"), {},[]);
+		this.blurHorizontal = new Material(
+			// engine.assetsManager.addShader("shaders/default/shadow_blurh.vert", "shaders/default/shadow_blur.frag"),
+			engine.assetsManager.addShader(
+				engine.assetsManager.shadersManager.bundle('shadow_blurh.vert'),
+				engine.assetsManager.shadersManager.bundle('shadow_blur.frag')
+			),
+			{},
+			[]
+		);
+		this.blurVertical = new Material(
+			// engine.assetsManager.addShader("shaders/default/shadow_blurv.vert", "shaders/default/shadow_blur.frag"),
+			engine.assetsManager.addShader(
+				engine.assetsManager.shadersManager.bundle('shadow_blurv.vert'),
+				engine.assetsManager.shadersManager.bundle('shadow_blur.frag')
+			),
+			{},
+			[]
+		);
 
 		engine.assetsManager.load();
 	},
