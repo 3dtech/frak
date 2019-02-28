@@ -5,19 +5,21 @@ var Renderer=FrakClass.extend({
 		@param matrix Matrix applied to anything rendered
 		*/
 	init: function(matrix) {
-		this.matrix=matrix;											///< Usually updated automatically by the component
-		this.layer=1;												///< Usually updated automatically by the component
-		this.visible=true;											///< Usually updated automatically by the component
-		this.castShadows=true;										///< Usually updated automatically by the component
-		this.receiveShadows=true;									///< Usually updated automatically by the component
-		this.lightContribution=1.0;									///< Usually updated automatically by the component
-		this.transparent=false; 									///< Value must be set to true to have renderer passed through transparent pipeline
+		this.matrix=matrix;			///< Usually updated automatically by the component
+		this.layer=1;				///< Usually updated automatically by the component
+		this.visible=true;			///< Usually updated automatically by the component
+		this.castShadows=true;		///< Usually updated automatically by the component
+		this.receiveShadows=true;	///< Usually updated automatically by the component
+		this.lightContribution=1.0;	///< Usually updated automatically by the component
+		this.transparent=false; 	///< Value must be set to true to have renderer passed through transparent pipeline
 
 		this.localBoundingBox=new BoundingBox();
 		this.localBoundingSphere=new BoundingSphere();
 		this.globalBoundingBox=new BoundingBox();
 		this.globalBoundingSphere=new BoundingSphere();
 		this.cacheMatrix = mat4.create();
+
+		// TODO: this needs further revision, but using some sort of caching is sensible
 		this.cacheUniforms = {
 			model: new UniformMat4(mat4.create()),
 			modelview: new UniformMat4(mat4.create()),
@@ -34,7 +36,7 @@ var Renderer=FrakClass.extend({
 			useShadows: new UniformInt(0),
 			lightView: new UniformMat4(mat4.create()),
 			lightProjection: new UniformMat4(mat4.create())
-		}
+		};
 	},
 
 	// Methods
@@ -59,45 +61,45 @@ var Renderer=FrakClass.extend({
 	 * @param uniforms Optional previously allocated uniforms object that the values will be written to.
 	 */
 
+	// getDefaultUniforms: function(context, uniforms) {
+	// 	if (typeof uniforms !== 'object' || uniforms === null) {
+	// 		uniforms = Object.assign({}, this.cacheUniforms);
+	// 	}
+	//
+	// 	mat4.copy(uniforms.model.value, this.matrix);
+	// 	mat4.copy(uniforms.modelview.value, context.modelview.top());
+	// 	mat4.copy(uniforms.projection.value, context.projection.top());
+	// 	uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0;
+	// 	uniforms.lightContribution.value = this.lightContribution;
+	// 	mat4.copy(uniforms.view.value, context.camera.viewMatrix);
+	// 	mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix);
+	//
+	// 	if (context.camera.near) {
+	// 		uniforms.zNear.value = context.camera.near;
+	// 	}
+	//
+	// 	if (context.camera.far) {
+	// 		uniforms.zFar.value = context.camera.far;
+	// 	}
+	//
+	// 	// Light uniforms
+	// 	if (context.light && context.light.uniforms) {
+	// 		uniforms.lightDirection = context.light.uniforms.lightDirection;
+	// 		uniforms.lightColor = context.light.uniforms.lightColor;
+	// 		uniforms.lightIntensity = context.light.uniforms.lightIntensity;
+	// 		uniforms.useShadows = context.light.uniforms.useShadows;
+	// 	}
+	//
+	// 	// Shadow uniforms
+	// 	if (context.shadow) {
+	// 		uniforms.lightView = context.shadow.lightView;
+	// 		uniforms.lightProjection = context.shadow.lightProjection;
+	// 	}
+	//
+	// 	return uniforms;
+	// },
+
 	getDefaultUniforms: function(context, uniforms) {
-		if (typeof uniforms !== 'object' || uniforms === null) {
-			uniforms = Object.assign({}, this.cacheUniforms);
-		}
-
-		mat4.copy(uniforms.model.value, this.matrix);
-		mat4.copy(uniforms.modelview.value, context.modelview.top());
-		mat4.copy(uniforms.projection.value, context.projection.top());
-		uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0;
-		uniforms.lightContribution.value = this.lightContribution;
-		mat4.copy(uniforms.view.value, context.camera.viewMatrix);
-		mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix);
-		
-		if (context.camera.near) {
-			uniforms.zNear.value = context.camera.near;
-		}
-
-		if (context.camera.far) {
-			uniforms.zFar.value = context.camera.far;
-		}
-
-		// Light uniforms
-		if (context.light && context.light.uniforms) {
-			uniforms.lightDirection = context.light.uniforms.lightDirection;
-			uniforms.lightColor = context.light.uniforms.lightColor;
-			uniforms.lightIntensity = context.light.uniforms.lightIntensity;
-			uniforms.useShadows = context.light.uniforms.useShadows;
-		}
-
-		// Shadow uniforms
-		if (context.shadow) {
-			uniforms.lightView = context.shadow.lightView;
-			uniforms.lightProjection = context.shadow.lightProjection;
-		}
-
-		return uniforms;
-	},
-
-	getDefaultUniformsOld: function(context, uniforms) {
 		if (typeof uniforms !== 'object' || uniforms === null) {
 			uniforms = {};
 		}
