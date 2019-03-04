@@ -19,7 +19,8 @@ var OmniLight = Light.extend({
 		this._super();
 
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/deferred_light_omni"),
+			// engine.assetsManager.addShaderSource("shaders/default/deferred_light_omni"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_light_omni')),
 			{
 				'lightColor': new UniformColor(this.color),
 				'lightPosition': new UniformVec3(vec3.create()),

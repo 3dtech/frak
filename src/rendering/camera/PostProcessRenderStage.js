@@ -41,7 +41,12 @@ var PostProcessRenderStage = RenderStage.extend({
 		this.dst = new TargetTexture(this.size, context, false, true);
 		this.dstSampler = new Sampler('src', this.dst.texture);
 
-		this.material = new Material(engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"), {}, []);
+		this.material = new Material(
+			// engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('ScreenQuad')),
+			{},
+			[]
+		);
 		this.material.name = 'To Screen';
 
 		this.textureQuad = new ScreenQuad(context);

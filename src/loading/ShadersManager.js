@@ -12,21 +12,30 @@ var ShadersManager=Manager.extend({
 		this.context = context;
 		this.builtin = BuiltInShaders;
 
-		this.aliases = {
-			'diffuse': 'shaders/default/diffuse',
-			'normalmapped': 'shaders/default/normalmapped',
-			'transparent': 'shaders/default/transparent',
-			'reflective': 'shaders/default/reflective',
-			'reflective_masked': 'shaders/default/reflective_masked',
-
-			// The following are deprecated:
-			'test': 'shaders/default/test',
-			'fallback': 'shaders/default/fallback',
-			'depthrgba': 'shaders/default/DepthRGBA',
-			'gaussianblur': 'shaders/default/GaussianBlur'
-		};
+		this.shaderBundle = context.isWebGL2() ? 'webgl2' : 'default';
+		this.setAliases();
 
 		this.textManager = new TextManager();
+	},
+
+	setAliases: function() {
+		this.aliases = {
+			'diffuse': this.bundle('diffuse'),
+			'normalmapped': this.bundle('normalmapped'),
+			'transparent': this.bundle('transparent'),
+			'reflective': this.bundle('reflective'),
+			'reflective_masked': this.bundle('reflective_masked'),
+
+			// The following are deprecated:
+			'test': this.bundle('test'),
+			'fallback': this.bundle('fallback'),
+			'depthrgba': this.bundle('depthrgba'),
+			'gaussianblur': this.bundle('gaussianblur'),
+		};
+	},
+
+	bundle: function(shaderName) {
+		return 'shaders/{0}/{1}'.format(this.shaderBundle, shaderName);
 	},
 
 	add: function(vertexSource, fragmentSource) {

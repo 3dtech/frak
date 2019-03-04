@@ -11,7 +11,8 @@ var BlurPostProcess = PostProcess.extend({
 
 	onStart: function(context, engine) {
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/postprocess_blur"),
+			// engine.assetsManager.addShaderSource("shaders/default/postprocess_blur"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('postprocess_blur')),
 			{
 				"ViewportSize": new UniformVec2(vec2.clone(this.parent.size)),
 				"BlurSize": new UniformVec2(this.blurSize)

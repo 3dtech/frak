@@ -14,7 +14,8 @@ var PositionBufferRenderStage = RenderStage.extend({
 		this.target = new TargetTextureFloat([this.size, this.size], context, false);
 
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/positionbuffer"),
+			// engine.assetsManager.addShaderSource("shaders/default/positionbuffer"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('positionbuffer')),
 			{
 				"ViewportSize": new UniformVec2(vec2.clone(engine.scene.camera.target.size))
 			},

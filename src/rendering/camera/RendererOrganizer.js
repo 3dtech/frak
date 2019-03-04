@@ -5,7 +5,7 @@ function TransparencySort(a, b) {
 	if (a && !b)
 		return -1;
 	if (!a && b)
-		return 1
+		return 1;
 	var d1 = vec3.squaredDistance(TransparencySort.cmpValue, a.globalBoundingSphere.center);
 	var d2 = vec3.squaredDistance(TransparencySort.cmpValue, b.globalBoundingSphere.center);
 	if (d1>d2) return -1;
@@ -92,15 +92,17 @@ var RendererOrganizer = FrakClass.extend({
 	},
 
 	batch: function(batchList, renderers) {
+		var i;
+
 		// Clears existing batches
 		var batch;
-		for (var i = 0; i < batchList.length; ++i) {
+		for (i = 0; i < batchList.length; ++i) {
 			batchList[i].clear();
 		}
 
 		// Batch renderers
 		var renderer;
-		for (var i = 0; i < renderers.length; ++i) {
+		for (i = 0; i < renderers.length; ++i) {
 			renderer = renderers[i];
 			if (!renderer)
 				break;

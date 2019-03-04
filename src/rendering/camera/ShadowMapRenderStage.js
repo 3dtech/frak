@@ -27,7 +27,11 @@ var ShadowMapRenderStage=RenderStage.extend({
 			shader = 'forward_shadow_vsm';
 
 		this.material = new Material(
-			engine.assetsManager.addShader("shaders/default/forward_shadow.vert", "shaders/default/{0}.frag".format(shader)),
+			// engine.assetsManager.addShader("shaders/default/forward_shadow.vert", "shaders/default/{0}.frag".format(shader)),
+			engine.assetsManager.addShader(
+				engine.assetsManager.shadersManager.bundle('forward_shadow.vert'),
+				engine.assetsManager.shadersManager.bundle('{0}.frag'.format(shader))
+			),
 			{
 				'hasFloat': new UniformInt(1)
 			},

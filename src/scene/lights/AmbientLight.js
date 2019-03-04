@@ -17,7 +17,8 @@ var AmbientLight = Light.extend({
 		this._super();
 
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/deferred_light_ambient"),
+			// engine.assetsManager.addShaderSource("shaders/default/deferred_light_ambient"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_light_ambient')),
 			{
 				'lightColor': new UniformColor(this.color)
 			},

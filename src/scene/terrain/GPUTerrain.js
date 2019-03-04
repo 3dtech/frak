@@ -28,7 +28,8 @@ var GPUTerrain = MeshRendererComponent.extend({
 		this.color = engine.assetsManager.texturesManager.addDescriptor(this.colorSource);
 
 		this.material = new Material(
-			engine.assetsManager.addShaderSource("shaders/default/terrain"),
+			// engine.assetsManager.addShaderSource("shaders/default/terrain"),
+			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('terrain')),
 			{
 				"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
 				"ambient": new UniformColor({r:0.2, g:0.2, b:0.2}),
