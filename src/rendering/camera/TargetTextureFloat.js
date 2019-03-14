@@ -49,7 +49,7 @@ var TargetTextureFloat = TargetTexture.extend({
 
 	getInternalFormat: function(context) {
 		if (context.isWebGL2())
-			return context.gl.RGBA32F;
+			return context.gl.RGBA16F;
 		return context.gl.RGBA;
 	},
 

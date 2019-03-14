@@ -44,7 +44,6 @@ var GBufferRenderStage = RenderStage.extend({
 		this.envFallback.createFallbackCubeTexture(context);
 		this.envFallback.texture = fallbackCubeTexture;
 
-
 		engine.assetsManager.load();
 	},
 
