@@ -325,9 +325,11 @@ var Engine = FrakClass.extend({
 		// Renderer mode validation
 		switch (this.options.renderer) {
 			case 'auto':
-				if (this.options.context.isWebGL2() || (gl.getExtension('WEBGL_draw_buffers') &&
+				if (this.options.context.isWebGL2() || (
+					gl.getExtension('WEBGL_draw_buffers') &&
 					gl.getExtension('OES_texture_float') &&
-					gl.getExtension('OES_standard_derivatives')))
+					gl.getExtension('OES_standard_derivatives'))
+				)
 					this.options.renderer = 'deferred';
 				else
 					this.options.renderer = 'forward';
@@ -336,7 +338,7 @@ var Engine = FrakClass.extend({
 			case 'forward':
 				break;
 			default:
-				this.options.renderer = 'forward'
+				this.options.renderer = 'forward';
 				break;
 		}
 	},
