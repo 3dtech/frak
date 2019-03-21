@@ -1,3 +1,5 @@
+#version 300 es
+
 /*
  * Screen space ambient occlusion post process
  *
@@ -29,6 +31,8 @@ uniform float radius; // AO radius, default: 2.0
 uniform float brightness; // AO brightness, default: 1.0
 uniform float luminanceInfluence; // how much luminance affects occlusion, default: 0.7
 
+out vec4 fragColor;
+
 const int samples = 16;
 // const int samples = 8;
 
@@ -48,7 +52,7 @@ vec2 rand(vec2 coord) {
 }
 
 float readDepth(in vec2 coord) {
-	return texture2D(depth0, coord).r;
+	return texture(depth0, coord).r;
 }
 
 float compareDepths(in float depth1, in float depth2, inout int far) {
@@ -96,7 +100,7 @@ void main() {
 
 	vec2 noise = rand(texCoord);
 	float depth = readDepth(texCoord);
-	float reveal = texture2D(oitWeight, texCoord).a;
+	float reveal = texture(oitWeight, texCoord).a;
 
 	float w = inverseVP.x/clamp(depth, aoclamp,1.0)+(noise.x*(1.0-noise.x));
 	float h = inverseVP.y/clamp(depth, aoclamp,1.0)+(noise.y*(1.0-noise.y));
@@ -123,7 +127,7 @@ void main() {
 	ao /= float(samples) * brightness;
 	ao = 1.0 - ao * reveal;
 
-	vec3 color = texture2D(src, texCoord).rgb;
+	vec3 color = texture(src, texCoord).rgb;
 	vec3 lumcoeff = vec3(0.299, 0.587, 0.114);
 	float lum = dot(color.rgb, lumcoeff);
 	vec3 luminance = vec3(lum, lum, lum);
@@ -133,5 +137,5 @@ void main() {
 		final = vec3(mix(vec3(ao),vec3(1.0),luminance * luminanceInfluence));
 	}
 
-	gl_FragColor = vec4(final, 1.0);
+	fragColor = vec4(final, 1.0);
 }

@@ -1,9 +1,11 @@
+#version 300 es
+
 /** FXAA post-process effect vertex shader */
 
-attribute vec3 position;
-attribute vec2 uv0;
+in vec3 position;
+in vec2 uv0;
 
-varying vec2 uv;
+out vec2 uv;
 
 void main() {
 	uv = uv0;
