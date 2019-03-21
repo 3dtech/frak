@@ -25,7 +25,8 @@ var Engine = FrakClass.extend({
 			'context': false,
 			'contextErrorCallback': null,
 			'captureScreenshot': false,
-			'webGLVersion': 'auto'
+			'webGLVersion': 'auto',
+			'builtinShaders': true,
 		}, options);
 		this.validateOptions(canvas);
 
@@ -44,6 +45,9 @@ var Engine = FrakClass.extend({
 		this.onScreenshotCaptured = false;
 
 		this.assetsManager = new AssetsManager(this.context, this.options.assetsPath);
+		if (!this.options.builtinShaders) {
+			this.assetsManager.shadersManager.builtin = {};
+		}
 
 		// Universal 1x1 opaque white texture
 		this.WhiteTexture = new Texture(this.context);
