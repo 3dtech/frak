@@ -10,9 +10,12 @@ var ShadersManager=Manager.extend({
 	init: function(context, assetsPath) {
 		this._super(assetsPath);
 		this.context = context;
-		this.builtin = BuiltInShaders;
+		this.builtin = {};
 
 		this.shaderBundle = context.isWebGL2() ? 'webgl2' : 'default';
+		if (BuiltInShaders && this.shaderBundle in BuiltInShaders) {
+			this.builtin = BuiltInShaders[this.shaderBundle];
+		}
 		this.setAliases();
 
 		this.textManager = new TextManager();
