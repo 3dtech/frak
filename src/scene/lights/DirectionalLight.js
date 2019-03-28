@@ -11,7 +11,7 @@ var DirectionalLight = Light.extend({
 		if (direction)
 			this.setLightDirection(direction);
 		this.shadowResolution = vec2.fromValues(2048, 2048);
-		this.shadowBias = 0.001; ///< Used to offset lightspace depth to avoid floating point errors in depth comparison
+		this.shadowBias = 0.01; ///< Used to offset lightspace depth to avoid floating point errors in depth comparison
 
 		this.geometry = null;
 		this.material = null;
@@ -46,19 +46,23 @@ var DirectionalLight = Light.extend({
 				'lightView': new UniformMat4(mat4.create()),
 				'lightProjection': new UniformMat4(mat4.create()),
 				'useShadows': new UniformInt(0),
-				'shadowBias': new UniformFloat(0.001)
+				'shadowBias': new UniformFloat(0.01)
 			},
 			[]
 		);
 
 		if (this.shadowCasting && !this.shadow) {
-			var extHalfFloat = context.gl.getExtension('OES_texture_half_float');
-			var extFloat = context.gl.getExtension('OES_texture_float');
-
-			if (!extFloat && !extHalfFloat) {
-				this.shadow = new TargetTexture(this.shadowResolution, context, false);
-			} else {
+			if (context.isWebGL2()) {
 				this.shadow = new TargetTextureFloat(this.shadowResolution, context, false);
+			}
+			else {
+				var extHalfFloat = context.gl.getExtension('OES_texture_half_float');
+				var extFloat = context.gl.getExtension('OES_texture_float');
+				if (!extFloat && !extHalfFloat) {
+					this.shadow = new TargetTexture(this.shadowResolution, context, false);
+				} else {
+					this.shadow = new TargetTextureFloat(this.shadowResolution, context, false);
+				}
 			}
 
 			this.shadowSampler = new Sampler('shadow0', this.shadow.texture);

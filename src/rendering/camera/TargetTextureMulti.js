@@ -112,7 +112,7 @@ var TargetTextureMulti = RenderTarget.extend({
 
 	getInternalFormat: function(context) {
 		if (context.isWebGL2() && this.options.dataType == 'float')
-			return context.gl.RGBA32F;
+			return context.gl.RGBA16F;
 		return context.gl.RGBA;
 	},
 
@@ -144,13 +144,19 @@ var TargetTextureMulti = RenderTarget.extend({
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filtering);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filtering);
-		gl.texImage2D(gl.TEXTURE_2D, 0, this.getInternalFormat(context), this.size[0], this.size[1], 0, format, dataType, null);
+		if (context.isWebGL2()) {
+			gl.texStorage2D(gl.TEXTURE_2D, 1, this.getInternalFormat(context), this.size[0], this.size[1]);
+		}
+		else {
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.getInternalFormat(context), this.size[0], this.size[1], 0, format, dataType, null);
+		}
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		texture.loaded = true;
 		return texture;
 	},
 
 	build: function(context) {
+		var i;
 		var gl = context.gl;
 		this.frameBuffer = gl.createFramebuffer();
 
@@ -170,7 +176,7 @@ var TargetTextureMulti = RenderTarget.extend({
 		// Setup color attachments
 		var buffers = [];
 		var COLOR_ATTACHMENT0 = context.isWebGL2() ? context.gl.COLOR_ATTACHMENT0 : this.extDrawBuffers.COLOR_ATTACHMENT0_WEBGL;
-		for (var i=0; i<this.options.numTargets; i++) {
+		for (i=0; i<this.options.numTargets; ++i) {
 			var texture = this.createBuffer(context);
 			this.targets.push(texture);
 			buffers.push(COLOR_ATTACHMENT0 + i);
@@ -189,7 +195,7 @@ var TargetTextureMulti = RenderTarget.extend({
 		}
 
 		// Attach color
-		for (var i=0; i<this.targets.length; i++) {
+		for (i=0; i<this.targets.length; ++i) {
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, this.targets[i].glTexture, 0);
 		}
 

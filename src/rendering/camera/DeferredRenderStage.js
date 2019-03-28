@@ -89,16 +89,15 @@ var DeferredRenderStage = PostProcessRenderStage.extend({
 		var x = -1;
 		var y = -1;
 
-		this.debugger.quads.push({ quad: createQuad(x, y, size, size),   texture: buffer.targets[0] });
-		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size), texture: buffer.targets[1] });
-		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),    texture: buffer.targets[2] });
-		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: buffer.targets[3] });
+		this.debugger.quads.push({ quad: createQuad(x, y, size, size), texture: buffer.targets[0] });
+		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[1] });
+		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[2] });
+		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[3] });
 
-		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.softShadowsStage.target.texture });
+		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.softShadowsStage.target.texture });
 
-		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.oitStage.transparencyTarget.texture });
-		this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.oitStage.transparencyWeight.texture });
-
+		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.oitStage.transparencyTarget.texture });
+		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.oitStage.transparencyWeight.texture });
 
 		// Draw shadowmaps
 		size = 0.5;

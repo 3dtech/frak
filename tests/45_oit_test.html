@@ -42,35 +42,35 @@
 				var windowTexture = scene.engine.assetsManager.texturesManager.add("data/window.png");
 
 				var material = new Material(
-					scene.engine.assetsManager.addShaderSource("shaders/default/diffuse"),
+					scene.engine.assetsManager.addShaderSource("diffuse"),
 					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
 					[ new Sampler("diffuse0", p1) ]
 				);
 				material.name = 'ground';
 
 				var red = new Material(
-					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					scene.engine.assetsManager.addShaderSource("transparent"),
 					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.5}) },
 					[]
 				);
 				red.name = 'red';
 
 				var blue = new Material(
-					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					scene.engine.assetsManager.addShaderSource("transparent"),
 					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.5}) },
 					[]
 				);
 				blue.name = 'blue';
 
 				var ceiling = new Material(
-					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					scene.engine.assetsManager.addShaderSource("transparent"),
 					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:0.5}) },
 					[ new Sampler("diffuse0", p0) ]
 				);
 				ceiling.name = 'ceiling';
 
 				var windowMaterial = new Material(
-					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					scene.engine.assetsManager.addShaderSource("transparent"),
 					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
 					[ new Sampler("diffuse0", windowTexture) ]
 				);

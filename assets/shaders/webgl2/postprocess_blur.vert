@@ -1,15 +1,17 @@
+#version 300 es
+
 /**
  * Blur post-process
  * http://www.sunsetlakesoftware.com/2013/10/21/optimizing-gaussian-blurs-mobile-gpu
  */
 
-attribute vec3 position;
-attribute vec2 uv0;
+in vec3 position;
+in vec2 uv0;
 
 uniform vec2 ViewportSize;
 uniform vec2 BlurSize;
 
-varying vec2 blurCoords[5];
+out vec2 blurCoords[5];
 
 void main() {
 	vec2 offset = vec2(1.0 / ViewportSize.x, 1.0 / ViewportSize.y) * BlurSize;
