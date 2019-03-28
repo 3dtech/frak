@@ -71,7 +71,7 @@
 				var yellow = new Material(
 					scene.engine.assetsManager.addShaderSource("diffuse"),
 					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:0.0, a:1.0}) },
-					[]
+					[ new Sampler("diffuse0", engine.WhiteTexture) ]
 				);
 				var yellowBox = Primitives.box([0,0,0], [1.0, 1.0, 0.5], yellow);
 				mat4.fromRotationTranslation(scene.root.addNode(yellowBox).transform.relative, rotation1, [-2,0,-2]);
