@@ -27,6 +27,8 @@ var Engine = FrakClass.extend({
 			'captureScreenshot': false,
 			'webGLVersion': 'auto',
 			'builtinShaders': true,
+			'directionalShadowResolution': 2048,
+			'shadowManualUpdate': false,
 		}, options);
 		this.validateOptions(canvas);
 

@@ -36,6 +36,8 @@ var DirectionalLight = Light.extend({
 	onStart: function(context, engine) {
 		this._super();
 
+		vec2.set(this.shadowResolution, engine.options.directionalShadowResolution, engine.options.directionalShadowResolution);
+
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/deferred_light_directional"),
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_light_directional')),
