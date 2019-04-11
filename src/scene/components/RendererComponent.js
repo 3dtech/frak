@@ -4,6 +4,7 @@ var RendererComponent=Component.extend({
 		this.castShadows = true;
 		this.receiveShadows = true;
 		this.lightContribution = 1.0;
+		this.reflectivity = 0.0;
 	},
 
 	type: function() {
@@ -11,10 +12,11 @@ var RendererComponent=Component.extend({
 	},
 
 	instantiate: function() {
-		var instance=this._super();
+		var instance = this._super();
 		instance.castShadows = this.castShadows;
 		instance.receiveShadows = this.receiveShadows;
 		instance.lightContribution = this.lightContribution;
+		instance.reflectivity = this.reflectivity;
 		return instance;
 	},
 

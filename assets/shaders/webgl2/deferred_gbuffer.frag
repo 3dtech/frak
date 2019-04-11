@@ -9,6 +9,7 @@ uniform vec4 diffuse;
 uniform float specularStrength;
 uniform int specularPower;
 uniform float lightContribution;
+uniform float reflectivity;
 uniform int useNormalmap;
 uniform int useReflection;
 uniform int receiveShadows;
@@ -65,5 +66,5 @@ void main() {
 	gbuf_color = vec4(color.rgb, specularStrength);
 	gbuf_normal = vec4(N, depth);
 	gbuf_position = vec4(worldPosition.xyz, float(specularPower)/255.0);
-	gbuf_params = vec4(lightContribution, receiveShadows, depth, 1.0);
+	gbuf_params = vec4(lightContribution, receiveShadows, reflectivity, 1.0);
 }

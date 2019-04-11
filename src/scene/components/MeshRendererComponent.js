@@ -67,24 +67,26 @@ var MeshRendererComponent=RendererComponent.extend({
 		var layer = this.node.layer;
 		var receiveShadows = this.receiveShadows;
 		var lightContribution = this.lightContribution;
+		var reflectivity = this.reflectivity;
 
-		for (var i=0, l = this.meshRenderers.length; i < l; i++) {
+		for (var i = 0, l = this.meshRenderers.length; i < l; ++i) {
 			renderer = this.meshRenderers[i];
 			renderer.layer = layer;
 			renderer.castShadows = castShadows;
 			renderer.receiveShadows = receiveShadows;
 			renderer.lightContribution = lightContribution;
+			renderer.reflectivity = reflectivity;
 			renderer.setMatrix(absolute);
 		}
 	},
 
 	onEnable: function() {
-		for (var i=0; i<this.meshRenderers.length; i++)
+		for (var i = 0; i < this.meshRenderers.length; ++i)
 			this.meshRenderers[i].visible = true;
 	},
 
 	onDisable: function() {
-		for (var i=0; i<this.meshRenderers.length; i++)
+		for (var i = 0; i < this.meshRenderers.length; ++i)
 			this.meshRenderers[i].visible = false;
 	},
 
@@ -93,7 +95,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		@return The {BoundingBox} of all Renderers */
 	getBoundingBox: function(excludeInvisible) {
 		var bounds = new BoundingBox();
-		for (var i=0; i<this.meshRenderers.length; i++) {
+		for (var i = 0; i < this.meshRenderers.length; ++i) {
 			if (excludeInvisible && !this.meshRenderers[i].visible)
 				continue;
 			bounds.encapsulateBox(this.meshRenderers[i].globalBoundingBox);
@@ -106,7 +108,7 @@ var MeshRendererComponent=RendererComponent.extend({
 		@return The {BoundingSphere} of all Renderers */
 	getBoundingSphere: function(excludeInvisible) {
 		var bounds = new BoundingSphere();
-		for (var i=0; i<this.meshRenderers.length; i++) {
+		for (var i = 0; i < this.meshRenderers.length; ++i) {
 			if (excludeInvisible && !this.meshRenderers[i].visible)
 				continue;
 			bounds.encapsulateSphere(this.meshRenderers[i].globalBoundingSphere);
@@ -117,14 +119,14 @@ var MeshRendererComponent=RendererComponent.extend({
 	/** Sets all Renderer.transparent to value for all Renderers attached to this component. */
 	setTransparency: function(value) {
 		value = !!value;
-		for (var i=0; i<this.meshRenderers.length; i++) {
-			this.meshRenderers[i].transparent=value;
+		for (var i = 0; i < this.meshRenderers.length; ++i) {
+			this.meshRenderers[i].transparent = value;
 		}
 	},
 
 	/** Returns the SubmeshRenderer attached to the given submesh, if it exists. */
 	getSubmeshRenderer: function(submesh) {
-		for (var i=0; i<this.meshRenderers.length; i++) {
+		for (var i = 0; i < this.meshRenderers.length; ++i) {
 			if (this.meshRenderers[i].submesh === submesh)
 				return this.meshRenderers[i];
 		}
@@ -133,7 +135,7 @@ var MeshRendererComponent=RendererComponent.extend({
 
 	onContextRestored: function(context) {
 		this._super(context);
-		for (var i=0; i<this.meshRenderers.length; ++i) {
+		for (var i = 0; i < this.meshRenderers.length; ++i) {
 			this.meshRenderers[i].onContextRestored(context);
 		}
 	}

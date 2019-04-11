@@ -5,18 +5,21 @@ var Renderer=FrakClass.extend({
 		@param matrix Matrix applied to anything rendered
 		*/
 	init: function(matrix) {
-		this.matrix=matrix;			///< Usually updated automatically by the component
-		this.layer=1;				///< Usually updated automatically by the component
-		this.visible=true;			///< Usually updated automatically by the component
-		this.castShadows=true;		///< Usually updated automatically by the component
-		this.receiveShadows=true;	///< Usually updated automatically by the component
-		this.lightContribution=1.0;	///< Usually updated automatically by the component
-		this.transparent=false; 	///< Value must be set to true to have renderer passed through transparent pipeline
+		// Usually updated automatically by the component
+		this.matrix = matrix;
+		this.layer = 1;
+		this.visible = true;
+		this.castShadows = true;
+		this.receiveShadows = true;
+		this.lightContribution = 1.0;
+		this.reflectivity = 0.0;
 
-		this.localBoundingBox=new BoundingBox();
-		this.localBoundingSphere=new BoundingSphere();
-		this.globalBoundingBox=new BoundingBox();
-		this.globalBoundingSphere=new BoundingSphere();
+		this.transparent = false; ///< Value must be set to true to have renderer passed through transparent pipeline
+
+		this.localBoundingBox = new BoundingBox();
+		this.localBoundingSphere = new BoundingSphere();
+		this.globalBoundingBox = new BoundingBox();
+		this.globalBoundingSphere = new BoundingSphere();
 		this.cacheMatrix = mat4.create();
 
 		// TODO: this needs further revision, but using some sort of caching is sensible
@@ -121,6 +124,9 @@ var Renderer=FrakClass.extend({
 
 		if (uniforms.hasOwnProperty('lightContribution')) uniforms.lightContribution.value = this.lightContribution;
 		else uniforms.lightContribution = new UniformFloat(this.lightContribution);
+
+		if (uniforms.hasOwnProperty('reflectivity')) uniforms.reflectivity.value = this.reflectivity;
+		else uniforms.reflectivity = new UniformFloat(this.reflectivity);
 
 		// Camera uniforms
 		if (context.camera) {
