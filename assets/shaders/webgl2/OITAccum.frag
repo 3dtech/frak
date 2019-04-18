@@ -20,12 +20,18 @@ uniform sampler2D diffuse0;
 
 uniform int render_mode;
 
+uniform mat4 viewInverse;
 uniform float zNear;
 uniform float zFar;
+uniform int useReflection;
+uniform float reflectivity;
+
+uniform samplerCube env0;
 
 in vec3 fragNormal;
 in vec4 fragPosition;
 in vec2 fragTexcoord2d0;
+in vec3 worldNormal;
 out vec4 fragColor;
 
 vec4 mod289(vec4 x) {
@@ -144,6 +150,14 @@ float oit_weight(float z, vec4 color) {
 	return max(min(1.0, max(max(color.r, color.g), color.b) * color.a), color.a) * clamp(0.03 / (1e-5 + pow(z / 200.0, 4.0)), 1e-2, 3e3);
 }
 
+vec3 reflection() {
+	vec3 eyeDirection = normalize(-fragPosition.xyz);
+	vec3 worldEyeDirection = normalize(mat3(viewInverse) * eyeDirection);
+	vec3 lookup = reflect(worldEyeDirection, worldNormal) * vec3(-1.0, 1.0, 1.0);
+	vec4 color = texture(env0, lookup);
+	return color.rgb;
+}
+
 vec4 lighting() {
 	/* TODO: proper lighting for transparent surfaces */
 	vec4 textureColor = texture(diffuse0, fragTexcoord2d0);
@@ -153,6 +167,11 @@ vec4 lighting() {
 
 void main(void) {
 	vec4 color = lighting();
+
+	if (useReflection == 1) {
+		vec3 refl = reflection();
+		color.rgb = mix(refl, color.rgb, clamp(1.0 - reflectivity, 0.0, 1.0));
+	}
 
 	// Weighted Blended Order-Independent Transparency color pass
 	if (render_mode == 0) {
