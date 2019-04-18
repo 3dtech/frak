@@ -5,9 +5,12 @@ var Material=Serializable.extend({
 		@param uniforms Shader uniforms as object described in Shader.use
 		@param samplers Shader samplers as array described in Shader.bindSamplers/unbindSamplers
 		@param descriptor MaterialDescriptor instance [optional] */
-	init: function(shader, uniforms, samplers, descriptor) {
+	init: function(shader, uniforms, samplers, name, descriptor) {
 		this._super();
-		this.name = 'Unnamed';
+		this.name = name;
+		if (!this.name)
+			this.name = 'unnamed_' + Math.round(Math.random() * Math.pow(36, 12)).toString(36);
+
 		this.shader = shader; ///< Instance of Shader
 		this.uniforms = uniforms; ///< Shader uniforms as described by Shader
 		this.samplers = samplers; ///< Shader samplers list
