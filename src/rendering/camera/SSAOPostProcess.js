@@ -22,11 +22,11 @@ var SSAOPostProcess = PostProcess.extend({
 		);
 		this.material.name = "SSAO";
 
-		if (engine.options.transparencyMode == 'sorted') {
-			this.material.samplers.push(new Sampler('oitWeight', engine.WhiteTexture));
+		if (engine.options.transparencyMode == 'blended') {
+			this.material.samplers.push(this.parent.generator.oitStage.transparencyWeightSampler);
 		}
 		else {
-			this.material.samplers.push(this.parent.generator.oitStage.transparencyWeightSampler);
+			this.material.samplers.push(new Sampler('oitWeight', engine.WhiteTexture));
 		}
 
 		engine.assetsManager.load();
@@ -34,7 +34,6 @@ var SSAOPostProcess = PostProcess.extend({
 
 	onPreRender: function(context, scene, camera) {
 		this._super(context, scene, camera);
-
 
 		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.src.size[0], this.parent.src.size[1]);
 		this.material.uniforms.ssaoOnly.value = (this.ssaoOnly === true) ? 1 : 0;

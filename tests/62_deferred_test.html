@@ -17,6 +17,7 @@
 			<button onclick="pauseEngine(this);">PAUSE</button>
 			<button onclick="loseContext();">Lose context</button>
 			<button onclick="restoreContext();">Restore context</button>
+			<button onclick="updateShadows();">Update shadows</button>
 		</div>
 
 		<!-- Libraries -->
@@ -223,7 +224,10 @@
 					'antialias': true,
 					// 'ssao': true,
 					'softShadows': true,
-					'renderer': 'deferred'
+					'renderer': 'deferred',
+					// 'directionalShadowResolution': 4096,
+					'directionalShadowResolution': 8192,
+					'shadowManualUpdate': true,
 				});
 
 				loseContextExtension = engine.context.gl.getExtension('WEBGL_lose_context');
@@ -275,6 +279,10 @@
 				if (!loseContextExtension)
 					return;
 				loseContextExtension.restoreContext();
+			}
+
+			function updateShadows() {
+				engine.scene.broadcast(DirectionalLight, 'damage');
 			}
 		</script>
 	</body>

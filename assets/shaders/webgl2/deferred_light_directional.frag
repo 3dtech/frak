@@ -49,7 +49,7 @@ float shadowmap(vec4 worldPosition) {
 
 void main () {
 	vec4 data2 = texture(gb2, uv); // position, specularPower/255
-	vec4 data3 = texture(gb3, uv); // material parameters: (lightContribution, receiveShadows, unused, unused)
+	vec4 data3 = texture(gb3, uv); // material parameters: (lightContribution, receiveShadows, reflectivity, unused)
 	vec4 P = vec4(data2.xyz, 1.0);
 
 	float shadow = 1.0;

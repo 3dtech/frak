@@ -22,12 +22,16 @@ var ShadowMapRenderStage=RenderStage.extend({
 
 	onStart: function(context, engine) {
 		var shader = 'forward_shadow';
-		this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives');
-		if (this.extStandardDerivatives)
+		if (context.isWebGL2()) {
 			shader = 'forward_shadow_vsm';
+		}
+		else {
+			this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives');
+			if (this.extStandardDerivatives)
+				shader = 'forward_shadow_vsm';
+		}
 
 		this.material = new Material(
-			// engine.assetsManager.addShader("shaders/default/forward_shadow.vert", "shaders/default/{0}.frag".format(shader)),
 			engine.assetsManager.addShader(
 				engine.assetsManager.shadersManager.bundle('forward_shadow.vert'),
 				engine.assetsManager.shadersManager.bundle('{0}.frag'.format(shader))
@@ -42,7 +46,7 @@ var ShadowMapRenderStage=RenderStage.extend({
 	},
 
 	onPostRender: function(context, scene, camera) {
-		var light = this.getFirstShadowCastingLight(scene);
+		var light = this.getFirstShadowCastingLight(scene, false);
 		if (!light)
 			return;
 
@@ -51,14 +55,13 @@ var ShadowMapRenderStage=RenderStage.extend({
 		vec3.sub(this.lightLookTarget, this.lightPosition, light.direction);
 		mat4.lookAt(light.lightView, this.lightPosition, this.lightLookTarget, this.lightUpVector);
 
-
 		this.sceneAABB.getVertices(this.aabbVertices);
-		for (var i=0; i<8; i++) {
+		for (var i = 0; i < 8; ++i) {
 			vec3.transformMat4(this.aabbVertices[i], this.aabbVertices[i], light.lightView);
 		}
 
 		this.lightFrustum.set(this.aabbVertices[0], [0, 0, 0]);
-		for (var i=1; i<8; i++) {
+		for (var i = 1; i < 8; ++i) {
 			this.lightFrustum.encapsulatePoint(this.aabbVertices[i]);
 		}
 
@@ -92,7 +95,7 @@ var ShadowMapRenderStage=RenderStage.extend({
 		// Render opaque geometry
 		this.material.bind();
 		var renderers = this.parent.organizer.solidRenderers;
-		for (var i=0; i<renderers.length; ++i) {
+		for (var i = 0; i < renderers.length; ++i) {
 			if (!renderers[i])
 				break;
 
@@ -117,6 +120,8 @@ var ShadowMapRenderStage=RenderStage.extend({
 
 		light.shadow.unbind(context);
 		light.updateSamplers();
+		light.undamage();
+
 		this.parent.prepareShadowContext(context, scene);
 
 		context.modelview.pop();
@@ -135,7 +140,7 @@ var ShadowMapRenderStage=RenderStage.extend({
 		shader.bindUniforms(this.parent.sharedUniforms);
 
 		var samplers;
-		for (var i=0; i<batches.length; i++) {
+		for (var i = 0; i < batches.length; ++i) {
 			var batch = batches[i];
 			if (batch.length == 0)
 				continue;
@@ -151,7 +156,7 @@ var ShadowMapRenderStage=RenderStage.extend({
 			shader.bindSamplers(samplers);
 
 			var renderer;
-			for (var j=0; j<batch.length; ++j) {
+			for (var j = 0; j < batch.length; ++j) {
 				renderer = batch.get(j);
 				if (!(renderer.layer & light.shadowMask))
 					continue;
@@ -186,7 +191,7 @@ var ShadowMapRenderStage=RenderStage.extend({
 		var opaque = this.parent.organizer.solidRenderers;
 		var transparent = this.parent.organizer.transparentRenderers;
 
-		for (var i=0; i<opaque.length; i++) {
+		for (var i = 0; i < opaque.length; ++i) {
 			if (!opaque[i])
 				break;
 			if (!opaque[i].castShadows)
@@ -194,7 +199,7 @@ var ShadowMapRenderStage=RenderStage.extend({
 			this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
 		}
 
-		for (var i=0; i<transparent.length; i++) {
+		for (var i = 0; i < transparent.length; ++i) {
 			if (!transparent[i])
 				break;
 			if (!transparent[i].castShadows)
@@ -206,11 +211,13 @@ var ShadowMapRenderStage=RenderStage.extend({
 	},
 
 	/** Returns the first shadow casting directional light or false. */
-	getFirstShadowCastingLight: function(scene) {
-		for (var i=0; i<scene.lights.length; i++) {
+	getFirstShadowCastingLight: function(scene, ignoreDamage) {
+		for (var i = 0; i < scene.lights.length; ++i) {
 			if (!(scene.lights[i] instanceof DirectionalLight))
 				continue;
 			if (!scene.lights[i].enabled)
+				continue;
+			if (!ignoreDamage && scene.engine.options.shadowManualUpdate && !scene.lights[i].damaged)
 				continue;
 			if (scene.lights[i].shadowCasting === true)
 				return scene.lights[i];

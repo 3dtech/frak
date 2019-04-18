@@ -100,7 +100,7 @@ var MaterialRenderStage = RenderStage.extend({
 		context.shadow = this._shadowContext;
 		context.shadow.shadow0 = this.shadowFallback;
 
-		var light = this.shadowMapStage.getFirstShadowCastingLight(scene);
+		var light = this.shadowMapStage.getFirstShadowCastingLight(scene, true);
 		if (!light)
 			return;
 
@@ -256,7 +256,7 @@ var MaterialRenderStage = RenderStage.extend({
 
 			context.modelview.push();
 			context.modelview.multiply(renderer.matrix);
-			
+
 			this.cachedUniforms = renderer.getDefaultUniforms(context, null);
 			//this.cachedUniforms = renderer.getDefaultUniforms(context, this.cachedUniforms);
 			renderer.material.bind(

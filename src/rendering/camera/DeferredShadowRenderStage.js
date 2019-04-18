@@ -37,12 +37,14 @@ var DeferredShadowRenderStage = RenderStage.extend({
 	/** Collects all shadow casting lights */
 	collectLights: function(scene) {
 		this.directional.length = 0;
-		for (var i=0; i<scene.lights.length; i++) {
+		for (var i = 0; i < scene.lights.length; ++i) {
 			if (!scene.lights[i].enabled)
 				continue;
 			if (!scene.lights[i].shadowCasting)
 				continue;
 			if (!scene.lights[i].shadow)
+				continue;
+			if (scene.engine.options.shadowManualUpdate && !scene.lights[i].damaged)
 				continue;
 			if (scene.lights[i] instanceof DirectionalLight)
 				this.directional.push(scene.lights[i]);
@@ -60,7 +62,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		var opaque = this.parent.organizer.solidRenderers;
 		var transparent = this.parent.organizer.transparentRenderers;
 
-		for (var i=0; i<opaque.length; i++) {
+		for (var i = 0; i < opaque.length; ++i) {
 			if (!opaque[i])
 				break;
 			if (!opaque[i].castShadows)
@@ -68,7 +70,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 			this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
 		}
 
-		for (var i=0; i<transparent.length; i++) {
+		for (var i = 0; i < transparent.length; ++i) {
 			if (!transparent[i])
 				break;
 			if (!transparent[i].castShadows)
@@ -84,14 +86,13 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		vec3.sub(this.lightLookTarget, this.lightPosition, light.direction);
 		mat4.lookAt(light.lightView, this.lightPosition, this.lightLookTarget, this.lightUpVector);
 
-
 		this.sceneAABB.getVertices(this.aabbVertices);
-		for (var i=0; i<8; i++) {
+		for (var i = 0; i < 8; ++i) {
 			vec3.transformMat4(this.aabbVertices[i], this.aabbVertices[i], light.lightView);
 		}
 
 		this.lightFrustum.set(this.aabbVertices[0], [0, 0, 0]);
-		for (var i=1; i<8; i++) {
+		for (var i = 1; i < 8; ++i) {
 			this.lightFrustum.encapsulatePoint(this.aabbVertices[i]);
 		}
 
@@ -119,7 +120,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		// Render opaque geometry
 		this.material.bind();
 		var renderers = this.parent.organizer.solidRenderers;
-		for (var i=0; i<renderers.length; ++i) {
+		for (var i = 0; i < renderers.length; ++i) {
 			if (!renderers[i])
 				break;
 
@@ -150,6 +151,8 @@ var DeferredShadowRenderStage = RenderStage.extend({
 
 		context.modelview.pop();
 		context.projection.pop();
+
+		light.undamage();
 	},
 
 	renderAlphaMapped: function(context, light) {
@@ -163,7 +166,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		shader.bindUniforms(this.material.uniforms);
 
 		var samplers;
-		for (var i=0; i<batches.length; i++) {
+		for (var i = 0; i < batches.length; ++i) {
 			var batch = batches[i];
 			if (batch.length == 0)
 				continue;
@@ -179,7 +182,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 			shader.bindSamplers(samplers);
 
 			var renderer;
-			for (var j=0; j<batch.length; ++j) {
+			for (var j = 0; j < batch.length; ++j) {
 				var renderer = batch.get(j);
 				if (!(renderer.layer & light.shadowMask))
 					continue;
@@ -202,7 +205,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		this.collectLights(scene);
 		this.computeSceneBounds();
 
-		for (var i=0; i<this.directional.length; i++) {
+		for (var i = 0; i < this.directional.length; ++i) {
 			this.renderDirectionalLightDepth(context, this.directional[i]);
 		}
 	},

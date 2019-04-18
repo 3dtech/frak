@@ -6,6 +6,7 @@ var Light = Component.extend({
 		this.intensity = 1.0;
 		this.shadowCasting = false;
 		this.shadowMask = 0xFFFFFFFF;
+		this.damaged = true;
 	},
 
 	type: function() {
@@ -34,5 +35,13 @@ var Light = Component.extend({
 		return false;
 	},
 
-	onContextRestored: function(context) {}
+	onContextRestored: function(context) {},
+
+	damage: function() {
+		this.damaged = true;
+	},
+
+	undamage: function() {
+		this.damaged = false;
+	}
 });
