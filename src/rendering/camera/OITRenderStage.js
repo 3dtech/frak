@@ -30,6 +30,7 @@ var OITRenderStage = RenderStage.extend({
 		this.transparencySampler = new Sampler('oitAccum', this.transparencyTarget.texture);
 		this.transparencyWeightSampler = new Sampler('oitWeight', this.transparencyWeight.texture);
 		this.diffuseFallback = new Sampler('diffuse0', engine.WhiteTexture);
+		this.envFallback = new Sampler('env0', engine.WhiteTexture);
 
 		// Set up shared depth buffer
 		var gl = context.gl;
@@ -42,7 +43,9 @@ var OITRenderStage = RenderStage.extend({
 			// engine.assetsManager.addShaderSource("shaders/default/OITAccum"),
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('OITAccum')),
 			{
-				'render_mode': new UniformInt(0)
+				'render_mode': new UniformInt(0),
+				'useNormalmap': new UniformInt(0),
+				'useReflection': new UniformInt(0),
 			},
 			[]);
 
@@ -115,7 +118,6 @@ var OITRenderStage = RenderStage.extend({
 		shader.use();
 
 		// Bind shared uniforms
-		shader.bindUniforms(material.uniforms);
 		if (context.light && context.light.uniforms)
 			shader.bindUniforms(context.light.uniforms);
 
@@ -136,7 +138,20 @@ var OITRenderStage = RenderStage.extend({
 
 			if (batchMaterial.samplers.length === 0) {
 				samplers.push(this.diffuseFallback);
+				samplers.push(this.envFallback);
 			}
+
+			for (var m = 0; m < samplers.length; ++m) {
+				if (samplers[m].name == 'normal0') {
+					material.uniforms.useNormalmap.value = 1;
+					continue;
+				}
+				if (samplers[m].name == 'env0') {
+					material.uniforms.useReflection.value = 1;
+					continue;
+				}
+			}
+			shader.bindUniforms(material.uniforms);
 
 			// Bind material uniforms and samplers
 			shader.bindUniforms(batchMaterial.uniforms);

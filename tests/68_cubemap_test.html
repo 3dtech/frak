@@ -75,7 +75,7 @@
 			});
 
 			var Rotator = Component.extend({
-				init: function() {
+				init: function(position) {
 					this._super();
 					this.SPEED = 0.001;
 					this.PITCH = 0.0;
@@ -84,7 +84,7 @@
 
 					this.rotation = quat.create();
 					this.targetRotation = quat.create();
-					this.position = vec3.create();
+					this.position = vec3.clone(position || vec3.create());
 					this.scale = vec3.create();
 				},
 
@@ -137,10 +137,26 @@
 
 			function setupLights(scene) {
 				var lights = scene.root.addNode(new Node('lights'));
-				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.8, 0.8, 0.8)));
+				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
 				var lightDirectional = scene.light;
 				lightDirectional.setLightDirection([1, 1, 1]);
-				lightDirectional.intensity = 0.8;
+				lightDirectional.intensity = 0.7;
+				lightDirectional.shadowCasting = true;
+
+				var light0 = lights.addNode(new Node('light0'));
+				light0.addComponent(new OmniLight(10.0, new Color(0.7, 0.1, 0.4)));
+				light0.transform.setPosition([-1, 0, 1]);
+				light0.getComponent(OmniLight).intensity = 2.0;
+
+				var light1 = lights.addNode(new Node('light1'));
+				light1.addComponent(new OmniLight(10.0, new Color(0.0, 1.0, 0.0)));
+				light1.transform.setPosition([6, 0, -1.5]);
+				light1.getComponent(OmniLight).intensity = 1.5;
+
+				var light2 = lights.addNode(new Node('light2'));
+				light2.addComponent(new OmniLight(10.0, new Color(0.3, 0.5, 0.9)));
+				light2.transform.setPosition([-5.0, 0, -2.0]);
+				light2.getComponent(OmniLight).intensity = 2.0;
 			}
 
 			function setupScene(scene) {
@@ -157,6 +173,22 @@
 				var cube = engine.assetsManager.texturesManager.addCube(sources);
 				var texture = scene.engine.assetsManager.addTexture("data/pattern_2.jpg");
 				var mask = scene.engine.assetsManager.addTexture("data/check-128.png");
+				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");
+				var texNormal = scene.engine.assetsManager.texturesManager.add("data/tiles_n.png");
+
+				var normalmapped = new Material(
+					scene.engine.assetsManager.addShaderSource("normalmapped"),
+					{
+						"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
+						"specularStrength": new UniformFloat(0.8),
+						"specularPower": new UniformInt(256)
+					},
+					[
+						new Sampler("diffuse0", texColor),
+						new Sampler("normal0", texNormal)
+					],
+					'Normalmapped'
+				);
 
 				var reflective = new Material(
 					engine.assetsManager.addShaderSource("reflective"),
@@ -168,9 +200,9 @@
 					[
 						new Sampler('env0', cube),
 						new Sampler('diffuse0', texture)
-					]
+					],
+					'reflective'
 				);
-				reflective.name = 'reflective';
 
 				var reflectiveLit = new Material(
 					engine.assetsManager.addShaderSource("reflective"),
@@ -182,38 +214,53 @@
 					[
 						new Sampler('env0', cube),
 						new Sampler('diffuse0', texture)
-					]
+					],
+					'reflectiveLit'
 				);
-				reflectiveLit.name = 'reflectiveLit';
+
+				var reflectiveTransparent = new Material(
+					// engine.assetsManager.addShaderSource('reflective'),
+					engine.assetsManager.addShaderSource('transparent'),
+					{
+						'diffuse': new UniformColor({r:1.0, g:0.2, b:1.0, a:0.5}),
+						'useLighting': new UniformInt(1),
+						'materialBlend': new UniformFloat(0.5),
+					},
+					[
+						new Sampler('env0', cube),
+						new Sampler('diffuse0', texture)
+					],
+					'reflectiveTransparent'
+				);
 
 				var reflectiveTextured = new Material(
 					engine.assetsManager.addShaderSource("reflective"),
 					{
 						'diffuse': new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
-						'useLighting': new UniformInt(0),
+						'useLighting': new UniformInt(1),
 						'materialBlend': new UniformFloat(0.5)
 					},
 					[
 						new Sampler('env0', cube),
 						new Sampler('diffuse0', texture)
-					]
+					],
+					'reflectiveTextured'
 				);
-				reflectiveTextured.name = 'reflectiveTextured';
 
 				var reflectiveMasked = new Material(
 					engine.assetsManager.addShaderSource("reflective_masked"),
 					{
 						'diffuse': new UniformColor({r:0.56, g:0.7, b:0.1, a:1.0}),
-						'useLighting': new UniformInt(0),
+						'useLighting': new UniformInt(1),
 						'materialBlend': new UniformFloat(1.0)
 					},
 					[
 						new Sampler('env0', cube),
 						new Sampler('mask', mask),
 						new Sampler('diffuse0', texture)
-					]
+					],
+					'reflectiveMasked'
 				);
-				reflectiveMasked.name = 'reflectiveMasked';
 
 				var reflectiveMaskedTexturedAndLit = new Material(
 					engine.assetsManager.addShaderSource("reflective_masked"),
@@ -226,39 +273,49 @@
 						new Sampler('env0', cube),
 						new Sampler('mask', mask),
 						new Sampler('diffuse0', texture)
-					]
+					],
+					'reflectiveMaskedTexturedAndLit'
 				);
-				reflectiveMaskedTexturedAndLit.name = 'reflectiveMaskedTexturedAndLit';
+
+				var ground = Primitives.box([0,0,0], [10.0, 0.05, 10.0], normalmapped);
+				mat4.fromRotationTranslation(ground.transform.relative, quat.create(), [0, -2, 0]);
+				scene.root.addNode(ground);
 
 				var teapot = scene.engine.assetsManager.addModel('data/teapot.json');
 				teapot.addComponent(new Rotator());
 				scene.root.addNode(teapot);
 
 				var box = Primitives.box([0, 0, 0], [1, 1, 1], reflective);
-				mat4.fromRotationTranslation(box.transform.relative, quat.create(), [4, 0, 0]);
+				mat4.fromRotationTranslation(box.transform.relative, quat.create(), [4, 0, 3]);
 				scene.root.addNode(box);
 
 				var boxMaskedLit = Primitives.box([0, 0, 0], [1, 1, 1], reflectiveMaskedTexturedAndLit);
-				mat4.fromRotationTranslation(boxMaskedLit.transform.relative, quat.create(), [4, 3, 0]);
+				mat4.fromRotationTranslation(boxMaskedLit.transform.relative, quat.create(), [4, 0, -3]);
 				scene.root.addNode(boxMaskedLit);
 
 				var boxMasked = Primitives.box([0, 0, 0], [1, 1, 1], reflectiveMasked);
-				mat4.fromRotationTranslation(boxMasked.transform.relative, quat.create(), [4, -3, 0]);
+				mat4.fromRotationTranslation(boxMasked.transform.relative, quat.create(), [4, 0, 0]);
 				scene.root.addNode(boxMasked);
 
+				var boxTransparent = Primitives.box([0, 0, 0], [1, 1, 1], reflectiveTransparent);
+				mat4.fromRotationTranslation(boxTransparent.transform.relative, quat.create(), [0, 0, -3]);
+				boxTransparent.getComponent(RendererComponent).reflectivity = 0.5;
+				scene.root.addNode(boxTransparent);
+
 				var sphere = Primitives.sphere(1.0, 16, 16, reflective);
-				mat4.fromRotationTranslation(sphere.transform.relative, quat.create(), [-4, 0, 0]);
+				mat4.fromRotationTranslation(sphere.transform.relative, quat.create(), [-4, 0, -3]);
 				scene.root.addNode(sphere);
 
 				var sphereTextured = Primitives.sphere(1.0, 16, 16, reflectiveTextured);
-				mat4.fromRotationTranslation(sphereTextured.transform.relative, quat.create(), [-4, 3, 0]);
+				mat4.fromRotationTranslation(sphereTextured.transform.relative, quat.create(), [-4, 0, 3]);
 				scene.root.addNode(sphereTextured);
 
 				var sphereLit = Primitives.sphere(1.0, 16, 16, reflectiveLit);
-				mat4.fromRotationTranslation(sphereLit.transform.relative, quat.create(), [-4, -3, 0]);
+				mat4.fromRotationTranslation(sphereLit.transform.relative, quat.create(), [-4, 0, 0]);
 				scene.root.addNode(sphereLit);
 
 				scene.engine.sceneStarted = function() {
+					// mat4.fromRotationTranslation(teapot.transform.relative, quat.create(), [0, 0, 0]);
 					teapot.onEachChildComponent(function (component) {
 						if (component instanceof MeshRendererComponent) {
 							for (var i=0; i<component.meshRenderers.length; i++) {
@@ -276,7 +333,9 @@
 					'assetsPath': '../assets/',
 					'transparencyMode': 'blended',
 					'antialias': true,
-					// 'renderer': 'deferred'
+					'renderer': 'deferred',
+					// 'transparencyMode': 'blended',
+					// 'builtinShaders': false,
 				});
 
 				engine.assetsManager.modelsManager.path = './'; // Load test models locally
