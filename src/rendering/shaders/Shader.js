@@ -19,6 +19,8 @@ var Shader=Serializable.extend({
 		this.linked = false;
 		this.failed = false;
 		this.uniformLocations = {};
+
+		this.bindings = {};
 	},
 
 	excluded: function() {
@@ -71,7 +73,12 @@ var Shader=Serializable.extend({
 			console.error('Shader linking failed: ', this.context.gl.getProgramInfoLog(this.program));
 			this.linked = false;
 			this.failed = true;
+			return;
 		}
+
+		// if supported, map standard binding blocks immediately
+		if (this.context.isWebGL2())
+			this.updateBlockBindings(this.context);
 	},
 
 	/** Uses the shader program. Links automatically, if not linked
@@ -106,14 +113,20 @@ var Shader=Serializable.extend({
 		@param uniforms Uniform variables that will be passed to shader
 	*/
 	bindUniforms: function(uniforms) {
-		if(!uniforms) return;
-		if(!this.linked) return;
-		for(var uniformName in uniforms) {
+		if (!uniforms)
+			return;
+		if (!this.linked)
+			return;
+		for (var uniformName in uniforms) {
 			var uniformLocation = this.getUniformLocation(uniformName);
 
-			if(!uniformLocation || uniformLocation == -1) continue;
+			if (!uniformLocation || uniformLocation == -1)
+				continue;
+
 			var uniform = uniforms[uniformName];
-			if(!uniform) throw "Uniform '"+uniformName+"' is undefined.";
+			if (!uniform)
+				throw "Uniform '"+uniformName+"' is undefined.";
+
 			uniform.bind(this.context, uniformLocation);
 		}
 	},
@@ -170,5 +183,27 @@ var Shader=Serializable.extend({
 			this.shaders[i].onContextRestored(context);
 		}
 		this.link();
+	},
+
+	updateBlockBindings: function(context) {
+		var blocks = [
+			'Transform',
+			'Material',
+		];
+
+		this.bindings = {};
+		for (var i = 0; i < blocks.length; ++i) {
+			var bindingPoint = i + 1;
+			var blockName = blocks[i];
+			var blockIndex = context.gl.getUniformBlockIndex(this.program, blockName);
+			if (blockIndex == context.gl.INVALID_INDEX)
+				continue;
+
+			this.bindings[blockName] = {
+				index: blockIndex,
+				name: blockName,
+				bindingPoint: bindingPoint,
+			};
+		}
 	}
 });
