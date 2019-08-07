@@ -116,7 +116,7 @@ var LargeMeshCollider=Collider.extend({
 		var localRay = ray.clone();
 		mat4.invert(this.invMat, this.node.transform.absolute);
 		localRay.transform(this.invMat);
-		var collision=this.tree.getNearestRayCollision(localRay, ray);
+		var collision=this.tree.getNearestRayCollision(localRay, ray, collideInvisible);
 		if (collision.t==Infinity || collision.t==-Infinity)
 			return false;
 		if (result && collision) {
