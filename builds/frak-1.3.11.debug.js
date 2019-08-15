@@ -5216,7 +5216,7 @@ var MaterialRenderStage = RenderStage.extend({
         }
         context.shadow = this._shadowContext;
         context.shadow.shadow0 = this.shadowFallback;
-        var light = this.shadowMapStage.getFirstShadowCastingLight(scene);
+        var light = this.shadowMapStage.getFirstShadowCastingLight(scene, true);
         if (!light) return;
         mat4.copy(this.shadowUniforms.lightView.value, light.lightView);
         mat4.copy(this.shadowUniforms.lightProjection.value, light.lightProj);
@@ -5456,26 +5456,30 @@ var ShadowMapRenderStage = RenderStage.extend({
     },
     onStart: function(context, engine) {
         var shader = "forward_shadow";
-        this.extStandardDerivatives = context.gl.getExtension("OES_standard_derivatives");
-        if (this.extStandardDerivatives) shader = "forward_shadow_vsm";
+        if (context.isWebGL2()) {
+            shader = "forward_shadow_vsm";
+        } else {
+            this.extStandardDerivatives = context.gl.getExtension("OES_standard_derivatives");
+            if (this.extStandardDerivatives) shader = "forward_shadow_vsm";
+        }
         this.material = new Material(engine.assetsManager.addShader(engine.assetsManager.shadersManager.bundle("forward_shadow.vert"), engine.assetsManager.shadersManager.bundle("{0}.frag".format(shader))), {
             hasFloat: new UniformInt(1)
         }, []);
         engine.assetsManager.load();
     },
     onPostRender: function(context, scene, camera) {
-        var light = this.getFirstShadowCastingLight(scene);
+        var light = this.getFirstShadowCastingLight(scene, false);
         if (!light) return;
         this.computeSceneBounds();
         vec3.copy(this.lightPosition, this.sceneAABB.center);
         vec3.sub(this.lightLookTarget, this.lightPosition, light.direction);
         mat4.lookAt(light.lightView, this.lightPosition, this.lightLookTarget, this.lightUpVector);
         this.sceneAABB.getVertices(this.aabbVertices);
-        for (var i = 0; i < 8; i++) {
+        for (var i = 0; i < 8; ++i) {
             vec3.transformMat4(this.aabbVertices[i], this.aabbVertices[i], light.lightView);
         }
         this.lightFrustum.set(this.aabbVertices[0], [ 0, 0, 0 ]);
-        for (var i = 1; i < 8; i++) {
+        for (var i = 1; i < 8; ++i) {
             this.lightFrustum.encapsulatePoint(this.aabbVertices[i]);
         }
         mat4.ortho(light.lightProj, this.lightFrustum.min[0], this.lightFrustum.max[0], this.lightFrustum.min[1], this.lightFrustum.max[1], this.lightFrustum.min[2], this.lightFrustum.max[2]);
@@ -5507,6 +5511,7 @@ var ShadowMapRenderStage = RenderStage.extend({
         gl.disable(gl.DEPTH_TEST);
         light.shadow.unbind(context);
         light.updateSamplers();
+        light.undamage();
         this.parent.prepareShadowContext(context, scene);
         context.modelview.pop();
         context.projection.pop();
@@ -5519,7 +5524,7 @@ var ShadowMapRenderStage = RenderStage.extend({
         shader.bindUniforms(this.material.uniforms);
         shader.bindUniforms(this.parent.sharedUniforms);
         var samplers;
-        for (var i = 0; i < batches.length; i++) {
+        for (var i = 0; i < batches.length; ++i) {
             var batch = batches[i];
             if (batch.length == 0) continue;
             var batchMaterial = batch.get(0).material;
@@ -5549,22 +5554,23 @@ var ShadowMapRenderStage = RenderStage.extend({
         this.sceneAABB.recalculate();
         var opaque = this.parent.organizer.solidRenderers;
         var transparent = this.parent.organizer.transparentRenderers;
-        for (var i = 0; i < opaque.length; i++) {
+        for (var i = 0; i < opaque.length; ++i) {
             if (!opaque[i]) break;
             if (!opaque[i].castShadows) continue;
             this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
         }
-        for (var i = 0; i < transparent.length; i++) {
+        for (var i = 0; i < transparent.length; ++i) {
             if (!transparent[i]) break;
             if (!transparent[i].castShadows) continue;
             this.sceneAABB.encapsulateBox(transparent[i].globalBoundingBox);
         }
         return this.sceneAABB;
     },
-    getFirstShadowCastingLight: function(scene) {
-        for (var i = 0; i < scene.lights.length; i++) {
+    getFirstShadowCastingLight: function(scene, ignoreDamage) {
+        for (var i = 0; i < scene.lights.length; ++i) {
             if (!(scene.lights[i] instanceof DirectionalLight)) continue;
             if (!scene.lights[i].enabled) continue;
+            if (!ignoreDamage && scene.engine.options.shadowManualUpdate && !scene.lights[i].damaged) continue;
             if (scene.lights[i].shadowCasting === true) return scene.lights[i];
         }
         return false;
@@ -6338,10 +6344,11 @@ var DeferredShadowRenderStage = RenderStage.extend({
     },
     collectLights: function(scene) {
         this.directional.length = 0;
-        for (var i = 0; i < scene.lights.length; i++) {
+        for (var i = 0; i < scene.lights.length; ++i) {
             if (!scene.lights[i].enabled) continue;
             if (!scene.lights[i].shadowCasting) continue;
             if (!scene.lights[i].shadow) continue;
+            if (scene.engine.options.shadowManualUpdate && !scene.lights[i].damaged) continue;
             if (scene.lights[i] instanceof DirectionalLight) this.directional.push(scene.lights[i]);
         }
     },
@@ -6352,12 +6359,12 @@ var DeferredShadowRenderStage = RenderStage.extend({
         this.sceneAABB.recalculate();
         var opaque = this.parent.organizer.solidRenderers;
         var transparent = this.parent.organizer.transparentRenderers;
-        for (var i = 0; i < opaque.length; i++) {
+        for (var i = 0; i < opaque.length; ++i) {
             if (!opaque[i]) break;
             if (!opaque[i].castShadows) continue;
             this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
         }
-        for (var i = 0; i < transparent.length; i++) {
+        for (var i = 0; i < transparent.length; ++i) {
             if (!transparent[i]) break;
             if (!transparent[i].castShadows) continue;
             this.sceneAABB.encapsulateBox(transparent[i].globalBoundingBox);
@@ -6369,11 +6376,11 @@ var DeferredShadowRenderStage = RenderStage.extend({
         vec3.sub(this.lightLookTarget, this.lightPosition, light.direction);
         mat4.lookAt(light.lightView, this.lightPosition, this.lightLookTarget, this.lightUpVector);
         this.sceneAABB.getVertices(this.aabbVertices);
-        for (var i = 0; i < 8; i++) {
+        for (var i = 0; i < 8; ++i) {
             vec3.transformMat4(this.aabbVertices[i], this.aabbVertices[i], light.lightView);
         }
         this.lightFrustum.set(this.aabbVertices[0], [ 0, 0, 0 ]);
-        for (var i = 1; i < 8; i++) {
+        for (var i = 1; i < 8; ++i) {
             this.lightFrustum.encapsulatePoint(this.aabbVertices[i]);
         }
         mat4.ortho(light.lightProj, this.lightFrustum.min[0], this.lightFrustum.max[0], this.lightFrustum.min[1], this.lightFrustum.max[1], this.lightFrustum.min[2], this.lightFrustum.max[2]);
@@ -6406,6 +6413,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
         light.updateSamplers(context);
         context.modelview.pop();
         context.projection.pop();
+        light.undamage();
     },
     renderAlphaMapped: function(context, light) {
         var batches = this.parent.organizer.transparentBatchList;
@@ -6414,7 +6422,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
         shader.use();
         shader.bindUniforms(this.material.uniforms);
         var samplers;
-        for (var i = 0; i < batches.length; i++) {
+        for (var i = 0; i < batches.length; ++i) {
             var batch = batches[i];
             if (batch.length == 0) continue;
             var batchMaterial = batch.get(0).material;
@@ -6437,7 +6445,7 @@ var DeferredShadowRenderStage = RenderStage.extend({
     onPreRender: function(context, scene, camera) {
         this.collectLights(scene);
         this.computeSceneBounds();
-        for (var i = 0; i < this.directional.length; i++) {
+        for (var i = 0; i < this.directional.length; ++i) {
             this.renderDirectionalLightDepth(context, this.directional[i]);
         }
     },
@@ -6882,10 +6890,10 @@ var SSAOPostProcess = PostProcess.extend({
             brightness: new UniformFloat(engine.options.ssaoBrightness ? engine.options.ssaoBrightness : 1)
         }, [ this.parent.generator.depthStage.sampler ]);
         this.material.name = "SSAO";
-        if (engine.options.transparencyMode == "sorted") {
-            this.material.samplers.push(new Sampler("oitWeight", engine.WhiteTexture));
-        } else {
+        if (engine.options.transparencyMode == "blended") {
             this.material.samplers.push(this.parent.generator.oitStage.transparencyWeightSampler);
+        } else {
+            this.material.samplers.push(new Sampler("oitWeight", engine.WhiteTexture));
         }
         engine.assetsManager.load();
     },
@@ -8033,6 +8041,7 @@ var Renderer = FrakClass.extend({
         this.castShadows = true;
         this.receiveShadows = true;
         this.lightContribution = 1;
+        this.reflectivity = 0;
         this.transparent = false;
         this.localBoundingBox = new BoundingBox();
         this.localBoundingSphere = new BoundingSphere();
@@ -8072,6 +8081,7 @@ var Renderer = FrakClass.extend({
         if (uniforms.hasOwnProperty("projection")) mat4.copy(uniforms.projection.value, context.projection.top()); else uniforms.projection = new UniformMat4(context.projection.top());
         if (uniforms.hasOwnProperty("receiveShadows")) uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0; else uniforms.receiveShadows = new UniformInt(this.receiveShadows ? 1 : 0);
         if (uniforms.hasOwnProperty("lightContribution")) uniforms.lightContribution.value = this.lightContribution; else uniforms.lightContribution = new UniformFloat(this.lightContribution);
+        if (uniforms.hasOwnProperty("reflectivity")) uniforms.reflectivity.value = this.reflectivity; else uniforms.reflectivity = new UniformFloat(this.reflectivity);
         if (context.camera) {
             if (uniforms.hasOwnProperty("view")) mat4.copy(uniforms.view.value, context.camera.viewMatrix); else uniforms.view = new UniformMat4(context.camera.viewMatrix);
             if (uniforms.hasOwnProperty("viewInverse")) mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix); else uniforms.viewInverse = new UniformMat4(context.camera.viewInverseMatrix);
@@ -11698,6 +11708,7 @@ var RendererComponent = Component.extend({
         this.castShadows = true;
         this.receiveShadows = true;
         this.lightContribution = 1;
+        this.reflectivity = 0;
     },
     type: function() {
         return "RendererComponent";
@@ -11707,6 +11718,7 @@ var RendererComponent = Component.extend({
         instance.castShadows = this.castShadows;
         instance.receiveShadows = this.receiveShadows;
         instance.lightContribution = this.lightContribution;
+        instance.reflectivity = this.reflectivity;
         return instance;
     },
     onContextRestored: function(context) {}
@@ -11767,24 +11779,26 @@ var MeshRendererComponent = RendererComponent.extend({
         var layer = this.node.layer;
         var receiveShadows = this.receiveShadows;
         var lightContribution = this.lightContribution;
-        for (var i = 0, l = this.meshRenderers.length; i < l; i++) {
+        var reflectivity = this.reflectivity;
+        for (var i = 0, l = this.meshRenderers.length; i < l; ++i) {
             renderer = this.meshRenderers[i];
             renderer.layer = layer;
             renderer.castShadows = castShadows;
             renderer.receiveShadows = receiveShadows;
             renderer.lightContribution = lightContribution;
+            renderer.reflectivity = reflectivity;
             renderer.setMatrix(absolute);
         }
     },
     onEnable: function() {
-        for (var i = 0; i < this.meshRenderers.length; i++) this.meshRenderers[i].visible = true;
+        for (var i = 0; i < this.meshRenderers.length; ++i) this.meshRenderers[i].visible = true;
     },
     onDisable: function() {
-        for (var i = 0; i < this.meshRenderers.length; i++) this.meshRenderers[i].visible = false;
+        for (var i = 0; i < this.meshRenderers.length; ++i) this.meshRenderers[i].visible = false;
     },
     getBoundingBox: function(excludeInvisible) {
         var bounds = new BoundingBox();
-        for (var i = 0; i < this.meshRenderers.length; i++) {
+        for (var i = 0; i < this.meshRenderers.length; ++i) {
             if (excludeInvisible && !this.meshRenderers[i].visible) continue;
             bounds.encapsulateBox(this.meshRenderers[i].globalBoundingBox);
         }
@@ -11792,7 +11806,7 @@ var MeshRendererComponent = RendererComponent.extend({
     },
     getBoundingSphere: function(excludeInvisible) {
         var bounds = new BoundingSphere();
-        for (var i = 0; i < this.meshRenderers.length; i++) {
+        for (var i = 0; i < this.meshRenderers.length; ++i) {
             if (excludeInvisible && !this.meshRenderers[i].visible) continue;
             bounds.encapsulateSphere(this.meshRenderers[i].globalBoundingSphere);
         }
@@ -11800,12 +11814,12 @@ var MeshRendererComponent = RendererComponent.extend({
     },
     setTransparency: function(value) {
         value = !!value;
-        for (var i = 0; i < this.meshRenderers.length; i++) {
+        for (var i = 0; i < this.meshRenderers.length; ++i) {
             this.meshRenderers[i].transparent = value;
         }
     },
     getSubmeshRenderer: function(submesh) {
-        for (var i = 0; i < this.meshRenderers.length; i++) {
+        for (var i = 0; i < this.meshRenderers.length; ++i) {
             if (this.meshRenderers[i].submesh === submesh) return this.meshRenderers[i];
         }
         return false;
@@ -12926,6 +12940,7 @@ var Light = Component.extend({
         this.intensity = 1;
         this.shadowCasting = false;
         this.shadowMask = 4294967295;
+        this.damaged = true;
     },
     type: function() {
         return "Light";
@@ -12948,7 +12963,13 @@ var Light = Component.extend({
     isPositional: function() {
         return false;
     },
-    onContextRestored: function(context) {}
+    onContextRestored: function(context) {},
+    damage: function() {
+        this.damaged = true;
+    },
+    undamage: function() {
+        this.damaged = false;
+    }
 });
 
 var OmniLight = Light.extend({
@@ -13052,6 +13073,7 @@ var DirectionalLight = Light.extend({
     },
     onStart: function(context, engine) {
         this._super();
+        vec2.set(this.shadowResolution, engine.options.directionalShadowResolution, engine.options.directionalShadowResolution);
         this.material = new Material(engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle("deferred_light_directional")), {
             lightColor: new UniformColor(this.color),
             lightIntensity: new UniformFloat(this.intensity),
@@ -13852,7 +13874,7 @@ var Scene = Serializable.extend({
         this.updatedComponents = [];
         var scope = this;
         this.processPreRenderList = function(context, camera) {
-            for (var i = 0; i < scope.preRenderedComponents.length; i++) {
+            for (var i = 0; i < scope.preRenderedComponents.length; ++i) {
                 var component = scope.preRenderedComponents[i];
                 if (component.node.layer & camera.layerMask) {
                     context.modelview.push();
@@ -13863,7 +13885,7 @@ var Scene = Serializable.extend({
             }
         };
         this.processPostRenderList = function(context, camera) {
-            for (i = 0; i < scope.postRenderedComponents.length; i++) {
+            for (var i = 0; i < scope.postRenderedComponents.length; ++i) {
                 var component = scope.postRenderedComponents[i];
                 if (component.node.layer & camera.layerMask) {
                     context.modelview.push();
@@ -13931,7 +13953,7 @@ var Scene = Serializable.extend({
     render: function(context) {
         if (!this.started) return;
         var camera = false;
-        for (var cameraIndex = 0; cameraIndex < this.cameras.length; cameraIndex++) {
+        for (var cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {
             camera = this.cameras[cameraIndex];
             camera.render(context, this, this.processPreRenderList, this.processPostRenderLists);
         }
@@ -13939,7 +13961,7 @@ var Scene = Serializable.extend({
     update: function(engine) {
         if (!this.started) return;
         var passes = 1;
-        for (var pass = 0; pass < passes; pass++) {
+        for (var pass = 0; pass < passes; ++pass) {
             for (var i = 0; i < this.updatedComponents.length; ++i) {
                 var component = this.updatedComponents[i];
                 if (!component.enabled) continue;
@@ -13959,6 +13981,24 @@ var Scene = Serializable.extend({
             }
         });
         return result;
+    },
+    broadcast: function(componentType, method, data) {
+        data = data || null;
+        if (componentType.prototype instanceof Light) {
+            var c;
+            for (var i = 0; i < this.lights.length; i++) {
+                c = this.lights[i];
+                if (c instanceof componentType && method in c && typeof c[method] == "function") {
+                    c[method](data);
+                }
+            }
+            return;
+        }
+        this.root.onEachChildComponent(function(c) {
+            if (c instanceof componentType && method in c && typeof c[method] == "function") {
+                c[method](data);
+            }
+        });
     }
 });
 
@@ -14025,7 +14065,9 @@ var Engine = FrakClass.extend({
             contextErrorCallback: null,
             captureScreenshot: false,
             webGLVersion: "auto",
-            builtinShaders: true
+            builtinShaders: true,
+            directionalShadowResolution: 2048,
+            shadowManualUpdate: false
         }, options);
         this.validateOptions(canvas);
         this.context = this.options.context;
