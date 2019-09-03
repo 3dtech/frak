@@ -24,7 +24,7 @@ var Manager=FrakClass.extend({
 
 		/* Set source callback to overwrite any source before it is used to create a descriptor. */
 		this.sourceCallback = function(source) {
-			return source;
+			return scope.path + source;
 		};
 
 		/* Set descriptor callback to overwrite any descriptor parameters before it is requested. */
@@ -77,7 +77,7 @@ var Manager=FrakClass.extend({
 
 		// Resource not found in cache or loading queue. Add it to waiting queue.
 		resource = this.createResource(descriptor);
-		
+
 		this.queue.push([descriptor, descriptor.serialize(['id']), resource]);
 		return resource;
 	},
@@ -119,7 +119,7 @@ var Manager=FrakClass.extend({
 			this.progressCallbacks.push(progressCallback);
 		}
 
-		
+
 		if(callback) {
 			this.callbacks.push(callback);
 			if (this.callbacks.length > 1) {

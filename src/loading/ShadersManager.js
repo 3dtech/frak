@@ -9,6 +9,9 @@ var ShadersManager=Manager.extend({
 	 */
 	init: function(context, assetsPath) {
 		this._super(assetsPath);
+		this.sourceCallback = function(source) {
+			return source;
+		};
 		this.context = context;
 		this.builtin = {};
 
