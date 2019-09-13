@@ -233,6 +233,19 @@
 					'reflectiveTransparent'
 				);
 
+				var noreflectTransparent = new Material(
+					engine.assetsManager.addShaderSource('transparent'),
+					{
+						'diffuse': new UniformColor({r: 0.2, g: 1.0, b: 1.0, a: 0.5}),
+						'useLighting': new UniformInt(1),
+						'materialBlend': new UniformFloat(0.5),
+					},
+					[
+						new Sampler('diffuse0', texture)
+					],
+					'noreflectTransparent'
+				);
+
 				var reflectiveTextured = new Material(
 					engine.assetsManager.addShaderSource("reflective"),
 					{
@@ -297,10 +310,15 @@
 				mat4.fromRotationTranslation(boxMasked.transform.relative, quat.create(), [4, 0, 0]);
 				scene.root.addNode(boxMasked);
 
-				var boxTransparent = Primitives.box([0, 0, 0], [1, 1, 1], reflectiveTransparent);
-				mat4.fromRotationTranslation(boxTransparent.transform.relative, quat.create(), [0, 0, -3]);
+				var boxTransparent = Primitives.box([0, 0, 0], [1, 1, 1], noreflectTransparent);
+				mat4.fromRotationTranslation(boxTransparent.transform.relative, quat.create(), [0, 0, 3]);
 				boxTransparent.getComponent(RendererComponent).reflectivity = 0.5;
 				scene.root.addNode(boxTransparent);
+
+				var boxReflectiveTransparent = Primitives.box([0, 0, 0], [1, 1, 1], reflectiveTransparent);
+				mat4.fromRotationTranslation(boxReflectiveTransparent.transform.relative, quat.create(), [0, 0, -3]);
+				boxReflectiveTransparent.getComponent(RendererComponent).reflectivity = 0.5;
+				scene.root.addNode(boxReflectiveTransparent);
 
 				var sphere = Primitives.sphere(1.0, 16, 16, reflective);
 				mat4.fromRotationTranslation(sphere.transform.relative, quat.create(), [-4, 0, -3]);

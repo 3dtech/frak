@@ -136,11 +136,7 @@ var OITRenderStage = RenderStage.extend({
 				samplers = batchMaterial.samplers;
 			}
 
-			if (batchMaterial.samplers.length === 0) {
-				samplers.push(this.diffuseFallback);
-				samplers.push(this.envFallback);
-			}
-
+			var hasDiffuse, hasEnv;
 			for (var m = 0; m < samplers.length; ++m) {
 				if (samplers[m].name == 'normal0') {
 					material.uniforms.useNormalmap.value = 1;
@@ -148,9 +144,28 @@ var OITRenderStage = RenderStage.extend({
 				}
 				if (samplers[m].name == 'env0') {
 					material.uniforms.useReflection.value = 1;
+					hasEnv = true;
 					continue;
 				}
+				if (samplers[m].name == 'diffuse0') {
+					hasDiffuse = true;
+				}
 			}
+			/* Shader runs all paths, even if useReflection == 0
+			*  This means that if one of the samplers is not bound but
+			*  the other is, then both are pointing to texture0
+			*  (default when sampler uniform is not set).
+			*  Since env0 is a samplerCube and diffuse0 is a sampler2D
+			*  this leads to an invalid operation and crashes the shader.
+			*  So we make sure both are always present
+			*/
+			if (!hasDiffuse) {
+				samplers.push(this.diffuseFallback);
+			}
+			if (!hasEnv) {
+				samplers.push(this.envFallback);
+			}
+
 			shader.bindUniforms(material.uniforms);
 
 			// Bind material uniforms and samplers
