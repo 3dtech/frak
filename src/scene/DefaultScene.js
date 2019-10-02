@@ -1,6 +1,6 @@
 /** Default scene sets is a scene that has automatically created camera node. */
-var DefaultScene=Scene.extend({
-	init: function() {
+export class DefaultScene extends Scene {
+	init() {
 		this._super();
 
 		// Create default camera node and add camera component to it
@@ -20,4 +20,4 @@ var DefaultScene=Scene.extend({
 		this.lightNode.addComponent(this.light);
 		this.root.addNode(this.lightNode);
 	}
-});
+}

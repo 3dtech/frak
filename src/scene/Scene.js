@@ -1,6 +1,10 @@
+import {Serializable} from "./Serializable";
+import {Node} from './Node';
+import {DynamicSpace} from "../rendering/spaces/DynamicSpace";
+
 /** Scene keeps track of components and nodes, cameras etc */
-var Scene=Serializable.extend({
-	init: function() {
+export class Scene extends Serializable {
+	init() {
 		this.root = new Node(); ///< Root node of the scene
 		this.root.scene = this;
 		this.dynamicSpace = new DynamicSpace(); ///< Dynamic space where all the mesh renderers go
@@ -28,7 +32,7 @@ var Scene=Serializable.extend({
 					context.modelview.pop();
 				}
 			}
-		}
+		};
 
 		// Post-render components
 		this.processPostRenderList = function(context, camera) {
@@ -42,14 +46,14 @@ var Scene=Serializable.extend({
 				}
 			}
 		}
-	},
+	}
 
-	fields: function() {
+	fields() {
 		return ["root"];
-	},
+	}
 
 	/** Called to start the scene */
-	start: function(context) {
+	start(context) {
 		if (this.started || this.starting)
 			return;
 		this.starting = true;
@@ -101,10 +105,10 @@ var Scene=Serializable.extend({
 		};
 
 		internalStart();
-	},
+	}
 
 	/** Calls Component.onEnd(context,engine) for all components. */
-	end: function(context, engine) {
+	end(context, engine) {
 		if (!this.started)
 			return;
 
@@ -120,10 +124,10 @@ var Scene=Serializable.extend({
 		});
 
 		this.started = false;
-	},
+	}
 
 	/** Called to render all scene cameras. */
-	render: function(context) {
+	render(context) {
 		if (!this.started)
 			return; // Make sure we don't render before starting the scene
 		var camera = false;
@@ -132,10 +136,10 @@ var Scene=Serializable.extend({
 			camera = this.cameras[cameraIndex];
 			camera.render(context, this, this.processPreRenderList, this.processPostRenderLists);
 		}
-	},
+	}
 
 	/** Called when updating */
-	update: function(engine) {
+	update(engine) {
 		if (!this.started)
 			return; // Not started yet
 
@@ -156,10 +160,10 @@ var Scene=Serializable.extend({
 		}
 
 		this.root.updateChildTransforms();
-	},
+	}
 
 	/** @return All materials used in the scene */
-	getMaterials: function() {
+	getMaterials() {
 		var result = [];
 
 		this.root.onEachChildComponent(
@@ -172,9 +176,9 @@ var Scene=Serializable.extend({
 		);
 
 		return result;
-	},
+	}
 
-	broadcast: function(componentType, method, data) {
+	broadcast(componentType, method, data) {
 		data = data || null;
 
 		// Optimization for Light type components
@@ -196,4 +200,4 @@ var Scene=Serializable.extend({
 			}
 		});
 	}
-});
+}

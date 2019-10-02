@@ -1,13 +1,16 @@
+import {FRAK, FrakClass} from "../FRAK";
+import {FPS} from "./FPS";
+
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
  */
 
-var Engine = FrakClass.extend({
+export class Engine extends FrakClass {
 	/** Constructor
-		@param canvas Canvas element or ID or jQuery container
-		@param options Engine options [optional]
-		@param scene Scene to render and update [optional] */
-	init: function(canvas, options, scene) {
+	 @param canvas Canvas element or ID or jQuery container
+	 @param options Engine options [optional]
+	 @param scene Scene to render and update [optional] */
+	init(canvas, options, scene) {
 		if (!options) options = {};
 		this.options = FRAK.extend({
 			'assetsPath': '',
@@ -75,22 +78,22 @@ var Engine = FrakClass.extend({
 		}
 
 		this.setupInput();
-	},
+	}
 
-	onContextLost: function(event) {
+	onContextLost(event) {
 		console.log('FRAK: Rendering context lost');
 		event.preventDefault();
 		this.pause();
-	},
+	}
 
-	onContextRestored: function(event) {
+	onContextRestored(event) {
 		console.log('FRAK: Rendering context restored');
 		this.context.engine = this;
 		this.context.restore();
 		this.run();
-	},
+	}
 
-	onVisibilityChange: function() {
+	onVisibilityChange() {
 		if (!this.options.runInBackground) {
 			if (document.hidden) {
 				if (this.running === false) {
@@ -98,8 +101,7 @@ var Engine = FrakClass.extend({
 					return;
 				}
 				this.pause();
-			}
-			else {
+			} else {
 				if (this._externallyPaused) {
 					delete this._externallyPaused;
 					return;
@@ -107,9 +109,9 @@ var Engine = FrakClass.extend({
 				this.run();
 			}
 		}
-	},
+	}
 
-	onFullscreenChange: function() {
+	onFullscreenChange() {
 		if (!(this.context instanceof RenderingContext))
 			return;
 
@@ -141,24 +143,23 @@ var Engine = FrakClass.extend({
 
 			// We have to wait for the styles to be applied to continue
 			var scope = this;
-			setTimeout(function() {
-				// Set aspect ratio
-				var bounds = canvas.getBoundingClientRect();
-				scope.scene.cameraComponent.setAspectRatio(bounds.width / bounds.height);
-				if (scope.useUpscaling)
-					return;
+			setTimeout(function () {
+					// Set aspect ratio
+					var bounds = canvas.getBoundingClientRect();
+					scope.scene.cameraComponent.setAspectRatio(bounds.width / bounds.height);
+					if (scope.useUpscaling)
+						return;
 
-				// If not using upscaling then resize the RenderTarget
-				var gl = scope.context.gl;
-				var width = gl.canvas.clientWidth;
-				var height = Math.max(1, gl.canvas.clientHeight);
-				canvas.setAttribute('width', width);
-				canvas.setAttribute('height', height);
-				scope.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-			},
-			2000 / this.options.requestedFPS);
-		}
-		else {
+					// If not using upscaling then resize the RenderTarget
+					var gl = scope.context.gl;
+					var width = gl.canvas.clientWidth;
+					var height = Math.max(1, gl.canvas.clientHeight);
+					canvas.setAttribute('width', width);
+					canvas.setAttribute('height', height);
+					scope.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+				},
+				2000 / this.options.requestedFPS);
+		} else {
 			if (this._savedCanvasStyles) {
 				// Restore canvas size and aspect ratio for perspective cameras
 				canvas = this.context.canvas;
@@ -183,16 +184,16 @@ var Engine = FrakClass.extend({
 				delete this._savedCanvasStyles;
 			}
 		}
-	},
+	}
 
-	setupInput: function() {
+	setupInput() {
 		this.input = new Input(this, this.context.canvas);
-	},
+	}
 
 	/** Starts the engine. The engine will try to draw frames at the "requestedFPS" specified
-		in the options that were passed to the constructor. The default value is 30fps.
-		If requestAnimationFrame function is not available then setTimeout is used. */
-	run: function() {
+	 in the options that were passed to the constructor. The default value is 30fps.
+	 If requestAnimationFrame function is not available then setTimeout is used. */
+	run() {
 		if (this.running !== false)
 			return;
 
@@ -221,89 +222,90 @@ var Engine = FrakClass.extend({
 			this.scene.start(this.context, this);
 
 		this._currentAnimationFrame = FRAK.requestAnimationFrame(draw);
-	},
+	}
 
 	/**
-		This is called when scene has finished starting up.
-		Overide to get this call from outside.
+	 This is called when scene has finished starting up.
+	 Overide to get this call from outside.
 
-		XXX: It would probably make more sense to have this callback in the Scene class.
-	*/
-	sceneStarted: function() {},
+	 XXX: It would probably make more sense to have this callback in the Scene class.
+	 */
+	sceneStarted() {
+	}
 
 	/** Stops the engine by pausing the engine and calling Scene.end() method.
-		Component.onEnd(context,engine) method will be called for all components.
-		Subsequent call to run() will start the engine again. */
-	stop: function() {
+	 Component.onEnd(context,engine) method will be called for all components.
+	 Subsequent call to run() will start the engine again. */
+	stop() {
 		this.pause();
 		if (this.scene.started) this.scene.end(this.context);
-	},
+	}
 
 	/** Pauses the engine, call run to start it again. */
-	pause: function() {
+	pause() {
 		this.running = false;
 		if (this._currentAnimationFrame)
 			FRAK.cancelAnimationFrame(this._currentAnimationFrame);
-	},
+	}
 
 	/** Toggles engine pause */
-	togglePause: function() {
-		if (this.running===false) this.run();
+	togglePause() {
+		if (this.running === false) this.run();
 		else this.pause();
-	},
+	}
 
 	/** Requests engine to go to fullscreen */
-	requestFullscreen: function(useUpscaling) {
+	requestFullscreen(useUpscaling) {
 		if (!FRAK.fullscreenEnabled) {
 			console.warn('FRAK: Fullscreen API is disabled in this browser.');
 			return;
 		}
 		this.useUpscaling = useUpscaling;
 		FRAK.requestFullscreen(this.context.canvas);
-	},
+	}
 
 	/** Requests engine to exit fullscreen */
-	exitFullscreen: function() {
+	exitFullscreen() {
 		if (!FRAK.fullscreenEnabled) {
 			console.warn('FRAK: Fullscreen API is disabled in this browser.');
 			return;
 		}
 		FRAK.exitFullscreen();
-	},
+	}
 
 	/**
-		Idle rendering. Try'is to draw in low (1) fps
-		@fps {float} idle at given fps, default is 1
-	*/
-	startIdle: function(fps){
+	 Idle rendering. Try'is to draw in low (1) fps
+	 @fps {float} idle at given fps, default is 1
+	 */
+	startIdle(fps) {
 		if (!fps) fps = 1.0;
 		this.options.requestedFPS = fps;
 		this.pause();
 		this.run();
-	},
+	}
 
 	/**
-		Stop idling and return to normal fps
-	*/
-	stopIdle: function() {
+	 Stop idling and return to normal fps
+	 */
+	stopIdle() {
 		this.options.requestedFPS = this.options.defaultRequestedFPS;
 		this.pause();
 		this.run();
-	},
+	}
 
 	/** Runs engine to render a single frame and do an update */
-	frame: function() {
+	frame() {
 		this.context.engine = this;
 		this.input.update(this);
 		this.scene.update(this);
 		this.scene.render(this.context);
 		this.fps.measure();
-		if(this.options.captureScreenshot) {
+		if (this.options.captureScreenshot) {
 			this._captureScreenshot();
 		}
-	},
+	}
 
-	validateOptions: function(canvas) {
+	validateOptions(canvas) {
 		// Create default rendering context
 		if (!this.options.context)
 			this.options.context = new RenderingContext(canvas, null, this.options.contextErrorCallback, this.options.webGLVersion);
@@ -347,20 +349,20 @@ var Engine = FrakClass.extend({
 				this.options.renderer = 'forward';
 				break;
 		}
-	},
+	}
 
-	resize: function(){
+	resize() {
 		if (this.context instanceof RenderingContext) {
 			var gl = this.context.gl;
 			// var width = gl.canvas.clientWidth;
 			// var height = Math.max(1, gl.canvas.clientHeight);
-			this.scene.cameraComponent.setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
+			this.scene.cameraComponent.setAspectRatio(gl.drawingBufferWidth / gl.drawingBufferHeight);
 			this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 		}
-	},
+	}
 
 	/** Helper function for displaying renderer statistics. */
-	stats: function() {
+	stats() {
 		if (!this.scene)
 			return;
 		var organizer = this.scene.camera.renderStage.generator.organizer;
@@ -369,20 +371,20 @@ var Engine = FrakClass.extend({
 		console.log('  Visible renderers (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidRenderers, organizer.visibleTransparentRenderers));
 		console.log('  Visible batches (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidBatches, organizer.visibleTransparentBatches));
 		console.log('================================================');
-	},
+	}
 
-	_captureScreenshot: function () {
+	_captureScreenshot() {
 		var shot = this.context.gl.canvas.toDataURL();
 		if (shot && this.onScreenshotCaptured) {
 			this.options.captureScreenshot = false;
 			this.onScreenshotCaptured(shot);
 		}
-	},
+	}
 
-	captureScreenshot: function (callback) {
-		if(typeof callback === 'function') {
+	captureScreenshot(callback) {
+		if (typeof callback === 'function') {
 			this.options.captureScreenshot = true;
 			this.onScreenshotCaptured = callback;
 		}
 	}
-});
+}

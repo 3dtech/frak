@@ -1,13 +1,15 @@
+import {FrakClass} from "../FRAK";
+
 /** Base-class for classes that know their own type and can be cloned. */
-var Cloneable=FrakClass.extend({
+export class Cloneable extends FrakClass {
 	/** @return Type of object. Default returns false. */
-	type: function() {
+	type() {
 		return false;
-	},
+	}
 	
 	/** Constructs a new object of this type with default values */
-	clone: function() {
+	clone() {
 		return ( typeof window[this.type()] === 'function' ) ? 
               new window[this.type()]() : { };
 	}
-});
+}
