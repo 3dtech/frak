@@ -327,8 +327,18 @@ var EmptyNode=Serializable.extend({
 			node = this.scene.root;
 			parts.shift();
 		}
-		for (var i=0; i<parts.length; i++) {
-			node = node.findChildWithName(parts[i]);
+
+		if (parts.length > 2) { // This is a hack when submeshes are deeper than 3 layers
+			var _parts = parts.slice(0, 1);
+			var __parts = parts.slice(1, parts.length).join('/');
+			
+			parts = _parts;
+			parts.push(__parts);
+			//console.log('parts3', path, _parts, __parts, parts);
+		}
+		
+		for (var i=0; i < parts.length; i++) {
+			node = node.findChildWithName(parts[i], path);
 			if (node===false)
 				return false;
 		}
@@ -338,8 +348,8 @@ var EmptyNode=Serializable.extend({
 	/** Returns the first immediate subnode to this node that has the given name.
 		@param name The name of the subnode
 		@return Instance of {Node} or false if the target was not found */
-	findChildWithName: function(name) {
-		for (var i=0; i<this.subnodes.length; i++) {
+	findChildWithName: function(name, path) {
+		for (var i=0; i<this.subnodes.length; i++) {	
 			if (this.subnodes[i].name===name)
 				return this.subnodes[i];
 		}

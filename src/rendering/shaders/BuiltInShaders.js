@@ -1,4 +1,4 @@
-// Generated at Thu Apr 18 2019 17:08:28 GMT+0300 (EEST)
+// Generated at Tue Dec 31 2019 09:55:13 GMT+0200 (EET)
 var BuiltInShaders = {
 	"default": {
 		"shaders/default/DebugPackedDepthTexture.frag": "// DebugPackedDepthTexture\nprecision highp float;\n\n#define USE_VSM\n\nuniform mat4 modelview;\nuniform vec4 diffuse;\nuniform sampler2D diffuse0;\n\nvarying vec4 viewPosition;\nvarying vec3 viewNormal;\nvarying vec2 uv0;\n\nfloat unpack(vec4 c) {\n\tconst vec4 bitShifts = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);\n\treturn dot(c, bitShifts);\n}\n\nfloat unpackHalf(vec2 c) {\n\treturn c.x + (c.y / 255.0);\n}\n\nvoid main(void) {\n\tvec4 texel = texture2D(diffuse0, uv0);\n\n#ifdef USE_VSM\n\tgl_FragColor = vec4(0.0, unpackHalf(texel.xy), unpackHalf(texel.zw), 1.0);\n#else\n\tfloat depth = unpack(texel);\n\tgl_FragColor = vec4(depth, depth, depth, 1.0);\n#endif\n}\n",

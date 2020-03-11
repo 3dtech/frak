@@ -2635,7 +2635,7 @@ var Logistics = function() {
             var url = dt.url;
             xhr.open(dt.requestType, url, true);
             if (xhr.overrideMimeType) {
-                xhr.overrideMimeType("text/xml");
+                xhr.overrideMimeType("text/plain");
             }
             if (dt.dataType == "binary") {
                 xhr.responseType = "arraybuffer";
@@ -4400,6 +4400,7 @@ var Shader = Serializable.extend({
         this.linked = false;
         this.failed = false;
         this.uniformLocations = {};
+        this.bindings = {};
     },
     excluded: function() {
         return true;
@@ -4435,7 +4436,9 @@ var Shader = Serializable.extend({
             console.error("Shader linking failed: ", this.context.gl.getProgramInfoLog(this.program));
             this.linked = false;
             this.failed = true;
+            return;
         }
+        if (this.context.isWebGL2()) this.updateBlockBindings(this.context);
     },
     use: function(uniforms) {
         if (this.failed) return;
@@ -4506,6 +4509,21 @@ var Shader = Serializable.extend({
             this.shaders[i].onContextRestored(context);
         }
         this.link();
+    },
+    updateBlockBindings: function(context) {
+        var blocks = [ "Transform", "Material" ];
+        this.bindings = {};
+        for (var i = 0; i < blocks.length; ++i) {
+            var bindingPoint = i + 1;
+            var blockName = blocks[i];
+            var blockIndex = context.gl.getUniformBlockIndex(this.program, blockName);
+            if (blockIndex == context.gl.INVALID_INDEX) continue;
+            this.bindings[blockName] = {
+                index: blockIndex,
+                name: blockName,
+                bindingPoint: bindingPoint
+            };
+        }
     }
 });
 
@@ -5835,13 +5853,16 @@ var OITRenderStage = RenderStage.extend({
         this.transparencySampler = new Sampler("oitAccum", this.transparencyTarget.texture);
         this.transparencyWeightSampler = new Sampler("oitWeight", this.transparencyWeight.texture);
         this.diffuseFallback = new Sampler("diffuse0", engine.WhiteTexture);
+        this.envFallback = new Sampler("env0", engine.WhiteTexture);
         var gl = context.gl;
         this.transparencyWeight.bind(context, true);
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.transparencyTarget.depth);
         this.transparencyWeight.unbind(context);
         this.transparencyWeight.depth = this.transparencyTarget.depth;
         this.transparencyAccum = new Material(engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle("OITAccum")), {
-            render_mode: new UniformInt(0)
+            render_mode: new UniformInt(0),
+            useNormalmap: new UniformInt(0),
+            useReflection: new UniformInt(0)
         }, []);
         this.opaqueDepthMaterial = new Material(engine.assetsManager.addShaderSource("diffuse"), {
             useShadows: new UniformInt(0),
@@ -5885,7 +5906,6 @@ var OITRenderStage = RenderStage.extend({
     renderTransparentBatches: function(context, scene, camera, material) {
         var shader = material.shader;
         shader.use();
-        shader.bindUniforms(material.uniforms);
         if (context.light && context.light.uniforms) shader.bindUniforms(context.light.uniforms);
         var batches = this.parent.organizer.transparentBatchList;
         for (var i = 0, l = batches.length; i < l; i++) {
@@ -5898,9 +5918,28 @@ var OITRenderStage = RenderStage.extend({
             } else {
                 samplers = batchMaterial.samplers;
             }
-            if (batchMaterial.samplers.length === 0) {
+            var hasDiffuse, hasEnv;
+            for (var m = 0; m < samplers.length; ++m) {
+                if (samplers[m].name == "normal0") {
+                    material.uniforms.useNormalmap.value = 1;
+                    continue;
+                }
+                if (samplers[m].name == "env0") {
+                    material.uniforms.useReflection.value = 1;
+                    hasEnv = true;
+                    continue;
+                }
+                if (samplers[m].name == "diffuse0") {
+                    hasDiffuse = true;
+                }
+            }
+            if (!hasDiffuse) {
                 samplers.push(this.diffuseFallback);
             }
+            if (!hasEnv) {
+                samplers.push(this.envFallback);
+            }
+            shader.bindUniforms(material.uniforms);
             shader.bindUniforms(batchMaterial.uniforms);
             shader.bindSamplers(samplers);
             var renderer;
@@ -7912,9 +7951,10 @@ CubeTexture.BOTTOM = 4;
 CubeTexture.TOP = 5;
 
 var Material = Serializable.extend({
-    init: function(shader, uniforms, samplers, descriptor) {
+    init: function(shader, uniforms, samplers, name, descriptor) {
         this._super();
-        this.name = "Unnamed";
+        this.name = name;
+        if (!this.name) this.name = "unnamed_" + Math.round(Math.random() * Math.pow(36, 12)).toString(36);
         this.shader = shader;
         this.uniforms = uniforms;
         this.samplers = samplers;
@@ -8047,24 +8087,6 @@ var Renderer = FrakClass.extend({
         this.localBoundingSphere = new BoundingSphere();
         this.globalBoundingBox = new BoundingBox();
         this.globalBoundingSphere = new BoundingSphere();
-        this.cacheMatrix = mat4.create();
-        this.cacheUniforms = {
-            model: new UniformMat4(mat4.create()),
-            modelview: new UniformMat4(mat4.create()),
-            projection: new UniformMat4(mat4.create()),
-            receiveShadows: new UniformFloat(0),
-            lightContribution: new UniformFloat(0),
-            view: new UniformMat4(mat4.create()),
-            viewInverse: new UniformMat4(mat4.create()),
-            zNear: new UniformFloat(0),
-            zFar: new UniformFloat(0),
-            lightDirection: new UniformVec3(vec3.create()),
-            lightColor: new UniformColor(new Color()),
-            lightIntensity: new UniformFloat(1),
-            useShadows: new UniformInt(0),
-            lightView: new UniformMat4(mat4.create()),
-            lightProjection: new UniformMat4(mat4.create())
-        };
     },
     render: function(context, pass) {
         this.onRender(context, pass);
@@ -9548,7 +9570,7 @@ var Manager = FrakClass.extend({
         this.callbacks = [];
         this.progressCallbacks = [];
         this.sourceCallback = function(source) {
-            return source;
+            return scope.path + source;
         };
         this.descriptorCallback = function(descriptor) {
             return descriptor;
@@ -9689,6 +9711,9 @@ var TextManager = Manager.extend({
 var ShadersManager = Manager.extend({
     init: function(context, assetsPath) {
         this._super(assetsPath);
+        this.sourceCallback = function(source) {
+            return source;
+        };
         this.context = context;
         this.builtin = {};
         this.shaderBundle = context.isWebGL2() ? "webgl2" : "default";
@@ -13767,13 +13792,19 @@ var EmptyNode = Serializable.extend({
             node = this.scene.root;
             parts.shift();
         }
+        if (parts.length > 2) {
+            var _parts = parts.slice(0, 1);
+            var __parts = parts.slice(1, parts.length).join("/");
+            parts = _parts;
+            parts.push(__parts);
+        }
         for (var i = 0; i < parts.length; i++) {
-            node = node.findChildWithName(parts[i]);
+            node = node.findChildWithName(parts[i], path);
             if (node === false) return false;
         }
         return node;
     },
-    findChildWithName: function(name) {
+    findChildWithName: function(name, path) {
         for (var i = 0; i < this.subnodes.length; i++) {
             if (this.subnodes[i].name === name) return this.subnodes[i];
         }
@@ -14856,8 +14887,8 @@ var BuiltInShaders = {
         "shaders/webgl2/DepthRGBA.vert": "#version 300 es\n\n// Shader for rendering linear depth values into RGBA texture\nin vec3 position;\n\nuniform mat4 modelview;\nuniform mat4 projection;\n\nout vec4 viewPosition;\n\nvoid main() {\n\tviewPosition = modelview * vec4(position, 1.0);\n\tgl_Position = projection * viewPosition;\n}\n",
         "shaders/webgl2/GaussianBlur.frag": "// Shader for rendering gaussian blurred image (horizontal)\nprecision highp float;\n\n#define MAX_BLUR_KERNEL_SIZE 10\n\nuniform float screenWidth;\nuniform float screenHeight;\nuniform int orientation; // 0 - horizontal, 1 - vertical\nuniform int kernelSize; // Recommended values: 3, 5, 7, 10 (10 is currently the maximum)\nuniform sampler2D tex0;\n\nvarying vec2 uv0;\n\nvoid main () {\n\tfloat halfSize = float(kernelSize)*0.5;\n\tvec2 texelSize = vec2(1.0/screenWidth, 1.0/screenHeight);\n\tvec4 color = vec4(0.0);\n\n\tif (orientation==1) {\n\t\t// vertical pass\n\t\tfor (int i=0; i<MAX_BLUR_KERNEL_SIZE; ++i) {\n\t\t\tif (i>=kernelSize)\n\t\t\t\tbreak;\n\t\t\tfloat offset = float(i)-halfSize;\n\t\t\tcolor += texture2D(tex0, uv0 + vec2(0.0, offset * texelSize.y));\n\t\t}\n\t}\n\telse {\n\t\t// horizontal pass\n\t\tfor (int i=0; i<MAX_BLUR_KERNEL_SIZE; ++i) {\n\t\t\tif (i>=kernelSize)\n\t\t\t\tbreak;\n\t\t\tfloat offset = float(i)-halfSize;\n\t\t\tcolor += texture2D(tex0, uv0 + vec2(offset * texelSize.x, 0.0));\n\t\t}\n\t}\n\tgl_FragColor = color / float(kernelSize);\n\t// gl_FragColor = texture2D(tex0, uv0);\n}\n",
         "shaders/webgl2/GaussianBlur.vert": "// Shader for rendering gaussian blurred image (horizontal)\nattribute vec3 position;\nattribute vec2 texcoord2d0;\n\nuniform mat4 modelview;\nuniform mat4 projection;\nuniform float screenWidth;\nuniform float screenHeight;\n\nvarying vec2 uv0;\n\nvoid main() {\n\tuv0 = texcoord2d0;\n\t\n\t// Resizes the rendered unit-quad to screen size\n\tvec4 viewPosition=modelview*vec4(position.x*screenWidth, position.y*screenHeight, position.z, 1.0);\n\tgl_Position=projection*viewPosition;\n}\n",
-        "shaders/webgl2/OITAccum.frag": "#version 300 es\n\n/**\n * Based on the following ideas:\n *\n *   - Weighted Blended Order-Independent Transparency\n *     http://jcgt.org/published/0002/02/09/\n *\n *   - Stochastic Transparency\n *     http://www.nvidia.com/object/nvidia_research_pub_016.html\n *\n *   - Simplex noise (C) Ashima Arts\n *     https://github.com/ashima/webgl-noise\n */\n\nprecision highp float;\n\nuniform vec4 diffuse;\nuniform sampler2D diffuse0;\n\nuniform int render_mode;\n\nuniform float zNear;\nuniform float zFar;\n\nin vec3 fragNormal;\nin vec4 fragPosition;\nin vec2 fragTexcoord2d0;\nout vec4 fragColor;\n\nvec4 mod289(vec4 x) {\n\treturn x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nfloat mod289(float x) {\n\treturn x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute(vec4 x) {\n\treturn mod289(((x*34.0)+1.0)*x);\n}\n\nfloat permute(float x) {\n\treturn mod289(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt(vec4 r) {\n\treturn 1.79284291400159 - 0.85373472095314 * r;\n}\n\nfloat taylorInvSqrt(float r) {\n\treturn 1.79284291400159 - 0.85373472095314 * r;\n}\n\nvec4 grad4(float j, vec4 ip) {\n\tconst vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);\n\tvec4 p,s;\n\tp.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;\n\tp.w = 1.5 - dot(abs(p.xyz), ones.xyz);\n\ts = vec4(lessThan(p, vec4(0.0)));\n\tp.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;\n\treturn p;\n}\n\n// (sqrt(5) - 1)/4 = F4, used once below\n#define F4 0.309016994374947451\n\nfloat snoise(vec4 v) {\n\tconst vec4 C = vec4(\n\t\t0.138196601125011, // (5 - sqrt(5))/20 G4\n\t\t0.276393202250021, // 2 * G4\n\t\t0.414589803375032, // 3 * G4\n\t\t-0.447213595499958); // -1 + 4 * G4\n\n\t// First corner\n\tvec4 i = floor(v + dot(v, vec4(F4)) );\n\tvec4 x0 = v - i + dot(i, C.xxxx);\n\n\t// Other corners\n\t// Rank sorting originally contributed by Bill Licea-Kane, AMD (formerly ATI)\n\tvec4 i0;\n\tvec3 isX = step( x0.yzw, x0.xxx );\n\tvec3 isYZ = step( x0.zww, x0.yyz );\n\t// i0.x = dot( isX, vec3( 1.0 ) );\n\ti0.x = isX.x + isX.y + isX.z;\n\ti0.yzw = 1.0 - isX;\n\t// i0.y += dot( isYZ.xy, vec2( 1.0 ) );\n\ti0.y += isYZ.x + isYZ.y;\n\ti0.zw += 1.0 - isYZ.xy;\n\ti0.z += isYZ.z;\n\ti0.w += 1.0 - isYZ.z;\n\n\t// i0 now contains the unique values 0,1,2,3 in each channel\n\tvec4 i3 = clamp( i0, 0.0, 1.0 );\n\tvec4 i2 = clamp( i0-1.0, 0.0, 1.0 );\n\tvec4 i1 = clamp( i0-2.0, 0.0, 1.0 );\n\t// x0 = x0 - 0.0 + 0.0 * C.xxxx\n\t// x1 = x0 - i1 + 1.0 * C.xxxx\n\t// x2 = x0 - i2 + 2.0 * C.xxxx\n\t// x3 = x0 - i3 + 3.0 * C.xxxx\n\t// x4 = x0 - 1.0 + 4.0 * C.xxxx\n\tvec4 x1 = x0 - i1 + C.xxxx;\n\tvec4 x2 = x0 - i2 + C.yyyy;\n\tvec4 x3 = x0 - i3 + C.zzzz;\n\tvec4 x4 = x0 + C.wwww;\n\n\t// Permutations\n\ti = mod289(i);\n\tfloat j0 = permute( permute( permute( permute(i.w) + i.z) + i.y) + i.x);\n\tvec4 j1 = permute( permute( permute( permute (\n\ti.w + vec4(i1.w, i2.w, i3.w, 1.0 ))\n\t+ i.z + vec4(i1.z, i2.z, i3.z, 1.0 ))\n\t+ i.y + vec4(i1.y, i2.y, i3.y, 1.0 ))\n\t+ i.x + vec4(i1.x, i2.x, i3.x, 1.0 ));\n\n\t// Gradients: 7x7x6 points over a cube, mapped onto a 4-cross polytope\n\t// 7*7*6 = 294, which is close to the ring size 17*17 = 289.\n\tvec4 ip = vec4(1.0/294.0, 1.0/49.0, 1.0/7.0, 0.0) ;\n\tvec4 p0 = grad4(j0, ip);\n\tvec4 p1 = grad4(j1.x, ip);\n\tvec4 p2 = grad4(j1.y, ip);\n\tvec4 p3 = grad4(j1.z, ip);\n\tvec4 p4 = grad4(j1.w, ip);\n\n\t// Normalise gradients\n\tvec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));\n\tp0 *= norm.x;\n\tp1 *= norm.y;\n\tp2 *= norm.z;\n\tp3 *= norm.w;\n\tp4 *= taylorInvSqrt(dot(p4,p4));\n\n\t// Mix contributions from the five corners\n\tvec3 m0 = max(0.6 - vec3(dot(x0,x0), dot(x1,x1), dot(x2,x2)), 0.0);\n\tvec2 m1 = max(0.6 - vec2(dot(x3,x3), dot(x4,x4) ), 0.0);\n\tm0 = m0 * m0;\n\tm1 = m1 * m1;\n\treturn 49.0 *\n\t\t( dot(m0*m0, vec3( dot( p0, x0 ), dot( p1, x1 ), dot( p2, x2 )))\n\t\t+ dot(m1*m1, vec2( dot( p3, x3 ), dot( p4, x4 ) ) ) ) ;\n}\n\nfloat oit_weight(float z, vec4 color) {\n\treturn max(min(1.0, max(max(color.r, color.g), color.b) * color.a), color.a) * clamp(0.03 / (1e-5 + pow(z / 200.0, 4.0)), 1e-2, 3e3);\n}\n\nvec4 lighting() {\n\t/* TODO: proper lighting for transparent surfaces */\n\tvec4 textureColor = texture(diffuse0, fragTexcoord2d0);\n\tvec4 color = diffuse * textureColor;\n\treturn color;\n}\n\nvoid main(void) {\n\tvec4 color = lighting();\n\n\t// Weighted Blended Order-Independent Transparency color pass\n\tif (render_mode == 0) {\n\t\tfloat linDepth = 2.0 * zNear * zFar / (zFar + zNear - (2.0 * -fragPosition.z - 1.0) * (zFar - zNear));\n\t\tfloat weight = oit_weight(linDepth, color);\n\t\tfragColor = vec4(color.rgb * color.a, color.a) * weight;\n\t}\n\n\t// Alpha reveal amount pass\n\telse if (render_mode == 1) {\n\t\tfragColor = vec4(color.a); // total amount revealed (blending: 0; 1-src.a)\n\t}\n\n\t// Alpha mapping pass\n\telse if (render_mode == 2) {\n\t\tif (color.a < 0.99)\n\t\t\tdiscard;\n\t\tfragColor = color;\n\t}\n\n\t// Stochastic transparency pass\n\telse if (render_mode == 3) {\n\t\tfloat random = snoise(fragPosition*150.0);\n\t\tif (random > color.a)\n\t\t\tdiscard;\n\t\tfragColor = vec4(color.rgb * color.a, 1.0);\n\t}\n}\n",
-        "shaders/webgl2/OITAccum.vert": "#version 300 es\n\n/** Order independent transparency - vertex program */\n\nin vec3 position;\nin vec3 normal;\nin vec2 texcoord2d0;\n\nuniform mat4 modelview;\nuniform mat4 projection;\n\nout vec3 fragNormal;\nout vec4 fragPosition;\nout vec2 fragTexcoord2d0;\n\nvoid main() {\n\tfragNormal = mat3(modelview) * normal;\n\tfragPosition = modelview * vec4(position, 1.0);\n\tfragTexcoord2d0 = texcoord2d0;\n\tgl_Position = projection * fragPosition;\n}\n",
+        "shaders/webgl2/OITAccum.frag": "#version 300 es\n\n/**\n * Based on the following ideas:\n *\n *   - Weighted Blended Order-Independent Transparency\n *     http://jcgt.org/published/0002/02/09/\n *\n *   - Stochastic Transparency\n *     http://www.nvidia.com/object/nvidia_research_pub_016.html\n *\n *   - Simplex noise (C) Ashima Arts\n *     https://github.com/ashima/webgl-noise\n */\n\nprecision highp float;\n\nuniform vec4 diffuse;\nuniform sampler2D diffuse0;\n\nuniform int render_mode;\n\nuniform mat4 viewInverse;\nuniform float zNear;\nuniform float zFar;\nuniform int useReflection;\nuniform float reflectivity;\n\nuniform samplerCube env0;\n\nin vec3 fragNormal;\nin vec4 fragPosition;\nin vec2 fragTexcoord2d0;\nin vec3 worldNormal;\nout vec4 fragColor;\n\nvec4 mod289(vec4 x) {\n\treturn x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nfloat mod289(float x) {\n\treturn x - floor(x * (1.0 / 289.0)) * 289.0;\n}\n\nvec4 permute(vec4 x) {\n\treturn mod289(((x*34.0)+1.0)*x);\n}\n\nfloat permute(float x) {\n\treturn mod289(((x*34.0)+1.0)*x);\n}\n\nvec4 taylorInvSqrt(vec4 r) {\n\treturn 1.79284291400159 - 0.85373472095314 * r;\n}\n\nfloat taylorInvSqrt(float r) {\n\treturn 1.79284291400159 - 0.85373472095314 * r;\n}\n\nvec4 grad4(float j, vec4 ip) {\n\tconst vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);\n\tvec4 p,s;\n\tp.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;\n\tp.w = 1.5 - dot(abs(p.xyz), ones.xyz);\n\ts = vec4(lessThan(p, vec4(0.0)));\n\tp.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;\n\treturn p;\n}\n\n// (sqrt(5) - 1)/4 = F4, used once below\n#define F4 0.309016994374947451\n\nfloat snoise(vec4 v) {\n\tconst vec4 C = vec4(\n\t\t0.138196601125011, // (5 - sqrt(5))/20 G4\n\t\t0.276393202250021, // 2 * G4\n\t\t0.414589803375032, // 3 * G4\n\t\t-0.447213595499958); // -1 + 4 * G4\n\n\t// First corner\n\tvec4 i = floor(v + dot(v, vec4(F4)) );\n\tvec4 x0 = v - i + dot(i, C.xxxx);\n\n\t// Other corners\n\t// Rank sorting originally contributed by Bill Licea-Kane, AMD (formerly ATI)\n\tvec4 i0;\n\tvec3 isX = step( x0.yzw, x0.xxx );\n\tvec3 isYZ = step( x0.zww, x0.yyz );\n\t// i0.x = dot( isX, vec3( 1.0 ) );\n\ti0.x = isX.x + isX.y + isX.z;\n\ti0.yzw = 1.0 - isX;\n\t// i0.y += dot( isYZ.xy, vec2( 1.0 ) );\n\ti0.y += isYZ.x + isYZ.y;\n\ti0.zw += 1.0 - isYZ.xy;\n\ti0.z += isYZ.z;\n\ti0.w += 1.0 - isYZ.z;\n\n\t// i0 now contains the unique values 0,1,2,3 in each channel\n\tvec4 i3 = clamp( i0, 0.0, 1.0 );\n\tvec4 i2 = clamp( i0-1.0, 0.0, 1.0 );\n\tvec4 i1 = clamp( i0-2.0, 0.0, 1.0 );\n\t// x0 = x0 - 0.0 + 0.0 * C.xxxx\n\t// x1 = x0 - i1 + 1.0 * C.xxxx\n\t// x2 = x0 - i2 + 2.0 * C.xxxx\n\t// x3 = x0 - i3 + 3.0 * C.xxxx\n\t// x4 = x0 - 1.0 + 4.0 * C.xxxx\n\tvec4 x1 = x0 - i1 + C.xxxx;\n\tvec4 x2 = x0 - i2 + C.yyyy;\n\tvec4 x3 = x0 - i3 + C.zzzz;\n\tvec4 x4 = x0 + C.wwww;\n\n\t// Permutations\n\ti = mod289(i);\n\tfloat j0 = permute( permute( permute( permute(i.w) + i.z) + i.y) + i.x);\n\tvec4 j1 = permute( permute( permute( permute (\n\ti.w + vec4(i1.w, i2.w, i3.w, 1.0 ))\n\t+ i.z + vec4(i1.z, i2.z, i3.z, 1.0 ))\n\t+ i.y + vec4(i1.y, i2.y, i3.y, 1.0 ))\n\t+ i.x + vec4(i1.x, i2.x, i3.x, 1.0 ));\n\n\t// Gradients: 7x7x6 points over a cube, mapped onto a 4-cross polytope\n\t// 7*7*6 = 294, which is close to the ring size 17*17 = 289.\n\tvec4 ip = vec4(1.0/294.0, 1.0/49.0, 1.0/7.0, 0.0) ;\n\tvec4 p0 = grad4(j0, ip);\n\tvec4 p1 = grad4(j1.x, ip);\n\tvec4 p2 = grad4(j1.y, ip);\n\tvec4 p3 = grad4(j1.z, ip);\n\tvec4 p4 = grad4(j1.w, ip);\n\n\t// Normalise gradients\n\tvec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));\n\tp0 *= norm.x;\n\tp1 *= norm.y;\n\tp2 *= norm.z;\n\tp3 *= norm.w;\n\tp4 *= taylorInvSqrt(dot(p4,p4));\n\n\t// Mix contributions from the five corners\n\tvec3 m0 = max(0.6 - vec3(dot(x0,x0), dot(x1,x1), dot(x2,x2)), 0.0);\n\tvec2 m1 = max(0.6 - vec2(dot(x3,x3), dot(x4,x4) ), 0.0);\n\tm0 = m0 * m0;\n\tm1 = m1 * m1;\n\treturn 49.0 *\n\t\t( dot(m0*m0, vec3( dot( p0, x0 ), dot( p1, x1 ), dot( p2, x2 )))\n\t\t+ dot(m1*m1, vec2( dot( p3, x3 ), dot( p4, x4 ) ) ) ) ;\n}\n\nfloat oit_weight(float z, vec4 color) {\n\treturn max(min(1.0, max(max(color.r, color.g), color.b) * color.a), color.a) * clamp(0.03 / (1e-5 + pow(z / 200.0, 4.0)), 1e-2, 3e3);\n}\n\nvec3 reflection() {\n\tvec3 eyeDirection = normalize(-fragPosition.xyz);\n\tvec3 worldEyeDirection = normalize(mat3(viewInverse) * eyeDirection);\n\tvec3 lookup = reflect(worldEyeDirection, worldNormal) * vec3(-1.0, 1.0, 1.0);\n\tvec4 color = texture(env0, lookup);\n\treturn color.rgb;\n}\n\nvec4 lighting() {\n\t/* TODO: proper lighting for transparent surfaces */\n\tvec4 textureColor = texture(diffuse0, fragTexcoord2d0);\n\tvec4 color = diffuse * textureColor;\n\treturn color;\n}\n\nvoid main(void) {\n\tvec4 color = lighting();\n\n\tif (useReflection == 1) {\n\t\tvec3 refl = reflection();\n\t\tcolor.rgb = mix(refl, color.rgb, clamp(1.0 - reflectivity, 0.0, 1.0));\n\t}\n\n\t// Weighted Blended Order-Independent Transparency color pass\n\tif (render_mode == 0) {\n\t\tfloat linDepth = 2.0 * zNear * zFar / (zFar + zNear - (2.0 * -fragPosition.z - 1.0) * (zFar - zNear));\n\t\tfloat weight = oit_weight(linDepth, color);\n\t\tfragColor = vec4(color.rgb * color.a, color.a) * weight;\n\t}\n\n\t// Alpha reveal amount pass\n\telse if (render_mode == 1) {\n\t\tfragColor = vec4(color.a); // total amount revealed (blending: 0; 1-src.a)\n\t}\n\n\t// Alpha mapping pass\n\telse if (render_mode == 2) {\n\t\tif (color.a < 0.99)\n\t\t\tdiscard;\n\t\tfragColor = color;\n\t}\n\n\t// Stochastic transparency pass\n\telse if (render_mode == 3) {\n\t\tfloat random = snoise(fragPosition*150.0);\n\t\tif (random > color.a)\n\t\t\tdiscard;\n\t\tfragColor = vec4(color.rgb * color.a, 1.0);\n\t}\n}\n",
+        "shaders/webgl2/OITAccum.vert": "#version 300 es\n\n/** Order independent transparency - vertex program */\n\nin vec3 position;\nin vec3 normal;\nin vec2 texcoord2d0;\n\nuniform mat4 model;\nuniform mat4 modelview;\nuniform mat4 projection;\n\nout vec3 fragNormal;\nout vec4 fragPosition;\nout vec2 fragTexcoord2d0;\nout vec3 worldNormal;\n\nvoid main() {\n\tfragNormal = mat3(modelview) * normal;\n\tfragPosition = modelview * vec4(position, 1.0);\n\tfragTexcoord2d0 = texcoord2d0;\n\tworldNormal = normalize(mat3(model) * normal);\n\tgl_Position = projection * fragPosition;\n}\n",
         "shaders/webgl2/OITRender.frag": "#version 300 es\n\n/**\n * Weighted Blended Order-Independent Transparency - Compositing program\n * Based on http://jcgt.org/published/0002/02/09/\n */\n\nprecision highp float;\n\nin vec2 uv;\n\nuniform vec2 ViewportSize;\nuniform int render_mode;\n\nuniform sampler2D src;\nuniform sampler2D oitAccum;\nuniform sampler2D oitWeight;\n\nout vec4 fragColor;\n\n\nvoid addRelevantSample(vec2 coords, float weight, inout vec4 accum) {\n\tvec4 texel = texture(oitAccum, coords);\n\tif (texel.a < 1.0)\n\t\treturn;\n\tfloat a = texture(oitWeight, coords).a;\n\tif (a>0.99)\n\t\treturn;\n\taccum += texel * weight * a;\n}\n\nvec4 avgColor(sampler2D s, vec2 coords) {\n\tvec2 step = vec2(1.0 / ViewportSize.x, 1.0 / ViewportSize.y);\n\n\tvec2 kernel[8];\n\tkernel[0] = vec2(-step.x, step.y);\n\tkernel[1] = vec2(0.0, step.y);\n\tkernel[2] = vec2(step.x, step.y);\n\tkernel[3] = vec2(step.x, 0.0);\n\tkernel[4] = vec2(-step.x, 0.0);\n\tkernel[5] = vec2(-step.x, -step.y);\n\tkernel[6] = vec2(0.0, -step.y);\n\tkernel[7] = vec2(step.x, -step.y);\n\n\tvec4 sum = vec4(0.0);\n\tfloat weight = 1.0 / (2.0 + 1.0);\n\tfloat kernelSize = 1.0;\n\n\taddRelevantSample(coords, weight, sum);\n\n\tfor (int i=0; i<8; i++) {\n\t\taddRelevantSample(coords + kernel[i] * kernelSize, weight, sum);\n\t}\n\n\tkernelSize = 2.0;\n\tfor (int i=0; i<8; i++) {\n\t\taddRelevantSample(coords + kernel[i] * kernelSize, weight, sum);\n\t}\n\n\treturn sum;\n}\n\nvoid main(void) {\n\t// Blending: ONE_MINUS_SRC_ALPHA, SRC_ALPHA\n\n\tvec4 solidColor = texture(src, uv);\n\tfloat reveal = texture(oitWeight, uv).a;\n\tvec4 transparentColor;\n\n\t// Blended order transparency\n\tif (render_mode == 0) {\n\t\ttransparentColor = texture(oitAccum, uv);\n\n\t\tvec4 composite = vec4(transparentColor.rgb / max(transparentColor.a, 1e-5), reveal);\n\t\tfragColor = (1.0-composite.a) * composite +  composite.a * solidColor;\n\t}\n\n\t// Stochastic transparency\n\telse if (render_mode == 1) {\n\t\ttransparentColor = avgColor(oitAccum, uv);\n\t\tfragColor = (1.0 - reveal) * transparentColor + reveal * solidColor;\n\t}\n}\n",
         "shaders/webgl2/OITRender.vert": "#version 300 es\n\n/** Order independent transparency - vertex program */\n\nin vec3 position;\nin vec2 uv0;\n\nout vec2 uv;\n\nvoid main() {\n\tuv = uv0;\n\tgl_Position = vec4(position.xy, 0.0, 1.0);\n}\n",
         "shaders/webgl2/ScreenQuad.frag": "// Shader for rendering a screen aligned quad for image space effects\n\nprecision highp float;\n\nvarying vec2 uv;\nuniform sampler2D tex0;\n\nvoid main () {\n\tgl_FragColor = texture2D(tex0, uv);\n}\n",
@@ -14868,11 +14899,11 @@ var BuiltInShaders = {
         "shaders/webgl2/debug.vert": "#version 300 es\n\n// Debug shader\nin vec3 position;\n\nuniform mat4 modelview;\nuniform mat4 projection;\n\nout vec4 fragPosition;\n\nvoid main() {\n\tfragPosition = projection * modelview * vec4(position, 1.0);\n\tgl_Position = fragPosition;\n}\n",
         "shaders/webgl2/deferred_background.frag": "#version 300 es\n\nprecision highp float;\n\nuniform vec4 color;\n\nin vec2 uv;\nout vec4 fragColor;\n\nvoid main () {\n\tfragColor = color;\n}\n",
         "shaders/webgl2/deferred_background.vert": "#version 300 es\n\nin vec3 position;\nin vec2 uv0;\n\nout vec2 uv;\n\nvoid main() {\n\tuv = uv0;\n\tgl_Position = vec4(position.xy, 0.0, 1.0);\n}\n",
-        "shaders/webgl2/deferred_gbuffer.frag": "#version 300 es\n\nprecision highp float;\n\nuniform mat4 view;\nuniform mat4 viewInverse;\n\nuniform vec4 diffuse;\nuniform float specularStrength;\nuniform int specularPower;\nuniform float lightContribution;\nuniform int useNormalmap;\nuniform int useReflection;\nuniform int receiveShadows;\n\nuniform float materialBlend;\n\nuniform sampler2D diffuse0;\nuniform sampler2D normal0;\nuniform samplerCube env0;\nuniform sampler2D mask;\n\nin float depth;\nin vec2 uv0;\nin vec4 worldPosition;\nin vec3 worldNormal;\nin vec4 viewPosition;\nin vec3 viewNormal;\n\nin mat3 tbn;\n\nlayout(location = 0) out vec4 gbuf_color;\nlayout(location = 1) out vec4 gbuf_normal;\nlayout(location = 2) out vec4 gbuf_position;\nlayout(location = 3) out vec4 gbuf_params;\n\nvec3 reflection() {\n\tvec3 eyeDirection = normalize(-viewPosition.xyz);\n\tvec3 worldEyeDirection = normalize(mat3(viewInverse) * eyeDirection);\n\tvec3 lookup = reflect(worldEyeDirection, worldNormal) * vec3(-1.0, 1.0, 1.0);\n\tvec4 color = texture(env0, lookup);\n\treturn color.rgb;\n}\n\nvoid main() {\n\tvec4 textureColor = texture(diffuse0, uv0);\n\tvec4 color = diffuse * textureColor;\n\tif (color.a < 0.99)\n\t\tdiscard;\n\n\tvec3 N = viewNormal;\n\tif (useNormalmap == 1) {\n\t\tvec4 encodedNormal = texture(normal0, uv0);\n\t\tvec3 localCoords = vec3(2.0 * encodedNormal.rg - vec2(1.0), encodedNormal.b);\n\t\tN = normalize(tbn * localCoords);\n\t\tN = normalize(mat3(view) * N);\n\t}\n\n\tif (useReflection == 1) {\n\t\tvec3 refl = reflection();\n\t\tfloat maskValue = texture(mask, uv0).r;\n\t\tcolor.rgb = mix(refl, color.rgb, maskValue * materialBlend);\n\t}\n\n\tgbuf_color = vec4(color.rgb, specularStrength);\n\tgbuf_normal = vec4(N, depth);\n\tgbuf_position = vec4(worldPosition.xyz, float(specularPower)/255.0);\n\tgbuf_params = vec4(lightContribution, receiveShadows, depth, 1.0);\n}\n",
+        "shaders/webgl2/deferred_gbuffer.frag": "#version 300 es\n\nprecision highp float;\n\nuniform mat4 view;\nuniform mat4 viewInverse;\n\nuniform vec4 diffuse;\nuniform float specularStrength;\nuniform int specularPower;\nuniform float lightContribution;\nuniform float reflectivity;\nuniform int useNormalmap;\nuniform int useReflection;\nuniform int receiveShadows;\n\nuniform float materialBlend;\n\nuniform sampler2D diffuse0;\nuniform sampler2D normal0;\nuniform samplerCube env0;\nuniform sampler2D mask;\n\nin float depth;\nin vec2 uv0;\nin vec4 worldPosition;\nin vec3 worldNormal;\nin vec4 viewPosition;\nin vec3 viewNormal;\n\nin mat3 tbn;\n\nlayout(location = 0) out vec4 gbuf_color;\nlayout(location = 1) out vec4 gbuf_normal;\nlayout(location = 2) out vec4 gbuf_position;\nlayout(location = 3) out vec4 gbuf_params;\n\nvec3 reflection() {\n\tvec3 eyeDirection = normalize(-viewPosition.xyz);\n\tvec3 worldEyeDirection = normalize(mat3(viewInverse) * eyeDirection);\n\tvec3 lookup = reflect(worldEyeDirection, worldNormal) * vec3(-1.0, 1.0, 1.0);\n\tvec4 color = texture(env0, lookup);\n\treturn color.rgb;\n}\n\nvoid main() {\n\tvec4 textureColor = texture(diffuse0, uv0);\n\tvec4 color = diffuse * textureColor;\n\tif (color.a < 0.99)\n\t\tdiscard;\n\n\tvec3 N = viewNormal;\n\tif (useNormalmap == 1) {\n\t\tvec4 encodedNormal = texture(normal0, uv0);\n\t\tvec3 localCoords = vec3(2.0 * encodedNormal.rg - vec2(1.0), encodedNormal.b);\n\t\tN = normalize(tbn * localCoords);\n\t\tN = normalize(mat3(view) * N);\n\t}\n\n\tif (useReflection == 1) {\n\t\tvec3 refl = reflection();\n\t\tfloat maskValue = texture(mask, uv0).r;\n\t\tcolor.rgb = mix(refl, color.rgb, maskValue * materialBlend);\n\t}\n\n\tgbuf_color = vec4(color.rgb, specularStrength);\n\tgbuf_normal = vec4(N, depth);\n\tgbuf_position = vec4(worldPosition.xyz, float(specularPower)/255.0);\n\tgbuf_params = vec4(lightContribution, receiveShadows, reflectivity, 1.0);\n}\n",
         "shaders/webgl2/deferred_gbuffer.vert": "#version 300 es\n\nin vec3 position;\nin vec3 normal;\nin vec2 texcoord2d0;\nin vec3 tangent;\nin vec3 bitangent;\n\nuniform mat4 model;\nuniform mat4 view;\nuniform mat4 modelview;\nuniform mat4 projection;\nuniform float zNear;\nuniform float zFar;\n\nout float depth;\nout vec2 uv0;\nout vec4 worldPosition;\nout vec3 worldNormal;\nout vec4 viewPosition;\nout vec3 viewNormal;\n\nout mat3 tbn;\n\nvoid main() {\n\tuv0 = texcoord2d0;\n\tworldPosition = model * vec4(position, 1.0);\n\tworldNormal = normalize(mat3(model) * normal);\n\tviewPosition = view * worldPosition;\n\tviewNormal = mat3(modelview) * normal;\n\tdepth = (-viewPosition.z - zNear) / (zFar - zNear);\n\n\ttbn[0] = normalize(vec3(model * vec4(tangent, 0.0)));\n\ttbn[1] = normalize(vec3(model * vec4(bitangent, 0.0)));\n\ttbn[2] = worldNormal;\n\n\tgl_Position = projection * viewPosition;\n}\n",
         "shaders/webgl2/deferred_light_ambient.frag": "#version 300 es\n\nprecision highp float;\n\nuniform sampler2D gb0;\nuniform sampler2D gb1;\nuniform sampler2D gb2;\nuniform sampler2D gb3;\nuniform sampler2D shadow0;\n\nuniform vec4 lightColor;\n\nin vec2 uv;\nout vec4 fragColor;\n\nvoid main () {\n\tvec4 data0 = texture(gb0, uv);\n\tvec3 color = data0.rgb * lightColor.rgb;\n\tfragColor = vec4(color, 1.0);\n}\n",
         "shaders/webgl2/deferred_light_ambient.vert": "#version 300 es\n\nin vec3 position;\nin vec2 texcoord2d0;\n\nout vec2 uv;\n\nvoid main() {\n\tuv = texcoord2d0;\n\tgl_Position = vec4(position.xy, 0.0, 1.0);\n}\n",
-        "shaders/webgl2/deferred_light_directional.frag": "#version 300 es\n\nprecision highp float;\n\nuniform sampler2D gb0;\nuniform sampler2D gb1;\nuniform sampler2D gb2;\nuniform sampler2D gb3;\nuniform sampler2D shadow0;\n\nuniform vec3 cameraPosition;\nuniform vec3 lightDirection;\nuniform vec4 lightColor;\nuniform float lightIntensity;\n\nuniform mat4 view;\nuniform mat4 lightView;\nuniform mat4 lightProjection;\nuniform float shadowBias;\n\nuniform int useShadows;\nuniform int useSoftShadows;\nuniform int shadowOnly;\n\nin vec2 uv;\nout vec4 fragColor;\n\nfloat linstep(float low, float high, float v) {\n\treturn clamp((v-low)/(high-low), 0.0, 1.0);\n}\n\nfloat VSM(vec2 moments, float compare) {\n\tfloat p = smoothstep(compare - shadowBias, compare, moments.x);\n\tfloat variance = max(moments.y - moments.x*moments.x, -0.001);\n\tfloat d = compare - moments.x;\n\tfloat p_max = linstep(0.2, 1.0, variance / (variance + d*d));\n\treturn clamp(max(p, p_max), 0.0, 1.0);\n}\n\nfloat shadowmap(vec4 worldPosition) {\n\tvec4 shadowPosition = lightProjection * lightView * worldPosition;\n\tvec2 shadowUV = shadowPosition.xy / shadowPosition.w;\n\tshadowUV = shadowUV * 0.5 + 0.5;\n\tvec4 shadowTexel = texture(shadow0, shadowUV);\n\n\treturn VSM(shadowTexel.xy, shadowPosition.z);\n\t// return step(shadowPosition.z - shadowBias, shadowTexel.r);\n}\n\nvoid main () {\n\tvec4 data2 = texture(gb2, uv); // position, specularPower/255\n\tvec4 data3 = texture(gb3, uv); // material parameters: (lightContribution, receiveShadows, unused, unused)\n\tvec4 P = vec4(data2.xyz, 1.0);\n\n\tfloat shadow = 1.0;\n\n\tif (useShadows == 1 && data3.g > 0.0) {\n\t\tif (useSoftShadows == 1)\n\t\t\tshadow = texture(shadow0, uv).r;\n\t\telse\n\t\t\tshadow = shadowmap(P);\n\t}\n\n\tif (shadowOnly == 1) {\n\t\tfragColor = vec4(shadow, shadow, shadow, 1.0);\n\t\treturn;\n\t}\n\n\tvec4 data0 = texture(gb0, uv); // color, specularIntensity\n\n\tvec4 data1 = texture(gb1, uv); // normal, depth\n\n\tvec3 C = data0.xyz;\n\tvec3 N = data1.xyz;\n\tfloat specularIntensity = data0.w;\n\tfloat specularPower = 255.0*data2.w;\n\n\tvec4 viewPosition = view * P;\n\tvec3 L = normalize(mat3(view) * lightDirection);\n\tvec3 V = normalize(-viewPosition.xyz);\n\tvec3 H = normalize(L + V);\n\tfloat diffuseLight = max(dot(N, L), 0.0);\n\tfloat specularLight = pow(clamp(dot(N, H), 0.0, 1.0), float(specularPower));\n\tvec3 diffuseColor = C * lightColor.rgb * diffuseLight * lightIntensity;\n\tvec3 specularColor = lightColor.rgb * specularLight * specularIntensity;\n\n\tvec3 lighting = diffuseColor + specularColor;\n\n\tvec3 final = shadow * mix(C, lighting, data3.r);\n\n\tfragColor = vec4(final, 1.0);\n}\n",
+        "shaders/webgl2/deferred_light_directional.frag": "#version 300 es\n\nprecision highp float;\n\nuniform sampler2D gb0;\nuniform sampler2D gb1;\nuniform sampler2D gb2;\nuniform sampler2D gb3;\nuniform sampler2D shadow0;\n\nuniform vec3 cameraPosition;\nuniform vec3 lightDirection;\nuniform vec4 lightColor;\nuniform float lightIntensity;\n\nuniform mat4 view;\nuniform mat4 lightView;\nuniform mat4 lightProjection;\nuniform float shadowBias;\n\nuniform int useShadows;\nuniform int useSoftShadows;\nuniform int shadowOnly;\n\nin vec2 uv;\nout vec4 fragColor;\n\nfloat linstep(float low, float high, float v) {\n\treturn clamp((v-low)/(high-low), 0.0, 1.0);\n}\n\nfloat VSM(vec2 moments, float compare) {\n\tfloat p = smoothstep(compare - shadowBias, compare, moments.x);\n\tfloat variance = max(moments.y - moments.x*moments.x, -0.001);\n\tfloat d = compare - moments.x;\n\tfloat p_max = linstep(0.2, 1.0, variance / (variance + d*d));\n\treturn clamp(max(p, p_max), 0.0, 1.0);\n}\n\nfloat shadowmap(vec4 worldPosition) {\n\tvec4 shadowPosition = lightProjection * lightView * worldPosition;\n\tvec2 shadowUV = shadowPosition.xy / shadowPosition.w;\n\tshadowUV = shadowUV * 0.5 + 0.5;\n\tvec4 shadowTexel = texture(shadow0, shadowUV);\n\n\treturn VSM(shadowTexel.xy, shadowPosition.z);\n\t// return step(shadowPosition.z - shadowBias, shadowTexel.r);\n}\n\nvoid main () {\n\tvec4 data2 = texture(gb2, uv); // position, specularPower/255\n\tvec4 data3 = texture(gb3, uv); // material parameters: (lightContribution, receiveShadows, reflectivity, unused)\n\tvec4 P = vec4(data2.xyz, 1.0);\n\n\tfloat shadow = 1.0;\n\n\tif (useShadows == 1 && data3.g > 0.0) {\n\t\tif (useSoftShadows == 1)\n\t\t\tshadow = texture(shadow0, uv).r;\n\t\telse\n\t\t\tshadow = shadowmap(P);\n\t}\n\n\tif (shadowOnly == 1) {\n\t\tfragColor = vec4(shadow, shadow, shadow, 1.0);\n\t\treturn;\n\t}\n\n\tvec4 data0 = texture(gb0, uv); // color, specularIntensity\n\n\tvec4 data1 = texture(gb1, uv); // normal, depth\n\n\tvec3 C = data0.xyz;\n\tvec3 N = data1.xyz;\n\tfloat specularIntensity = data0.w;\n\tfloat specularPower = 255.0*data2.w;\n\n\tvec4 viewPosition = view * P;\n\tvec3 L = normalize(mat3(view) * lightDirection);\n\tvec3 V = normalize(-viewPosition.xyz);\n\tvec3 H = normalize(L + V);\n\tfloat diffuseLight = max(dot(N, L), 0.0);\n\tfloat specularLight = pow(clamp(dot(N, H), 0.0, 1.0), float(specularPower));\n\tvec3 diffuseColor = C * lightColor.rgb * diffuseLight * lightIntensity;\n\tvec3 specularColor = lightColor.rgb * specularLight * specularIntensity;\n\n\tvec3 lighting = diffuseColor + specularColor;\n\n\tvec3 final = shadow * mix(C, lighting, data3.r);\n\n\tfragColor = vec4(final, 1.0);\n}\n",
         "shaders/webgl2/deferred_light_directional.vert": "#version 300 es\n\nin vec3 position;\nin vec2 texcoord2d0;\n\nout vec2 uv;\n\nvoid main() {\n\tuv = texcoord2d0;\n\tgl_Position = vec4(position.xy, 0.0, 1.0);\n}\n",
         "shaders/webgl2/deferred_light_omni.frag": "#version 300 es\n\nprecision highp float;\n\nuniform sampler2D gb0;\nuniform sampler2D gb1;\nuniform sampler2D gb2;\nuniform sampler2D gb3;\n\nuniform vec4 lightColor;\nuniform vec3 lightPosition;\nuniform float lightIntensity;\nuniform float lightRadius;\n\nuniform mat4 view;\nuniform vec3 cameraPosition;\n\nin vec4 screenPosition;\nout vec4 fragColor;\n\nvoid main() {\n\tvec2 uv = screenPosition.xy;\n\tuv /= screenPosition.w;\n\tuv = 0.5 * (vec2(uv.x, uv.y) + 1.0);\n\n\tvec4 data0 = texture(gb0, uv); // color.rgb, specularIntensity\n\tvec4 data1 = texture(gb1, uv); // normal.xyz, depth\n\tvec4 data2 = texture(gb2, uv); // position.xyz, specularPower/255\n\t// vec4 data3 = texture(gb3, uv); // unused\n\n\tvec3 C = data0.xyz;\n\tvec3 N = data1.xyz;\n\tvec3 P = data2.xyz;\n\tfloat specularIntensity = data0.w;\n\tfloat specularPower = 255.0*data2.w;\n\n\tvec3 lightVector = lightPosition - P;\n\tfloat attenuation = clamp(1.0 - length(lightVector)/lightRadius, 0.0, 1.0);\n\tlightVector = normalize(lightVector);\n\n\tvec4 viewPosition = view * vec4(P, 1.0);\n\tvec3 L = normalize(mat3(view) * lightVector);\n\tvec3 V = normalize(-viewPosition.xyz);\n\tvec3 H = normalize(L + V);\n\tfloat diffuseLight = max(dot(N, L), 0.0);\n\tfloat specularLight = pow(clamp(dot(N, H), 0.0, 1.0), float(specularPower));\n\tvec3 diffuseColor = C * lightColor.rgb * diffuseLight * lightIntensity;\n\tvec3 specularColor = lightColor.rgb * specularLight * specularIntensity;\n\n\tvec3 final = attenuation * (diffuseColor + specularColor);\n\n\tfragColor = vec4(final, 1.0);\n}\n",
         "shaders/webgl2/deferred_light_omni.vert": "#version 300 es\n\nin vec3 position;\nin vec3 normal;\nin vec2 texcoord2d0;\n\nuniform mat4 model;\nuniform mat4 view;\nuniform mat4 modelview;\nuniform mat4 projection;\n\nout vec4 screenPosition;\n\nvoid main() {\n\tscreenPosition = projection * view * model * vec4(position, 1.0);\n\tgl_Position = screenPosition;\n}\n",
