@@ -3627,10 +3627,20 @@ function FRAK(callback) {
     if (typeof callback == "function") callback();
 }
 
+FRAK.raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame;
+
+FRAK.caf = window.cancelAnimationFrame || window.webkitCancelRequestAnimationFrame || window.mozCancelRequestAnimationFrame || window.oCancelRequestAnimationFrame || window.msCancelRequestAnimationFrame;
+
+FRAK.performance = typeof window !== "undefined" ? window.performance ? window.performance.now : false : false;
+
+FRAK.performanceNOW = function() {
+    return window.performance.now.apply(window.performance);
+};
+
 FRAK.extend = function() {
     for (var i = 1; i < arguments.length; ++i) {
         for (var key in arguments[i]) {
-            if (arguments[i].hasOwnProperty(key)) arguments[0][key] = arguments[i][key];
+            if (key in arguments[i]) arguments[0][key] = arguments[i][key];
         }
     }
     return arguments[0];
@@ -3642,14 +3652,13 @@ FRAK.isFunction = function(f) {
 
 FRAK.isEmptyObject = function(o) {
     for (var prop in o) {
-        if (o.hasOwnProperty(prop)) return false;
+        if (prop in o) return false;
     }
     return true;
 };
 
 FRAK.parseJSON = function(s) {
     if (typeof window !== "undefined" && window.JSON && window.JSON.parse) return window.JSON.parse(s);
-    if (typeof window !== "undefined" && window.jQuery && window.jQuery.parseJSON) return window.jQuery.parseJSON(s);
     if (typeof JSON !== "undefined") {
         return JSON.parse(s);
     }
@@ -3657,18 +3666,15 @@ FRAK.parseJSON = function(s) {
 };
 
 FRAK.timestamp = function() {
-    if (typeof window !== "undefined" && window.performance && window.performance.now) return function() {
-        return window.performance.now.apply(window.performance);
-    };
+    if (FRAK.performance) return FRAK.performanceNOW;
     return Date.now;
 }();
 
 FRAK.requestAnimationFrame = function() {
     if (typeof window !== "undefined") {
-        var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame;
-        if (raf) {
+        if (FRAK.raf) {
             return function() {
-                return raf.apply(window, arguments);
+                return FRAK.raf.apply(window, arguments);
             };
         }
         return function(f) {
@@ -3683,9 +3689,8 @@ FRAK.requestAnimationFrame = function() {
 
 FRAK.cancelAnimationFrame = function() {
     if (typeof window !== "undefined") {
-        var caf = window.cancelAnimationFrame || window.webkitCancelRequestAnimationFrame || window.mozCancelRequestAnimationFrame || window.oCancelRequestAnimationFrame || window.msCancelRequestAnimationFrame;
-        if (caf) return function() {
-            return caf.apply(window, arguments);
+        if (FRAK.caf) return function() {
+            return FRAK.caf.apply(window, arguments);
         };
     } else if (typeof clearTimeout !== "undefined") {
         return clearTimeout;
@@ -14111,6 +14116,10 @@ var Engine = FrakClass.extend({
         this.input = false;
         this.screenshot = false;
         this.onScreenshotCaptured = false;
+        this.debugCTX = false;
+        this.debugWidth = 256;
+        this.debugFPS = [];
+        this.debugCount = 24;
         this.assetsManager = new AssetsManager(this.context, this.options.assetsPath);
         if (!this.options.builtinShaders) {
             this.assetsManager.shadersManager.builtin = {};
@@ -14291,6 +14300,9 @@ var Engine = FrakClass.extend({
         if (this.options.captureScreenshot) {
             this._captureScreenshot();
         }
+        if (true || this.options.showDebug) {
+            this.renderDebugInfo();
+        }
     },
     validateOptions: function(canvas) {
         if (!this.options.context) this.options.context = new RenderingContext(canvas, null, this.options.contextErrorCallback, this.options.webGLVersion);
@@ -14341,6 +14353,54 @@ var Engine = FrakClass.extend({
         console.log("  Visible renderers (opaque/transparent): {0}/{1}".format(organizer.visibleSolidRenderers, organizer.visibleTransparentRenderers));
         console.log("  Visible batches (opaque/transparent): {0}/{1}".format(organizer.visibleSolidBatches, organizer.visibleTransparentBatches));
         console.log("================================================");
+    },
+    renderDebugInfo: function() {
+        var organizer = this.scene.camera.renderStage.generator.organizer;
+        if (!this.debugCTX) {
+            var canvas = document.createElement("canvas");
+            canvas.width = this.debugWidth;
+            canvas.height = this.debugWidth / 2;
+            canvas.style.position = "absolute";
+            canvas.style.top = 0;
+            canvas.style.zIndex = 100;
+            canvas.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+            var parent = this.context.canvas.parentNode;
+            parent.insertBefore(canvas, parent.firstChild);
+            this.debugCTX = canvas.getContext("2d");
+        }
+        if (this.debugCTX && this.debugCount < 1) {
+            var ctx = this.debugCTX;
+            ctx.clearRect(0, 0, this.debugWidth, this.debugWidth / 2);
+            ctx.font = "Normal 20px Arial";
+            ctx.fillStyle = "rgba(240,240,240,0.75)";
+            ctx.fillText("FPS: " + this.fps.getAverage().toFixed(2), 10, 20);
+            ctx.font = "Normal 12px Arial";
+            ctx.fillText("Faces: " + organizer.visibleSolidFaces + " / " + organizer.visibleTransparentFaces, 10, 45);
+            ctx.fillText("Renderers: " + organizer.visibleSolidRenderers + " / " + organizer.visibleTransparentRenderers, 10, 60);
+            ctx.fillText("Batches: " + organizer.visibleSolidBatches + " / " + organizer.visibleTransparentBatches, 10, 75);
+            ctx.fillText("RequestedFPS: " + this.options.requestedFPS, this.debugWidth / 2, 45);
+            ctx.fillText("WebGL: " + this.context.version, this.debugWidth / 2, 60);
+            var gl = this.context.gl;
+            var debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+            if (debugInfo) {
+                var vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                var renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                ctx.fillText(vendor, 10, 90);
+                ctx.fillText(renderer, 10, 105);
+            }
+            this.debugFPS.push(this.fps.getAverage().toFixed(2));
+            if (this.debugFPS.length > 60) {
+                this.debugFPS.shift();
+            }
+            var x = this.debugWidth / 2;
+            var y = 25;
+            for (var i = 0; i < this.debugFPS.length; i++) {
+                if (this.debugFPS[i] < 20) ctx.fillStyle = "#FF0000"; else if (this.debugFPS[i] < 30) ctx.fillStyle = "#f6921e"; else ctx.fillStyle = "#00FF00";
+                ctx.fillRect(x + i * 2, y - this.debugFPS[i] / 60 * 20, 2, 2);
+            }
+            this.debugCount = Math.max(3, Math.floor(this.fps.getAverage() / 2));
+        }
+        this.debugCount--;
     },
     _captureScreenshot: function() {
         var shot = this.context.gl.canvas.toDataURL();

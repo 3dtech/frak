@@ -4,10 +4,26 @@ function FRAK(callback) {
 		callback();
 }
 
+FRAK.raf = window.requestAnimationFrame ||
+window.webkitRequestAnimationFrame ||
+window.mozRequestAnimationFrame ||
+window.msRequestAnimationFrame ||
+window.oRequestAnimationFrame;
+
+FRAK.caf = window.cancelAnimationFrame ||
+window.webkitCancelRequestAnimationFrame ||
+window.mozCancelRequestAnimationFrame ||
+window.oCancelRequestAnimationFrame ||
+window.msCancelRequestAnimationFrame;
+
+FRAK.performance = typeof window !== 'undefined' ? (window.performance ? window.performance.now : false) : false; 
+FRAK.performanceNOW = function() {
+	return window.performance.now.apply(window.performance);
+};
 FRAK.extend = function() {
-	for (var i=1; i<arguments.length; ++i) {
+	for (var i=1; i < arguments.length; ++i) {
 		for (var key in arguments[i]) {
-			if (arguments[i].hasOwnProperty(key))
+			if (key in arguments[i])
 				arguments[0][key] = arguments[i][key];
 		}
 	}
@@ -20,7 +36,7 @@ FRAK.isFunction = function(f) {
 
 FRAK.isEmptyObject = function(o) {
 	for (var prop in o) {
-		if (o.hasOwnProperty(prop))
+		if (prop in o)
 			return false;
 	}
 	return true;
@@ -29,8 +45,6 @@ FRAK.isEmptyObject = function(o) {
 FRAK.parseJSON = function(s) {
 	if (typeof window !== 'undefined' && window.JSON && window.JSON.parse)
 		return window.JSON.parse(s);
-	if (typeof window !== 'undefined' && window.jQuery && window.jQuery.parseJSON)
-		return window.jQuery.parseJSON(s);
 
 	if (typeof JSON !== 'undefined') {
 		return JSON.parse(s);
@@ -39,22 +53,16 @@ FRAK.parseJSON = function(s) {
 };
 
 FRAK.timestamp = function() {
-	if (typeof window !== 'undefined' && window.performance && window.performance.now)
-		return function() {
-			return window.performance.now.apply(window.performance);
-		};
+	if (FRAK.performance)
+		return FRAK.performanceNOW;
+		
 	return Date.now;
 }();
 
 FRAK.requestAnimationFrame = function() {
 	if(typeof window !== 'undefined') {
-		var raf = window.requestAnimationFrame ||
-		window.webkitRequestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.msRequestAnimationFrame ||
-		window.oRequestAnimationFrame;
-		if (raf) {
-			return function() { return raf.apply(window, arguments); };
+		if (FRAK.raf) {
+			return function() { return FRAK.raf.apply(window, arguments); };
 		}
 
 		return function(f) { return window.setTimeout(f, 1000/60); };
@@ -66,13 +74,8 @@ FRAK.requestAnimationFrame = function() {
 
 FRAK.cancelAnimationFrame = function() {
 	if(typeof window !== 'undefined') {
-		var caf = window.cancelAnimationFrame ||
-		window.webkitCancelRequestAnimationFrame ||
-		window.mozCancelRequestAnimationFrame ||
-		window.oCancelRequestAnimationFrame ||
-		window.msCancelRequestAnimationFrame;
-		if (caf)
-			return function() { return caf.apply(window, arguments); };
+		if (FRAK.caf)
+			return function() { return FRAK.caf.apply(window, arguments); };
 	}
 	else if (typeof clearTimeout !== 'undefined') {
 		return clearTimeout;
