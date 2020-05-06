@@ -11301,7 +11301,7 @@ var CollisionOctreeNode = FrakClass.extend({
         }
         return t0;
     },
-    rayIntersectGeometry: function(worldRay) {
+    rayIntersectGeometry: function(worldRay, collideInvisible) {
         if (!this.hasGeometry()) return false;
         var result = {
             submesh: false,
@@ -11319,7 +11319,17 @@ var CollisionOctreeNode = FrakClass.extend({
                 mat4.invert(inv, this.root.nodes[nodeIndex].transform.absolute);
                 localRay.transform(inv);
             }
+            var meshRendererComponent = this.root.nodes[nodeIndex].getComponent(MeshRendererComponent);
             for (var meshIndex in this.faces[nodeIndex]) {
+                var visible;
+                if (meshRendererComponent) {
+                    for (var i in meshRendererComponent.meshRenderers) {
+                        if (meshRendererComponent.meshRenderers[i].submesh == this.root.submeshes[meshIndex]) {
+                            visible = meshRendererComponent.meshRenderers[i].visible;
+                            break;
+                        }
+                    }
+                }
                 var faces = this.faces[nodeIndex][meshIndex];
                 var positions = this.root.submeshes[meshIndex].positions;
                 for (var i = 0; i < faces.length; i += 3) {
@@ -11335,11 +11345,13 @@ var CollisionOctreeNode = FrakClass.extend({
                     var t = localRay.intersectTriangleDistanceOnly(a, b, c);
                     if (t !== false) {
                         if (t < result.t) {
-                            result.t = t;
-                            result.submesh = this.root.submeshes[meshIndex];
-                            result.node = this.root.nodes[nodeIndex];
-                            vec3.cross(result.normal, vec3.subtract(this.root.cache[3], b, a), vec3.subtract(this.root.cache[4], c, a));
-                            vec3.normalize(result.normal, result.normal);
+                            if (visible || collideInvisible) {
+                                result.t = t;
+                                result.submesh = this.root.submeshes[meshIndex];
+                                result.node = this.root.nodes[nodeIndex];
+                                vec3.cross(result.normal, vec3.subtract(this.root.cache[3], b, a), vec3.subtract(this.root.cache[4], c, a));
+                                vec3.normalize(result.normal, result.normal);
+                            }
                         }
                     }
                 }
@@ -11365,7 +11377,7 @@ var CollisionOctreeNode = FrakClass.extend({
             }
         }
     },
-    getNearestRayCollision: function(localRay, worldRay) {
+    getNearestRayCollision: function(localRay, worldRay, collideInvisible) {
         var nodes = [];
         this.getNodesWithGeometry(localRay, nodes);
         var result = {
@@ -11379,7 +11391,7 @@ var CollisionOctreeNode = FrakClass.extend({
             if (result.octreeNode !== false && nodes[i].depth == result.octreeNode.depth && nodes[i].t > result.t) {
                 continue;
             }
-            var collision = nodes[i].octreeNode.rayIntersectGeometry(worldRay);
+            var collision = nodes[i].octreeNode.rayIntersectGeometry(worldRay, collideInvisible);
             if (collision.t < result.t) {
                 result.t = collision.t;
                 result.submesh = collision.submesh;
@@ -12632,6 +12644,8 @@ var SmoothOrbitController = OrbitController.extend({
         this.speed = 5;
         this.currentRotation = vec2.create();
         this.currentDistance = this.distance;
+        this.enableRotatingX = true;
+        this.enableRotatingY = true;
     },
     excluded: function() {
         return this._super().concat([ "currentRotation", "currentDistance", "tmpRotation" ]);
@@ -12643,8 +12657,8 @@ var SmoothOrbitController = OrbitController.extend({
         if (this.target.isNull()) return;
         var dt = engine.fps.getDelta() / 1e3 * this.speed;
         dt = Math.min(dt, 1);
-        this.currentRotation[0] = lerp(this.currentRotation[0], this.rotation[0], dt);
-        this.currentRotation[1] = lerp(this.currentRotation[1], this.rotation[1], dt);
+        if (this.enableRotatingX) this.currentRotation[0] = lerp(this.currentRotation[0], this.rotation[0], dt);
+        if (this.enableRotatingY) this.currentRotation[1] = lerp(this.currentRotation[1], this.rotation[1], dt);
         this.currentDistance = lerp(this.currentDistance, this.distance, dt);
         quat.identity(this.tmpRotation);
         quat.rotateY(this.tmpRotation, this.tmpRotation, this.currentRotation[1]);
@@ -12848,7 +12862,7 @@ var LargeMeshCollider = Collider.extend({
         var localRay = ray.clone();
         mat4.invert(this.invMat, this.node.transform.absolute);
         localRay.transform(this.invMat);
-        var collision = this.tree.getNearestRayCollision(localRay, ray);
+        var collision = this.tree.getNearestRayCollision(localRay, ray, collideInvisible);
         if (collision.t == Infinity || collision.t == -Infinity) return false;
         if (result && collision) {
             var p = localRay.getPointOnRay(collision.t);

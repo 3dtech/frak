@@ -229,7 +229,7 @@ var CollisionOctreeNode=FrakClass.extend({
 		return t0;
 	},
 
-	rayIntersectGeometry: function(worldRay) {
+	rayIntersectGeometry: function(worldRay, collideInvisible) {
 		if (!this.hasGeometry())
 			return false;
 		var result = {'submesh': false, 'node': false, 't': Infinity, 'normal': vec3.create()};
@@ -244,7 +244,17 @@ var CollisionOctreeNode=FrakClass.extend({
 				mat4.invert(inv, this.root.nodes[nodeIndex].transform.absolute);
 				localRay.transform(inv);
 			}
+			var meshRendererComponent = this.root.nodes[nodeIndex].getComponent(MeshRendererComponent);
 			for (var meshIndex in this.faces[nodeIndex]) {
+				var visible;
+				if (meshRendererComponent) {
+					for (var i in meshRendererComponent.meshRenderers) {
+						if (meshRendererComponent.meshRenderers[i].submesh == this.root.submeshes[meshIndex]) {
+							visible = meshRendererComponent.meshRenderers[i].visible;
+							break;
+						}
+					}
+				}
 				var faces = this.faces[nodeIndex][meshIndex];
 				var positions = this.root.submeshes[meshIndex].positions;
 				for (var i=0; i<faces.length; i+=3) {
@@ -259,12 +269,14 @@ var CollisionOctreeNode=FrakClass.extend({
 					c[2]=positions[faces[i+2]*3+2];
 					var t=localRay.intersectTriangleDistanceOnly(a, b, c);
 					if (t!==false) {
-						if (t<result.t) {
-							result.t=t;
-							result.submesh=this.root.submeshes[meshIndex];
-							result.node=this.root.nodes[nodeIndex];
-							vec3.cross(result.normal, vec3.subtract(this.root.cache[3], b, a), vec3.subtract(this.root.cache[4], c, a));
-							vec3.normalize(result.normal, result.normal);
+						if (t < result.t) {
+							if (visible || collideInvisible) {
+								result.t = t;
+								result.submesh = this.root.submeshes[meshIndex];
+								result.node = this.root.nodes[nodeIndex];
+								vec3.cross(result.normal, vec3.subtract(this.root.cache[3], b, a), vec3.subtract(this.root.cache[4], c, a));
+								vec3.normalize(result.normal, result.normal);
+							}
 						}
 					}
 				}
@@ -299,7 +311,7 @@ var CollisionOctreeNode=FrakClass.extend({
 	/** Returns the ray intersection result nearest to the ray's origin.
 		@param ray Instance of {Ray}
 		*/
-	getNearestRayCollision: function(localRay, worldRay) {
+	getNearestRayCollision: function(localRay, worldRay, collideInvisible) {
 		var nodes=[];
 		this.getNodesWithGeometry(localRay, nodes);
 		var result={'t': Infinity, 'octreeNode': false, 'submesh': false, 'node': false, 'normal': false};
@@ -308,7 +320,7 @@ var CollisionOctreeNode=FrakClass.extend({
 			if (result.octreeNode!==false && nodes[i].depth==result.octreeNode.depth && nodes[i].t>result.t) {
 				continue;
 			}
-			var collision=nodes[i].octreeNode.rayIntersectGeometry(worldRay);
+			var collision=nodes[i].octreeNode.rayIntersectGeometry(worldRay, collideInvisible);
 			if (collision.t<result.t) {
 				result.t=collision.t;
 				result.submesh=collision.submesh;
