@@ -161,16 +161,8 @@
 
 			function setupScene(scene) {
 				scene.root.addComponent(new ClickController());
+				var cube = (scene.cameraNode.getComponent(SkyboxComponent)).cubeTexture;
 
-				var sources = [
-					"data/skybox/yokohama/negz.jpg",
-					"data/skybox/yokohama/posz.jpg",
-					"data/skybox/yokohama/posx.jpg",
-					"data/skybox/yokohama/negx.jpg",
-					"data/skybox/yokohama/negy.jpg",
-					"data/skybox/yokohama/posy.jpg",
-				];
-				var cube = engine.assetsManager.texturesManager.addCube(sources);
 				var texture = scene.engine.assetsManager.addTexture("data/pattern_2.jpg");
 				var mask = scene.engine.assetsManager.addTexture("data/check-128.png");
 				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");

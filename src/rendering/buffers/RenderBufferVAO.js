@@ -8,14 +8,14 @@ var RenderBufferVAO = RenderBuffer.extend({
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */
 	init: function(context, faces, type) {
 		if (context.isWebGL2()) {
-			this.createVAO = context.gl.createVertexArray;
-			this.bindVAO = context.gl.bindVertexArray;
+			this.createVAO = context.gl.createVertexArray.bind(context.gl);
+			this.bindVAO = context.gl.bindVertexArray.bind(context.gl);
 		} else {
 			var extVAO = context.gl.getExtension('OES_vertex_array_object');
 			if (!extVAO)
 				throw 'RenderBufferVAO: Vertex array objects not supported on this device.';
-			this.createVAO = extVAO.createVertexArrayOES;
-			this.bindVAO = extVAO.bindVertexArrayOES;
+			this.createVAO = extVAO.createVertexArrayOES.bind(extVAO);
+			this.bindVAO = extVAO.bindVertexArrayOES.bind(extVAO);
 		}
 
 		this.vao = this.createVAO();
