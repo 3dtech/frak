@@ -16,6 +16,10 @@ var ModelDescriptor=Descriptor.extend({
 				return 'binary';
 			if (this.source.endsWith('.json'))
 				return 'json';
+			if (this.source.endsWith('.gltf'))
+				return 'gltf';
+			if (this.source.endsWith('.glb'))
+				return 'glb';
 			return 'binary';
 		}
 		return this.format;

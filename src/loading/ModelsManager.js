@@ -40,12 +40,21 @@ var ModelsManager=Manager.extend({
 
 		if (modelDescriptor.getFormat() == 'json') {
 			Logistics.getJSON(descriptor.getFullPath(), function (data) {
-				var modelLoader = new JSONModelLoader(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
+				var modelLoader = new ModelLoaderJSON(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
 				modelLoader.load(resource, data);
 				loadedCallback(descriptor, resource);
 
 				scope.shadersManager.load(function() {});
 				scope.texturesManager.load(function() {});
+			});
+		}
+		else if (modelDescriptor.getFormat() == 'gltf') {
+			Logistics.getJSON(descriptor.getFullPath(), function(data) {
+				var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager);
+				modelLoader.load(resource, data);
+				loadedCallback(descriptor, resource);
+
+				scope.shadersManager.load(function() {});
 			});
 		}
 		else {
