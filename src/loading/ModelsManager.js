@@ -37,8 +37,16 @@ var ModelsManager=Manager.extend({
 	loadResource: function(modelDescriptor, resource, loadedCallback, failedCallback) {
 		var descriptor = this.descriptorCallback(modelDescriptor);
 		var scope = this;
+		var format = modelDescriptor.getFormat();
+		function loadGLTF(data) {
+			var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager, format);
+			modelLoader.load(resource, data);
+			loadedCallback(descriptor, resource);
 
-		if (modelDescriptor.getFormat() == 'json') {
+			scope.shadersManager.load(function() {});
+		}
+
+		if (format == 'json') {
 			Logistics.getJSON(descriptor.getFullPath(), function (data) {
 				var modelLoader = new ModelLoaderJSON(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
 				modelLoader.load(resource, data);
@@ -48,14 +56,11 @@ var ModelsManager=Manager.extend({
 				scope.texturesManager.load(function() {});
 			});
 		}
-		else if (modelDescriptor.getFormat() == 'gltf') {
-			Logistics.getJSON(descriptor.getFullPath(), function(data) {
-				var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager);
-				modelLoader.load(resource, data);
-				loadedCallback(descriptor, resource);
-
-				scope.shadersManager.load(function() {});
-			});
+		else if (format == 'gltf') {
+			Logistics.getJSON(descriptor.getFullPath(), loadGLTF);
+		}
+		else if (format == 'glb') {
+			Logistics.getBinary(descriptor.getFullPath(), loadGLTF);
 		}
 		else {
 			Logistics.getBinary(descriptor.getFullPath(),

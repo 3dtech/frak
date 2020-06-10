@@ -1,6 +1,6 @@
 /** Loads models to scene hierarchy from JSON data */
 var ModelLoaderGLTF = FrakClass.extend({
-	init: function(context, descriptor, shadersManager) {
+	init: function(context, descriptor, shadersManager, format) {
 		this.descriptor = descriptor;
 		this.shadersManager = shadersManager;
 		this.nodesByID = {};
@@ -11,6 +11,9 @@ var ModelLoaderGLTF = FrakClass.extend({
 			'texturesDiffuse': 'diffuse',
 			'texturesNormals': 'normal'
 		}
+
+		this.binary = format === 'glb';
+		this.binaryBuffer = false;
 
 		this.buffers = [];
 		this.bufferViews = [];
@@ -30,7 +33,23 @@ var ModelLoaderGLTF = FrakClass.extend({
 	},
 
 	/** Loads parsed data to scene hierarchy at given node */
-	load: function(node, parsedData) {
+	load: function(node, data) {
+		var parsedData;
+
+		if (!this.binary) {
+			parsedData = data;
+		}
+		else {
+			var header = new Uint32Array(data, 0, 3);
+			if (header[0] == 0x46546C67 && header[1] == 2 && header[2] == data.byteLength) {
+				var view = new DataView(data);
+				parsedData = this.parseJSON(view);
+				this.binaryBuffer = this.parseBinaryBuffer(view);
+			} else {
+				throw 'Invalid data';
+			}
+		}
+
 		if (
 			FRAK.isEmptyObject(parsedData) ||
 			FRAK.isEmptyObject(parsedData.asset) ||
@@ -47,6 +66,40 @@ var ModelLoaderGLTF = FrakClass.extend({
 		});
 	},
 
+	parseJSON: function(view) {
+		var length = view.getUint32(12, true);
+		if (view.getUint32(16, true) !== 0x4E4F534A) {
+			throw 'Invalid JSON data';
+		}
+
+		var data = new Uint8Array(view.buffer, 20, length);
+		var str = '';
+		for (var i = 0; i < length; i++) {
+			str += String.fromCodePoint(data[i]);
+		}
+
+		return JSON.parse(str);
+	},
+
+	parseBinaryBuffer: function(view) {
+		var jsonLength = view.getUint32(12, true);
+		if (20 + jsonLength === view.byteLength) {
+			return;
+		}
+		else {
+			var length = view.getUint32(20 + jsonLength, true);
+			if (28 + jsonLength + length != view.byteLength) {
+				return;
+			}
+
+			if (view.getUint32(24 + jsonLength, true) !== 0x004E4942) {
+				throw 'Invalid binary data';
+			}
+
+			return view.buffer.slice(28 + jsonLength, 28 + jsonLength + length);
+		}
+	},
+
 	loadBuffers: function(buffers, cb) {
 		var count = 0;
 		for (var i = 0, l = buffers.length; i < l; i++) {
@@ -58,6 +111,12 @@ var ModelLoaderGLTF = FrakClass.extend({
 			};
 
 			this.buffers.push(buffer);
+			if (!buffers[i].uri) {
+				buffer.data = this.binaryBuffer;
+				count--;
+
+				continue;
+			}
 
 			Logistics.getBinary(buffers[i].uri, function(binaryData) {
 				count--;
@@ -72,6 +131,10 @@ var ModelLoaderGLTF = FrakClass.extend({
 					cb();
 				}
 			});
+		}
+
+		if (count === 0) {
+			cb();
 		}
 	},
 

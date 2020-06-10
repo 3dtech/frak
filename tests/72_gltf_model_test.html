@@ -106,7 +106,7 @@
 			var lines = grid.addComponent(new LineRendererComponent(new Color(0.5, 0.5, 0.5, 1.0)));
 			lines.addGrid([0, 0, 0], [100, 100], [1.0, 1.0]);
 
-			var boxRGB = scene.engine.assetsManager.addModel('data/gltf/OrientationTest.gltf');
+			var boxRGB = scene.engine.assetsManager.addModel('data/gltf/OrientationTest.glb');
 			scene.root.addNode(boxRGB);
 		}
 
@@ -119,7 +119,7 @@
 				'antialias': true
 			});
 
-			engine.assetsManager.modelsManager.path = './'; // Load test models locally
+			engine.assetsManager.modelsManager.path = './';
 			engine.assetsManager.texturesManager.path = './'; // Load test textures locally
 
 			setupCamera(engine.scene);

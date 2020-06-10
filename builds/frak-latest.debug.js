@@ -9563,7 +9563,7 @@ var ModelLoaderJSON = FrakClass.extend({
 });
 
 var ModelLoaderGLTF = FrakClass.extend({
-    init: function(context, descriptor, shadersManager) {
+    init: function(context, descriptor, shadersManager, format) {
         this.descriptor = descriptor;
         this.shadersManager = shadersManager;
         this.nodesByID = {};
@@ -9573,6 +9573,8 @@ var ModelLoaderGLTF = FrakClass.extend({
             texturesDiffuse: "diffuse",
             texturesNormals: "normal"
         };
+        this.binary = format === "glb";
+        this.binaryBuffer = false;
         this.buffers = [];
         this.bufferViews = [];
         this.accessors = [];
@@ -9584,7 +9586,20 @@ var ModelLoaderGLTF = FrakClass.extend({
         this.defaultTexture = context.engine.WhiteTexture;
         this.defaultSampler = new Sampler("diffuse0", this.defaultTexture);
     },
-    load: function(node, parsedData) {
+    load: function(node, data) {
+        var parsedData;
+        if (!this.binary) {
+            parsedData = data;
+        } else {
+            var header = new Uint32Array(data, 0, 3);
+            if (header[0] == 1179937895 && header[1] == 2 && header[2] == data.byteLength) {
+                var view = new DataView(data);
+                parsedData = this.parseJSON(view);
+                this.binaryBuffer = this.parseBinaryBuffer(view);
+            } else {
+                throw "Invalid data";
+            }
+        }
         if (FRAK.isEmptyObject(parsedData) || FRAK.isEmptyObject(parsedData.asset) || parsedData.asset.version[0] !== "2") return;
         var scope = this;
         this.loadBuffers(parsedData.buffers, function() {
@@ -9593,6 +9608,33 @@ var ModelLoaderGLTF = FrakClass.extend({
             scope.loadMeshes(parsedData.meshes);
             scope.loadScene(node, parsedData);
         });
+    },
+    parseJSON: function(view) {
+        var length = view.getUint32(12, true);
+        if (view.getUint32(16, true) !== 1313821514) {
+            throw "Invalid JSON data";
+        }
+        var data = new Uint8Array(view.buffer, 20, length);
+        var str = "";
+        for (var i = 0; i < length; i++) {
+            str += String.fromCodePoint(data[i]);
+        }
+        return JSON.parse(str);
+    },
+    parseBinaryBuffer: function(view) {
+        var jsonLength = view.getUint32(12, true);
+        if (20 + jsonLength === view.byteLength) {
+            return;
+        } else {
+            var length = view.getUint32(20 + jsonLength, true);
+            if (28 + jsonLength + length != view.byteLength) {
+                return;
+            }
+            if (view.getUint32(24 + jsonLength, true) !== 5130562) {
+                throw "Invalid binary data";
+            }
+            return view.buffer.slice(28 + jsonLength, 28 + jsonLength + length);
+        }
     },
     loadBuffers: function(buffers, cb) {
         var count = 0;
@@ -9603,6 +9645,11 @@ var ModelLoaderGLTF = FrakClass.extend({
                 length: byteLength
             };
             this.buffers.push(buffer);
+            if (!buffers[i].uri) {
+                buffer.data = this.binaryBuffer;
+                count--;
+                continue;
+            }
             Logistics.getBinary(buffers[i].uri, function(binaryData) {
                 count--;
                 if (!binaryData || binaryData.byteLength !== byteLength) {
@@ -9613,6 +9660,9 @@ var ModelLoaderGLTF = FrakClass.extend({
                     cb();
                 }
             });
+        }
+        if (count === 0) {
+            cb();
         }
     },
     loadBufferViews: function(bufferViews) {
@@ -10146,7 +10196,14 @@ var ModelsManager = Manager.extend({
     loadResource: function(modelDescriptor, resource, loadedCallback, failedCallback) {
         var descriptor = this.descriptorCallback(modelDescriptor);
         var scope = this;
-        if (modelDescriptor.getFormat() == "json") {
+        var format = modelDescriptor.getFormat();
+        function loadGLTF(data) {
+            var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager, format);
+            modelLoader.load(resource, data);
+            loadedCallback(descriptor, resource);
+            scope.shadersManager.load(function() {});
+        }
+        if (format == "json") {
             Logistics.getJSON(descriptor.getFullPath(), function(data) {
                 var modelLoader = new ModelLoaderJSON(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
                 modelLoader.load(resource, data);
@@ -10154,13 +10211,10 @@ var ModelsManager = Manager.extend({
                 scope.shadersManager.load(function() {});
                 scope.texturesManager.load(function() {});
             });
-        } else if (modelDescriptor.getFormat() == "gltf") {
-            Logistics.getJSON(descriptor.getFullPath(), function(data) {
-                var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager);
-                modelLoader.load(resource, data);
-                loadedCallback(descriptor, resource);
-                scope.shadersManager.load(function() {});
-            });
+        } else if (format == "gltf") {
+            Logistics.getJSON(descriptor.getFullPath(), loadGLTF);
+        } else if (format == "glb") {
+            Logistics.getBinary(descriptor.getFullPath(), loadGLTF);
         } else {
             Logistics.getBinary(descriptor.getFullPath(), function(binaryData) {
                 if (!binaryData || binaryData.byteLength == 0) {
