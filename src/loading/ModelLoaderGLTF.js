@@ -18,6 +18,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 		this.buffers = [];
 		this.bufferViews = [];
 		this.accessors = [];
+		this.materials = [];
 		this.meshes = [];
 	},
 
@@ -61,6 +62,8 @@ var ModelLoaderGLTF = FrakClass.extend({
 		this.loadBuffers(parsedData.buffers, function() {
 			scope.loadBufferViews(parsedData.bufferViews);
 			scope.loadAccessors(parsedData.accessors);
+			// scope.loadTextures(parsedData.textures);
+			scope.loadMaterials(parsedData.materials);
 			scope.loadMeshes(parsedData.meshes);
 			scope.loadScene(node, parsedData);
 		});
@@ -188,19 +191,58 @@ var ModelLoaderGLTF = FrakClass.extend({
 		}
 	},
 
+	defaultMaterial: function() {
+		this.createDefaultTextureSampler(this.shadersManager.context);
+
+		return new Material(
+			this.shadersManager.addSource('diffuse'),
+			{
+				diffuse: new UniformColor(new Color()),
+			},
+			[
+				this.defaultSampler,
+			]
+		);
+	},
+
+	loadMaterials: function(materials) {
+		for (var i = 0, l = materials.length; i < l; i++) {
+			var material = this.defaultMaterial();
+			if (materials[i].name) {
+				material.name = materials[i].name;
+			}
+
+			if (materials[i].alphaMode === 'BLEND') {
+				material.shader = this.shadersManager.addSource('transparent');
+			}
+
+			var diffuse = new Color();
+			if (materials[i].pbrMetallicRoughness) {
+				var bcf = materials[i].pbrMetallicRoughness.baseColorFactor;
+				if (bcf) {
+					diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
+				}
+			}
+
+			material.uniforms = {
+				diffuse: new UniformColor(diffuse),
+			};
+
+			this.materials.push(material);
+		}
+	},
+
 	loadMeshes: function(meshes) {
 		for (var i = 0, l = meshes.length; i < l; i++) {
 			var mesh = new Mesh();
 
 			for (var j = 0, m = meshes[i].primitives.length; j < m; j++) {
-				var material = new Material();
-				material.uniforms = {
-					diffuse: new UniformColor(new Color(1.0, 1.0, 1.0, 1.0))
-				};
-				material.shader = this.shadersManager.addSource('diffuse');
-				material.samplers=[];
-				this.createDefaultTextureSampler(this.shadersManager.context);
-				material.samplers.push(this.defaultSampler);
+				var material;
+				if (!isNaN(parseInt(meshes[i].primitives[j].material))) {
+					material = this.materials[meshes[i].primitives[j].material];
+				} else {
+					material = this.defaultMaterial();
+				}
 
 				var submesh = this.loadSubmesh(meshes[i].primitives[j]);
 				if (submesh)
