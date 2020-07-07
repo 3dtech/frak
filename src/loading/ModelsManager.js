@@ -39,11 +39,13 @@ var ModelsManager=Manager.extend({
 		var scope = this;
 		var format = modelDescriptor.getFormat();
 		function loadGLTF(data) {
-			var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager, format);
-			modelLoader.load(resource, data);
-			loadedCallback(descriptor, resource);
+			var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager, scope.texturesManager, format);
+			modelLoader.load(resource, data, function() {
+				loadedCallback(descriptor, resource);
 
-			scope.shadersManager.load(function() {});
+				scope.shadersManager.load(function() { });
+				scope.texturesManager.load(function() { });
+			});
 		}
 
 		if (format == 'json') {

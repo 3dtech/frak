@@ -12,6 +12,7 @@ var Texture = BaseTexture.extend({
 		this.glTexture = null; ///< GL texture ID
 		this.name = false;		///< Texture name assigned by manager
 		this.mipmapped = true;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
+		this.flipY = true;
 		this.clampToEdge = false;
 		this.anisotropic = true;
 		this.anisotropyFilter = 4; // 4x filtering by default
@@ -109,7 +110,7 @@ var Texture = BaseTexture.extend({
 
 		var gl = context.gl;
 		gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.flipY);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
 		// Apply clamp to edge settings

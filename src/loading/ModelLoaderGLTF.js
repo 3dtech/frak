@@ -1,8 +1,9 @@
 /** Loads models to scene hierarchy from JSON data */
 var ModelLoaderGLTF = FrakClass.extend({
-	init: function(context, descriptor, shadersManager, format) {
+	init: function(context, descriptor, shadersManager, texturesManager, format) {
 		this.descriptor = descriptor;
 		this.shadersManager = shadersManager;
+		this.texturesManager = texturesManager;
 		this.nodesByID = {};
 		this.submeshesByID = {};
 		this.submeshes = [];
@@ -18,6 +19,8 @@ var ModelLoaderGLTF = FrakClass.extend({
 		this.buffers = [];
 		this.bufferViews = [];
 		this.accessors = [];
+		this.images = [];
+		this.textures = [];
 		this.materials = [];
 		this.meshes = [];
 	},
@@ -34,7 +37,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 	},
 
 	/** Loads parsed data to scene hierarchy at given node */
-	load: function(node, data) {
+	load: function(node, data, cb) {
 		var parsedData;
 
 		if (!this.binary) {
@@ -62,10 +65,12 @@ var ModelLoaderGLTF = FrakClass.extend({
 		this.loadBuffers(parsedData.buffers, function() {
 			scope.loadBufferViews(parsedData.bufferViews);
 			scope.loadAccessors(parsedData.accessors);
-			// scope.loadTextures(parsedData.textures);
+			scope.loadImages(parsedData.images);
+			scope.loadTextures(parsedData.textures);
 			scope.loadMaterials(parsedData.materials);
 			scope.loadMeshes(parsedData.meshes);
 			scope.loadScene(node, parsedData);
+			cb();
 		});
 	},
 
@@ -205,6 +210,35 @@ var ModelLoaderGLTF = FrakClass.extend({
 		);
 	},
 
+	loadImages: function(images) {
+		for (var i = 0, l = images.length; i < l; i++) {
+			var uri;
+			if (images[i].uri) {
+				uri = images[i].uri;
+			} else if (!isNaN(parseInt(images[i].bufferView)) && images[i].mimeType) {
+				var blob = new Blob([this.bufferViews[images[i].bufferView]], { type: images[i].mimeType });
+				uri = URL.createObjectURL(blob);
+			}
+
+			if (uri) {
+				this.images.push(this.texturesManager.addDescriptor(new TextureDescriptor(uri)));
+			}
+		}
+	},
+
+	loadTextures: function(textures) {
+		for (var i = 0, l = textures.length; i < l; i++) {
+			if (isNaN(parseInt(textures[i].source))) {
+				continue;
+			}
+
+			var image = this.images[textures[i].source];
+			image.flipY = false;	// Make sure this happens before texturesManager.load is called
+
+			this.textures.push(new Sampler('diffuse0', image));
+		}
+	},
+
 	loadMaterials: function(materials) {
 		for (var i = 0, l = materials.length; i < l; i++) {
 			var material = this.defaultMaterial();
@@ -214,6 +248,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 			if (materials[i].alphaMode === 'BLEND') {
 				material.shader = this.shadersManager.addSource('transparent');
+				material.shader.requirements.transparent = true;
 			}
 
 			var diffuse = new Color();
@@ -221,6 +256,13 @@ var ModelLoaderGLTF = FrakClass.extend({
 				var bcf = materials[i].pbrMetallicRoughness.baseColorFactor;
 				if (bcf) {
 					diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
+				}
+
+				var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
+				if (texture) {
+					material.samplers = [
+						this.textures[texture.index]
+					];
 				}
 			}
 
@@ -266,6 +308,9 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 		if (!isNaN(parseInt(primitive.attributes.NORMAL)))
 			submesh.normals = this.accessors[primitive.attributes.NORMAL];
+		
+		if (!isNaN(parseInt(primitive.attributes.TEXCOORD_0)))
+			submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
 		
 		submesh.recalculateBounds();
 

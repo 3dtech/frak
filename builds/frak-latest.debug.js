@@ -7729,6 +7729,7 @@ var Texture = BaseTexture.extend({
         this.glTexture = null;
         this.name = false;
         this.mipmapped = true;
+        this.flipY = true;
         this.clampToEdge = false;
         this.anisotropic = true;
         this.anisotropyFilter = 4;
@@ -7791,7 +7792,7 @@ var Texture = BaseTexture.extend({
         vec2.set(this.size, image.width, image.height);
         var gl = context.gl;
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.flipY);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
         if (this.clampToEdge) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -9563,9 +9564,10 @@ var ModelLoaderJSON = FrakClass.extend({
 });
 
 var ModelLoaderGLTF = FrakClass.extend({
-    init: function(context, descriptor, shadersManager, format) {
+    init: function(context, descriptor, shadersManager, texturesManager, format) {
         this.descriptor = descriptor;
         this.shadersManager = shadersManager;
+        this.texturesManager = texturesManager;
         this.nodesByID = {};
         this.submeshesByID = {};
         this.submeshes = [];
@@ -9578,6 +9580,8 @@ var ModelLoaderGLTF = FrakClass.extend({
         this.buffers = [];
         this.bufferViews = [];
         this.accessors = [];
+        this.images = [];
+        this.textures = [];
         this.materials = [];
         this.meshes = [];
     },
@@ -9587,7 +9591,7 @@ var ModelLoaderGLTF = FrakClass.extend({
         this.defaultTexture = context.engine.WhiteTexture;
         this.defaultSampler = new Sampler("diffuse0", this.defaultTexture);
     },
-    load: function(node, data) {
+    load: function(node, data, cb) {
         var parsedData;
         if (!this.binary) {
             parsedData = data;
@@ -9606,9 +9610,12 @@ var ModelLoaderGLTF = FrakClass.extend({
         this.loadBuffers(parsedData.buffers, function() {
             scope.loadBufferViews(parsedData.bufferViews);
             scope.loadAccessors(parsedData.accessors);
+            scope.loadImages(parsedData.images);
+            scope.loadTextures(parsedData.textures);
             scope.loadMaterials(parsedData.materials);
             scope.loadMeshes(parsedData.meshes);
             scope.loadScene(node, parsedData);
+            cb();
         });
     },
     parseJSON: function(view) {
@@ -9718,6 +9725,32 @@ var ModelLoaderGLTF = FrakClass.extend({
             diffuse: new UniformColor(new Color())
         }, [ this.defaultSampler ]);
     },
+    loadImages: function(images) {
+        for (var i = 0, l = images.length; i < l; i++) {
+            var uri;
+            if (images[i].uri) {
+                uri = images[i].uri;
+            } else if (!isNaN(parseInt(images[i].bufferView)) && images[i].mimeType) {
+                var blob = new Blob([ this.bufferViews[images[i].bufferView] ], {
+                    type: images[i].mimeType
+                });
+                uri = URL.createObjectURL(blob);
+            }
+            if (uri) {
+                this.images.push(this.texturesManager.addDescriptor(new TextureDescriptor(uri)));
+            }
+        }
+    },
+    loadTextures: function(textures) {
+        for (var i = 0, l = textures.length; i < l; i++) {
+            if (isNaN(parseInt(textures[i].source))) {
+                continue;
+            }
+            var image = this.images[textures[i].source];
+            image.flipY = false;
+            this.textures.push(new Sampler("diffuse0", image));
+        }
+    },
     loadMaterials: function(materials) {
         for (var i = 0, l = materials.length; i < l; i++) {
             var material = this.defaultMaterial();
@@ -9726,12 +9759,17 @@ var ModelLoaderGLTF = FrakClass.extend({
             }
             if (materials[i].alphaMode === "BLEND") {
                 material.shader = this.shadersManager.addSource("transparent");
+                material.shader.requirements.transparent = true;
             }
             var diffuse = new Color();
             if (materials[i].pbrMetallicRoughness) {
                 var bcf = materials[i].pbrMetallicRoughness.baseColorFactor;
                 if (bcf) {
                     diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
+                }
+                var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
+                if (texture) {
+                    material.samplers = [ this.textures[texture.index] ];
                 }
             }
             material.uniforms = {
@@ -9762,6 +9800,7 @@ var ModelLoaderGLTF = FrakClass.extend({
         submesh.faces = this.accessors[primitive.indices];
         submesh.positions = this.accessors[primitive.attributes.POSITION];
         if (!isNaN(parseInt(primitive.attributes.NORMAL))) submesh.normals = this.accessors[primitive.attributes.NORMAL];
+        if (!isNaN(parseInt(primitive.attributes.TEXCOORD_0))) submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
         submesh.recalculateBounds();
         return submesh;
     },
@@ -10226,10 +10265,12 @@ var ModelsManager = Manager.extend({
         var scope = this;
         var format = modelDescriptor.getFormat();
         function loadGLTF(data) {
-            var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager, format);
-            modelLoader.load(resource, data);
-            loadedCallback(descriptor, resource);
-            scope.shadersManager.load(function() {});
+            var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager, scope.texturesManager, format);
+            modelLoader.load(resource, data, function() {
+                loadedCallback(descriptor, resource);
+                scope.shadersManager.load(function() {});
+                scope.texturesManager.load(function() {});
+            });
         }
         if (format == "json") {
             Logistics.getJSON(descriptor.getFullPath(), function(data) {
