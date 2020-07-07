@@ -9814,7 +9814,7 @@ var ModelLoaderGLTF = FrakClass.extend({
         } else {
             var scene = parsedData.scenes[parsedData.scene];
             for (var i = 0, l = scene.nodes && scene.nodes.length || 0; i < l; i++) {
-                node.addNode(this.loadNode(parsedData.nodes, i));
+                node.addNode(this.loadNode(parsedData.nodes, scene.nodes[i]));
             }
         }
     },
