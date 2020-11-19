@@ -3,26 +3,37 @@
  * The lines are all rendered with the same color per LineRendererComponent.
  */
 var LineRendererComponent = RendererComponent.extend({
-	init: function(color) {
+	init: function(color, width) {
 		this._super();
 
 		this.lightContribution = 0.0; // By default we do not want lighting to affect lines
 		this.receiveShadows = false; // By default we do not want lines to receive shadows
 		this.castShadows = false; // By default we do not want lines to cast shadows
 
-		if (color instanceof Color)
+		if (color instanceof Color) {
 			this.color = new UniformColor(color);
-		else
+			this.defaultColor = color;
+		} else {
 			this.color = new UniformColor(new Color(0.5, 0.5, 0.5, 1.0));
+			this.defaultColor = new Color();
+		}
+
+		this.defaultWidth = width || 2;
 
 		this.renderer = null;
 		this.damaged = true;
 
-		this.material = new Material(null, { 'diffuse': this.color }, []);
+		this.material = new Material(null, {
+			viewport: new UniformVec2(),
+		}, []);
 		this.overlay = false; ///< If set to true the lines are rendered in onPostRender instead of the usual pipeline
 
 		this.faces = [];
 		this.vertices = [];
+		this.pointsA = [];
+		this.pointsB = [];
+		this.widths = [];
+		this.colors = [];
 	},
 
 	type: function() {
@@ -34,10 +45,9 @@ var LineRendererComponent = RendererComponent.extend({
 	},
 
 	onStart: function(context, engine) {
-		this.material.shader = engine.assetsManager.addShaderSource('transparent');
-		this.material.samplers = [
-			new Sampler('diffuse0', engine.WhiteTexture)
-		];
+		this.material.shader = engine.assetsManager.addShaderSource('lines');
+		this.material.samplers = [];
+		vec2.copy(this.material.uniforms.viewport.value, engine.scene.camera.target.size);
 
 		if (!this.renderer)
 			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
@@ -78,6 +88,10 @@ var LineRendererComponent = RendererComponent.extend({
 			this.renderer.visible = false;
 	},
 
+	onPreRender: function(context, camera) {
+		vec2.copy(this.material.uniforms.viewport.value, camera.target.size);
+	},
+
 	onPostRender: function(context, camera) {
 		if (!this.overlay || !this.renderer || !this.enabled)
 			return;
@@ -108,12 +122,20 @@ var LineRendererComponent = RendererComponent.extend({
 
 		this.renderer.buffer.updateFaces(this.faces);
 
-		if (this.renderer.buffer.has('position')) {
-			this.renderer.buffer.update('position', this.vertices);
-		}
-		else {
-			this.renderer.buffer.add('position', this.vertices, 3);
-		}
+		var _this = this;
+		var addOrUpdateBuffer = function(name, items, itemSize) {
+			if (_this.renderer.buffer.has(name)) {
+				_this.renderer.buffer.update(name, items);
+			} else {
+				_this.renderer.buffer.add(name, items, itemSize);
+			}
+		};
+
+		addOrUpdateBuffer('position', this.vertices, 3);
+		addOrUpdateBuffer('pointA', this.pointsA, 3);
+		addOrUpdateBuffer('pointB', this.pointsB, 3);
+		addOrUpdateBuffer('width', this.widths, 1);
+		addOrUpdateBuffer('color', this.colors, 4);
 
 		this.damaged = false;
 	},
@@ -122,40 +144,113 @@ var LineRendererComponent = RendererComponent.extend({
 	clear: function(context) {
 		this.faces = [];
 		this.vertices = [];
+		this.pointsA = [];
+		this.pointsB = [];
+		this.widths = [];
+		this.colors = [];
 		this.damaged = true;
 	},
 
-	/** Adds new line to line renderer
-		@param a Start point of line
-		@param b End point of line
-		@return An object that can be passed to updateLine for updating the position of line later*/
-	addLine: function(a, b) {
-		var base = this.vertices.length/3;
-		var line={"vertexOffset": base};
-		this.vertices.push(a[0], a[1], a[2], b[0], b[1], b[2]);
-		this.faces.push(base, base+1);
-		this.damaged = true;
-		return line;
-	},
+	/** Add a new line
+	 *  @deprecated since 1.4.2, use `addLines`
+	 *  @param a {[x: number, y: number, z: number]} Start point of the line
+	 *  @param b {[x: number, y: number, z: number]} End point of the line
+	 *  @param color {Color?} Color of the line
+	 *  @param width {number?} Width of the line
+	 */
+	addLine: function(a, b, color, width) {
+		var vertexOffset = this.vertices.length / 3;
 
-	/** Updates line in line renderer. Lines can only be updated after the LineRenderer
-		has started.
-		@param line A line object previously returned from addLine method */
-	updateLine: function(line, a, b) {
-		// if(!this.buffer || !this.buffer.buffers.position) return; 	// Can't update buffers, because these don't exist yet
-		var setWithOffset=function(buffer, offset, vertex) {
-			buffer[offset*3+0]=vertex[0];
-			buffer[offset*3+1]=vertex[1];
-			buffer[offset*3+2]=vertex[2];
+		var c = color || this.defaultColor;
+		var w = width || this.defaultWidth;
+
+		var _this = this;
+		var count = 0;
+		var addVertex = function(x, y, z) {
+			//TODO: Instancing
+
+			_this.vertices.push(x, y, z);
+			count++;
 		};
 
-		// Set new line values directly in rendering buffer
-		//setWithOffset(this.buffer.bufferValues.position, line.vertexOffset+0, a);
-		//setWithOffset(this.buffer.bufferValues.position, line.vertexOffset+1, b);
+		addVertex(0, -0.5, 0);
+		addVertex(0, 0.5, 0);
+		addVertex(0, 0.5, 1);
+		addVertex(0, -0.5, 1);
 
-		// Set values in the cached vertices for updated values to be preserved, if more lines are called later
-		setWithOffset(this.vertices, line.vertexOffset+0, a);
-		setWithOffset(this.vertices, line.vertexOffset+1, b);
+		this.faces.push(
+			vertexOffset,
+			vertexOffset + 1,
+			vertexOffset + 2,
+			vertexOffset,
+			vertexOffset + 2,
+			vertexOffset + 3
+		);
+
+		// Caps
+		addVertex(0, 0, 0);
+		addVertex(0, 0, 1);
+
+		for (var i = 0; i < 33; i++) {
+			var z = i > 16 ? 1 : 0;
+			var theta0 = Math.PI / 2 + (i / 16) * Math.PI;
+			addVertex(0.5 * Math.cos(theta0), 0.5 * Math.sin(theta0), z);
+
+			if (i > 0) {
+				this.faces.push(
+					vertexOffset + 4 + z,
+					vertexOffset + 5 + i,
+					vertexOffset + 6 + i
+				);
+			}
+		}
+
+		for (var j = 0; j < count; j++) {
+			this.pointsA.push(a[0], a[1], a[2]);
+			this.pointsB.push(b[0], b[1], b[2]);
+			this.colors.push(c.r, c.g, c.b, c.a);
+			this.widths.push(w);
+		}
+
+		this.damaged = true;
+
+		return {
+			vertexOffset: vertexOffset,
+		}
+	},
+
+	/** Add lines to the renderer
+	 *  @param lines {{
+	 * 		a: [x: number, y: number, z: number],
+	 * 		b: [x: number, y: number, z: number],
+	 * 		color: Color?,
+	 * 		width: number?
+	 * }[]} Array of lines to add
+	*/
+	addLines: function(lines) {
+		var _this = this;
+
+		return lines.map(function(line) {
+			return _this.addLine(
+				line.a,
+				line.b,
+				line.color,
+				line.width
+			);
+		});
+	},
+
+	updateLine: function(line, a, b) {
+		var setWithOffset = function(buffer, offset, vertex) {
+			for (var i = 0; i < 39; i++) {
+				for (var j = 0; j < 3; j++) {
+					buffer[offset * 3 + i * 3 + j] = vertex[j];
+				}
+			}
+		};
+
+		setWithOffset(this.pointsA, line.vertexOffset, a);
+		setWithOffset(this.pointsB, line.vertexOffset, b);
 
 		this.damaged = true;
 	},

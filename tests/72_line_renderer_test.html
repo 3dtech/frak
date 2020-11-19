@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>LineRendererComponent test</title>
+		<meta charset="utf-8" />
+		<meta name="description" content="3DWayfinder WebGL" />
+		<link rel="stylesheet" href="style.css" >
+	</head>
+	<body>
+		<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+		<div>
+			<button onclick="toggleDebug();">Debug</button>
+			<button onclick="pauseEngine(this);">PAUSE</button>
+		</div>
+
+		<script src="../builds/frak-latest.debug.js"></script>
+
+		<script type="text/javascript">
+			function setupCamera(scene) {
+				scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
+				scene.cameraComponent.setClipPlanes(0.1, 100.0);
+				var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+				orbitController.distance = 20.0;
+				orbitController.minimumDistance = 1.0;
+				orbitController.maximumDistance = 50.0;
+				orbitController.distanceSteps = 32;
+				orbitController.maximumPitch = Math.PI/2.2;
+				orbitController.rotation[0] = -0.5;
+				orbitController.rotation[1] = 1.0;
+				orbitController.target.value = scene.root.transform;
+			}
+
+			function setupLights(scene) {
+				var lights = scene.root.addNode(new Node('lights'));
+				var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
+				var lightDirectional = scene.light;
+				lightDirectional.setLightDirection([1, 1, 1]);
+				lightDirectional.intensity = 0.7;
+				lightDirectional.shadowCasting = true;
+				lightDirectional.shadowResolution = vec2.fromValues(1024, 1024);
+
+				var light0 = lights.addNode(new Node('light0'));
+				light0.addComponent(new OmniLight(2.0, new Color(0.7, 0.1, 0.4)));
+				light0.transform.setPosition([-1, 0, 1]);
+				light0.getComponent(OmniLight).intensity = 2.0;
+
+				var light1 = lights.addNode(new Node('light1'));
+				light1.addComponent(new OmniLight(2.0, new Color(0.0, 1.0, 0.0)));
+				light1.transform.setPosition([1, 0, -1.5]);
+
+				var light2 = lights.addNode(new Node('light2'));
+				light2.addComponent(new OmniLight(2.0, new Color(0.3, 0.5, 0.9)));
+				light2.transform.setPosition([-4.5, 0, -2.0]);
+				light2.getComponent(OmniLight).intensity = 2.0;
+			}
+
+			function setupScene(scene, context) {
+				function makeTransparent(subnode) {
+					if (subnode.getComponent(MeshRendererComponent)) {
+						var meshRendererComponent = subnode.getComponent(MeshRendererComponent);
+						for (var i in meshRendererComponent.meshRenderers) {
+							meshRendererComponent.meshRenderers[i].transparent=true;
+							var material = meshRendererComponent.meshRenderers[i].material;
+							material.shader = engine.assetsManager.addShaderSource("transparent");
+							material.shader.requirements.transparent = true;
+						}
+					}
+				}
+
+				var texColor = scene.engine.assetsManager.texturesManager.add("data/tiles_c.png");
+				var texNormal = scene.engine.assetsManager.texturesManager.add("data/tiles_n.png");
+
+				var material = new Material(
+					scene.engine.assetsManager.addShaderSource("normalmapped"),
+					{
+						"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}),
+						"specularStrength": new UniformFloat(0.8),
+						"specularPower": new UniformInt(256)
+					},
+					[
+						new Sampler("diffuse0", texColor),
+						new Sampler("normal0", texNormal)
+					]
+				);
+				material.name = 'Normalmapped';
+
+				var box = Primitives.box([0,0,0], [1.0, 1.0, 1.0], material);
+				//scene.root.addNode(box);
+				mat4.fromRotationTranslation(box.transform.relative, quat.create(), [-3, 0, 0]);
+
+				var sphere = Primitives.sphere(1.0, 16, 16, material);
+				//scene.root.addNode(sphere);
+				mat4.fromRotationTranslation(sphere.transform.relative, quat.create(), [3, 0, -3]);
+
+				var cone = Primitives.cone(1.0, 2.0, 16, material);
+				//scene.root.addNode(cone);
+				mat4.fromRotationTranslation(cone.transform.relative, quat.create(), [-3, 0, 3]);
+
+				var p0 = scene.engine.assetsManager.texturesManager.add("data/pattern_0.jpg");
+				var p1 = scene.engine.assetsManager.texturesManager.add("data/pattern_1.jpg");
+				var windowTexture = scene.engine.assetsManager.texturesManager.add("data/window.png");
+
+				var groundMaterial = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/diffuse"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[ new Sampler("diffuse0", p1) ]
+				);
+				groundMaterial.name = 'ground';
+
+				var red = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:0.0, b:0.0, a:0.2}) },
+					[]
+				);
+				red.name = 'red';
+
+				var blue = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:0.0, g:0.0, b:1.0, a:0.2}) },
+					[]
+				);
+				blue.name = 'blue';
+
+				var ceiling = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:0.0, g:1.0, b:0.0, a:0.2}) },
+					[ new Sampler("diffuse0", p0) ]
+				);
+				ceiling.name = 'ceiling';
+
+				var windowMaterial = new Material(
+					scene.engine.assetsManager.addShaderSource("shaders/default/transparent"),
+					{ "diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0}) },
+					[ new Sampler("diffuse0", windowTexture) ]
+				);
+				windowMaterial.name = 'window';
+
+				var ground = Primitives.box([0,0,0], [5.0, 0.05, 5.0], groundMaterial);
+				mat4.fromRotationTranslation(ground.transform.relative, quat.create(), [0, -1, 0]);
+				scene.root.addNode(ground);
+
+				var redBox = Primitives.box([0,0,0], [5.0, 0.5, 0.2], red);
+				mat4.fromRotationTranslation(redBox.transform.relative, quat.euler(quat.create(), 0, 90, 0), [3, 0.1, 0]);
+				//scene.root.addNode(redBox);
+
+				var blueBox = Primitives.box([0,0,0], [2.0, 2.0, 2.0], blue);
+				mat4.fromRotationTranslation(blueBox.transform.relative, quat.euler(quat.create(), 0, 0, 0), [3, 0.1, 0]);
+				//scene.root.addNode(blueBox);
+
+				var plane = Primitives.plane(10.0, 5.0, ceiling);
+				mat4.fromRotationTranslation(plane.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, 3, -2.5]);
+				//scene.root.addNode(plane);
+
+				var aken = Primitives.plane(10.0, 5.0, windowMaterial);
+				mat4.fromRotationTranslation(aken.transform.relative, quat.euler(quat.create(), -90, 0, 0), [0, 3, 2.5]);
+				//scene.root.addNode(aken);
+
+				// Grid
+				var grid = engine.scene.root.addNode(new Node('grid'));
+				var lines = grid.addComponent(new LineRendererComponent(new Color(1, 1, 1, 1)));
+				lines.addLine([0, 0, 0], [2, 2, 2]);
+				lines.addLine([2, 2, 2], [3, 4, 5]);
+				var l = lines.addLines([
+					{
+						a: [0, 0, 0],
+						b: [-2, 2, 3],
+					}, {
+						a: [-2, 2, 3],
+						b: [-3, 3, -3],
+						width: 100,
+						color: new Color(1, 0.6, 0.3, 1)
+					}
+				]);
+				// lines.overlay = true;
+
+				scene.engine.sceneStarted = function() {
+					redBox.onEachChild(makeTransparent);
+					blueBox.onEachChild(makeTransparent);
+					plane.onEachChild(makeTransparent);
+					aken.onEachChild(makeTransparent);
+
+					var f = function() {
+						lines.updateLine(l[1], [-2, 2, 3], [-3, 3 + Math.sin((new Date()).getTime() / 1000), -3]);
+						window.requestAnimationFrame(f);
+					};
+
+					f();
+				}
+			}
+
+			var engine;
+			window.onload = function() {
+				engine = new Engine('canvas', {
+					'requestedFPS': 60,
+					'assetsPath': '../assets/',
+					'antialias': true,
+					'webGLVersion': 'auto',
+					// 'renderer': 'deferred'
+				});
+
+				engine.assetsManager.modelsManager.path = './'; // Load test models locally
+				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+				setupCamera(engine.scene);
+				setupLights(engine.scene);
+				setupScene(engine.scene, engine.context);
+
+				engine.assetsManager.load(function() {
+					engine.run();
+				});
+			};
+
+			function toggleDebug() {
+				var renderStage = engine.scene.camera.renderStage;
+				renderStage.debug(!renderStage.debugActive);
+			}
+
+			function pauseEngine(element) {
+				engine.togglePause();
+				if (engine.running)
+					element.textContent = 'PAUSE';
+				else
+					element.textContent = 'UNPAUSE';
+			}
+		</script>
+	</body>
+</html>

@@ -12,6 +12,6 @@ var LinesRenderBuffer = RenderBuffer.extend({
 	drawElements: function() {
 		var gl = this.context.gl;
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
-		gl.drawElements(gl.LINES, this.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(gl.TRIANGLES, this.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
 });
