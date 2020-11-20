@@ -28,12 +28,7 @@ var LineRendererComponent = RendererComponent.extend({
 		}, []);
 		this.overlay = false; ///< If set to true the lines are rendered in onPostRender instead of the usual pipeline
 
-		this.faces = [];
-		this.vertices = [];
-		this.pointsA = [];
-		this.pointsB = [];
-		this.widths = [];
-		this.colors = [];
+		this.lines = [];
 	},
 
 	type: function() {
@@ -112,110 +107,133 @@ var LineRendererComponent = RendererComponent.extend({
 	},
 
 	rebuild: function(context) {
-		if (this.vertices.length == 0 || this.faces.length == 0)
+		if (this.lines.length == 0) {
 			return;
+		}
 
-		// In case we wish to build our geometry before the scene is started
 		if (!this.renderer) {
 			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
 		}
 
-		this.renderer.buffer.updateFaces(this.faces);
+		var vertices = [];
+		var faces = [];
+		var pointsA = [];
+		var pointsB = [];
+		var widths = [];
+		var colors = [];
+		var createLineGeometry = function() {
+			var vertexOffset = vertices.length / 3;
+
+			vertices.push(0, -0.5, 0);
+			vertices.push(0, 0.5, 0);
+			vertices.push(0, 0.5, 1);
+			vertices.push(0, -0.5, 1);
+
+			var count = 4;
+
+			faces.push(
+				vertexOffset,
+				vertexOffset + 1,
+				vertexOffset + 2,
+				vertexOffset,
+				vertexOffset + 2,
+				vertexOffset + 3
+			);
+
+			// Caps
+			vertices.push(0, 0, 0);
+			vertices.push(0, 0, 1);
+
+			count += 2;
+
+			var roundCapPoints = 32;
+			for (var i = 0; i < roundCapPoints + 1; i++) {
+				var z = i > (roundCapPoints / 2) ? 1 : 0;
+				var theta0 = Math.PI / 2 + (i / (roundCapPoints / 2)) * Math.PI;
+				vertices.push(0.5 * Math.cos(theta0), 0.5 * Math.sin(theta0), z);
+
+				if (i > 0) {
+					faces.push(
+						vertexOffset + 4 + z,
+						vertexOffset + 5 + i,
+						vertexOffset + 6 + i
+					);
+				}
+
+				count++;
+			}
+
+			return count;
+		}
+
+		if (!this.renderer.instanced) {
+			for (var i = 0; i < this.lines.length; i++) {
+				var count = createLineGeometry();
+				for (var j = 0; j < count; j++) {
+					pointsA.push(this.lines[i].a[0], this.lines[i].a[1], this.lines[i].a[2]);
+					pointsB.push(this.lines[i].b[0], this.lines[i].b[1], this.lines[i].b[2]);
+					colors.push(this.lines[i].color.r, this.lines[i].color.g, this.lines[i].color.b, this.lines[i].color.a);
+					widths.push(this.lines[i].width);
+				}
+			}
+		} else {
+			createLineGeometry();
+			for (var i = 0; i < this.lines.length; i++) {
+				pointsA.push(this.lines[i].a[0], this.lines[i].a[1], this.lines[i].a[2]);
+				pointsB.push(this.lines[i].b[0], this.lines[i].b[1], this.lines[i].b[2]);
+				colors.push(this.lines[i].color.r, this.lines[i].color.g, this.lines[i].color.b, this.lines[i].color.a);
+				widths.push(this.lines[i].width);
+			}
+		}
+
+		this.renderer.count = this.lines.length;
+
+		this.renderer.buffer.updateFaces(faces);
 
 		var _this = this;
-		var addOrUpdateBuffer = function(name, items, itemSize) {
+		var addOrUpdateBuffer = function(name, items, itemSize, divisor) {
 			if (_this.renderer.buffer.has(name)) {
 				_this.renderer.buffer.update(name, items);
 			} else {
-				_this.renderer.buffer.add(name, items, itemSize);
+				_this.renderer.buffer.add(name, items, itemSize, divisor);
 			}
 		};
 
-		addOrUpdateBuffer('position', this.vertices, 3);
-		addOrUpdateBuffer('pointA', this.pointsA, 3);
-		addOrUpdateBuffer('pointB', this.pointsB, 3);
-		addOrUpdateBuffer('width', this.widths, 1);
-		addOrUpdateBuffer('color', this.colors, 4);
+		addOrUpdateBuffer('position', vertices, 3, 0);
+		addOrUpdateBuffer('pointA', pointsA, 3, 1);
+		addOrUpdateBuffer('pointB', pointsB, 3, 1);
+		addOrUpdateBuffer('width', widths, 1, 1);
+		addOrUpdateBuffer('color', colors, 4, 1);
 
 		this.damaged = false;
 	},
 
 	/** Clears the current vertices/faces buffers. */
 	clear: function(context) {
-		this.faces = [];
-		this.vertices = [];
-		this.pointsA = [];
-		this.pointsB = [];
-		this.widths = [];
-		this.colors = [];
+		this.lines = [];
 		this.damaged = true;
 	},
 
 	/** Add a new line
-	 *  @deprecated since 1.4.2, use `addLines`
 	 *  @param a {[x: number, y: number, z: number]} Start point of the line
 	 *  @param b {[x: number, y: number, z: number]} End point of the line
 	 *  @param color {Color?} Color of the line
 	 *  @param width {number?} Width of the line
 	 */
 	addLine: function(a, b, color, width) {
-		var vertexOffset = this.vertices.length / 3;
+		var lineID = this.lines.length;
 
-		var c = color || this.defaultColor;
-		var w = width || this.defaultWidth;
-
-		var _this = this;
-		var count = 0;
-		var addVertex = function(x, y, z) {
-			//TODO: Instancing
-
-			_this.vertices.push(x, y, z);
-			count++;
-		};
-
-		addVertex(0, -0.5, 0);
-		addVertex(0, 0.5, 0);
-		addVertex(0, 0.5, 1);
-		addVertex(0, -0.5, 1);
-
-		this.faces.push(
-			vertexOffset,
-			vertexOffset + 1,
-			vertexOffset + 2,
-			vertexOffset,
-			vertexOffset + 2,
-			vertexOffset + 3
-		);
-
-		// Caps
-		addVertex(0, 0, 0);
-		addVertex(0, 0, 1);
-
-		for (var i = 0; i < 33; i++) {
-			var z = i > 16 ? 1 : 0;
-			var theta0 = Math.PI / 2 + (i / 16) * Math.PI;
-			addVertex(0.5 * Math.cos(theta0), 0.5 * Math.sin(theta0), z);
-
-			if (i > 0) {
-				this.faces.push(
-					vertexOffset + 4 + z,
-					vertexOffset + 5 + i,
-					vertexOffset + 6 + i
-				);
-			}
-		}
-
-		for (var j = 0; j < count; j++) {
-			this.pointsA.push(a[0], a[1], a[2]);
-			this.pointsB.push(b[0], b[1], b[2]);
-			this.colors.push(c.r, c.g, c.b, c.a);
-			this.widths.push(w);
-		}
+		this.lines.push({
+			a: a,
+			b: b,
+			color: color || this.defaultColor,
+			width: width || this.defaultWidth
+		});
 
 		this.damaged = true;
 
 		return {
-			vertexOffset: vertexOffset,
+			vertexOffset: lineID,
 		}
 	},
 
@@ -240,17 +258,13 @@ var LineRendererComponent = RendererComponent.extend({
 		});
 	},
 
-	updateLine: function(line, a, b) {
-		var setWithOffset = function(buffer, offset, vertex) {
-			for (var i = 0; i < 39; i++) {
-				for (var j = 0; j < 3; j++) {
-					buffer[offset * 3 + i * 3 + j] = vertex[j];
-				}
-			}
-		};
+	updateLine: function(line, a, b, color, width) {
+		var line = this.lines[line.vertexOffset];
 
-		setWithOffset(this.pointsA, line.vertexOffset, a);
-		setWithOffset(this.pointsB, line.vertexOffset, b);
+		line.a = a;
+		line.b = b;
+		line.color = color || line.color;
+		line.width = width || line.width;
 
 		this.damaged = true;
 	},
