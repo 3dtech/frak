@@ -18,7 +18,7 @@ var LineRendererComponent = RendererComponent.extend({
 			this.defaultColor = new Color();
 		}
 
-		this.defaultWidth = width || 2;
+		this.defaultWidth = width || 1;
 
 		this.renderer = null;
 		this.damaged = true;
