@@ -61,17 +61,22 @@ var RendererOrganizer = FrakClass.extend({
 
 		this.solidRenderers = [];
 		this.transparentRenderers = [];
+		this.unlitRenderers = [];
 
 		this.opaqueBatchList = [];
 		this.transparentBatchList = [];
+		this.unlitBatchList = [];
 		this.batchIndex = {};
 
 		this.renderers = new CollectionReference([]);
 		this.viewSolidRenderers = new CollectionView(this.renderers, function(renderer) {
-			return !renderer.transparent;
+			return !renderer.transparent && !renderer.unlit;
 		});
 		this.viewTransparentRenderers = new CollectionView(this.renderers, function(renderer) {
-			return renderer.transparent;
+			return renderer.transparent && !renderer.unlit;
+		});
+		this.viewUnlitRenderers = new CollectionView(this.renderers, function(renderer) {
+			return renderer.unlit;
 		});
 
 		// Stats
@@ -82,12 +87,16 @@ var RendererOrganizer = FrakClass.extend({
 		this.visibleTransparentRenderers = 0;
 		this.visibleTransparentFaces = 0;
 		this.visibleTransparentBatches = 0;
+		this.visibleUnlitRenderers = 0;
+		this.visibleUnlitFaces = 0;
+		this.visibleUnlitBatches = 0;
 	},
 
 	updateStats: function() {
 		this.visibleSolidRenderers = this.viewSolidRenderers.length;
 		this.visibleTransparentRenderers = this.viewTransparentRenderers.length;
-		this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers;
+		this.visibleUnlitRenderers = this.viewUnlitRenderers.length;
+		this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleUnlitRenderers;
 		// FIXME: visible batches should only be updated when the info is required
 	},
 
@@ -131,8 +140,10 @@ var RendererOrganizer = FrakClass.extend({
 		this.renderers.list = renderers;
 		this.viewSolidRenderers.filter();
 		this.viewTransparentRenderers.filter();
+		this.viewUnlitRenderers.filter();
 		this.solidRenderers = this.viewSolidRenderers.view;
 		this.transparentRenderers = this.viewTransparentRenderers.view;
+		this.unlitRenderers = this.viewUnlitRenderers.view;
 
 		// Batch renderers by material.id
 		if (this.enableDynamicBatching) {
@@ -140,6 +151,7 @@ var RendererOrganizer = FrakClass.extend({
 				this.batch(this.transparentBatchList, this.transparentRenderers);
 			}
 			this.batch(this.opaqueBatchList, this.solidRenderers);
+			this.batch(this.unlitBatchList, this.unlitRenderers);
 		}
 
 		// Sort transparent renderers

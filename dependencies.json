@@ -52,6 +52,7 @@
 	"src/rendering/camera/SSAOBufferRenderStage.js",
 	"src/rendering/camera/SkyboxRenderStage.js",
 	"src/rendering/camera/OpaqueGeometryRenderStage.js",
+	"src/rendering/camera/UnlitGeometryRenderStage.js",
 	"src/rendering/camera/TransparentGeometryRenderStage.js",
 	"src/rendering/camera/OITRenderStage.js",
 	"src/rendering/camera/PostProcessRenderStage.js",

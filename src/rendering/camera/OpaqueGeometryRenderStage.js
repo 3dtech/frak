@@ -53,7 +53,7 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 			gl.blendFunc(gl.ONE, gl.ONE);
 			gl.enable(gl.BLEND);
 			// Note: Fordward renderer only supports directional lighting at this point
-			for (var l=1; l<lights.length; l++) {
+			for (var l = 1; l < lights.length; l++) {
 				if (!lights[l])
 					break;
 
@@ -68,6 +68,12 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 			gl.disable(gl.BLEND);
 			gl.depthMask(true);
 			gl.depthFunc(gl.LESS);
+		}
+
+		if (this.parent.organizer.enableDynamicBatching) {
+			this.parent.renderBatched(context, this.parent.organizer.unlitBatchList);
+		} else {
+			this.parent.renderBruteForce(context, this.parent.organizer.unlitRenderers);
 		}
 
 		gl.disable(gl.DEPTH_TEST);

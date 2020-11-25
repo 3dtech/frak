@@ -149,7 +149,7 @@ var LineRendererComponent = RendererComponent.extend({
 			var roundCapPoints = 32;
 			for (var i = 0; i < roundCapPoints + 1; i++) {
 				var z = i > (roundCapPoints / 2) ? 1 : 0;
-				var theta0 = Math.PI / 2 + (i / (roundCapPoints / 2)) * Math.PI;
+				var theta0 = 3 * Math.PI / 2 - (i / (roundCapPoints / 2)) * Math.PI;
 				vertices.push(0.5 * Math.cos(theta0), 0.5 * Math.sin(theta0), z);
 
 				if (i > 0) {
@@ -303,15 +303,15 @@ var LineRendererComponent = RendererComponent.extend({
 		@param count Count of cells in the grid as vec2
 		@param scale Scale of grid cells as vec2 [default: [1, 1]] */
 	addGrid: function(center, count, scale) {
-		var half=[count[0]/2.0, count[1]/2.0];
-		if(!scale) scale=[1, 1];
-		for(var i=-half[0]; i<=half[0]; i++) {
-			this.addLine([i*scale[0]+center[0], center[1], -half[1]*scale[1]+center[2]],
-			             [i*scale[0]+center[0], center[1],  half[1]*scale[1]+center[2]]);
+		var half = [count[0] / 2.0, count[1] / 2.0];
+		if (!scale) scale = [1, 1];
+		for (var i = -half[0]; i <= half[0]; i++) {
+			this.addLine([i * scale[0] + center[0], center[1], -half[1] * scale[1] + center[2]],
+				[i * scale[0] + center[0], center[1], half[1] * scale[1] + center[2]]);
 		}
-		for(i=-half[1]; i<=half[1]; i++) {
-			this.addLine([-half[0]*scale[0]+center[0], center[1], i*scale[1]+center[2]],
-			             [half[0]*scale[0]+center[0], center[1], i*scale[1]+center[2]]);
+		for (i = -half[1]; i <= half[1]; i++) {
+			this.addLine([-half[0] * scale[0] + center[0], center[1], i * scale[1] + center[2]],
+				[half[0] * scale[0] + center[0], center[1], i * scale[1] + center[2]]);
 		}
 
 		this.damaged = true;

@@ -14,6 +14,8 @@ var LineRenderer = Renderer.extend({
 			this.instanced = false;
 		}
 
+		this.unlit = true;
+
 		this.count = 0;
 	},
 
