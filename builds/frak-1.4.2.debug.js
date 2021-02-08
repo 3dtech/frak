@@ -12233,6 +12233,8 @@ var LineRendererComponent = RendererComponent.extend({
             this.defaultColor = new Color();
         }
         this.defaultWidth = width || 1;
+        this.maxWidth = this.defaultWidth;
+        this.roundCapPoints = 2;
         this.renderer = null;
         this.damaged = true;
         this.material = new Material(null, {
@@ -12308,6 +12310,7 @@ var LineRendererComponent = RendererComponent.extend({
         var pointsB = [];
         var widths = [];
         var colors = [];
+        var rcp = this.roundCapPoints;
         var createLineGeometry = function() {
             var vertexOffset = vertices.length / 3;
             vertices.push(0, -.5, 0);
@@ -12319,15 +12322,17 @@ var LineRendererComponent = RendererComponent.extend({
             vertices.push(0, 0, 0);
             vertices.push(0, 0, 1);
             count += 2;
-            var roundCapPoints = 32;
-            for (var i = 0; i < roundCapPoints + 1; i++) {
-                var z = i > roundCapPoints / 2 ? 1 : 0;
-                var theta0 = 3 * Math.PI / 2 - i / (roundCapPoints / 2) * Math.PI;
-                vertices.push(.5 * Math.cos(theta0), .5 * Math.sin(theta0), z);
-                if (i > 0) {
-                    faces.push(vertexOffset + 4 + z, vertexOffset + 5 + i, vertexOffset + 6 + i);
-                }
+            for (var z = 0; z < 2; z++) {
+                var t = 3 * Math.PI / 2 - z * Math.PI;
+                vertices.push(.5 * Math.cos(t), .5 * Math.sin(t), z);
                 count++;
+                var offset = count - 1;
+                for (var i = 1; i < rcp + 1; i++) {
+                    var theta0 = 3 * Math.PI / 2 - (i + rcp * z) / rcp * Math.PI;
+                    vertices.push(.5 * Math.cos(theta0), .5 * Math.sin(theta0), z);
+                    faces.push(vertexOffset + 4 + z, vertexOffset + offset + i - 1, vertexOffset + offset + i);
+                    count++;
+                }
             }
             return count;
         };
@@ -12380,6 +12385,10 @@ var LineRendererComponent = RendererComponent.extend({
             width: width || this.defaultWidth
         });
         this.damaged = true;
+        if (width && width > this.maxWidth) {
+            this.maxWidth = width;
+            this.roundCapPoints = Math.pow(2, Math.max(1, Math.round(Math.log2(width)) - 2));
+        }
         return {
             vertexOffset: lineID
         };
