@@ -12234,7 +12234,7 @@ var LineRendererComponent = RendererComponent.extend({
         }
         this.defaultWidth = width || 1;
         this.maxWidth = this.defaultWidth;
-        this.roundCapPoints = 2;
+        this.roundCapPoints = Math.pow(2, Math.max(1, Math.round(Math.log2(this.defaultWidth)) - 2));
         this.renderer = null;
         this.damaged = true;
         this.material = new Material(null, {
