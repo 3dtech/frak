@@ -59,9 +59,9 @@ var LineRendererComponent = RendererComponent.extend({
 		this.renderer = null;
 	},
 
-	onUpdate: function(context, engine) {
+	onUpdate: function(engine) {
 		if (this.damaged) {
-			this.rebuild(context);
+			this.rebuild(engine.context);
 		}
 	},
 
@@ -109,10 +109,6 @@ var LineRendererComponent = RendererComponent.extend({
 	},
 
 	rebuild: function(context) {
-		if (this.lines.length == 0) {
-			return;
-		}
-
 		if (!this.renderer) {
 			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
 		}
@@ -183,7 +179,7 @@ var LineRendererComponent = RendererComponent.extend({
 					widths.push(this.lines[i].width);
 				}
 			}
-		} else {
+		} else if (this.lines.length) {
 			createLineGeometry();
 			for (var i = 0; i < this.lines.length; i++) {
 				pointsA.push(this.lines[i].a[0], this.lines[i].a[1], this.lines[i].a[2]);

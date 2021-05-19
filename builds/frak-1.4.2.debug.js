@@ -7673,6 +7673,28 @@ var LinesRenderBuffer = RenderBuffer.extend({
     init: function(context) {
         this._super(context, [], context.gl.DYNAMIC_DRAW);
     },
+    add: function(name, items, itemSize) {
+        if (items.length / itemSize <= this.maxFaceIndex && this.facesBuffer.numItems > 0) throw "RenderBuffer: Buffer '{0}' too small ({1} vertices, {2} max index).".format(name, items.length / itemSize, this.maxFaceIndex);
+        var gl = this.context.gl;
+        if (!(items instanceof Float32Array)) items = new Float32Array(items);
+        this.buffers[name] = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[name]);
+        gl.bufferData(gl.ARRAY_BUFFER, items, this.type);
+        this.buffers[name].itemSize = itemSize;
+        this.buffers[name].numItems = items.length / this.buffers[name].itemSize;
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    },
+    update: function(name, items) {
+        if (!(name in this.buffers)) throw "RenderBuffer: Unknown buffer: '{0}'".format(name);
+        var buf = this.buffers[name];
+        if (items.length / buf.itemSize <= this.maxFaceIndex && this.facesBuffer.numItems > 0) throw "RenderBuffer: Buffer '{0}' too small.".format(name);
+        if (!(items instanceof Float32Array)) items = new Float32Array(items);
+        var gl = this.context.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, items, this.type);
+        buf.numItems = items.length / buf.itemSize;
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    },
     drawElements: function() {
         var gl = this.context.gl;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
@@ -7697,7 +7719,7 @@ var LinesRenderBufferInstanced = LinesRenderBuffer.extend({
         this.divisors = {};
     },
     add: function(name, items, itemSize, divisor) {
-        if (items.length / itemSize <= this.maxFaceIndex && divisor === 0) throw "RenderBuffer: Buffer '{0}' too small ({1} vertices, {2} max index).".format(name, items.length / itemSize, this.maxFaceIndex);
+        if (items.length / itemSize <= this.maxFaceIndex && this.facesBuffer.numItems > 0 && divisor === 0) throw "RenderBuffer: Buffer '{0}' too small ({1} vertices, {2} max index).".format(name, items.length / itemSize, this.maxFaceIndex);
         var gl = this.context.gl;
         if (!(items instanceof Float32Array)) items = new Float32Array(items);
         this.buffers[name] = gl.createBuffer();
@@ -7711,7 +7733,7 @@ var LinesRenderBufferInstanced = LinesRenderBuffer.extend({
     update: function(name, items) {
         if (!(name in this.buffers)) throw "RenderBuffer: Unknown buffer: '{0}'".format(name);
         var buf = this.buffers[name];
-        if (items.length / buf.itemSize <= this.maxFaceIndex && this.divisors[name] === 0) throw "RenderBuffer: Buffer '{0}' too small.".format(name);
+        if (items.length / buf.itemSize <= this.maxFaceIndex && this.facesBuffer.numItems > 0 && this.divisors[name] === 0) throw "RenderBuffer: Buffer '{0}' too small.".format(name);
         if (!(items instanceof Float32Array)) items = new Float32Array(items);
         var gl = this.context.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -12261,9 +12283,9 @@ var LineRendererComponent = RendererComponent.extend({
         delete this.renderer;
         this.renderer = null;
     },
-    onUpdate: function(context, engine) {
+    onUpdate: function(engine) {
         if (this.damaged) {
-            this.rebuild(context);
+            this.rebuild(engine.context);
         }
     },
     onUpdateTransform: function(absolute) {
@@ -12298,9 +12320,6 @@ var LineRendererComponent = RendererComponent.extend({
         context.modelview.pop();
     },
     rebuild: function(context) {
-        if (this.lines.length == 0) {
-            return;
-        }
         if (!this.renderer) {
             this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
         }
@@ -12346,7 +12365,7 @@ var LineRendererComponent = RendererComponent.extend({
                     widths.push(this.lines[i].width);
                 }
             }
-        } else {
+        } else if (this.lines.length) {
             createLineGeometry();
             for (var i = 0; i < this.lines.length; i++) {
                 pointsA.push(this.lines[i].a[0], this.lines[i].a[1], this.lines[i].a[2]);
