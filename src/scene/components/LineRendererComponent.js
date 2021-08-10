@@ -3,26 +3,34 @@
  * The lines are all rendered with the same color per LineRendererComponent.
  */
 var LineRendererComponent = RendererComponent.extend({
-	init: function(color) {
+	init: function(color, width) {
 		this._super();
 
 		this.lightContribution = 0.0; // By default we do not want lighting to affect lines
 		this.receiveShadows = false; // By default we do not want lines to receive shadows
 		this.castShadows = false; // By default we do not want lines to cast shadows
 
-		if (color instanceof Color)
+		if (color instanceof Color) {
 			this.color = new UniformColor(color);
-		else
+			this.defaultColor = color;
+		} else {
 			this.color = new UniformColor(new Color(0.5, 0.5, 0.5, 1.0));
+			this.defaultColor = new Color();
+		}
+
+		this.defaultWidth = width || 1;
+		this.maxWidth = this.defaultWidth;
+		this.roundCapPoints = Math.pow(2, Math.max(1, Math.round(Math.log2(this.defaultWidth)) - 2));
 
 		this.renderer = null;
 		this.damaged = true;
 
-		this.material = new Material(null, { 'diffuse': this.color }, []);
+		this.material = new Material(null, {
+			viewport: new UniformVec2(),
+		}, []);
 		this.overlay = false; ///< If set to true the lines are rendered in onPostRender instead of the usual pipeline
 
-		this.faces = [];
-		this.vertices = [];
+		this.lines = [];
 	},
 
 	type: function() {
@@ -34,10 +42,9 @@ var LineRendererComponent = RendererComponent.extend({
 	},
 
 	onStart: function(context, engine) {
-		this.material.shader = engine.assetsManager.addShaderSource('transparent');
-		this.material.samplers = [
-			new Sampler('diffuse0', engine.WhiteTexture)
-		];
+		this.material.shader = engine.assetsManager.addShaderSource('lines');
+		this.material.samplers = [];
+		vec2.copy(this.material.uniforms.viewport.value, engine.scene.camera.target.size);
 
 		if (!this.renderer)
 			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
@@ -52,9 +59,9 @@ var LineRendererComponent = RendererComponent.extend({
 		this.renderer = null;
 	},
 
-	onUpdate: function(context, engine) {
+	onUpdate: function(engine) {
 		if (this.damaged) {
-			this.rebuild(context);
+			this.rebuild(engine.context);
 		}
 	},
 
@@ -78,6 +85,10 @@ var LineRendererComponent = RendererComponent.extend({
 			this.renderer.visible = false;
 	},
 
+	onPreRender: function(context, camera) {
+		vec2.copy(this.material.uniforms.viewport.value, camera.target.size);
+	},
+
 	onPostRender: function(context, camera) {
 		if (!this.overlay || !this.renderer || !this.enabled)
 			return;
@@ -98,64 +109,170 @@ var LineRendererComponent = RendererComponent.extend({
 	},
 
 	rebuild: function(context) {
-		if (this.vertices.length == 0 || this.faces.length == 0)
-			return;
-
-		// In case we wish to build our geometry before the scene is started
 		if (!this.renderer) {
 			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
 		}
 
-		this.renderer.buffer.updateFaces(this.faces);
+		var vertices = [];
+		var faces = [];
+		var pointsA = [];
+		var pointsB = [];
+		var widths = [];
+		var colors = [];
+		var rcp = this.roundCapPoints;
+		var createLineGeometry = function() {
+			var vertexOffset = vertices.length / 3;
 
-		if (this.renderer.buffer.has('position')) {
-			this.renderer.buffer.update('position', this.vertices);
+			vertices.push(0, -0.5, 0);
+			vertices.push(0, 0.5, 0);
+			vertices.push(0, 0.5, 1);
+			vertices.push(0, -0.5, 1);
+
+			var count = 4;
+
+			faces.push(
+				vertexOffset,
+				vertexOffset + 1,
+				vertexOffset + 2,
+				vertexOffset,
+				vertexOffset + 2,
+				vertexOffset + 3
+			);
+
+			// Cap centers
+			vertices.push(0, 0, 0);
+			vertices.push(0, 0, 1);
+
+			count += 2;
+
+			for (var z = 0; z < 2; z++) {
+				var t = 3 * Math.PI / 2 - z * Math.PI;
+				vertices.push(0.5 * Math.cos(t), 0.5 * Math.sin(t), z);
+				count++;
+
+				var offset = count - 1;
+
+				for (var i = 1; i < rcp + 1; i++) {
+					var theta0 = 3 * Math.PI / 2 - ((i + rcp * z) / rcp) * Math.PI;
+					vertices.push(0.5 * Math.cos(theta0), 0.5 * Math.sin(theta0), z);
+
+					faces.push(
+						vertexOffset + 4 + z,
+						vertexOffset + offset + i - 1,
+						vertexOffset + offset + i
+					);
+
+					count++;
+				}
+			}
+
+			return count;
 		}
-		else {
-			this.renderer.buffer.add('position', this.vertices, 3);
+
+		if (!this.renderer.instanced) {
+			for (var i = 0; i < this.lines.length; i++) {
+				var count = createLineGeometry();
+				for (var j = 0; j < count; j++) {
+					pointsA.push(this.lines[i].a[0], this.lines[i].a[1], this.lines[i].a[2]);
+					pointsB.push(this.lines[i].b[0], this.lines[i].b[1], this.lines[i].b[2]);
+					colors.push(this.lines[i].color.r, this.lines[i].color.g, this.lines[i].color.b, this.lines[i].color.a);
+					widths.push(this.lines[i].width);
+				}
+			}
+		} else if (this.lines.length) {
+			createLineGeometry();
+			for (var i = 0; i < this.lines.length; i++) {
+				pointsA.push(this.lines[i].a[0], this.lines[i].a[1], this.lines[i].a[2]);
+				pointsB.push(this.lines[i].b[0], this.lines[i].b[1], this.lines[i].b[2]);
+				colors.push(this.lines[i].color.r, this.lines[i].color.g, this.lines[i].color.b, this.lines[i].color.a);
+				widths.push(this.lines[i].width);
+			}
 		}
+
+		this.renderer.count = this.lines.length;
+
+		this.renderer.buffer.updateFaces(faces);
+
+		var _this = this;
+		var addOrUpdateBuffer = function(name, items, itemSize, divisor) {
+			if (_this.renderer.buffer.has(name)) {
+				_this.renderer.buffer.update(name, items);
+			} else {
+				_this.renderer.buffer.add(name, items, itemSize, divisor);
+			}
+		};
+
+		addOrUpdateBuffer('position', vertices, 3, 0);
+		addOrUpdateBuffer('pointA', pointsA, 3, 1);
+		addOrUpdateBuffer('pointB', pointsB, 3, 1);
+		addOrUpdateBuffer('width', widths, 1, 1);
+		addOrUpdateBuffer('color', colors, 4, 1);
 
 		this.damaged = false;
 	},
 
 	/** Clears the current vertices/faces buffers. */
 	clear: function(context) {
-		this.faces = [];
-		this.vertices = [];
+		this.lines = [];
 		this.damaged = true;
 	},
 
-	/** Adds new line to line renderer
-		@param a Start point of line
-		@param b End point of line
-		@return An object that can be passed to updateLine for updating the position of line later*/
-	addLine: function(a, b) {
-		var base = this.vertices.length/3;
-		var line={"vertexOffset": base};
-		this.vertices.push(a[0], a[1], a[2], b[0], b[1], b[2]);
-		this.faces.push(base, base+1);
+	/** Add a new line
+	 *  @param a {[x: number, y: number, z: number]} Start point of the line
+	 *  @param b {[x: number, y: number, z: number]} End point of the line
+	 *  @param color {Color?} Color of the line
+	 *  @param width {number?} Width of the line
+	 */
+	addLine: function(a, b, color, width) {
+		var lineID = this.lines.length;
+
+		this.lines.push({
+			a: a,
+			b: b,
+			color: color || this.defaultColor,
+			width: width || this.defaultWidth
+		});
+
 		this.damaged = true;
-		return line;
+
+		if (width && width > this.maxWidth) {
+			this.maxWidth = width;
+			this.roundCapPoints = Math.pow(2, Math.max(1, Math.round(Math.log2(width)) - 2));
+		}
+
+		return {
+			vertexOffset: lineID,
+		}
 	},
 
-	/** Updates line in line renderer. Lines can only be updated after the LineRenderer
-		has started.
-		@param line A line object previously returned from addLine method */
-	updateLine: function(line, a, b) {
-		// if(!this.buffer || !this.buffer.buffers.position) return; 	// Can't update buffers, because these don't exist yet
-		var setWithOffset=function(buffer, offset, vertex) {
-			buffer[offset*3+0]=vertex[0];
-			buffer[offset*3+1]=vertex[1];
-			buffer[offset*3+2]=vertex[2];
-		};
+	/** Add lines to the renderer
+	 *  @param lines {{
+	 * 		a: [x: number, y: number, z: number],
+	 * 		b: [x: number, y: number, z: number],
+	 * 		color: Color?,
+	 * 		width: number?
+	 * }[]} Array of lines to add
+	*/
+	addLines: function(lines) {
+		var _this = this;
 
-		// Set new line values directly in rendering buffer
-		//setWithOffset(this.buffer.bufferValues.position, line.vertexOffset+0, a);
-		//setWithOffset(this.buffer.bufferValues.position, line.vertexOffset+1, b);
+		return lines.map(function(line) {
+			return _this.addLine(
+				line.a,
+				line.b,
+				line.color,
+				line.width
+			);
+		});
+	},
 
-		// Set values in the cached vertices for updated values to be preserved, if more lines are called later
-		setWithOffset(this.vertices, line.vertexOffset+0, a);
-		setWithOffset(this.vertices, line.vertexOffset+1, b);
+	updateLine: function(line, a, b, color, width) {
+		var line = this.lines[line.vertexOffset];
+
+		line.a = a;
+		line.b = b;
+		line.color = color || line.color;
+		line.width = width || line.width;
 
 		this.damaged = true;
 	},
@@ -194,15 +311,15 @@ var LineRendererComponent = RendererComponent.extend({
 		@param count Count of cells in the grid as vec2
 		@param scale Scale of grid cells as vec2 [default: [1, 1]] */
 	addGrid: function(center, count, scale) {
-		var half=[count[0]/2.0, count[1]/2.0];
-		if(!scale) scale=[1, 1];
-		for(var i=-half[0]; i<=half[0]; i++) {
-			this.addLine([i*scale[0]+center[0], center[1], -half[1]*scale[1]+center[2]],
-			             [i*scale[0]+center[0], center[1],  half[1]*scale[1]+center[2]]);
+		var half = [count[0] / 2.0, count[1] / 2.0];
+		if (!scale) scale = [1, 1];
+		for (var i = -half[0]; i <= half[0]; i++) {
+			this.addLine([i * scale[0] + center[0], center[1], -half[1] * scale[1] + center[2]],
+				[i * scale[0] + center[0], center[1], half[1] * scale[1] + center[2]]);
 		}
-		for(i=-half[1]; i<=half[1]; i++) {
-			this.addLine([-half[0]*scale[0]+center[0], center[1], i*scale[1]+center[2]],
-			             [half[0]*scale[0]+center[0], center[1], i*scale[1]+center[2]]);
+		for (i = -half[1]; i <= half[1]; i++) {
+			this.addLine([-half[0] * scale[0] + center[0], center[1], i * scale[1] + center[2]],
+				[half[0] * scale[0] + center[0], center[1], i * scale[1] + center[2]]);
 		}
 
 		this.damaged = true;

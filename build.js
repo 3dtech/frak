@@ -3,22 +3,22 @@
  * node build.js [debug]
  */
 
-// var UGLIFYJS = 'uglifyjs';
-var UGLIFYJS = 'node_modules/.bin/uglifyjs';
+const fs = require('fs');
+const exec = require('child_process').exec;
+const path = require('path');
 
-var fs = require('fs');
-var exec = require('child_process').exec;
+const UGLIFYJS = path.join('node_modules', '.bin', 'uglifyjs');
 
-var frakVersion = require('./src/Version.js');
-var files = require('./dependencies.json');
-var type = 'min';
+const frakVersion = require('./src/Version.js').version;
+const files = require('./dependencies.json');
+let type = 'min';
 
 if (process.argv.length >= 3 && process.argv[2] == 'debug') {
 	type = 'debug';
 }
 
-var outputFilename = 'frak-' + frakVersion.version + '.' + type + '.js';
-var outputFile = 'builds/' + outputFilename;
+const outputFilename = `frak-${frakVersion}.${type}.js`// 'frak-' + frakVersion.version + '.' + type + '.js';
+const outputFile = path.join('builds', outputFilename);
 
 function success(error, stdout, stderr){
 	console.error(stderr);
@@ -26,12 +26,12 @@ function success(error, stdout, stderr){
 		console.log(error, stderr);
 	}
 	else {
-		console.log('Copying %s to builds/frak-latest.min.js', outputFile);
-		fs.createReadStream(outputFile).pipe(fs.createWriteStream('builds/frak-latest.' + type + '.js'));
+		console.log(`Copying ${outputFile} to ${path.join('builds', `frak-latest.${type}.js}`)}`);
+		fs.createReadStream(outputFile).pipe(fs.createWriteStream(path.join('builds', `frak-latest.${type}.js`)));
 	}
 }
 
-var command = UGLIFYJS + ' -m -c -o ' + outputFile + ' --timings -- ';
+let command = UGLIFYJS + ' -m -c -o ' + outputFile + ' --timings -- ';
 if (process.argv.length>=3) {
 	if (process.argv[2] == 'debug') {
 		command = UGLIFYJS + ' -b -o ' + outputFile + ' --timings -- ';

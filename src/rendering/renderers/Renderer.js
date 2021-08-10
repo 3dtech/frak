@@ -15,6 +15,7 @@ var Renderer=FrakClass.extend({
 		this.reflectivity = 0.0;
 
 		this.transparent = false; ///< Value must be set to true to have renderer passed through transparent pipeline
+		this.unlit = false;
 
 		this.localBoundingBox = new BoundingBox();
 		this.localBoundingSphere = new BoundingSphere();

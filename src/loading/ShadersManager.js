@@ -31,6 +31,7 @@ var ShadersManager=Manager.extend({
 			'transparent': this.bundle('transparent'),
 			'reflective': this.bundle('reflective'),
 			'reflective_masked': this.bundle('reflective_masked'),
+			'lines': this.bundle('lines'),
 
 			// The following are deprecated:
 			'test': this.bundle('test'),
