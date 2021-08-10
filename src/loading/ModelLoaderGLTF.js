@@ -44,7 +44,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			parsedData = data;
 		}
 		else {
-			var header = new Uint32Array(data, 0, 3);
+			var header = new Uint32Array(data, 0, 3); // [magic, version, length]
 			if (header[0] == 0x46546C67 && header[1] == 2 && header[2] == data.byteLength) {
 				var view = new DataView(data);
 				parsedData = this.parseJSON(view);
@@ -63,11 +63,11 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 		var scope = this;
 		this.loadBuffers(parsedData.buffers, function() {
-			scope.loadBufferViews(parsedData.bufferViews);
-			scope.loadAccessors(parsedData.accessors);
-			scope.loadImages(parsedData.images);
-			scope.loadTextures(parsedData.textures);
-			scope.loadMaterials(parsedData.materials);
+			scope.loadBufferViews(parsedData.bufferViews || []);
+			scope.loadAccessors(parsedData.accessors || []);
+			scope.loadImages(parsedData.images || []);
+			scope.loadTextures(parsedData.textures || []);
+			scope.loadMaterials(parsedData.materials || []);
 			scope.loadMeshes(parsedData.meshes);
 			scope.loadScene(node, parsedData);
 			cb();
@@ -76,7 +76,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 	parseJSON: function(view) {
 		var length = view.getUint32(12, true);
-		if (view.getUint32(16, true) !== 0x4E4F534A) {
+		if (view.getUint32(16, true) !== 0x4E4F534A) { // type === 'JSON'
 			throw 'Invalid JSON data';
 		}
 
@@ -100,7 +100,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 				return;
 			}
 
-			if (view.getUint32(24 + jsonLength, true) !== 0x004E4942) {
+			if (view.getUint32(24 + jsonLength, true) !== 0x004E4942) { // type === 'BIN'
 				throw 'Invalid binary data';
 			}
 
@@ -159,32 +159,32 @@ var ModelLoaderGLTF = FrakClass.extend({
 			var accessor;
 			var view = this.bufferViews[accessors[i].bufferView];
 			var itemCount;
-			
+
 			switch (accessors[i].type) {
 				case 'VEC2':
 					itemCount = 2;
 					break;
-				
+
 				case 'VEC3':
 					itemCount = 3;
 					break;
-				
+
 				case 'VEC4':
 					itemCount = 4;
 					break;
-				
+
 				case 'MAT2':
 					itemCount = 4;
 					break;
-				
+
 				case 'MAT3':
 					itemCount = 9;
 					break;
-				
+
 				case 'MAT4':
 					itemCount = 16;
 					break;
-				
+
 				default:
 					itemCount = 1;
 			}
@@ -235,7 +235,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			var image = this.images[textures[i].source];
 			image.flipY = false;	// Make sure this happens before texturesManager.load is called
 
-			this.textures.push(new Sampler('diffuse0', image));
+			this.textures.push(image);
 		}
 	},
 
@@ -261,14 +261,25 @@ var ModelLoaderGLTF = FrakClass.extend({
 				var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
 				if (texture) {
 					material.samplers = [
-						this.textures[texture.index]
+						new Sampler('diffuse0', this.textures[texture.index])
 					];
 				}
 			}
 
 			material.uniforms = {
-				diffuse: new UniformColor(diffuse),
+				diffuse: new UniformColor(diffuse)
 			};
+
+			// Does not work right now for some reason
+			/* if (materials[i].normalTexture) {
+				material.samplers.push(
+					new Sampler('normal0', this.textures[materials[i].normalTexture.index])
+				);
+
+				material.shader = this.shadersManager.addSource('normalmapped');
+				material.uniforms['specularStrength'] = new UniformFloat(0.1);
+				material.uniforms['specularPower'] = new UniformInt(10);
+			} */
 
 			this.materials.push(material);
 		}
@@ -308,10 +319,10 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 		if (!isNaN(parseInt(primitive.attributes.NORMAL)))
 			submesh.normals = this.accessors[primitive.attributes.NORMAL];
-		
+
 		if (!isNaN(parseInt(primitive.attributes.TEXCOORD_0)))
 			submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
-		
+
 		submesh.recalculateBounds();
 
 		return submesh;
