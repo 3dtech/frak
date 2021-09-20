@@ -44,9 +44,12 @@ var ModelLoaderGLTF = FrakClass.extend({
 			parsedData = data;
 		}
 		else {
-			var header = new Uint32Array(data, 0, 3); // [magic, version, length]
-			if (header[0] == 0x46546C67 && header[1] == 2 && header[2] == data.byteLength) {
-				var view = new DataView(data);
+			var view = new DataView(data);
+			if (
+				view.getUint32(0, true) == 0x46546C67 && // magic === 'glTF'
+				view.getUint32(4, true) == 2 && // version === 2
+				view.getUint32(8, true) == data.byteLength
+			) {
 				parsedData = this.parseJSON(view);
 				this.binaryBuffer = this.parseBinaryBuffer(view);
 			} else {
