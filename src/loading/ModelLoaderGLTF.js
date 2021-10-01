@@ -224,7 +224,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			}
 
 			if (uri) {
-				this.images.push(this.texturesManager.addDescriptor(new TextureDescriptor(uri)));
+				this.images.push(this.texturesManager.addDescriptor(new LockedTextureDescriptor(uri)));
 			}
 		}
 	},

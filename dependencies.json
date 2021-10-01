@@ -179,6 +179,7 @@
 	"src/scene/descriptors/MaterialSourceDescriptor.js",
 	"src/scene/descriptors/TextureDescriptor.js",
 	"src/scene/descriptors/CubeTextureDescriptor.js",
+	"src/scene/descriptors/LockedTextureDescriptor.js",
 
 	"src/scene/EmptyNode.js",
 	"src/scene/Node.js",
