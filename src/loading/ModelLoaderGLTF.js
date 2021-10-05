@@ -224,7 +224,14 @@ var ModelLoaderGLTF = FrakClass.extend({
 			}
 
 			if (uri) {
-				this.images.push(this.texturesManager.addDescriptor(new LockedTextureDescriptor(uri)));
+				var descriptor = new TextureDescriptor(uri);
+				var absolute = new RegExp('^//|(?:[a-z]+:)?', 'i');
+
+				if (absolute.test(uri)) {
+					descriptor.locked = true;
+				}
+
+				this.images.push(this.texturesManager.addDescriptor(descriptor));
 			}
 		}
 	},

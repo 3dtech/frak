@@ -9929,7 +9929,12 @@ var ModelLoaderGLTF = FrakClass.extend({
                 uri = URL.createObjectURL(blob);
             }
             if (uri) {
-                this.images.push(this.texturesManager.addDescriptor(new LockedTextureDescriptor(uri)));
+                var descriptor = new TextureDescriptor(uri);
+                var absolute = new RegExp("^//|(?:[a-z]+:)?", "i");
+                if (absolute.test(uri)) {
+                    descriptor.locked = true;
+                }
+                this.images.push(this.texturesManager.addDescriptor(descriptor));
             }
         }
     },
@@ -14037,11 +14042,13 @@ var MaterialSourceDescriptor = Descriptor.extend({
 });
 
 var TextureDescriptor = Descriptor.extend({
-    init: function(source, width, height) {
+    init: function(source, width, height, locked) {
         this._super();
         this.source = source;
+        this._source = source;
         this.width = width;
         this.height = height;
+        this.locked = locked;
     },
     type: function() {
         return "TextureDescriptor";
@@ -14049,6 +14056,13 @@ var TextureDescriptor = Descriptor.extend({
     equals: function(other) {
         if (!this._super(other)) return false;
         return this.source == other.source && this.width == other.width && height == other.height;
+    },
+    getFullPath: function() {
+        if (this.locked) {
+            return this._source;
+        } else {
+            return this._super();
+        }
     }
 });
 
@@ -14072,19 +14086,6 @@ var CubeTextureDescriptor = Descriptor.extend({
         var path = this.getFullPath();
         this.source = "";
         return path;
-    }
-});
-
-var LockedTextureDescriptor = TextureDescriptor.extend({
-    init: function(source, width, height) {
-        this._super(source, width, height);
-        this._source = source;
-    },
-    type: function() {
-        return "LockedTextureDescriptor";
-    },
-    getFullPath: function() {
-        return this._source;
     }
 });
 
