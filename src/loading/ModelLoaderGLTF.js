@@ -382,6 +382,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 				var meshNode = new Node();
 				meshNode.addComponent(new MeshComponent(this.meshes[i]));
 				meshNode.addComponent(new MeshRendererComponent());
+				meshNode.addComponent(new MeshCollider());
 			}
 		}
 		else {
@@ -399,6 +400,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 		if (!isNaN(parseInt(node.mesh))) {
 			sceneNode.addComponent(new MeshComponent(this.meshes[node.mesh]));
 			sceneNode.addComponent(new MeshRendererComponent());
+			sceneNode.addComponent(new MeshCollider());
 		}
 
 		if (node.matrix) {
