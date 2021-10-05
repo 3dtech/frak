@@ -20,6 +20,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 		this.bufferViews = [];
 		this.accessors = [];
 		this.images = [];
+		this.samplers = [];
 		this.textures = [];
 		this.materials = [];
 		this.meshes = [];
@@ -69,6 +70,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			scope.loadBufferViews(parsedData.bufferViews || []);
 			scope.loadAccessors(parsedData.accessors || []);
 			scope.loadImages(parsedData.images || []);
+			scope.loadSamplers(parsedData.samplers || []);
 			scope.loadTextures(parsedData.textures || []);
 			scope.loadMaterials(parsedData.materials || []);
 			scope.loadMeshes(parsedData.meshes);
@@ -224,26 +226,61 @@ var ModelLoaderGLTF = FrakClass.extend({
 			}
 
 			if (uri) {
-				var descriptor = new TextureDescriptor(uri);
-				var absolute = new RegExp('^//|(?:[a-z]+:)?', 'i');
+				var notRelative = new RegExp('^//|(?:[a-z]+:)?', 'i');
+				var locked = false;
 
-				if (absolute.test(uri)) {
-					descriptor.locked = true;
+				if (notRelative.test(uri)) {
+					locked = true;
 				}
 
-				this.images.push(this.texturesManager.addDescriptor(descriptor));
+				this.images.push({
+					locked: locked,
+					uri: uri,
+				});
 			}
 		}
 	},
 
+	loadSamplers: function(samplers) {
+		this.samplers = samplers.slice();
+	},
+
 	loadTextures: function(textures) {
 		for (var i = 0, l = textures.length; i < l; i++) {
-			if (isNaN(parseInt(textures[i].source))) {
+			var texture = textures[i];
+			if (isNaN(parseInt(texture.source))) {
 				continue;
 			}
 
-			var image = this.images[textures[i].source];
+			var descriptorImage = this.images[texture.source];
+			var descriptor = new TextureDescriptor(descriptorImage.uri);
+			descriptor.locked = descriptorImage.locked;
+
+			// Hack to enable multiple textures with different settings but same image
+			descriptor.glTFID = i;
+
+			var image = this.texturesManager.addDescriptor(descriptor);
 			image.flipY = false;	// Make sure this happens before texturesManager.load is called
+
+			if (!isNaN(parseInt(texture.sampler))) {
+				var sampler = this.samplers[texture.sampler];
+
+				if (!isNaN(parseInt(sampler.wrapS))) {
+					if (sampler.wrapS === 33071) {
+						image.wrapS = 'clamp';
+					} else if (sampler.wrapS === 33648) {
+						image.wrapS = 'mirror';
+					}
+				}
+
+				if (!isNaN(parseInt(sampler.wrapT))) {
+					if (sampler.wrapT === 33071) {
+						image.wrapT = 'clamp';
+					} else if (sampler.wrapT === 33648) {
+						image.wrapT = 'mirror';
+					}
+				}
+			}
 
 			this.textures.push(image);
 		}

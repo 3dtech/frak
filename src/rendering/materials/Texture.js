@@ -18,6 +18,9 @@ var Texture = BaseTexture.extend({
 		this.anisotropyFilter = 4; // 4x filtering by default
 		this.image = null;
 
+		this.wrapS = false;
+		this.wrapT = false;
+
 		if (context)
 			this.create(context);
 	},
@@ -54,17 +57,17 @@ var Texture = BaseTexture.extend({
 	 * @param size {number} The size of the texture side in pixels
 	 */
 	clearImage: function(context, color, size) {
-		if(this.glTexture === null)
+		if (this.glTexture === null)
 			this.create(context);
 		size = size || 1;
 		var gl = context.gl;
 		gl.bindTexture(context.gl.TEXTURE_2D, this.glTexture);
 		var data = new Uint8Array(size * size * 4);
-		for (var i=0; i<size*size*4; i+=4) {
-			data[i+0] = color[0];
-			data[i+1] = color[1];
-			data[i+2] = color[2];
-			data[i+3] = color[3];
+		for (var i = 0; i < size * size * 4; i += 4) {
+			data[i + 0] = color[0];
+			data[i + 1] = color[1];
+			data[i + 2] = color[2];
+			data[i + 3] = color[3];
 		}
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -84,7 +87,7 @@ var Texture = BaseTexture.extend({
 		this.bind(context);
 		var gl = context.gl;
 		gl.texSubImage2D(gl.TEXTURE_2D, 0,
-			position[0]*this.size[0], position[1]*this.size[1],
+			position[0] * this.size[0], position[1] * this.size[1],
 			gl.RGBA, gl.UNSIGNED_BYTE, image);
 		if (this.mipmapped)
 			gl.generateMipmap(gl.TEXTURE_2D);
@@ -113,7 +116,31 @@ var Texture = BaseTexture.extend({
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.flipY);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-		// Apply clamp to edge settings
+		// Apply wrap settings
+		if (this.wrapS) {
+			var wrap = gl.REPEAT;
+			if (this.wrapS === 'clamp') {
+				wrap = gl.CLAMP_TO_EDGE;
+			} else if (this.wrapS === 'mirror') {
+				wrap = gl.MIRRORED_REPEAT;
+			}
+
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+		}
+
+		if (this.wrapT) {
+			var wrap = gl.REPEAT;
+			if (this.wrapT === 'clamp') {
+				wrap = gl.CLAMP_TO_EDGE;
+			} else if (this.wrapT === 'mirror') {
+				wrap = gl.MIRRORED_REPEAT;
+			}
+
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+		}
+
+
+		// Legacy clamp to edge settings
 		if (this.clampToEdge) {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -146,11 +173,11 @@ var Texture = BaseTexture.extend({
 
 	/** @return WebGLUnsignedByteArray with contents of texture */
 	getImage: function(context) {
-		if(!this.glTexture) throw "Unable to get image. glTexture not available.";
-		var gl=context.gl;
-		var targetTexture=new TargetTexture(this, context, false);
+		if (!this.glTexture) throw "Unable to get image. glTexture not available.";
+		var gl = context.gl;
+		var targetTexture = new TargetTexture(this, context, false);
 		targetTexture.bind(context);
-		var result=new Uint8Array(this.size[0]*this.size[1]*4);
+		var result = new Uint8Array(this.size[0] * this.size[1] * 4);
 		context.gl.readPixels(0, 0, this.size[0], this.size[1], gl.RGBA, gl.UNSIGNED_BYTE, result);
 		targetTexture.unbind(context);
 		return result;
