@@ -8,8 +8,8 @@ function TransparencySort(a, b) {
 		return 1;
 	var d1 = vec3.squaredDistance(TransparencySort.cmpValue, a.globalBoundingSphere.center);
 	var d2 = vec3.squaredDistance(TransparencySort.cmpValue, b.globalBoundingSphere.center);
-	if (d1>d2) return -1;
-	if (d1<d2) return 1;
+	if (d1 > d2) return -1;
+	if (d1 < d2) return 1;
 	return 0;
 }
 
@@ -23,14 +23,14 @@ function Batch(list) {
 	var scope = this;
 
 	this.clear = function() {
-		for (var i=0, l = scope.indices.length; i < l; ++i)
+		for (var i = 0, l = scope.indices.length; i < l; ++i)
 			scope.indices[i] = -1;
 		scope.length = 0;
 	};
 
 	this.add = function(index) {
-		function indexOfFor(ar,v){
-			for (var i = 0, l=ar.length; i < l; i++) {
+		function indexOfFor(ar, v) {
+			for (var i = 0, l = ar.length; i < l; i++) {
 				if (ar[i] === v) {
 					return true;
 				}
@@ -61,22 +61,22 @@ var RendererOrganizer = FrakClass.extend({
 
 		this.solidRenderers = [];
 		this.transparentRenderers = [];
-		this.unlitRenderers = [];
+		this.customRenderers = [];
 
 		this.opaqueBatchList = [];
 		this.transparentBatchList = [];
-		this.unlitBatchList = [];
+		this.customBatchList = [];
 		this.batchIndex = {};
 
 		this.renderers = new CollectionReference([]);
 		this.viewSolidRenderers = new CollectionView(this.renderers, function(renderer) {
-			return !renderer.transparent && !renderer.unlit;
+			return !renderer.transparent && !renderer.customShader;
 		});
 		this.viewTransparentRenderers = new CollectionView(this.renderers, function(renderer) {
-			return renderer.transparent && !renderer.unlit;
+			return renderer.transparent && !renderer.customShader;
 		});
-		this.viewUnlitRenderers = new CollectionView(this.renderers, function(renderer) {
-			return renderer.unlit;
+		this.viewCustomRenderers = new CollectionView(this.renderers, function(renderer) {
+			return renderer.customShader;
 		});
 
 		// Stats
@@ -87,16 +87,16 @@ var RendererOrganizer = FrakClass.extend({
 		this.visibleTransparentRenderers = 0;
 		this.visibleTransparentFaces = 0;
 		this.visibleTransparentBatches = 0;
-		this.visibleUnlitRenderers = 0;
-		this.visibleUnlitFaces = 0;
-		this.visibleUnlitBatches = 0;
+		this.visibleCustomRenderers = 0;
+		this.visibleCustomFaces = 0;
+		this.visibleCustomBatches = 0;
 	},
 
 	updateStats: function() {
 		this.visibleSolidRenderers = this.viewSolidRenderers.length;
 		this.visibleTransparentRenderers = this.viewTransparentRenderers.length;
-		this.visibleUnlitRenderers = this.viewUnlitRenderers.length;
-		this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleUnlitRenderers;
+		this.visibleCustomRenderers = this.viewCustomRenderers.length;
+		this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleCustomRenderers;
 		// FIXME: visible batches should only be updated when the info is required
 	},
 
@@ -140,10 +140,10 @@ var RendererOrganizer = FrakClass.extend({
 		this.renderers.list = renderers;
 		this.viewSolidRenderers.filter();
 		this.viewTransparentRenderers.filter();
-		this.viewUnlitRenderers.filter();
+		this.viewCustomRenderers.filter();
 		this.solidRenderers = this.viewSolidRenderers.view;
 		this.transparentRenderers = this.viewTransparentRenderers.view;
-		this.unlitRenderers = this.viewUnlitRenderers.view;
+		this.customRenderers = this.viewCustomRenderers.view;
 
 		// Batch renderers by material.id
 		if (this.enableDynamicBatching) {
@@ -151,7 +151,7 @@ var RendererOrganizer = FrakClass.extend({
 				this.batch(this.transparentBatchList, this.transparentRenderers);
 			}
 			this.batch(this.opaqueBatchList, this.solidRenderers);
-			this.batch(this.unlitBatchList, this.unlitRenderers);
+			this.batch(this.customBatchList, this.customRenderers);
 		}
 
 		// Sort transparent renderers

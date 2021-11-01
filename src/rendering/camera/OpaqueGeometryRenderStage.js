@@ -71,9 +71,9 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 		}
 
 		if (this.parent.organizer.enableDynamicBatching) {
-			this.parent.renderBatched(context, this.parent.organizer.unlitBatchList);
+			this.parent.renderBatched(context, this.parent.organizer.customBatchList);
 		} else {
-			this.parent.renderBruteForce(context, this.parent.organizer.unlitRenderers);
+			this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
 		}
 
 		gl.disable(gl.DEPTH_TEST);

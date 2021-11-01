@@ -31,7 +31,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
 		this.softShadowsStage = this.addStage(new SoftShadowsRenderStage()).disable();
 		this.addStage(this.bindCameraTarget);
 		this.lightsStage = this.addStage(new LightsRenderStage());
-		this.unlitStage = this.addStage(new UnlitGeometryRenderStage());
+		this.customStage = this.addStage(new CustomGeometryRenderStage());
 		this.addStage(this.unbindCameraTarget);
 
 		// Shared uniforms cache

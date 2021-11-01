@@ -1,8 +1,8 @@
 /**
  * Render-stage for rendering opaque geometry.
  */
-var UnlitGeometryRenderStage = RenderStage.extend({
-	init: function () {
+var CustomGeometryRenderStage = RenderStage.extend({
+	init: function() {
 		this._super();
 
 		// Shared uniforms cache
@@ -23,24 +23,24 @@ var UnlitGeometryRenderStage = RenderStage.extend({
 		this.samplerAccum = new SamplerAccumulator();
 	},
 
-	onPostRender: function (context, scene, camera) {
+	onPostRender: function(context, scene, camera) {
 		var gl = context.gl;
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
 		gl.depthMask(true);
 
 		if (this.parent.organizer.enableDynamicBatching) {
-			this.renderBatched(context, this.parent.organizer.unlitBatchList);
+			this.renderBatched(context, this.parent.organizer.customBatchList);
 		}
 		else {
-			this.renderBruteForce(context, this.parent.organizer.unlitRenderers);
+			this.renderBruteForce(context, this.parent.organizer.customRenderers);
 		}
 
 		gl.disable(gl.DEPTH_TEST);
 	},
 
 	/** Renders renderers in batches by material */
-	renderBatched: function (context, batches) {
+	renderBatched: function(context, batches) {
 		//console.log("RenderBatched", context, batches);
 		var usedShader = false;
 		var material, batch, shader, renderer;
@@ -99,7 +99,7 @@ var UnlitGeometryRenderStage = RenderStage.extend({
 	},
 
 	/** Renders without dynamic batching */
-	renderBruteForce: function (context, renderers) {
+	renderBruteForce: function(context, renderers) {
 		for (var j = 0; j < renderers.length; ++j) {
 			var renderer = renderers[j];
 			if (!renderer)

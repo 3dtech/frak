@@ -1,6 +1,6 @@
 /** Renderer baseclass. Essentially Renderer classes are for containing ready-made buffers
   that are used straight for rendering. To render many at once add them to DynamicSpace. */
-var Renderer=FrakClass.extend({
+var Renderer = FrakClass.extend({
 	/** Constructor
 		@param matrix Matrix applied to anything rendered
 		*/
@@ -15,7 +15,7 @@ var Renderer=FrakClass.extend({
 		this.reflectivity = 0.0;
 
 		this.transparent = false; ///< Value must be set to true to have renderer passed through transparent pipeline
-		this.unlit = false;
+		this.customShader = false;
 
 		this.localBoundingBox = new BoundingBox();
 		this.localBoundingSphere = new BoundingSphere();
@@ -115,7 +115,7 @@ var Renderer=FrakClass.extend({
 
 	/** Updates matrix and global bounding volumes */
 	setMatrix: function(matrix) {
-		this.matrix=matrix;
+		this.matrix = matrix;
 		this.updateGlobalBoundingVolumes();
 	},
 
