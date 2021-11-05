@@ -11631,6 +11631,7 @@ var Component = Serializable.extend({
     onEnable: function() {},
     onDisable: function() {},
     onStart: function(context, engine) {},
+    onAfterStart: function(context, engine) {},
     start: function(context, engine) {
         this.onStart(context, engine);
     },
@@ -12113,9 +12114,11 @@ var TextComponent = MeshComponent.extend({
         this.context = false;
         this.material = false;
         this.texture = false;
-        this.wrap = wrap ? 0 : wrap;
+        this.wrap = wrap > 0 ? wrap : 0;
         this.sampler = new Sampler("diffuse0", null);
         this.lines = [];
+        this.canvasWidth = 0;
+        this.canvasHeight = 0;
         this.color = new Color(0, 0, 0, 1);
         this.fontSize = 56;
         this.style = "normal";
@@ -12127,6 +12130,7 @@ var TextComponent = MeshComponent.extend({
         this.outlineColor = new Color(1, 1, 1, 1);
         this.outlineWidth = 5;
         this.textLength = 0;
+        this.textHeight = 0;
         this.setText(text);
     },
     excluded: function() {
@@ -12153,21 +12157,36 @@ var TextComponent = MeshComponent.extend({
         this.font += this.fontSize + "px " + this.family;
     },
     updateText: function() {
-        if (!this.context || this.text.length == 0) return;
-        var rendererComponent = this.node.getComponent(TextRendererComponent);
-        if (!rendererComponent) return;
+        if (this.text.length == 0) return;
         this.updateFont();
         var canvas = document.createElement("canvas");
         var ctx = canvas.getContext("2d");
         this.applyTextStyles(ctx);
-        if (this.wrap) this.lines = this.getLines(this.text); else this.textLength = ctx.measureText(this.text).width;
-        canvas.width = nextHighestPowerOfTwo(ctx.measureText(this.text).width);
-        canvas.height = nextHighestPowerOfTwo(2 * this.fontSize);
+        this.lines = [ this.text ];
+        if (this.wrap) {
+            this.lines = this.getLines(this.text, this.wrap);
+        }
+        for (var l in this.lines) {
+            this.textLength = Math.max(this.textLength, ctx.measureText(this.lines[l]).width);
+        }
+        this.textHeight = 1.2 * this.fontSize * this.lines.length;
+        canvas.width = this.canvasWidth = nextHighestPowerOfTwo(this.textLength);
+        canvas.height = this.canvasHeight = nextHighestPowerOfTwo(this.textHeight);
+        var top = (this.canvasHeight - this.textHeight) / 2;
         ctx.fillStyle = this.backgroundColor.toString();
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         this.applyTextStyles(ctx);
-        if (this.outline) ctx.strokeText(this.text, canvas.width / 2, canvas.height / 2);
-        ctx.fillText(this.text, canvas.width / 2, canvas.height / 2);
+        if (this.outline) {
+            for (var l in this.lines) {
+                ctx.strokeText(this.lines[l], canvas.width / 2, 1.2 * this.fontSize * l + top + this.fontSize * .6);
+            }
+        }
+        for (var l in this.lines) {
+            ctx.fillText(this.lines[l], canvas.width / 2, 1.2 * this.fontSize * l + top + this.fontSize * .6);
+        }
+        if (!this.context) return;
+        var rendererComponent = this.node.getComponent(TextRendererComponent);
+        if (!rendererComponent) return;
         this.texture.setImage(this.context, canvas);
         var height = 1;
         var width = canvas.width / canvas.height;
@@ -12216,20 +12235,31 @@ var TextComponent = MeshComponent.extend({
         this.updateText();
     },
     getLines: function(text, linesCount) {
-        var words = text.split(" ");
+        var words = text.replace(/\&shy;/g, " &shy; ").split(" ");
+        var textLength = text.replace("&shy;", "-").length;
         var lines = [];
         var currentLine = words[0];
         if (linesCount <= 0) return words;
         if (words.length <= linesCount) return words;
         for (var i = 1; i < words.length; i++) {
-            if (currentLine.length > text.length / linesCount) {
-                lines.push(currentLine);
-                currentLine = "";
+            if (words[i].toLowerCase() !== "&shy;") {
+                if (currentLine.length > textLength / linesCount) {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine += " " + words[i];
+                }
             } else {
-                currentLine += " " + words[i];
+                if (currentLine.length + 1 > textLength / linesCount) {
+                    lines.push(currentLine + "-");
+                    currentLine = "";
+                } else if (i + 1 < words.length) {
+                    lines.push(currentLine + words[++i]);
+                    currentLine = "";
+                }
             }
         }
-        lines.push(currentLine);
+        if (currentLine !== "") lines.push(currentLine);
         return lines;
     },
     onContextRestored: function(context) {
