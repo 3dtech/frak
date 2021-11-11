@@ -75,6 +75,12 @@ var Component = Serializable.extend({
 		@param engine Starting engine */
 	onStart: function(context, engine) {},
 
+	/** Called on node immediately after Component children have started
+
+	@param context Rendering context
+	@param engine Starting engine */
+	onAfterStart: function(context, engine) {},
+
 	/** Calls onStart method. NB! This is intended as final method and called by FRAK internal functions! */
 	start: function(context, engine) {
 		this.onStart(context, engine);
