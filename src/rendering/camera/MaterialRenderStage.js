@@ -49,7 +49,8 @@ var MaterialRenderStage = RenderStage.extend({
 		this.sharedUniforms = {
 			"view": new UniformMat4(mat4.create()),
 			"viewInverse": new UniformMat4(mat4.create()),
-			"projection": new UniformMat4(mat4.create())
+			"projection": new UniformMat4(mat4.create()),
+			'cameraPosition': new UniformVec3(vec3.create())
 		};
 
 		// Renderer uniforms cache
@@ -155,6 +156,7 @@ var MaterialRenderStage = RenderStage.extend({
 		mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
 		mat4.copy(this.sharedUniforms.view.value, context.camera.viewMatrix);
 		mat4.copy(this.sharedUniforms.viewInverse.value, context.camera.viewInverseMatrix);
+		vec3.copy(this.sharedUniforms.cameraPosition.value, context.camera.getPosition());
 	},
 
 	/** Acquires and organizes the visible renderers. */

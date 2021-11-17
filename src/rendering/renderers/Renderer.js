@@ -82,10 +82,14 @@ var Renderer = FrakClass.extend({
 				if (uniforms.hasOwnProperty('zNear')) uniforms.zNear.value = context.camera.near;
 				else uniforms.zNear = new UniformFloat(context.camera.near);
 			}
+
 			if (context.camera.far) {
 				if (uniforms.hasOwnProperty('zFar')) uniforms.zFar.value = context.camera.far;
 				else uniforms.zFar = new UniformFloat(context.camera.far);
 			}
+
+			if (uniforms.hasOwnProperty('cameraPosition')) vec3.copy(uniforms.cameraPosition.value, context.camera.getPosition());
+			else uniforms.cameraPosition = new UniformVec3(context.camera.getPosition());
 		}
 
 		// Light uniforms

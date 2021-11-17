@@ -27,16 +27,13 @@ var ModelLoaderGLTF = FrakClass.extend({
 	},
 
 	createDefaultTextureSampler: function(context) {
-		if (this.defaultTexture) {
-			return;
-		}
-
 		if (!context.engine) {
 			return;
 		}
 
 		this.defaultTexture = context.engine.WhiteTexture;
-		this.defaultSampler = new Sampler('diffuse0', this.defaultTexture);
+
+		return new Sampler('diffuse0', this.defaultTexture);
 	},
 
 	/** Loads parsed data to scene hierarchy at given node */
@@ -211,15 +208,13 @@ var ModelLoaderGLTF = FrakClass.extend({
 	},
 
 	defaultMaterial: function() {
-		this.createDefaultTextureSampler(this.shadersManager.context);
+		var defaultSampler = this.createDefaultTextureSampler(this.shadersManager.context);
 
 		return new Material(
-			this.shadersManager.addSource('diffuse'),
-			{
-				diffuse: new UniformColor(new Color())
-			},
+			this.shadersManager.addSource('pbr'),
+			{},
 			[
-				this.defaultSampler
+				defaultSampler
 			]
 		);
 	},
@@ -311,10 +306,22 @@ var ModelLoaderGLTF = FrakClass.extend({
 			}
 
 			var diffuse = new Color();
+			var metalness = 1.0;
+			var roughness = 1.0;
 			if (materials[i].pbrMetallicRoughness) {
 				var bcf = materials[i].pbrMetallicRoughness.baseColorFactor;
 				if (bcf) {
 					diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
+				}
+
+				var metallicFactor = materials[i].pbrMetallicRoughness.metallicFactor;
+				if (!isNaN(parseFloat((metallicFactor)))) {
+					metalness = metallicFactor;
+				}
+
+				var roughnessFactor = materials[i].pbrMetallicRoughness.roughnessFactor;
+				if (!isNaN(parseFloat((roughnessFactor)))) {
+					roughness = roughnessFactor;
 				}
 
 				var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
@@ -323,22 +330,31 @@ var ModelLoaderGLTF = FrakClass.extend({
 						new Sampler('diffuse0', this.textures[texture.index])
 					];
 				}
+
+				var metallicRoughness = materials[i].pbrMetallicRoughness.metallicRoughnessTexture;
+				if (metallicRoughness) {
+					material.samplers.push(
+						new Sampler('metallicRoughness0', this.textures[metallicRoughness.index])
+					);
+				} else {
+					var metallicSampler = this.createDefaultTextureSampler(this.shadersManager.context);
+
+					metallicSampler.name = 'metallicRoughness0';
+					material.samplers.push(metallicSampler);
+				}
 			}
 
 			material.uniforms = {
-				diffuse: new UniformColor(diffuse)
+				diffuse: new UniformColor(diffuse),
+				perceptual_roughness: new UniformFloat(roughness),
+				metalness: new UniformFloat(metalness)
 			};
 
-			// Does not work right now for some reason
-			/* if (materials[i].normalTexture) {
+			if (materials[i].normalTexture) {
 				material.samplers.push(
 					new Sampler('normal0', this.textures[materials[i].normalTexture.index])
 				);
-
-				material.shader = this.shadersManager.addSource('normalmapped');
-				material.uniforms['specularStrength'] = new UniformFloat(0.1);
-				material.uniforms['specularPower'] = new UniformInt(10);
-			} */
+			}
 
 			this.materials.push(material);
 		}
@@ -386,6 +402,16 @@ var ModelLoaderGLTF = FrakClass.extend({
 			submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
 		}
 
+		if (!isNaN(parseInt(primitive.attributes.TANGENT))) {
+			submesh.tangents = this.accessors[primitive.attributes.TANGENT].filter(
+				function(_, i) {
+					return i % 4 !== 3;
+				}
+			);
+		} else {
+			submesh.calculateTangents();
+		}
+
 		submesh.recalculateBounds();
 
 		return submesh;
@@ -399,6 +425,8 @@ var ModelLoaderGLTF = FrakClass.extend({
 			for (i = 0, l = this.meshes.length; i < l; i++) {
 				var meshNode = new Node();
 				var renderer = new MeshRendererComponent();
+
+				renderer.customShader = true;
 
 				meshNode.addComponent(new MeshComponent(this.meshes[i]));
 				meshNode.addComponent(renderer);
@@ -416,6 +444,8 @@ var ModelLoaderGLTF = FrakClass.extend({
 		var node = nodes[index];
 		var sceneNode = new Node(node.name);
 		var renderer = new MeshRendererComponent();
+
+		renderer.customShader = true;
 
 		if (!isNaN(parseInt(node.mesh))) {
 			sceneNode.addComponent(new MeshComponent(this.meshes[node.mesh]));
