@@ -190,5 +190,5 @@ void main(void) {
 
 	output_color.rgb = reinhard_luminance(output_color.rgb);
 
-	fragColor = vec4(T, 1.0);
+	fragColor = output_color;
 }

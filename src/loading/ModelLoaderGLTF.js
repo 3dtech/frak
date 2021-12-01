@@ -231,7 +231,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			}
 
 			if (uri) {
-				var notRelative = new RegExp('^//|(?:[a-z]+:)?', 'i');
+				var notRelative = new RegExp('^//|(?:[a-z]+:)', 'i');
 				var locked = false;
 
 				if (notRelative.test(uri)) {
