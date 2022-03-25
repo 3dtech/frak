@@ -4968,20 +4968,20 @@ var RendererOrganizer = FrakClass.extend({
         this.enableDynamicBatching = true;
         this.solidRenderers = [];
         this.transparentRenderers = [];
-        this.unlitRenderers = [];
+        this.customRenderers = [];
         this.opaqueBatchList = [];
         this.transparentBatchList = [];
-        this.unlitBatchList = [];
+        this.customBatchList = [];
         this.batchIndex = {};
         this.renderers = new CollectionReference([]);
         this.viewSolidRenderers = new CollectionView(this.renderers, function(renderer) {
-            return !renderer.transparent && !renderer.unlit;
+            return !renderer.transparent && !renderer.customShader;
         });
         this.viewTransparentRenderers = new CollectionView(this.renderers, function(renderer) {
-            return renderer.transparent && !renderer.unlit;
+            return renderer.transparent && !renderer.customShader;
         });
-        this.viewUnlitRenderers = new CollectionView(this.renderers, function(renderer) {
-            return renderer.unlit;
+        this.viewCustomRenderers = new CollectionView(this.renderers, function(renderer) {
+            return renderer.customShader;
         });
         this.visibleRenderers = 0;
         this.visibleSolidRenderers = 0;
@@ -4990,15 +4990,15 @@ var RendererOrganizer = FrakClass.extend({
         this.visibleTransparentRenderers = 0;
         this.visibleTransparentFaces = 0;
         this.visibleTransparentBatches = 0;
-        this.visibleUnlitRenderers = 0;
-        this.visibleUnlitFaces = 0;
-        this.visibleUnlitBatches = 0;
+        this.visibleCustomRenderers = 0;
+        this.visibleCustomFaces = 0;
+        this.visibleCustomBatches = 0;
     },
     updateStats: function() {
         this.visibleSolidRenderers = this.viewSolidRenderers.length;
         this.visibleTransparentRenderers = this.viewTransparentRenderers.length;
-        this.visibleUnlitRenderers = this.viewUnlitRenderers.length;
-        this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleUnlitRenderers;
+        this.visibleCustomRenderers = this.viewCustomRenderers.length;
+        this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleCustomRenderers;
     },
     batch: function(batchList, renderers) {
         var i;
@@ -5028,16 +5028,16 @@ var RendererOrganizer = FrakClass.extend({
         this.renderers.list = renderers;
         this.viewSolidRenderers.filter();
         this.viewTransparentRenderers.filter();
-        this.viewUnlitRenderers.filter();
+        this.viewCustomRenderers.filter();
         this.solidRenderers = this.viewSolidRenderers.view;
         this.transparentRenderers = this.viewTransparentRenderers.view;
-        this.unlitRenderers = this.viewUnlitRenderers.view;
+        this.customRenderers = this.viewCustomRenderers.view;
         if (this.enableDynamicBatching) {
             if (engine.options.transparencyMode != "sorted") {
                 this.batch(this.transparentBatchList, this.transparentRenderers);
             }
             this.batch(this.opaqueBatchList, this.solidRenderers);
-            this.batch(this.unlitBatchList, this.unlitRenderers);
+            this.batch(this.customBatchList, this.customRenderers);
         }
         if (engine.options.transparencyMode == "sorted" && eyePosition) {
             vec3.copy(TransparencySort.cmpValue, eyePosition);
@@ -5214,7 +5214,8 @@ var MaterialRenderStage = RenderStage.extend({
         this.sharedUniforms = {
             view: new UniformMat4(mat4.create()),
             viewInverse: new UniformMat4(mat4.create()),
-            projection: new UniformMat4(mat4.create())
+            projection: new UniformMat4(mat4.create()),
+            cameraPosition: new UniformVec3(vec3.create())
         };
         this.rendererUniforms = {
             model: new UniformMat4(null),
@@ -5289,6 +5290,7 @@ var MaterialRenderStage = RenderStage.extend({
         mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
         mat4.copy(this.sharedUniforms.view.value, context.camera.viewMatrix);
         mat4.copy(this.sharedUniforms.viewInverse.value, context.camera.viewInverseMatrix);
+        vec3.copy(this.sharedUniforms.cameraPosition.value, context.camera.getPosition());
     },
     onPreRender: function(context, scene, camera) {
         this.prepareShared(context);
@@ -5820,16 +5822,16 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
             gl.depthFunc(gl.LESS);
         }
         if (this.parent.organizer.enableDynamicBatching) {
-            this.parent.renderBatched(context, this.parent.organizer.unlitBatchList);
+            this.parent.renderBatched(context, this.parent.organizer.customBatchList);
         } else {
-            this.parent.renderBruteForce(context, this.parent.organizer.unlitRenderers);
+            this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
         }
         gl.disable(gl.DEPTH_TEST);
         context.light = false;
     }
 });
 
-var UnlitGeometryRenderStage = RenderStage.extend({
+var CustomGeometryRenderStage = RenderStage.extend({
     init: function() {
         this._super();
         this.sharedUniforms = {
@@ -5850,9 +5852,9 @@ var UnlitGeometryRenderStage = RenderStage.extend({
         gl.depthFunc(gl.LESS);
         gl.depthMask(true);
         if (this.parent.organizer.enableDynamicBatching) {
-            this.renderBatched(context, this.parent.organizer.unlitBatchList);
+            this.renderBatched(context, this.parent.organizer.customBatchList);
         } else {
-            this.renderBruteForce(context, this.parent.organizer.unlitRenderers);
+            this.renderBruteForce(context, this.parent.organizer.customRenderers);
         }
         gl.disable(gl.DEPTH_TEST);
     },
@@ -6434,7 +6436,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
         this.softShadowsStage = this.addStage(new SoftShadowsRenderStage()).disable();
         this.addStage(this.bindCameraTarget);
         this.lightsStage = this.addStage(new LightsRenderStage());
-        this.unlitStage = this.addStage(new UnlitGeometryRenderStage());
+        this.customStage = this.addStage(new CustomGeometryRenderStage());
         this.addStage(this.unbindCameraTarget);
         this.sharedUniforms = {
             view: new UniformMat4(mat4.create()),
@@ -7918,6 +7920,8 @@ var Texture = BaseTexture.extend({
         this.anisotropic = true;
         this.anisotropyFilter = 4;
         this.image = null;
+        this.wrapS = false;
+        this.wrapT = false;
         if (context) this.create(context);
     },
     type: function() {
@@ -7978,6 +7982,24 @@ var Texture = BaseTexture.extend({
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.flipY);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        if (this.wrapS) {
+            var wrap = gl.REPEAT;
+            if (this.wrapS === "clamp") {
+                wrap = gl.CLAMP_TO_EDGE;
+            } else if (this.wrapS === "mirror") {
+                wrap = gl.MIRRORED_REPEAT;
+            }
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+        }
+        if (this.wrapT) {
+            var wrap = gl.REPEAT;
+            if (this.wrapT === "clamp") {
+                wrap = gl.CLAMP_TO_EDGE;
+            } else if (this.wrapT === "mirror") {
+                wrap = gl.MIRRORED_REPEAT;
+            }
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+        }
         if (this.clampToEdge) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -8273,7 +8295,7 @@ var Renderer = FrakClass.extend({
         this.lightContribution = 1;
         this.reflectivity = 0;
         this.transparent = false;
-        this.unlit = false;
+        this.customShader = false;
         this.localBoundingBox = new BoundingBox();
         this.localBoundingSphere = new BoundingSphere();
         this.globalBoundingBox = new BoundingBox();
@@ -8304,6 +8326,7 @@ var Renderer = FrakClass.extend({
             if (context.camera.far) {
                 if (uniforms.hasOwnProperty("zFar")) uniforms.zFar.value = context.camera.far; else uniforms.zFar = new UniformFloat(context.camera.far);
             }
+            if (uniforms.hasOwnProperty("cameraPosition")) vec3.copy(uniforms.cameraPosition.value, context.camera.getPosition()); else uniforms.cameraPosition = new UniformVec3(context.camera.getPosition());
         }
         if (context.light && context.light.uniforms) {
             uniforms.lightDirection = context.light.uniforms.lightDirection;
@@ -8399,7 +8422,7 @@ var LineRenderer = Renderer.extend({
             this.buffer = new LinesRenderBuffer(context);
             this.instanced = false;
         }
-        this.unlit = true;
+        this.customShader = true;
         this.count = 0;
     },
     onRender: function(context) {
@@ -9774,15 +9797,17 @@ var ModelLoaderGLTF = FrakClass.extend({
         this.bufferViews = [];
         this.accessors = [];
         this.images = [];
+        this.samplers = [];
         this.textures = [];
         this.materials = [];
         this.meshes = [];
     },
     createDefaultTextureSampler: function(context) {
-        if (this.defaultTexture) return;
-        if (!context.engine) return;
+        if (!context.engine) {
+            return;
+        }
         this.defaultTexture = context.engine.WhiteTexture;
-        this.defaultSampler = new Sampler("diffuse0", this.defaultTexture);
+        return new Sampler("diffuse0", this.defaultTexture);
     },
     load: function(node, data, cb) {
         var parsedData;
@@ -9790,19 +9815,22 @@ var ModelLoaderGLTF = FrakClass.extend({
             parsedData = data;
         } else {
             var view = new DataView(data);
-            if (view.getUint32(0, true) == 1179937895 && view.getUint32(4, true) == 2 && view.getUint32(8, true) == data.byteLength) {
+            if (view.getUint32(0, true) === 1179937895 && view.getUint32(4, true) === 2 && view.getUint32(8, true) === data.byteLength) {
                 parsedData = this.parseJSON(view);
                 this.binaryBuffer = this.parseBinaryBuffer(view);
             } else {
                 throw "Invalid data";
             }
         }
-        if (FRAK.isEmptyObject(parsedData) || FRAK.isEmptyObject(parsedData.asset) || parsedData.asset.version[0] !== "2") return;
+        if (FRAK.isEmptyObject(parsedData) || FRAK.isEmptyObject(parsedData.asset) || parsedData.asset.version[0] !== "2") {
+            return;
+        }
         var scope = this;
         this.loadBuffers(parsedData.buffers, function() {
             scope.loadBufferViews(parsedData.bufferViews || []);
             scope.loadAccessors(parsedData.accessors || []);
             scope.loadImages(parsedData.images || []);
+            scope.loadSamplers(parsedData.samplers || []);
             scope.loadTextures(parsedData.textures || []);
             scope.loadMaterials(parsedData.materials || []);
             scope.loadMeshes(parsedData.meshes);
@@ -9828,7 +9856,7 @@ var ModelLoaderGLTF = FrakClass.extend({
             return;
         } else {
             var length = view.getUint32(20 + jsonLength, true);
-            if (28 + jsonLength + length != view.byteLength) {
+            if (28 + jsonLength + length !== view.byteLength) {
                 return;
             }
             if (view.getUint32(24 + jsonLength, true) !== 5130562) {
@@ -9912,10 +9940,8 @@ var ModelLoaderGLTF = FrakClass.extend({
         }
     },
     defaultMaterial: function() {
-        this.createDefaultTextureSampler(this.shadersManager.context);
-        return new Material(this.shadersManager.addSource("diffuse"), {
-            diffuse: new UniformColor(new Color())
-        }, [ this.defaultSampler ]);
+        var defaultSampler = this.createDefaultTextureSampler(this.shadersManager.context);
+        return new Material(this.shadersManager.addSource("pbr"), {}, [ defaultSampler ]);
     },
     loadImages: function(images) {
         for (var i = 0, l = images.length; i < l; i++) {
@@ -9929,22 +9955,50 @@ var ModelLoaderGLTF = FrakClass.extend({
                 uri = URL.createObjectURL(blob);
             }
             if (uri) {
-                var descriptor = new TextureDescriptor(uri);
-                var absolute = new RegExp("^//|(?:[a-z]+:)?", "i");
-                if (absolute.test(uri)) {
-                    descriptor.locked = true;
+                var notRelative = new RegExp("^//|(?:[a-z]+:)", "i");
+                var locked = false;
+                if (notRelative.test(uri)) {
+                    locked = true;
                 }
-                this.images.push(this.texturesManager.addDescriptor(descriptor));
+                this.images.push({
+                    locked: locked,
+                    uri: uri
+                });
             }
         }
     },
+    loadSamplers: function(samplers) {
+        this.samplers = samplers.slice();
+    },
     loadTextures: function(textures) {
         for (var i = 0, l = textures.length; i < l; i++) {
-            if (isNaN(parseInt(textures[i].source))) {
+            var texture = textures[i];
+            if (isNaN(parseInt(texture.source))) {
                 continue;
             }
-            var image = this.images[textures[i].source];
+            var descriptorImage = this.images[texture.source];
+            var descriptor = new TextureDescriptor(descriptorImage.uri);
+            descriptor.locked = descriptorImage.locked;
+            descriptor.glTFID = i;
+            var image = this.texturesManager.addDescriptor(descriptor);
             image.flipY = false;
+            if (!isNaN(parseInt(texture.sampler))) {
+                var sampler = this.samplers[texture.sampler];
+                if (!isNaN(parseInt(sampler.wrapS))) {
+                    if (sampler.wrapS === 33071) {
+                        image.wrapS = "clamp";
+                    } else if (sampler.wrapS === 33648) {
+                        image.wrapS = "mirror";
+                    }
+                }
+                if (!isNaN(parseInt(sampler.wrapT))) {
+                    if (sampler.wrapT === 33071) {
+                        image.wrapT = "clamp";
+                    } else if (sampler.wrapT === 33648) {
+                        image.wrapT = "mirror";
+                    }
+                }
+            }
             this.textures.push(image);
         }
     },
@@ -9959,19 +10013,42 @@ var ModelLoaderGLTF = FrakClass.extend({
                 material.shader.requirements.transparent = true;
             }
             var diffuse = new Color();
+            var metalness = 1;
+            var roughness = 1;
             if (materials[i].pbrMetallicRoughness) {
                 var bcf = materials[i].pbrMetallicRoughness.baseColorFactor;
                 if (bcf) {
                     diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
                 }
+                var metallicFactor = materials[i].pbrMetallicRoughness.metallicFactor;
+                if (!isNaN(parseFloat(metallicFactor))) {
+                    metalness = metallicFactor;
+                }
+                var roughnessFactor = materials[i].pbrMetallicRoughness.roughnessFactor;
+                if (!isNaN(parseFloat(roughnessFactor))) {
+                    roughness = roughnessFactor;
+                }
                 var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
                 if (texture) {
                     material.samplers = [ new Sampler("diffuse0", this.textures[texture.index]) ];
                 }
+                var metallicRoughness = materials[i].pbrMetallicRoughness.metallicRoughnessTexture;
+                if (metallicRoughness) {
+                    material.samplers.push(new Sampler("metallicRoughness0", this.textures[metallicRoughness.index]));
+                } else {
+                    var metallicSampler = this.createDefaultTextureSampler(this.shadersManager.context);
+                    metallicSampler.name = "metallicRoughness0";
+                    material.samplers.push(metallicSampler);
+                }
             }
             material.uniforms = {
-                diffuse: new UniformColor(diffuse)
+                diffuse: new UniformColor(diffuse),
+                perceptual_roughness: new UniformFloat(roughness),
+                metalness: new UniformFloat(metalness)
             };
+            if (materials[i].normalTexture) {
+                material.samplers.push(new Sampler("normal0", this.textures[materials[i].normalTexture.index]));
+            }
             this.materials.push(material);
         }
     },
@@ -9986,41 +10063,65 @@ var ModelLoaderGLTF = FrakClass.extend({
                     material = this.defaultMaterial();
                 }
                 var submesh = this.loadSubmesh(meshes[i].primitives[j]);
-                if (submesh) mesh.addSubmesh(submesh, material); else continue;
+                if (submesh) {
+                    mesh.addSubmesh(submesh, material);
+                } else {
+                    continue;
+                }
             }
             this.meshes.push(mesh);
         }
     },
     loadSubmesh: function(primitive) {
         var submesh = new Submesh();
-        if (isNaN(parseInt(primitive.indices)) || isNaN(parseInt(primitive.attributes.POSITION))) return;
+        if (isNaN(parseInt(primitive.indices)) || isNaN(parseInt(primitive.attributes.POSITION))) {
+            return;
+        }
         submesh.faces = this.accessors[primitive.indices];
         submesh.positions = this.accessors[primitive.attributes.POSITION];
-        if (!isNaN(parseInt(primitive.attributes.NORMAL))) submesh.normals = this.accessors[primitive.attributes.NORMAL];
-        if (!isNaN(parseInt(primitive.attributes.TEXCOORD_0))) submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
+        if (!isNaN(parseInt(primitive.attributes.NORMAL))) {
+            submesh.normals = this.accessors[primitive.attributes.NORMAL];
+        }
+        if (!isNaN(parseInt(primitive.attributes.TEXCOORD_0))) {
+            submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
+        }
+        if (!isNaN(parseInt(primitive.attributes.TANGENT))) {
+            submesh.tangents = this.accessors[primitive.attributes.TANGENT].filter(function(_, i) {
+                return i % 4 !== 3;
+            });
+        } else {
+            submesh.calculateTangents();
+        }
         submesh.recalculateBounds();
         return submesh;
     },
     loadScene: function(node, parsedData) {
+        var i;
         if (!parsedData.scenes || isNaN(parseInt(parsedData.scene))) {
-            for (var i = 0, l = this.meshes.length; i < l; i++) {
+            for (i = 0, l = this.meshes.length; i < l; i++) {
                 var meshNode = new Node();
+                var renderer = new MeshRendererComponent();
+                renderer.customShader = true;
                 meshNode.addComponent(new MeshComponent(this.meshes[i]));
-                meshNode.addComponent(new MeshRendererComponent());
+                meshNode.addComponent(renderer);
+                meshNode.addComponent(new MeshCollider());
             }
         } else {
             var scene = parsedData.scenes[parsedData.scene];
-            for (var i = 0, l = scene.nodes && scene.nodes.length || 0; i < l; i++) {
+            for (i = 0, l = scene.nodes && scene.nodes.length || 0; i < l; i++) {
                 node.addNode(this.loadNode(parsedData.nodes, scene.nodes[i]));
             }
         }
     },
-    loadNode: function(nodes, i) {
-        var node = nodes[i];
+    loadNode: function(nodes, index) {
+        var node = nodes[index];
         var sceneNode = new Node(node.name);
+        var renderer = new MeshRendererComponent();
+        renderer.customShader = true;
         if (!isNaN(parseInt(node.mesh))) {
             sceneNode.addComponent(new MeshComponent(this.meshes[node.mesh]));
-            sceneNode.addComponent(new MeshRendererComponent());
+            sceneNode.addComponent(renderer);
+            sceneNode.addComponent(new MeshCollider());
         }
         if (node.matrix) {
             sceneNode.transform.relative = node.matrix;
@@ -10208,6 +10309,7 @@ var ShadersManager = Manager.extend({
             reflective: this.bundle("reflective"),
             reflective_masked: this.bundle("reflective_masked"),
             lines: this.bundle("lines"),
+            pbr: this.bundle("pbr"),
             test: this.bundle("test"),
             fallback: this.bundle("fallback"),
             depthrgba: this.bundle("depthrgba"),
