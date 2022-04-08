@@ -26,7 +26,7 @@ async function main() {
 		console.log('Bundling profile: %s', profile);
 		output[profile] = {};
 		let shadersPath = profiles[profile];
-		let bundleBasePath = path.relative(BUNDLE_RELATIVE_PATH, shadersPath);
+		let bundleBasePath = path.posix.relative(BUNDLE_RELATIVE_PATH, shadersPath);
 
 		try {
 			let files = await readdir(shadersPath);
@@ -35,7 +35,7 @@ async function main() {
 					continue;
 				let relativePath = path.join(shadersPath, file);
 				let data = await readFile(path.join(shadersPath, file));
-				output[profile][path.join(bundleBasePath, file)] = data.toString();
+				output[profile][path.posix.join(bundleBasePath, file)] = data.toString();
 			}
 		}
 		catch (err) {
@@ -43,7 +43,7 @@ async function main() {
 		}
 	}
 
-	let js = `// Generated at ${new Date()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};`;
+	let js = `// Generated at ${(new Date()).toISOString()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};`;
 	await writeFile(OUTPUT_PATH, js);
 	console.log('Output written to %s', OUTPUT_PATH);
 }
