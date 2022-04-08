@@ -12701,6 +12701,7 @@ var LineRendererComponent = RendererComponent.extend({
         vec2.copy(this.material.uniforms.viewport.value, engine.scene.camera.target.size);
         if (!this.renderer) this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
         this.getScene().dynamicSpace.addRenderer(this.renderer);
+        engine.assetsManager.load();
     },
     onEnd: function(context) {
         if (this.renderer) this.getScene().dynamicSpace.removeRenderer(this.renderer);
