@@ -50,6 +50,8 @@ var LineRendererComponent = RendererComponent.extend({
 			this.renderer = new LineRenderer(context, this.node.transform.absolute, this.material);
 
 		this.getScene().dynamicSpace.addRenderer(this.renderer);
+
+		engine.assetsManager.load();
 	},
 
 	onEnd: function(context) {
