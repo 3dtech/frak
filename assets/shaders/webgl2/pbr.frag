@@ -9,6 +9,7 @@ uniform vec3 cameraPosition;
 
 uniform vec4 ambient;
 uniform vec4 diffuse;
+uniform vec4 emissive;
 
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
@@ -16,9 +17,17 @@ uniform float lightIntensity;
 
 uniform sampler2D diffuse0;
 uniform sampler2D metallicRoughness0;
+#ifdef NORMAL_MAP
 uniform sampler2D normal0;
-// uniform sampler2D occlusion0;
-// uniform sampler2D emissive0;
+#endif
+
+#ifdef OCCLUSION_TEXTURE
+uniform sampler2D occlusion0;
+#endif
+
+#ifdef EMISSIVE_TEXTURE
+uniform sampler2D emissive0;
+#endif
 
 uniform float perceptual_roughness;
 uniform float metalness;
@@ -26,7 +35,9 @@ uniform float metalness;
 in vec2 uv0;
 in vec4 worldPosition;
 in vec3 worldNormal;
+#ifdef NORMAL_MAP
 in vec3 worldTangent;
+#endif
 in vec4 viewPosition;
 in vec3 viewNormal;
 in vec4 shadowPosition;
@@ -168,11 +179,24 @@ void main(void) {
 	float roughness = perceptualRoughnessToRoughness(perceptual_roughness);
 
 	vec3 N = normalize(worldNormal);
+#ifdef NORMAL_MAP
 	vec3 T = normalize(worldTangent);
 	vec3 B = cross(N, T);
 
 	mat3 TBN = mat3(T, B, N);
 	N = TBN * normalize(texture(normal0, uv0).xyz * 2.0 - 1.0);
+#endif
+
+#ifdef OCCLUSION_TEXTURE
+	float occlusion = texture(occlusion0, uv0).r;
+#else
+	float occlusion = 1.0;
+#endif
+
+#ifdef EMISSIVE_TEXTURE
+	vec4 emissive = emissive;
+	emissive.rgb *= texture(emissive0, uv0).rgb;
+#endif
 
 	vec3 V = normalize(cameraPosition - worldPosition.xyz);
 	float NdotV = max(dot(N, V), 1e-4);
@@ -186,7 +210,8 @@ void main(void) {
 	vec3 specular_ambient = EnvBRDFApprox(F0, perceptual_roughness, NdotV);
 
 	output_color.rgb = dir_light(normalize(lightDirection), lightColor, roughness, NdotV, N, V, R, F0, diffuseColor);
-	output_color.rgb += (diffuse_ambient + specular_ambient) * ambient.rgb;
+	output_color.rgb += (diffuse_ambient + specular_ambient) * ambient.rgb * occlusion;
+	output_color.rgb += emissive.rgb * output_color.a;
 
 	output_color.rgb = reinhard_luminance(output_color.rgb);
 

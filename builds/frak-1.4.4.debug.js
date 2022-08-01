@@ -4343,7 +4343,9 @@ var Subshader = FrakClass.extend({
     compile: function(context, definitions) {
         if (this.failedCompilation) return;
         if (!this.compiledShader) throw "WebGL shader has not been created. FragmentShader or VertexShader class instances should be used, not Shader.";
-        this.addDefinitions(context, definitions);
+        if (definitions) {
+            this.addDefinitions(context, definitions);
+        }
         this.context.gl.shaderSource(this.compiledShader, this.code);
         this.context.gl.compileShader(this.compiledShader);
         var status = this.context.gl.getShaderParameter(this.compiledShader, this.context.gl.COMPILE_STATUS);
@@ -10052,6 +10054,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 material.shader.requirements.transparent = true;
             }
             var diffuse = new Color();
+            var emissive = new Color(0, 0, 0);
             var metalness = 1;
             var roughness = 1;
             if (materials[i].pbrMetallicRoughness) {
@@ -10080,13 +10083,27 @@ var ModelLoaderGLTF = FrakClass.extend({
                     material.samplers.push(metallicSampler);
                 }
             }
+            var eF = materials[i].emissiveFactor;
+            if (eF && eF.length > 2) {
+                emissive.set(eF[0], eF[1], eF[2]);
+            }
             material.uniforms = {
                 diffuse: new UniformColor(diffuse),
                 perceptual_roughness: new UniformFloat(roughness),
-                metalness: new UniformFloat(metalness)
+                metalness: new UniformFloat(metalness),
+                emissive: new UniformColor(emissive)
             };
             if (materials[i].normalTexture) {
                 material.samplers.push(new Sampler("normal0", this.textures[materials[i].normalTexture.index]));
+                material.shader.definitions.push("NORMAL_MAP");
+            }
+            if (materials[i].occlusionTexture) {
+                material.samplers.push(new Sampler("normal0", this.textures[materials[i].occlusionTexture.index]));
+                material.shader.definitions.push("OCCLUSION_TEXTURE");
+            }
+            if (materials[i].emissiveTexture) {
+                material.samplers.push(new Sampler("emissive0", this.textures[materials[i].emissiveTexture.index]));
+                material.shader.definitions.push("EMISSIVE_TEXTURE");
             }
             this.materials.push(material);
         }
