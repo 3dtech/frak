@@ -9843,13 +9843,6 @@ var ModelLoaderGLTF = FrakClass.extend({
         this.materials = [];
         this.meshes = [];
     },
-    createDefaultTextureSampler: function(context) {
-        if (!context.engine) {
-            return;
-        }
-        this.defaultTexture = context.engine.WhiteTexture;
-        return new Sampler("diffuse0", this.defaultTexture);
-    },
     load: function(node, data, cb) {
         var parsedData;
         if (!this.binary) {
@@ -9906,6 +9899,14 @@ var ModelLoaderGLTF = FrakClass.extend({
             return view.buffer.slice(28 + jsonLength, 28 + jsonLength + length);
         }
     },
+    absoluteURI: function(uri) {
+        if (new RegExp("^//|(?:[a-z]+:)", "i").test(uri)) {
+            return uri;
+        }
+        var path = this.descriptor.getFullPath();
+        var start = new RegExp("(.*/).*?$").exec(path)[1];
+        return start + uri;
+    },
     loadBuffers: function(buffers, cb) {
         var count = 0;
         for (var i = 0, l = buffers.length; i < l; i++) {
@@ -9920,7 +9921,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 count--;
                 continue;
             }
-            Logistics.getBinary(buffers[i].uri, function(binaryData) {
+            Logistics.getBinary(this.absoluteURI(buffers[i].uri), function(binaryData) {
                 count--;
                 if (!binaryData || binaryData.byteLength !== byteLength) {
                     return;
@@ -9981,8 +9982,7 @@ var ModelLoaderGLTF = FrakClass.extend({
         }
     },
     defaultMaterial: function() {
-        var defaultSampler = this.createDefaultTextureSampler(this.shadersManager.context);
-        return new Material(this.shadersManager.addSource("pbr"), {}, [ defaultSampler ]);
+        return new Material(this.shadersManager.addSource("pbr"), {}, [ new Sampler("diffuse0", this.shadersManager.context.engine.WhiteTexture) ]);
     },
     loadImages: function(images) {
         for (var i = 0, l = images.length; i < l; i++) {
@@ -9996,15 +9996,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 uri = URL.createObjectURL(blob);
             }
             if (uri) {
-                var notRelative = new RegExp("^//|(?:[a-z]+:)", "i");
-                var locked = false;
-                if (notRelative.test(uri)) {
-                    locked = true;
-                }
-                this.images.push({
-                    locked: locked,
-                    uri: uri
-                });
+                this.images.push(this.absoluteURI(uri));
             }
         }
     },
@@ -10018,8 +10010,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 continue;
             }
             var descriptorImage = this.images[texture.source];
-            var descriptor = new TextureDescriptor(descriptorImage.uri);
-            descriptor.locked = descriptorImage.locked;
+            var descriptor = new TextureDescriptor(descriptorImage);
             descriptor.glTFID = i;
             var image = this.texturesManager.addDescriptor(descriptor);
             image.flipY = false;
@@ -10073,14 +10064,12 @@ var ModelLoaderGLTF = FrakClass.extend({
                 var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
                 if (texture) {
                     material.samplers = [ new Sampler("diffuse0", this.textures[texture.index]) ];
+                    material.shader.definitions.push("DIFFUSE_TEXTURE");
                 }
                 var metallicRoughness = materials[i].pbrMetallicRoughness.metallicRoughnessTexture;
                 if (metallicRoughness) {
                     material.samplers.push(new Sampler("metallicRoughness0", this.textures[metallicRoughness.index]));
-                } else {
-                    var metallicSampler = this.createDefaultTextureSampler(this.shadersManager.context);
-                    metallicSampler.name = "metallicRoughness0";
-                    material.samplers.push(metallicSampler);
+                    material.shader.definitions.push("METALLIC_ROUGHNESS_TEXTURE");
                 }
             }
             var eF = materials[i].emissiveFactor;
@@ -10090,6 +10079,7 @@ var ModelLoaderGLTF = FrakClass.extend({
             material.uniforms = {
                 diffuse: new UniformColor(diffuse),
                 perceptual_roughness: new UniformFloat(roughness),
+                reflectance: new UniformFloat(.5),
                 metalness: new UniformFloat(metalness),
                 emissive: new UniformColor(emissive)
             };
@@ -14237,7 +14227,6 @@ var TextureDescriptor = Descriptor.extend({
         this._source = source;
         this.width = width;
         this.height = height;
-        this.locked = locked;
     },
     type: function() {
         return "TextureDescriptor";
@@ -14245,13 +14234,6 @@ var TextureDescriptor = Descriptor.extend({
     equals: function(other) {
         if (!this._super(other)) return false;
         return this.source == other.source && this.width == other.width && height == other.height;
-    },
-    getFullPath: function() {
-        if (this.locked) {
-            return this._source;
-        } else {
-            return this._super();
-        }
     }
 });
 
