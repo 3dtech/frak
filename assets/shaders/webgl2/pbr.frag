@@ -11,12 +11,21 @@ uniform vec4 ambient;
 uniform vec4 diffuse;
 uniform vec4 emissive;
 
+uniform float metallic;
+uniform float perceptual_roughness;
+
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;
 
+#ifdef DIFFUSE_TEXTURE
 uniform sampler2D diffuse0;
+#endif
+
+#ifdef METALLIC_ROUGHNESS_TEXTURE
 uniform sampler2D metallicRoughness0;
+#endif
+
 #ifdef NORMAL_MAP
 uniform sampler2D normal0;
 #endif
@@ -29,18 +38,18 @@ uniform sampler2D occlusion0;
 uniform sampler2D emissive0;
 #endif
 
-uniform float perceptual_roughness;
-uniform float metalness;
-
 in vec2 uv0;
 in vec4 worldPosition;
 in vec3 worldNormal;
+
 #ifdef NORMAL_MAP
 in vec3 worldTangent;
 #endif
+
 in vec4 viewPosition;
 in vec3 viewNormal;
 in vec4 shadowPosition;
+
 out vec4 fragColor;
 
 const float PI = 3.1415926535897932384626433832795;
@@ -171,11 +180,16 @@ vec3 dir_light(vec3 direction, vec4 color, float roughness, float NdotV, vec3 no
 
 void main(void) {
 	vec4 output_color = diffuse;
+#ifdef DIFFUSE_TEXTURE
 	output_color *= texture(diffuse0, uv0);
+#endif
 
+#ifdef METALLIC_ROUGHNESS_TEXTURE
 	vec4 metallic_roughness = texture(metallicRoughness0, uv0);
-	float metallic = metalness * metallic_roughness.b;
+	float metallic = metallic * metallic_roughness.b;
 	float perceptual_roughness = perceptual_roughness * metallic_roughness.g;
+#endif
+
 	float roughness = perceptualRoughnessToRoughness(perceptual_roughness);
 
 	vec3 N = normalize(worldNormal);

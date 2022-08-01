@@ -26,16 +26,6 @@ var ModelLoaderGLTF = FrakClass.extend({
 		this.meshes = [];
 	},
 
-	createDefaultTextureSampler: function(context) {
-		if (!context.engine) {
-			return;
-		}
-
-		this.defaultTexture = context.engine.WhiteTexture;
-
-		return new Sampler('diffuse0', this.defaultTexture);
-	},
-
 	/** Loads parsed data to scene hierarchy at given node */
 	load: function(node, data, cb) {
 		var parsedData;
@@ -208,13 +198,11 @@ var ModelLoaderGLTF = FrakClass.extend({
 	},
 
 	defaultMaterial: function() {
-		var defaultSampler = this.createDefaultTextureSampler(this.shadersManager.context);
-
 		return new Material(
 			this.shadersManager.addSource('pbr'),
 			{},
 			[
-				defaultSampler
+				new Sampler('diffuse0', this.shadersManager.context.engine.WhiteTexture)
 			]
 		);
 	},
@@ -330,6 +318,8 @@ var ModelLoaderGLTF = FrakClass.extend({
 					material.samplers = [
 						new Sampler('diffuse0', this.textures[texture.index])
 					];
+
+					material.shader.definitions.push('DIFFUSE_TEXTURE');
 				}
 
 				var metallicRoughness = materials[i].pbrMetallicRoughness.metallicRoughnessTexture;
@@ -337,11 +327,8 @@ var ModelLoaderGLTF = FrakClass.extend({
 					material.samplers.push(
 						new Sampler('metallicRoughness0', this.textures[metallicRoughness.index])
 					);
-				} else {
-					var metallicSampler = this.createDefaultTextureSampler(this.shadersManager.context);
 
-					metallicSampler.name = 'metallicRoughness0';
-					material.samplers.push(metallicSampler);
+					material.shader.definitions.push('METALLIC_ROUGHNESS_TEXTURE');
 				}
 			}
 
