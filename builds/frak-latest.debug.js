@@ -4331,9 +4331,19 @@ var Subshader = FrakClass.extend({
     getFilename: function() {
         return "Unknown";
     },
-    compile: function() {
+    addDefinitions: function(context, definitions) {
+        var lines = this.code.split("\n");
+        for (var i = 0; i < definitions.length; i++) {
+            var def = definitions[i];
+            var line = context.isWebGL2() ? 1 : 0;
+            lines.splice(line, 0, "#define " + def);
+        }
+        this.code = lines.join("\n");
+    },
+    compile: function(context, definitions) {
         if (this.failedCompilation) return;
         if (!this.compiledShader) throw "WebGL shader has not been created. FragmentShader or VertexShader class instances should be used, not Shader.";
+        this.addDefinitions(context, definitions);
         this.context.gl.shaderSource(this.compiledShader, this.code);
         this.context.gl.compileShader(this.compiledShader);
         var status = this.context.gl.getShaderParameter(this.compiledShader, this.context.gl.COMPILE_STATUS);
@@ -4395,7 +4405,9 @@ var ShaderRequirements = FrakClass.extend({
 
 var Shader = Serializable.extend({
     init: function(context, descriptor) {
-        if (!context) throw "Shader: RenderingContext required";
+        if (!context) {
+            throw "Shader: RenderingContext required";
+        }
         this._super();
         this.descriptor = descriptor;
         this.context = context;
@@ -4406,6 +4418,7 @@ var Shader = Serializable.extend({
         this.failed = false;
         this.uniformLocations = {};
         this.bindings = {};
+        this.definitions = [];
     },
     excluded: function() {
         return true;
@@ -4426,9 +4439,11 @@ var Shader = Serializable.extend({
         shader.attach();
     },
     link: function() {
-        if (this.failed) return;
+        if (this.failed) {
+            return;
+        }
         for (var i = 0; i < this.shaders.length; i++) {
-            this.shaders[i].compile(this.context);
+            this.shaders[i].compile(this.context, this.definitions);
         }
         for (var name in ExplicitAttributeLocations) {
             this.context.gl.bindAttribLocation(this.program, ExplicitAttributeLocations[name], name);
@@ -4443,7 +4458,9 @@ var Shader = Serializable.extend({
             this.failed = true;
             return;
         }
-        if (this.context.isWebGL2()) this.updateBlockBindings(this.context);
+        if (this.context.isWebGL2()) {
+            this.updateBlockBindings(this.context);
+        }
     },
     use: function(uniforms) {
         if (this.failed) return;
@@ -4466,39 +4483,59 @@ var Shader = Serializable.extend({
         return this.uniformLocations[uniformName];
     },
     bindUniforms: function(uniforms) {
-        if (!uniforms) return;
-        if (!this.linked) return;
+        if (!uniforms) {
+            return;
+        }
+        if (!this.linked) {
+            return;
+        }
         for (var uniformName in uniforms) {
             var uniformLocation = this.getUniformLocation(uniformName);
-            if (!uniformLocation || uniformLocation == -1) continue;
+            if (!uniformLocation || uniformLocation == -1) {
+                continue;
+            }
             var uniform = uniforms[uniformName];
-            if (!uniform) throw "Uniform '" + uniformName + "' is undefined.";
+            if (!uniform) {
+                throw "Uniform '" + uniformName + "' is undefined.";
+            }
             uniform.bind(this.context, uniformLocation);
         }
     },
     bindSamplers: function(samplers) {
-        if (!samplers || samplers.length == 0 || !this.linked) return;
+        if (!samplers || samplers.length == 0 || !this.linked) {
+            return;
+        }
         var gl = this.context.gl;
         var slotIndex = 0;
         for (var i = 0; i < samplers.length; ++i) {
             var sampler = samplers[i];
-            if (!sampler) break;
+            if (!sampler) {
+                break;
+            }
             var uniformLocation = this.getUniformLocation(sampler.name);
-            if (uniformLocation == -1) continue;
+            if (uniformLocation == -1) {
+                continue;
+            }
             sampler.bind(this.context, uniformLocation, slotIndex);
             slotIndex++;
         }
         gl.activeTexture(gl.TEXTURE0);
     },
     unbindSamplers: function(samplers) {
-        if (!samplers || samplers.length == 0 || !this.linked) return;
+        if (!samplers || samplers.length == 0 || !this.linked) {
+            return;
+        }
         var gl = this.context.gl;
         var slotIndex = 0;
         for (var i = 0; i < samplers.length; ++i) {
             var sampler = samplers[i];
-            if (!sampler) break;
+            if (!sampler) {
+                break;
+            }
             var uniformLocation = this.getUniformLocation(sampler.name);
-            if (uniformLocation == -1) continue;
+            if (uniformLocation == -1) {
+                continue;
+            }
             sampler.unbind(this.context, uniformLocation, slotIndex);
             slotIndex++;
         }
@@ -4522,7 +4559,9 @@ var Shader = Serializable.extend({
             var bindingPoint = i + 1;
             var blockName = blocks[i];
             var blockIndex = context.gl.getUniformBlockIndex(this.program, blockName);
-            if (blockIndex == context.gl.INVALID_INDEX) continue;
+            if (blockIndex == context.gl.INVALID_INDEX) {
+                continue;
+            }
             this.bindings[blockName] = {
                 index: blockIndex,
                 name: blockName,
@@ -10089,7 +10128,7 @@ var ModelLoaderGLTF = FrakClass.extend({
             submesh.tangents = this.accessors[primitive.attributes.TANGENT].filter(function(_, i) {
                 return i % 4 !== 3;
             });
-        } else {
+        } else if (submesh.texCoords2D.length) {
             submesh.calculateTangents();
         }
         submesh.recalculateBounds();

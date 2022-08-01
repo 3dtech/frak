@@ -21,13 +21,32 @@ var Subshader=FrakClass.extend({
 	},
 
 	getFilename: function() {
-		return "Unknown";
+		return 'Unknown';
+	},
+
+	addDefinitions: function(context, definitions) {
+		var lines = this.code.split('\n');
+
+		for (var i = 0; i < definitions.length; i++) {
+			var def = definitions[i];
+			var line = context.isWebGL2() ? 1 : 0;
+
+			lines.splice(line, 0, '#define ' + def);
+		}
+
+		this.code = lines.join('\n');
 	},
 
 	/** Compiles the shader. Normally called by shader program prior to linking. */
-	compile: function() {
+	compile: function(context, definitions) {
 		if(this.failedCompilation) return;	// Only try to compile one time
-		if(!this.compiledShader) throw "WebGL shader has not been created. FragmentShader or VertexShader class instances should be used, not Shader.";
+
+		if(!this.compiledShader) throw 'WebGL shader has not been created. FragmentShader or VertexShader class instances should be used, not Shader.';
+
+		if (definitions) {
+			this.addDefinitions(context, definitions);
+		}
+
 		this.context.gl.shaderSource(this.compiledShader, this.code);
 		this.context.gl.compileShader(this.compiledShader);
 
@@ -35,7 +54,7 @@ var Subshader=FrakClass.extend({
 		if (!status) {
 			if(!this.failedCompilation) {
 				this.failedCompilation=true;
-				throw "Shader '"+this.getFilename()+"' failed to compile: "+this.context.gl.getShaderInfoLog(this.compiledShader);
+				throw 'Shader \''+this.getFilename()+'\' failed to compile: '+this.context.gl.getShaderInfoLog(this.compiledShader);
 			}
 		}
 	},

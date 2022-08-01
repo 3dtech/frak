@@ -408,7 +408,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 					return i % 4 !== 3;
 				}
 			);
-		} else {
+		} else if (submesh.texCoords2D.length) {
 			submesh.calculateTangents();
 		}
 
