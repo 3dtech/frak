@@ -14,6 +14,8 @@ uniform vec4 emissive;
 uniform float metallic;
 uniform float perceptual_roughness;
 
+uniform float reflectance;
+
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;
@@ -215,7 +217,7 @@ void main(void) {
 	vec3 V = normalize(cameraPosition - worldPosition.xyz);
 	float NdotV = max(dot(N, V), 1e-4);
 
-	vec3 F0 = 0.16 * (1.0 - metallic) + output_color.rgb * metallic;
+	vec3 F0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + output_color.rgb * metallic;
 	vec3 diffuseColor = output_color.rgb * (1.0 - metallic);
 
 	vec3 R = reflect(-V, N);

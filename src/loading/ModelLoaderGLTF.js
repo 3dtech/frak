@@ -339,6 +339,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			material.uniforms = {
 				diffuse: new UniformColor(diffuse),
 				perceptual_roughness: new UniformFloat(roughness),
+				reflectance: new UniformFloat(0.5),
 				metalness: new UniformFloat(metalness),
 				emissive: new UniformColor(emissive)
 			};
