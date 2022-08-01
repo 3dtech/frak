@@ -102,6 +102,17 @@ var ModelLoaderGLTF = FrakClass.extend({
 		}
 	},
 
+	absoluteURI: function(uri) {
+		if ((new RegExp('^//|(?:[a-z]+:)', 'i')).test(uri)) {
+			return uri;
+		}
+
+		var path = this.descriptor.getFullPath();
+		var start = (new RegExp('(.*/).*?$')).exec(path)[1];
+
+		return start + uri;
+	},
+
 	loadBuffers: function(buffers, cb) {
 		var count = 0;
 		for (var i = 0, l = buffers.length; i < l; i++) {
@@ -121,7 +132,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 				continue;
 			}
 
-			Logistics.getBinary(buffers[i].uri, function(binaryData) {
+			Logistics.getBinary(this.absoluteURI(buffers[i].uri), function(binaryData) {
 				count--;
 
 				if (!binaryData || binaryData.byteLength !== byteLength) {
@@ -219,17 +230,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			}
 
 			if (uri) {
-				var notRelative = new RegExp('^//|(?:[a-z]+:)', 'i');
-				var locked = false;
-
-				if (notRelative.test(uri)) {
-					locked = true;
-				}
-
-				this.images.push({
-					locked: locked,
-					uri: uri
-				});
+				this.images.push(this.absoluteURI(uri));
 			}
 		}
 	},
@@ -246,9 +247,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			}
 
 			var descriptorImage = this.images[texture.source];
-			var descriptor = new TextureDescriptor(descriptorImage.uri);
-
-			descriptor.locked = descriptorImage.locked;
+			var descriptor = new TextureDescriptor(descriptorImage);
 
 			// Hack to enable multiple textures with different settings but same image
 			descriptor.glTFID = i;

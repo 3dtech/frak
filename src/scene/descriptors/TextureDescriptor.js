@@ -11,7 +11,6 @@ var TextureDescriptor = Descriptor.extend({
 		this._source = source;
 		this.width = width;
 		this.height = height;
-		this.locked = locked;
 	},
 
 	type: function() {
@@ -21,13 +20,5 @@ var TextureDescriptor = Descriptor.extend({
 	equals: function(other) {
 		if (!this._super(other)) return false;
 		return this.source == other.source && this.width == other.width && height == other.height;
-	},
-
-	getFullPath: function() {
-		if (this.locked) {
-			return this._source;
-		} else {
-			return this._super();
-		}
 	}
 });
