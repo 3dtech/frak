@@ -1,7 +1,7 @@
 /**
  * Render-stage for rendering opaque geometry.
  */
-var CustomGeometryRenderStage = RenderStage.extend({
+var UnlitGeometryRenderStage = RenderStage.extend({
 	init: function() {
 		this._super();
 
@@ -30,10 +30,10 @@ var CustomGeometryRenderStage = RenderStage.extend({
 		gl.depthMask(true);
 
 		if (this.parent.organizer.enableDynamicBatching) {
-			this.renderBatched(context, this.parent.organizer.customBatchList);
+			this.renderBatched(context, this.parent.organizer.unlitBatchList);
 		}
 		else {
-			this.renderBruteForce(context, this.parent.organizer.customRenderers);
+			this.renderBruteForce(context, this.parent.organizer.unlitRenderers);
 		}
 
 		gl.disable(gl.DEPTH_TEST);

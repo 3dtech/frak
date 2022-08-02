@@ -60,9 +60,11 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 				context.light = lights[l];
 				if (this.parent.organizer.enableDynamicBatching) {
 					this.parent.renderBatched(context, this.parent.organizer.opaqueBatchList);
+					this.parent.renderBatched(context, this.parent.organizer.customBatchList);
 				}
 				else {
 					this.parent.renderBruteForce(context, this.parent.organizer.solidRenderers);
+					this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
 				}
 			}
 			gl.disable(gl.BLEND);
@@ -71,9 +73,9 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 		}
 
 		if (this.parent.organizer.enableDynamicBatching) {
-			this.parent.renderBatched(context, this.parent.organizer.customBatchList);
+			this.parent.renderBatched(context, this.parent.organizer.unlitBatchList);
 		} else {
-			this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
+			this.parent.renderBruteForce(context, this.parent.organizer.unlitRenderers);
 		}
 
 		gl.disable(gl.DEPTH_TEST);

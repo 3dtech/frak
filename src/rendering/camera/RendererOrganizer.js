@@ -62,21 +62,26 @@ var RendererOrganizer = FrakClass.extend({
 		this.solidRenderers = [];
 		this.transparentRenderers = [];
 		this.customRenderers = [];
+		this.unlitRenderers = [];
 
 		this.opaqueBatchList = [];
 		this.transparentBatchList = [];
 		this.customBatchList = [];
+		this.unlitBatchList = [];
 		this.batchIndex = {};
 
 		this.renderers = new CollectionReference([]);
 		this.viewSolidRenderers = new CollectionView(this.renderers, function(renderer) {
-			return !renderer.transparent && !renderer.customShader;
+			return !renderer.transparent && !renderer.customShader && !renderer.unlit;
 		});
 		this.viewTransparentRenderers = new CollectionView(this.renderers, function(renderer) {
-			return renderer.transparent && !renderer.customShader;
+			return renderer.transparent && !renderer.customShader && !renderer.unlit;
 		});
 		this.viewCustomRenderers = new CollectionView(this.renderers, function(renderer) {
-			return renderer.customShader;
+			return !renderer.transparent && renderer.customShader && !renderer.unlit;
+		});
+		this.viewUnlitRenderers = new CollectionView(this.renderers, function(renderer) {
+			return !renderer.transparent && !renderer.customShader && renderer.unlit;
 		});
 
 		// Stats
@@ -90,13 +95,17 @@ var RendererOrganizer = FrakClass.extend({
 		this.visibleCustomRenderers = 0;
 		this.visibleCustomFaces = 0;
 		this.visibleCustomBatches = 0;
+		this.visibleUnlitRenderers = 0;
+		this.visibleUnlitFaces = 0;
+		this.visibleUnlitBatches = 0;
 	},
 
 	updateStats: function() {
 		this.visibleSolidRenderers = this.viewSolidRenderers.length;
 		this.visibleTransparentRenderers = this.viewTransparentRenderers.length;
 		this.visibleCustomRenderers = this.viewCustomRenderers.length;
-		this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleCustomRenderers;
+		this.visibleUnlitRenderers = this.viewUnlitRenderers.length;
+		this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleCustomRenderers + this.visibleUnlitRenderers;
 		// FIXME: visible batches should only be updated when the info is required
 	},
 
@@ -141,9 +150,11 @@ var RendererOrganizer = FrakClass.extend({
 		this.viewSolidRenderers.filter();
 		this.viewTransparentRenderers.filter();
 		this.viewCustomRenderers.filter();
+		this.viewUnlitRenderers.filter();
 		this.solidRenderers = this.viewSolidRenderers.view;
 		this.transparentRenderers = this.viewTransparentRenderers.view;
 		this.customRenderers = this.viewCustomRenderers.view;
+		this.unlitRenderers = this.viewUnlitRenderers.view;
 
 		// Batch renderers by material.id
 		if (this.enableDynamicBatching) {
@@ -152,6 +163,7 @@ var RendererOrganizer = FrakClass.extend({
 			}
 			this.batch(this.opaqueBatchList, this.solidRenderers);
 			this.batch(this.customBatchList, this.customRenderers);
+			this.batch(this.unlitBatchList, this.unlitRenderers);
 		}
 
 		// Sort transparent renderers

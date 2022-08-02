@@ -5010,19 +5010,24 @@ var RendererOrganizer = FrakClass.extend({
         this.solidRenderers = [];
         this.transparentRenderers = [];
         this.customRenderers = [];
+        this.unlitRenderers = [];
         this.opaqueBatchList = [];
         this.transparentBatchList = [];
         this.customBatchList = [];
+        this.unlitBatchList = [];
         this.batchIndex = {};
         this.renderers = new CollectionReference([]);
         this.viewSolidRenderers = new CollectionView(this.renderers, function(renderer) {
-            return !renderer.transparent && !renderer.customShader;
+            return !renderer.transparent && !renderer.customShader && !renderer.unlit;
         });
         this.viewTransparentRenderers = new CollectionView(this.renderers, function(renderer) {
-            return renderer.transparent && !renderer.customShader;
+            return renderer.transparent && !renderer.customShader && !renderer.unlit;
         });
         this.viewCustomRenderers = new CollectionView(this.renderers, function(renderer) {
-            return renderer.customShader;
+            return !renderer.transparent && renderer.customShader && !renderer.unlit;
+        });
+        this.viewUnlitRenderers = new CollectionView(this.renderers, function(renderer) {
+            return !renderer.transparent && !renderer.customShader && renderer.unlit;
         });
         this.visibleRenderers = 0;
         this.visibleSolidRenderers = 0;
@@ -5034,12 +5039,16 @@ var RendererOrganizer = FrakClass.extend({
         this.visibleCustomRenderers = 0;
         this.visibleCustomFaces = 0;
         this.visibleCustomBatches = 0;
+        this.visibleUnlitRenderers = 0;
+        this.visibleUnlitFaces = 0;
+        this.visibleUnlitBatches = 0;
     },
     updateStats: function() {
         this.visibleSolidRenderers = this.viewSolidRenderers.length;
         this.visibleTransparentRenderers = this.viewTransparentRenderers.length;
         this.visibleCustomRenderers = this.viewCustomRenderers.length;
-        this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleCustomRenderers;
+        this.visibleUnlitRenderers = this.viewUnlitRenderers.length;
+        this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleCustomRenderers + this.visibleUnlitRenderers;
     },
     batch: function(batchList, renderers) {
         var i;
@@ -5070,15 +5079,18 @@ var RendererOrganizer = FrakClass.extend({
         this.viewSolidRenderers.filter();
         this.viewTransparentRenderers.filter();
         this.viewCustomRenderers.filter();
+        this.viewUnlitRenderers.filter();
         this.solidRenderers = this.viewSolidRenderers.view;
         this.transparentRenderers = this.viewTransparentRenderers.view;
         this.customRenderers = this.viewCustomRenderers.view;
+        this.unlitRenderers = this.viewUnlitRenderers.view;
         if (this.enableDynamicBatching) {
             if (engine.options.transparencyMode != "sorted") {
                 this.batch(this.transparentBatchList, this.transparentRenderers);
             }
             this.batch(this.opaqueBatchList, this.solidRenderers);
             this.batch(this.customBatchList, this.customRenderers);
+            this.batch(this.unlitBatchList, this.unlitRenderers);
         }
         if (engine.options.transparencyMode == "sorted" && eyePosition) {
             vec3.copy(TransparencySort.cmpValue, eyePosition);
@@ -5854,8 +5866,10 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
                 context.light = lights[l];
                 if (this.parent.organizer.enableDynamicBatching) {
                     this.parent.renderBatched(context, this.parent.organizer.opaqueBatchList);
+                    this.parent.renderBatched(context, this.parent.organizer.customBatchList);
                 } else {
                     this.parent.renderBruteForce(context, this.parent.organizer.solidRenderers);
+                    this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
                 }
             }
             gl.disable(gl.BLEND);
@@ -5863,16 +5877,16 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
             gl.depthFunc(gl.LESS);
         }
         if (this.parent.organizer.enableDynamicBatching) {
-            this.parent.renderBatched(context, this.parent.organizer.customBatchList);
+            this.parent.renderBatched(context, this.parent.organizer.unlitBatchList);
         } else {
-            this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
+            this.parent.renderBruteForce(context, this.parent.organizer.unlitRenderers);
         }
         gl.disable(gl.DEPTH_TEST);
         context.light = false;
     }
 });
 
-var CustomGeometryRenderStage = RenderStage.extend({
+var UnlitGeometryRenderStage = RenderStage.extend({
     init: function() {
         this._super();
         this.sharedUniforms = {
@@ -5893,9 +5907,9 @@ var CustomGeometryRenderStage = RenderStage.extend({
         gl.depthFunc(gl.LESS);
         gl.depthMask(true);
         if (this.parent.organizer.enableDynamicBatching) {
-            this.renderBatched(context, this.parent.organizer.customBatchList);
+            this.renderBatched(context, this.parent.organizer.unlitBatchList);
         } else {
-            this.renderBruteForce(context, this.parent.organizer.customRenderers);
+            this.renderBruteForce(context, this.parent.organizer.unlitRenderers);
         }
         gl.disable(gl.DEPTH_TEST);
     },
@@ -6477,7 +6491,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
         this.softShadowsStage = this.addStage(new SoftShadowsRenderStage()).disable();
         this.addStage(this.bindCameraTarget);
         this.lightsStage = this.addStage(new LightsRenderStage());
-        this.customStage = this.addStage(new CustomGeometryRenderStage());
+        this.customStage = this.addStage(new UnlitGeometryRenderStage());
         this.addStage(this.unbindCameraTarget);
         this.sharedUniforms = {
             view: new UniformMat4(mat4.create()),
@@ -8463,7 +8477,7 @@ var LineRenderer = Renderer.extend({
             this.buffer = new LinesRenderBuffer(context);
             this.instanced = false;
         }
-        this.customShader = true;
+        this.unlit = true;
         this.count = 0;
     },
     onRender: function(context) {
@@ -12386,6 +12400,7 @@ var RendererComponent = Component.extend({
         this.receiveShadows = true;
         this.lightContribution = 1;
         this.reflectivity = 0;
+        this.customShader = false;
     },
     type: function() {
         return "RendererComponent";
@@ -12396,6 +12411,7 @@ var RendererComponent = Component.extend({
         instance.receiveShadows = this.receiveShadows;
         instance.lightContribution = this.lightContribution;
         instance.reflectivity = this.reflectivity;
+        instance.customShader = this.customShader;
         return instance;
     },
     onContextRestored: function(context) {}
@@ -12413,7 +12429,9 @@ var MeshRendererComponent = RendererComponent.extend({
         return this._super().concat([ "meshRenderers" ]);
     },
     createRenderer: function(context, matrix, submesh, material) {
-        return new SubmeshRenderer(context, matrix, submesh, material);
+        var renderer = new SubmeshRenderer(context, matrix, submesh, material);
+        renderer.customShader = this.customShader;
+        return renderer;
     },
     onStart: function(context, engine) {
         this.updateRenderers(context, engine);
