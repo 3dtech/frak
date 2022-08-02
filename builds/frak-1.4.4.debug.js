@@ -10088,7 +10088,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 material.shader.definitions.push("NORMAL_MAP");
             }
             if (materials[i].occlusionTexture) {
-                material.samplers.push(new Sampler("normal0", this.textures[materials[i].occlusionTexture.index]));
+                material.samplers.push(new Sampler("occlusion0", this.textures[materials[i].occlusionTexture.index]));
                 material.shader.definitions.push("OCCLUSION_TEXTURE");
             }
             if (materials[i].emissiveTexture) {

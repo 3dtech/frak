@@ -225,7 +225,7 @@ void main(void) {
 	vec3 diffuse_ambient = EnvBRDFApprox(diffuseColor, 1.0, NdotV);
 	vec3 specular_ambient = EnvBRDFApprox(F0, perceptual_roughness, NdotV);
 
-	output_color.rgb = dir_light(normalize(lightDirection), lightColor, roughness, NdotV, N, V, R, F0, diffuseColor);
+	output_color.rgb = dir_light(normalize(lightDirection), lightColor * lightIntensity * 20.8, roughness, NdotV, N, V, R, F0, diffuseColor);
 	output_color.rgb += (diffuse_ambient + specular_ambient) * ambient.rgb * occlusion;
 	output_color.rgb += emissive.rgb * output_color.a;
 
