@@ -106,6 +106,14 @@ var SubmeshRenderer = Renderer.extend({
 				this.buffer.add("tangent", submesh.tangents, 3);
 			}
 		}
+		if (submesh.tangents4D) {
+			if (submesh.tangents4D.length / 4 != pointCount) {
+				console.warn("Wrong number of tangents ({0}). Must be the same as positions ({1}).".format(submesh.tangents4D.length / 4, pointCount));
+			}
+			else {
+				this.buffer.add("tangent4d", submesh.tangents4D, 4);
+			}
+		}
 		if (submesh.bitangents) {
 			if (submesh.positions.length != submesh.bitangents.length) {
 				console.warn("Wrong number of bitangents. Must be the same as positions.");

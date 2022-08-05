@@ -92,7 +92,7 @@
 
 		function setupLights(scene) {
 			var lights = scene.root.addNode(new Node('lights'));
-			var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.8, 0.8, 0.8)));
+			var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
 			var lightDirectional = scene.light;
 			lightDirectional.setLightDirection([1, 1, 1]);
 			lightDirectional.intensity = 0.8;

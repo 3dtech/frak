@@ -380,7 +380,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 					material = this.defaultMaterial();
 				}
 
-				var submesh = this.loadSubmesh(meshes[i].primitives[j]);
+				var submesh = this.loadSubmesh(meshes[i].primitives[j], material);
 				if (submesh) {
 					mesh.addSubmesh(submesh, material);
 				} else {
@@ -392,7 +392,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 		}
 	},
 
-	loadSubmesh: function(primitive) {
+	loadSubmesh: function(primitive, material) {
 		var submesh = new Submesh();
 
 		if (isNaN(parseInt(primitive.indices)) || isNaN(parseInt(primitive.attributes.POSITION))) {
@@ -411,13 +411,17 @@ var ModelLoaderGLTF = FrakClass.extend({
 		}
 
 		if (!isNaN(parseInt(primitive.attributes.TANGENT))) {
-			submesh.tangents = this.accessors[primitive.attributes.TANGENT].filter(
+			submesh.tangents4D = this.accessors[primitive.attributes.TANGENT];
+			submesh.tangents = submesh.tangents4D.filter(
 				function(_, i) {
 					return i % 4 !== 3;
 				}
 			);
+
+			material.shader.definitions.push('VERTEX_TANGENTS');
 		} else if (submesh.texCoords2D.length) {
 			submesh.calculateTangents();
+			material.shader.definitions.push('VERTEX_TANGENTS');
 		}
 
 		submesh.recalculateBounds();

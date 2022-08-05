@@ -44,7 +44,7 @@ in vec2 uv0;
 in vec4 worldPosition;
 in vec3 worldNormal;
 
-#ifdef NORMAL_MAP
+#ifdef VERTEX_TANGENTS
 in vec4 worldTangent;
 #endif
 
@@ -195,12 +195,14 @@ void main(void) {
 	float roughness = perceptualRoughnessToRoughness(perceptual_roughness);
 
 	vec3 N = normalize(worldNormal);
+#ifdef VERTEX_TANGENTS
 #ifdef NORMAL_MAP
 	vec3 T = normalize(worldTangent.xyz);
 	vec3 B = cross(N, T) * worldTangent.w;
 
-	mat3 TBN = mat3(T, B, N);
+	mat3 TBN = mat3(T, -B, N);
 	N = TBN * normalize(texture(normal0, uv0).xyz * 2.0 - 1.0);
+#endif
 #endif
 
 #ifdef OCCLUSION_TEXTURE

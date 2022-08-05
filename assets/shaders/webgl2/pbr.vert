@@ -3,8 +3,8 @@
 in vec3 position;
 in vec3 normal;
 in vec2 texcoord2d0;
-#ifdef NORMAL_MAP
-in vec3 tangent;
+#ifdef VERTEX_TANGENTS
+in vec4 tangent4d;
 #endif
 
 uniform mat4 model;
@@ -17,7 +17,7 @@ uniform mat4 lightView;
 out vec2 uv0;
 out vec4 worldPosition;
 out vec3 worldNormal;
-#ifdef NORMAL_MAP
+#ifdef VERTEX_TANGENTS
 out vec4 worldTangent;
 #endif
 out vec4 viewPosition;
@@ -30,8 +30,8 @@ void main() {
 	worldNormal = normalize(mat3(model) * normal);
 	viewPosition = view * worldPosition;
 	viewNormal = mat3(modelview) * normal;
-#ifdef NORMAL_MAP
-	worldTangent = vec4(normalize(mat3(model) * tangent), 1.);
+#ifdef VERTEX_TANGENTS
+	worldTangent = vec4(normalize(mat3(model) * tangent4d.xyz), tangent4d.w);
 #endif
 
 	shadowPosition = lightProjection * lightView * worldPosition;

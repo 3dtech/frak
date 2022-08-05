@@ -8590,6 +8590,13 @@ var SubmeshRenderer = Renderer.extend({
                 this.buffer.add("tangent", submesh.tangents, 3);
             }
         }
+        if (submesh.tangents4D) {
+            if (submesh.tangents4D.length / 4 != pointCount) {
+                console.warn("Wrong number of tangents ({0}). Must be the same as positions ({1}).".format(submesh.tangents4D.length / 4, pointCount));
+            } else {
+                this.buffer.add("tangent4d", submesh.tangents4D, 4);
+            }
+        }
         if (submesh.bitangents) {
             if (submesh.positions.length != submesh.bitangents.length) {
                 console.warn("Wrong number of bitangents. Must be the same as positions.");
@@ -10140,7 +10147,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 } else {
                     material = this.defaultMaterial();
                 }
-                var submesh = this.loadSubmesh(meshes[i].primitives[j]);
+                var submesh = this.loadSubmesh(meshes[i].primitives[j], material);
                 if (submesh) {
                     mesh.addSubmesh(submesh, material);
                 } else {
@@ -10150,7 +10157,7 @@ var ModelLoaderGLTF = FrakClass.extend({
             this.meshes.push(mesh);
         }
     },
-    loadSubmesh: function(primitive) {
+    loadSubmesh: function(primitive, material) {
         var submesh = new Submesh();
         if (isNaN(parseInt(primitive.indices)) || isNaN(parseInt(primitive.attributes.POSITION))) {
             return;
@@ -10164,11 +10171,14 @@ var ModelLoaderGLTF = FrakClass.extend({
             submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
         }
         if (!isNaN(parseInt(primitive.attributes.TANGENT))) {
-            submesh.tangents = this.accessors[primitive.attributes.TANGENT].filter(function(_, i) {
+            submesh.tangents4D = this.accessors[primitive.attributes.TANGENT];
+            submesh.tangents = submesh.tangents4D.filter(function(_, i) {
                 return i % 4 !== 3;
             });
+            material.shader.definitions.push("VERTEX_TANGENTS");
         } else if (submesh.texCoords2D.length) {
             submesh.calculateTangents();
+            material.shader.definitions.push("VERTEX_TANGENTS");
         }
         submesh.recalculateBounds();
         return submesh;
@@ -11433,11 +11443,24 @@ var Submesh = FrakClass.extend({
         this.texCoords3D = [];
         this.texCoords4D = [];
         this.tangents = false;
+        this.tangents4D = false;
         this.normals = false;
         this.bitangents = false;
         this.barycentric = false;
         this.boundingBox = new BoundingBox();
         this.boundingSphere = new BoundingSphere();
+    },
+    _calculateTangents4D: function() {
+        if (!this.tangents) {
+            return;
+        }
+        this.tangents4D = new Float32Array(this.positions.length / 3 * 4);
+        for (var i = 0; i < this.tangents4D.length; i += 4) {
+            this.tangents4D[i] = this.tangents[i];
+            this.tangents4D[i + 1] = this.tangents[i + 1];
+            this.tangents4D[i + 2] = this.tangents[i + 2];
+            this.tangents4D[i + 3] = 1;
+        }
     },
     calculateTangents: function() {
         var tan1 = new Float32Array(this.positions.length);
@@ -11521,6 +11544,7 @@ var Submesh = FrakClass.extend({
         }
         delete tan1;
         delete tan2;
+        this._calculateTangents4D();
     },
     calculateBarycentric: function() {
         this.barycentric = new Float32Array(this.positions.length);
