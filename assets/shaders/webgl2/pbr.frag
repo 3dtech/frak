@@ -227,9 +227,10 @@ void main(void) {
 
 	output_color.rgb = dir_light(normalize(lightDirection), lightColor * lightIntensity * 20.8, roughness, NdotV, N, V, R, F0, diffuseColor);
 	output_color.rgb += (diffuse_ambient + specular_ambient) * ambient.rgb * occlusion;
-	output_color.rgb += emissive.rgb * output_color.a;
 
 	output_color.rgb = reinhard_luminance(output_color.rgb);
+
+	output_color.rgb += emissive.rgb * output_color.a;
 
 	fragColor = output_color;
 }

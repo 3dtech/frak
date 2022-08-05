@@ -5853,8 +5853,10 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
         if (lights.length > 0 && lights[0]) context.light = lights[0];
         if (this.parent.organizer.enableDynamicBatching) {
             this.parent.renderBatched(context, this.parent.organizer.opaqueBatchList);
+            this.parent.renderBatched(context, this.parent.organizer.customBatchList);
         } else {
             this.parent.renderBruteForce(context, this.parent.organizer.solidRenderers);
+            this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
         }
         if (lights.length > 1 && lights[1]) {
             gl.depthMask(false);
