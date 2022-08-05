@@ -10078,7 +10078,7 @@ var ModelLoaderGLTF = FrakClass.extend({
             }
             var diffuse = new Color();
             var emissive = new Color(0, 0, 0);
-            var metalness = 1;
+            var metallic = 1;
             var roughness = 1;
             if (materials[i].pbrMetallicRoughness) {
                 var bcf = materials[i].pbrMetallicRoughness.baseColorFactor;
@@ -10087,7 +10087,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 }
                 var metallicFactor = materials[i].pbrMetallicRoughness.metallicFactor;
                 if (!isNaN(parseFloat(metallicFactor))) {
-                    metalness = metallicFactor;
+                    metallic = metallicFactor;
                 }
                 var roughnessFactor = materials[i].pbrMetallicRoughness.roughnessFactor;
                 if (!isNaN(parseFloat(roughnessFactor))) {
@@ -10112,7 +10112,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 diffuse: new UniformColor(diffuse),
                 perceptual_roughness: new UniformFloat(roughness),
                 reflectance: new UniformFloat(.5),
-                metalness: new UniformFloat(metalness),
+                metallic: new UniformFloat(metallic),
                 emissive: new UniformColor(emissive)
             };
             if (materials[i].normalTexture) {
