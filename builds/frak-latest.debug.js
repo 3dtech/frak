@@ -5270,6 +5270,9 @@ var MaterialRenderStage = RenderStage.extend({
             projection: new UniformMat4(mat4.create()),
             cameraPosition: new UniformVec3(vec3.create())
         };
+        this.ambientUniform = {
+            ambient: new UniformColor()
+        };
         this.rendererUniforms = {
             model: new UniformMat4(null),
             modelview: new UniformMat4(null),
@@ -5315,25 +5318,34 @@ var MaterialRenderStage = RenderStage.extend({
         context.shadow.shadow0 = light.shadowSampler;
     },
     prepareLightContext: function(context, scene) {
+        vec4.set(this.ambientUniform.ambient.value, 0, 0, 0, 1);
         for (var i = 0; i < scene.lights.length; i++) {
             var light = scene.lights[i];
-            if (!(light instanceof DirectionalLight)) continue;
-            if (!light.enabled) continue;
-            if (light.uniforms) {
-                vec3.copy(light.uniforms.lightDirection.value, light.direction);
-                light.uniforms.lightIntensity.value = light.intensity;
-                light.uniforms.lightColor.value[0] = light.color.r;
-                light.uniforms.lightColor.value[1] = light.color.g;
-                light.uniforms.lightColor.value[2] = light.color.b;
-                light.uniforms.lightColor.value[3] = light.color.a;
-                light.uniforms.useShadows.value = light.shadowCasting ? 1 : 0;
-            } else {
-                light.uniforms = {
-                    lightDirection: new UniformVec3(light.direction),
-                    lightColor: new UniformColor(light.color),
-                    lightIntensity: new UniformFloat(light.intensity),
-                    useShadows: new UniformInt(light.shadowCasting ? 1 : 0)
-                };
+            if (!light.enabled) {
+                continue;
+            }
+            if (light instanceof DirectionalLight) {
+                if (light.uniforms) {
+                    vec3.copy(light.uniforms.lightDirection.value, light.direction);
+                    light.uniforms.lightIntensity.value = light.intensity;
+                    light.uniforms.lightColor.value[0] = light.color.r;
+                    light.uniforms.lightColor.value[1] = light.color.g;
+                    light.uniforms.lightColor.value[2] = light.color.b;
+                    light.uniforms.lightColor.value[3] = light.color.a;
+                    light.uniforms.useShadows.value = light.shadowCasting ? 1 : 0;
+                } else {
+                    light.uniforms = {
+                        lightDirection: new UniformVec3(light.direction),
+                        lightColor: new UniformColor(light.color),
+                        lightIntensity: new UniformFloat(light.intensity),
+                        useShadows: new UniformInt(light.shadowCasting ? 1 : 0)
+                    };
+                }
+            } else if (light instanceof AmbientLight) {
+                context.ambient = true;
+                this.ambientUniform.ambient.value[0] += light.color.r;
+                this.ambientUniform.ambient.value[1] += light.color.g;
+                this.ambientUniform.ambient.value[2] += light.color.b;
             }
         }
     },
@@ -5359,6 +5371,7 @@ var MaterialRenderStage = RenderStage.extend({
     onPostRender: function(context, scene, camera) {
         context.shadow = false;
         context.light = false;
+        context.ambient = false;
     },
     renderBatched: function(context, batches) {
         var usedShader = false;
@@ -5384,6 +5397,9 @@ var MaterialRenderStage = RenderStage.extend({
                 }
                 shader.bindSamplers(this.samplerAccum.samplers);
                 shader.bindUniforms(material.uniforms);
+                if (context.ambient) {
+                    shader.bindUniforms(this.ambientUniform);
+                }
                 for (var j = 0, bl = batch.length; j < bl; ++j) {
                     renderer = batch.get(j);
                     context.modelview.push();
