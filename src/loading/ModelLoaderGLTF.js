@@ -212,9 +212,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 		return new Material(
 			this.shadersManager.addSource('pbr'),
 			{},
-			[
-				new Sampler('diffuse0', this.shadersManager.context.engine.WhiteTexture)
-			]
+			[]
 		);
 	},
 
@@ -314,9 +312,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 				var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
 				if (texture) {
-					material.samplers = [
-						new Sampler('diffuse0', this.textures[texture.index])
-					];
+					material.samplers.push(new Sampler('diffuse0', this.textures[texture.index]));
 
 					material.shader.definitions.push('DIFFUSE_TEXTURE');
 				}

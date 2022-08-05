@@ -10014,7 +10014,7 @@ var ModelLoaderGLTF = FrakClass.extend({
         }
     },
     defaultMaterial: function() {
-        return new Material(this.shadersManager.addSource("pbr"), {}, [ new Sampler("diffuse0", this.shadersManager.context.engine.WhiteTexture) ]);
+        return new Material(this.shadersManager.addSource("pbr"), {}, []);
     },
     loadImages: function(images) {
         for (var i = 0, l = images.length; i < l; i++) {
@@ -10095,7 +10095,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 }
                 var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
                 if (texture) {
-                    material.samplers = [ new Sampler("diffuse0", this.textures[texture.index]) ];
+                    material.samplers.push(new Sampler("diffuse0", this.textures[texture.index]));
                     material.shader.definitions.push("DIFFUSE_TEXTURE");
                 }
                 var metallicRoughness = materials[i].pbrMetallicRoughness.metallicRoughnessTexture;

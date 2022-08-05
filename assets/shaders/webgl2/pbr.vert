@@ -18,7 +18,7 @@ out vec2 uv0;
 out vec4 worldPosition;
 out vec3 worldNormal;
 #ifdef NORMAL_MAP
-out vec3 worldTangent;
+out vec4 worldTangent;
 #endif
 out vec4 viewPosition;
 out vec3 viewNormal;
@@ -31,7 +31,7 @@ void main() {
 	viewPosition = view * worldPosition;
 	viewNormal = mat3(modelview) * normal;
 #ifdef NORMAL_MAP
-	worldTangent = normalize(mat3(model) * tangent);
+	worldTangent = vec4(normalize(mat3(model) * tangent), 1.);
 #endif
 
 	shadowPosition = lightProjection * lightView * worldPosition;

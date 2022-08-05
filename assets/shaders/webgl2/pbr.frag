@@ -45,7 +45,7 @@ in vec4 worldPosition;
 in vec3 worldNormal;
 
 #ifdef NORMAL_MAP
-in vec3 worldTangent;
+in vec4 worldTangent;
 #endif
 
 in vec4 viewPosition;
@@ -196,8 +196,8 @@ void main(void) {
 
 	vec3 N = normalize(worldNormal);
 #ifdef NORMAL_MAP
-	vec3 T = normalize(worldTangent);
-	vec3 B = cross(N, T);
+	vec3 T = normalize(worldTangent.xyz);
+	vec3 B = cross(N, T) * worldTangent.w;
 
 	mat3 TBN = mat3(T, B, N);
 	N = TBN * normalize(texture(normal0, uv0).xyz * 2.0 - 1.0);
@@ -225,7 +225,7 @@ void main(void) {
 	vec3 diffuse_ambient = EnvBRDFApprox(diffuseColor, 1.0, NdotV);
 	vec3 specular_ambient = EnvBRDFApprox(F0, perceptual_roughness, NdotV);
 
-	output_color.rgb = dir_light(normalize(lightDirection), lightColor * lightIntensity * 20.8, roughness, NdotV, N, V, R, F0, diffuseColor);
+	output_color.rgb = dir_light(normalize(lightDirection), lightColor * lightIntensity * 5.2, roughness, NdotV, N, V, R, F0, diffuseColor);
 	output_color.rgb += (diffuse_ambient + specular_ambient) * ambient.rgb * occlusion;
 
 	output_color.rgb = reinhard_luminance(output_color.rgb);
