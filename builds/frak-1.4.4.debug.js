@@ -4420,7 +4420,7 @@ var Shader = Serializable.extend({
         this.failed = false;
         this.uniformLocations = {};
         this.bindings = {};
-        this.definitions = [];
+        this.definitions = descriptor.definitions;
     },
     excluded: function() {
         return true;
@@ -10020,9 +10020,6 @@ var ModelLoaderGLTF = FrakClass.extend({
             this.accessors.push(accessor);
         }
     },
-    defaultMaterial: function() {
-        return new Material(this.shadersManager.addSource("pbr"), {}, []);
-    },
     loadImages: function(images) {
         for (var i = 0, l = images.length; i < l; i++) {
             var uri;
@@ -10075,7 +10072,7 @@ var ModelLoaderGLTF = FrakClass.extend({
     },
     loadMaterials: function(materials) {
         for (var i = 0, l = materials.length; i < l; i++) {
-            var material = this.defaultMaterial();
+            var material = new Material(this.shadersManager.addSource("pbr"), {}, []);
             if (materials[i].name) {
                 material.name = materials[i].name;
             }
@@ -10083,6 +10080,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 material.shader = this.shadersManager.addSource("transparent");
                 material.shader.requirements.transparent = true;
             }
+            var definitions = [];
             var diffuse = new Color();
             var emissive = new Color(0, 0, 0);
             var metallic = 1;
@@ -10103,12 +10101,12 @@ var ModelLoaderGLTF = FrakClass.extend({
                 var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
                 if (texture) {
                     material.samplers.push(new Sampler("diffuse0", this.textures[texture.index]));
-                    material.shader.definitions.push("DIFFUSE_TEXTURE");
+                    definitions.push("DIFFUSE_TEXTURE");
                 }
                 var metallicRoughness = materials[i].pbrMetallicRoughness.metallicRoughnessTexture;
                 if (metallicRoughness) {
                     material.samplers.push(new Sampler("metallicRoughness0", this.textures[metallicRoughness.index]));
-                    material.shader.definitions.push("METALLIC_ROUGHNESS_TEXTURE");
+                    definitions.push("METALLIC_ROUGHNESS_TEXTURE");
                 }
             }
             var eF = materials[i].emissiveFactor;
@@ -10124,16 +10122,17 @@ var ModelLoaderGLTF = FrakClass.extend({
             };
             if (materials[i].normalTexture) {
                 material.samplers.push(new Sampler("normal0", this.textures[materials[i].normalTexture.index]));
-                material.shader.definitions.push("NORMAL_MAP");
+                definitions.push("NORMAL_MAP");
             }
             if (materials[i].occlusionTexture) {
                 material.samplers.push(new Sampler("occlusion0", this.textures[materials[i].occlusionTexture.index]));
-                material.shader.definitions.push("OCCLUSION_TEXTURE");
+                definitions.push("OCCLUSION_TEXTURE");
             }
             if (materials[i].emissiveTexture) {
                 material.samplers.push(new Sampler("emissive0", this.textures[materials[i].emissiveTexture.index]));
-                material.shader.definitions.push("EMISSIVE_TEXTURE");
+                definitions.push("EMISSIVE_TEXTURE");
             }
+            material.shader = this.shadersManager.addSource("pbr", definitions);
             this.materials.push(material);
         }
     },
@@ -10145,7 +10144,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 if (!isNaN(parseInt(meshes[i].primitives[j].material))) {
                     material = this.materials[meshes[i].primitives[j].material];
                 } else {
-                    material = this.defaultMaterial();
+                    material = new Material(this.shadersManager.addSource("pbr", []), {}, []);
                 }
                 var submesh = this.loadSubmesh(meshes[i].primitives[j], material);
                 if (submesh) {
@@ -10412,11 +10411,11 @@ var ShadersManager = Manager.extend({
         fragmentSource = this.sourceCallback(fragmentSource);
         return this.addDescriptor(new ShaderDescriptor(vertexSource, fragmentSource));
     },
-    addSource: function(source) {
+    addSource: function(source, definitions) {
         var alias = source.toLowerCase();
         if (alias in this.aliases) source = this.aliases[alias];
         source = this.sourceCallback(source);
-        return this.addDescriptor(new ShaderDescriptor(source + ".vert", source + ".frag"));
+        return this.addDescriptor(new ShaderDescriptor(source + ".vert", source + ".frag", definitions));
     },
     createResource: function(shaderDescriptor) {
         return new Shader(this.context, shaderDescriptor);
@@ -14207,7 +14206,7 @@ var ModelDescriptor = Descriptor.extend({
 });
 
 var ShaderDescriptor = Descriptor.extend({
-    init: function(vertexOrUnifiedSource, fragmentSource) {
+    init: function(vertexOrUnifiedSource, fragmentSource, definitions) {
         this._super();
         if (!fragmentSource) {
             this.vertexSource = vertexOrUnifiedSource + ".vert";
@@ -14216,13 +14215,17 @@ var ShaderDescriptor = Descriptor.extend({
             this.vertexSource = vertexOrUnifiedSource;
             this.fragmentSource = fragmentSource;
         }
+        this.definitions = [];
+        if (definitions) {
+            this.definitions = definitions;
+        }
     },
     type: function() {
         return "ShaderDescriptor";
     },
     equals: function(other) {
         if (!this._super(other)) return false;
-        return this.vertexSource == other.vertexSource && this.fragmentSource == other.fragmentSource;
+        return this.vertexSource == other.vertexSource && this.fragmentSource == other.fragmentSource && this.definitions == other.definitions;
     },
     getVertexShaderPath: function() {
         var path = this.getParentDirectory() + this.vertexSource;

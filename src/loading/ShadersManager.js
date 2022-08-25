@@ -53,12 +53,12 @@ var ShadersManager=Manager.extend({
 	},
 
 	/** Adds both vertex and fragment shader by appending .vert and .frag to source */
-	addSource: function(source) {
+	addSource: function(source, definitions) {
 		var alias = source.toLowerCase();
 		if (alias in this.aliases)
 			source = this.aliases[alias];
 		source = this.sourceCallback(source);
-		return this.addDescriptor(new ShaderDescriptor(source+'.vert', source+'.frag'));
+		return this.addDescriptor(new ShaderDescriptor(source+'.vert', source+'.frag', definitions));
 	},
 
 	// Protected methods

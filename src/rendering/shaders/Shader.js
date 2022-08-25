@@ -23,7 +23,7 @@ var Shader=Serializable.extend({
 
 		this.bindings = {};
 
-		this.definitions = [];
+		this.definitions = descriptor.definitions;
 	},
 
 	excluded: function() {
