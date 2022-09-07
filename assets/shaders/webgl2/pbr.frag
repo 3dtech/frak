@@ -22,22 +22,42 @@ uniform float lightIntensity;
 
 #ifdef DIFFUSE_TEXTURE
 uniform sampler2D diffuse0;
+
+#ifdef DIFFUSE_UV_TRANSFORM
+uniform mat3 diffuseUVTransform;
+#endif
 #endif
 
-#ifdef METALLIC_ROUGHNESS_TEXTURE
+#ifdef METALLICROUGHNESS_TEXTURE
 uniform sampler2D metallicRoughness0;
+
+#ifdef METALLICROUGHNESS_UV_TRANSFORM
+uniform mat3 metallicRoughnessUVTransform;
+#endif
 #endif
 
-#ifdef NORMAL_MAP
+#ifdef NORMAL_TEXTURE
 uniform sampler2D normal0;
+
+#ifdef NORMAL_UV_TRANSFORM
+uniform mat3 normalUVTransform;
+#endif
 #endif
 
 #ifdef OCCLUSION_TEXTURE
 uniform sampler2D occlusion0;
+
+#ifdef OCCLUSION_UV_TRANSFORM
+uniform mat3 occlusionUVTransform;
+#endif
 #endif
 
 #ifdef EMISSIVE_TEXTURE
 uniform sampler2D emissive0;
+
+#ifdef EMISSIVE_UV_TRANSFORM
+uniform mat3 emissiveUVTransform;
+#endif
 #endif
 
 in vec2 uv0;
@@ -180,14 +200,64 @@ vec3 dir_light(vec3 direction, vec4 color, float roughness, float NdotV, vec3 no
 	//return specular;
 }
 
+vec2 diffuseUV() {
+	vec3 uv = vec3(uv0, 1.0);
+
+#ifdef DIFFUSE_UV_TRANSFORM
+	uv = diffuseUVTransform * uv;
+#endif
+
+	return uv.xy;
+}
+
+vec2 metallicRoughnessUV() {
+	vec3 uv = vec3(uv0, 1.0);
+
+#ifdef METALLICROUGHNESS_UV_TRANSFORM
+	uv = metallicRoughnessUVTransform * uv;
+#endif
+
+	return uv.xy;
+}
+
+vec2 normalUV() {
+	vec3 uv = vec3(uv0, 1.0);
+
+#ifdef NORMAL_UV_TRANSFORM
+	uv = normalUVTransform * uv;
+#endif
+
+	return uv.xy;
+}
+
+vec2 occlusionUV() {
+	vec3 uv = vec3(uv0, 1.0);
+
+#ifdef OCCLUSION_UV_TRANSFORM
+	uv = occlusionUVTransform * uv;
+#endif
+
+	return uv.xy;
+}
+
+vec2 emissiveUV() {
+	vec3 uv = vec3(uv0, 1.0);
+
+#ifdef EMISSIVE_UV_TRANSFORM
+	uv = emissiveUVTransform * uv;
+#endif
+
+	return uv.xy;
+}
+
 void main(void) {
 	vec4 output_color = diffuse;
 #ifdef DIFFUSE_TEXTURE
-	output_color *= texture(diffuse0, uv0);
+	output_color *= texture(diffuse0, diffuseUV());
 #endif
 
-#ifdef METALLIC_ROUGHNESS_TEXTURE
-	vec4 metallic_roughness = texture(metallicRoughness0, uv0);
+#ifdef METALLICROUGHNESS_TEXTURE
+	vec4 metallic_roughness = texture(metallicRoughness0, metallicRoughnessUV());
 	float metallic = metallic * metallic_roughness.b;
 	float perceptual_roughness = perceptual_roughness * metallic_roughness.g;
 #endif
@@ -196,24 +266,24 @@ void main(void) {
 
 	vec3 N = normalize(worldNormal);
 #ifdef VERTEX_TANGENTS
-#ifdef NORMAL_MAP
+#ifdef NORMAL_TEXTURE
 	vec3 T = normalize(worldTangent.xyz);
 	vec3 B = cross(N, T) * worldTangent.w;
 
 	mat3 TBN = mat3(T, -B, N);
-	N = TBN * normalize(texture(normal0, uv0).xyz * 2.0 - 1.0);
+	N = TBN * normalize(texture(normal0, normalUV()).xyz * 2.0 - 1.0);
 #endif
 #endif
 
 #ifdef OCCLUSION_TEXTURE
-	float occlusion = texture(occlusion0, uv0).r;
+	float occlusion = texture(occlusion0, occlusionUV()).r;
 #else
 	float occlusion = 1.0;
 #endif
 
 #ifdef EMISSIVE_TEXTURE
 	vec4 emissive = emissive;
-	emissive.rgb *= texture(emissive0, uv0).rgb;
+	emissive.rgb *= texture(emissive0, emissiveUV()).rgb;
 #endif
 
 	vec3 V = normalize(cameraPosition - worldPosition.xyz);

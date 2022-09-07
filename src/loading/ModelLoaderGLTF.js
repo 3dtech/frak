@@ -271,6 +271,52 @@ var ModelLoaderGLTF = FrakClass.extend({
 	},
 
 	loadMaterials: function(materials) {
+		var textures = this.textures;
+
+		function setSampler(material, definitions, textureData, name) {
+			if (textureData) {
+				material.samplers.push(new Sampler(name + '0', textures[textureData.index]));
+
+				definitions.push(name.toUpperCase() + '_TEXTURE');
+
+				if (textureData.extensions && textureData.extensions.KHR_texture_transform && name !== 'normal') {
+					var transform = textureData.extensions.KHR_texture_transform;
+
+					var uvMatrix = mat3.create();
+					var tmp = mat3.create();
+
+					if (transform.offset) {
+						tmp[6] = transform.offset[0];
+						tmp[7] = transform.offset[1];
+						mat3.mul(uvMatrix, uvMatrix, tmp);
+						mat3.identity(tmp);
+					}
+
+					if (transform.rotation) {
+						var s = Math.sin(transform.rotation);
+						var c = Math.cos(transform.rotation);
+
+						tmp[0] = tmp[4] = c;
+						tmp[1] = -s;
+						tmp[3] = s;
+
+						mat3.mul(uvMatrix, uvMatrix, tmp);
+						mat3.identity(tmp);
+					}
+
+					if (transform.scale) {
+						tmp[0] = transform.scale[0];
+						tmp[4] = transform.scale[1];
+						mat3.mul(uvMatrix, uvMatrix, tmp);
+						mat3.identity(tmp);
+					}
+
+					definitions.push(name.toUpperCase() + '_UV_TRANSFORM');
+					material.uniforms[name + 'UVTransform'] = new UniformMat3(uvMatrix);
+				}
+			}
+		}
+
 		for (var i = 0, l = materials.length; i < l; i++) {
 			var material = new Material(this.shadersManager.addSource('pbr'), {}, []);
 			if (materials[i].name) {
@@ -288,36 +334,24 @@ var ModelLoaderGLTF = FrakClass.extend({
 			var metallic = 1.0;
 			var roughness = 1.0;
 			if (materials[i].pbrMetallicRoughness) {
-				var bcf = materials[i].pbrMetallicRoughness.baseColorFactor;
+				var mr = materials[i].pbrMetallicRoughness;
+				var bcf = mr.baseColorFactor;
 				if (bcf) {
 					diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
 				}
 
-				var metallicFactor = materials[i].pbrMetallicRoughness.metallicFactor;
+				var metallicFactor = mr.metallicFactor;
 				if (!isNaN(parseFloat((metallicFactor)))) {
 					metallic = metallicFactor;
 				}
 
-				var roughnessFactor = materials[i].pbrMetallicRoughness.roughnessFactor;
+				var roughnessFactor = mr.roughnessFactor;
 				if (!isNaN(parseFloat((roughnessFactor)))) {
 					roughness = roughnessFactor;
 				}
 
-				var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
-				if (texture) {
-					material.samplers.push(new Sampler('diffuse0', this.textures[texture.index]));
-
-					definitions.push('DIFFUSE_TEXTURE');
-				}
-
-				var metallicRoughness = materials[i].pbrMetallicRoughness.metallicRoughnessTexture;
-				if (metallicRoughness) {
-					material.samplers.push(
-						new Sampler('metallicRoughness0', this.textures[metallicRoughness.index])
-					);
-
-					definitions.push('METALLIC_ROUGHNESS_TEXTURE');
-				}
+				setSampler(material, definitions, mr.baseColorTexture, 'diffuse');
+				setSampler(material, definitions, mr.metallicRoughnessTexture, 'metallicRoughness');
 			}
 
 			var eF = materials[i].emissiveFactor;
@@ -325,37 +359,15 @@ var ModelLoaderGLTF = FrakClass.extend({
 				emissive.set(eF[0], eF[1], eF[2]);
 			}
 
-			material.uniforms = {
-				diffuse: new UniformColor(diffuse),
-				perceptual_roughness: new UniformFloat(roughness),
-				reflectance: new UniformFloat(0.5),
-				metallic: new UniformFloat(metallic),
-				emissive: new UniformColor(emissive)
-			};
+			material.uniforms.diffuse = new UniformColor(diffuse);
+			material.uniforms.perceptual_roughness = new UniformFloat(roughness);
+			material.uniforms.reflectance = new UniformFloat(0.5);
+			material.uniforms.metallic = new UniformFloat(metallic);
+			material.uniforms.emissive = new UniformColor(emissive);
 
-			if (materials[i].normalTexture) {
-				material.samplers.push(
-					new Sampler('normal0', this.textures[materials[i].normalTexture.index])
-				);
-
-				definitions.push('NORMAL_MAP');
-			}
-
-			if (materials[i].occlusionTexture) {
-				material.samplers.push(
-					new Sampler('occlusion0', this.textures[materials[i].occlusionTexture.index])
-				);
-
-				definitions.push('OCCLUSION_TEXTURE');
-			}
-
-			if (materials[i].emissiveTexture) {
-				material.samplers.push(
-					new Sampler('emissive0', this.textures[materials[i].emissiveTexture.index])
-				);
-
-				definitions.push('EMISSIVE_TEXTURE');
-			}
+			setSampler(material, definitions, materials[i].normalTexture, 'normal');
+			setSampler(material, definitions, materials[i].occlusionTexture, 'occlusion');
+			setSampler(material, definitions, materials[i].emissiveTexture, 'emissive');
 
 			material.shader = this.shadersManager.addSource('pbr', definitions);
 
