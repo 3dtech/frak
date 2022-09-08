@@ -10076,7 +10076,7 @@ var ModelLoaderGLTF = FrakClass.extend({
             if (textureData) {
                 material.samplers.push(new Sampler(name + "0", textures[textureData.index]));
                 definitions.push(name.toUpperCase() + "_TEXTURE");
-                if (textureData.extensions && textureData.extensions.KHR_texture_transform && name !== "normal") {
+                if (textureData.extensions && textureData.extensions.KHR_texture_transform) {
                     var transform = textureData.extensions.KHR_texture_transform;
                     var uvMatrix = mat3.create();
                     var tmp = mat3.create();

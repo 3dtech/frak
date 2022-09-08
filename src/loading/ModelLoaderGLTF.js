@@ -279,7 +279,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 				definitions.push(name.toUpperCase() + '_TEXTURE');
 
-				if (textureData.extensions && textureData.extensions.KHR_texture_transform && name !== 'normal') {
+				if (textureData.extensions && textureData.extensions.KHR_texture_transform) {
 					var transform = textureData.extensions.KHR_texture_transform;
 
 					var uvMatrix = mat3.create();
