@@ -5907,17 +5907,6 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 var UnlitGeometryRenderStage = RenderStage.extend({
     init: function() {
         this._super();
-        this.sharedUniforms = {
-            view: new UniformMat4(mat4.create()),
-            viewInverse: new UniformMat4(mat4.create()),
-            projection: new UniformMat4(mat4.create())
-        };
-        this.rendererUniforms = {
-            model: new UniformMat4(null),
-            modelview: new UniformMat4(null),
-            receiveShadows: new UniformInt(1)
-        };
-        this.samplerAccum = new SamplerAccumulator();
     },
     onPostRender: function(context, scene, camera) {
         var gl = context.gl;
@@ -5925,62 +5914,11 @@ var UnlitGeometryRenderStage = RenderStage.extend({
         gl.depthFunc(gl.LESS);
         gl.depthMask(true);
         if (this.parent.organizer.enableDynamicBatching) {
-            this.renderBatched(context, this.parent.organizer.unlitBatchList);
+            this.parent.renderBatched(context, this.parent.organizer.unlitBatchList);
         } else {
-            this.renderBruteForce(context, this.parent.organizer.unlitRenderers);
+            this.parent.renderBruteForce(context, this.parent.organizer.unlitRenderers);
         }
         gl.disable(gl.DEPTH_TEST);
-    },
-    renderBatched: function(context, batches) {
-        var usedShader = false;
-        var material, batch, shader, renderer;
-        for (var i = 0, l = batches.length; i < l; ++i) {
-            batch = batches[i];
-            if (batch.get(0)) {
-                material = batch.get(0).material;
-                shader = material.shader;
-                if (shader != usedShader) {
-                    shader.use();
-                    usedShader = shader;
-                    shader.bindUniforms(this.parent.sharedUniforms);
-                }
-                this.samplerAccum.add(context.shadow.shadow0);
-                for (var j = 0, msl = material.samplers.length; j < msl; ++j) {
-                    this.samplerAccum.add(material.samplers[j]);
-                }
-                if (this.samplerAccum.length === 0) {
-                    this.samplerAccum.add(this.parent.diffuseFallback);
-                }
-                shader.bindSamplers(this.samplerAccum.samplers);
-                shader.bindUniforms(material.uniforms);
-                for (var j = 0, bl = batch.length; j < bl; ++j) {
-                    renderer = batch.get(j);
-                    context.modelview.push();
-                    context.modelview.multiply(renderer.matrix);
-                    this.rendererUniforms.model.value = renderer.matrix;
-                    this.rendererUniforms.modelview.value = context.modelview.top();
-                    this.rendererUniforms.receiveShadows.value = renderer.receiveShadows;
-                    shader.bindUniforms(this.rendererUniforms);
-                    renderer.render(context);
-                    context.modelview.pop();
-                }
-                shader.unbindSamplers(this.samplerAccum.samplers);
-                this.samplerAccum.clear();
-            }
-        }
-    },
-    renderBruteForce: function(context, renderers) {
-        for (var j = 0; j < renderers.length; ++j) {
-            var renderer = renderers[j];
-            if (!renderer) break;
-            context.modelview.push();
-            context.modelview.multiply(renderer.matrix);
-            this.cachedUniforms = renderer.getDefaultUniforms(context, null);
-            renderer.material.bind(this.cachedUniforms, context.shadow.shadow0);
-            renderer.render(context);
-            renderer.material.unbind();
-            context.modelview.pop();
-        }
     }
 });
 
@@ -6521,11 +6459,14 @@ var DeferredShadingRenderStage = RenderStage.extend({
             modelview: new UniformMat4(null),
             receiveShadows: new UniformInt(1)
         };
+        this.samplerAccum = new SamplerAccumulator();
     },
     onStart: function(context, engine, camera) {
         this.diffuseFallback = new Sampler("diffuse0", engine.WhiteTexture);
         vec2.copy(this.size, this.parent.size);
-        if (engine.options.softShadows) this.softShadowsStage.enable();
+        if (engine.options.softShadows) {
+            this.softShadowsStage.enable();
+        }
     },
     prepareShared: function(context) {
         mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
@@ -6538,7 +6479,60 @@ var DeferredShadingRenderStage = RenderStage.extend({
         var renderers = scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask);
         this.organizer.sort(scene.engine, renderers);
     },
-    onPostRender: function(context, scene, camera) {}
+    onPostRender: function(context, scene, camera) {},
+    renderBatched: function(context, batches, uniforms) {
+        var usedShader = false;
+        var material, batch, shader, renderer;
+        for (var i = 0, l = batches.length; i < l; ++i) {
+            batch = batches[i];
+            if (batch.get(0)) {
+                material = batch.get(0).material;
+                shader = material.shader;
+                if (shader != usedShader) {
+                    shader.use();
+                    usedShader = shader;
+                    shader.bindUniforms(this.sharedUniforms);
+                    shader.bindUniforms(uniforms);
+                }
+                for (var j = 0, msl = material.samplers.length; j < msl; ++j) {
+                    this.samplerAccum.add(material.samplers[j]);
+                }
+                if (this.samplerAccum.length === 0) {
+                    this.samplerAccum.add(this.diffuseFallback);
+                }
+                shader.bindSamplers(this.samplerAccum.samplers);
+                shader.bindUniforms(material.uniforms);
+                for (var j = 0, bl = batch.length; j < bl; ++j) {
+                    renderer = batch.get(j);
+                    context.modelview.push();
+                    context.modelview.multiply(renderer.matrix);
+                    this.rendererUniforms.model.value = renderer.matrix;
+                    this.rendererUniforms.modelview.value = context.modelview.top();
+                    this.rendererUniforms.receiveShadows.value = renderer.receiveShadows;
+                    shader.bindUniforms(this.rendererUniforms);
+                    renderer.render(context);
+                    context.modelview.pop();
+                }
+                shader.unbindSamplers(this.samplerAccum.samplers);
+                this.samplerAccum.clear();
+            }
+        }
+    },
+    renderBruteForce: function(context, renderers, uniforms) {
+        for (var j = 0; j < renderers.length; ++j) {
+            var renderer = renderers[j];
+            if (!renderer) {
+                break;
+            }
+            context.modelview.push();
+            context.modelview.multiply(renderer.matrix);
+            this.cachedUniforms = renderer.getDefaultUniforms(context, uniforms);
+            renderer.material.bind(this.cachedUniforms);
+            renderer.render(context);
+            renderer.material.unbind();
+            context.modelview.pop();
+        }
+    }
 });
 
 var DeferredShadowRenderStage = RenderStage.extend({
@@ -6907,30 +6901,44 @@ var LightsRenderStage = RenderStage.extend({
         this.sharedUniforms = {
             cameraPosition: new UniformVec3(vec3.create()),
             shadowOnly: new UniformInt(0),
-            useSoftShadows: new UniformInt(1)
+            useSoftShadows: new UniformInt(1),
+            ambient: new UniformColor(new Color(0, 0, 0, 1)),
+            lightDirection: new UniformVec3(vec3.create()),
+            lightColor: new UniformColor(),
+            lightIntensity: new UniformFloat(),
+            useShadows: new UniformInt()
         };
         this.sharedSamplers = [];
+        this.directional = [];
         this.skyboxRenderStage = new SkyboxRenderStage();
     },
     getLightsWithGeometry: function(scene) {
+        vec4.set(this.sharedUniforms.ambient.value, 0, 0, 0, 1);
+        this.directional = [];
         var ambient = [];
-        var directional = [];
         var other = [];
         for (var i = 0; i < scene.lights.length; i++) {
             var light = scene.lights[i];
-            if (!light.enabled) continue;
-            if (!light.geometry) continue;
+            if (!light.enabled) {
+                continue;
+            }
+            if (!light.geometry) {
+                continue;
+            }
             if (light instanceof AmbientLight) {
                 ambient.push(light);
+                this.sharedUniforms.ambient.value[0] += light.color.r;
+                this.sharedUniforms.ambient.value[1] += light.color.g;
+                this.sharedUniforms.ambient.value[2] += light.color.b;
                 continue;
             }
             if (light instanceof DirectionalLight) {
-                directional.push(light);
+                this.directional.push(light);
                 continue;
             }
             other.push(light);
         }
-        return ambient.concat(directional).concat(other);
+        return ambient.concat(this.directional).concat(other);
     },
     onStart: function(context, engine, camera) {
         var gb = this.parent.gbufferStage.buffer;
@@ -6972,6 +6980,43 @@ var LightsRenderStage = RenderStage.extend({
         gl.disable(gl.BLEND);
         gl.stencilMask(255);
         gl.disable(gl.STENCIL_TEST);
+        this.renderCustom(context, scene, camera);
+    },
+    renderCustom: function(context, scene, camera) {
+        var self = this;
+        function renderLight(context, light) {
+            vec3.copy(self.sharedUniforms.lightDirection.value, light.direction);
+            self.sharedUniforms.lightIntensity.value = light.intensity;
+            self.sharedUniforms.lightColor.value[0] = light.color.r;
+            self.sharedUniforms.lightColor.value[1] = light.color.g;
+            self.sharedUniforms.lightColor.value[2] = light.color.b;
+            self.sharedUniforms.lightColor.value[3] = light.color.a;
+            self.sharedUniforms.useShadows.value = light.shadowCasting ? 1 : 0;
+            if (self.parent.organizer.enableDynamicBatching) {
+                self.parent.renderBatched(context, self.parent.organizer.customBatchList, self.sharedUniforms);
+            } else {
+                self.parent.renderBruteForce(context, self.parent.organizer.customRenderers, self.sharedUniforms);
+            }
+        }
+        var gl = context.gl;
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LESS);
+        gl.depthMask(true);
+        gl.disable(gl.CULL_FACE);
+        if (this.directional.length) {
+            renderLight(context, this.directional[0]);
+        }
+        gl.depthMask(false);
+        gl.depthFunc(gl.LEQUAL);
+        gl.blendFunc(gl.ONE, gl.ONE);
+        gl.enable(gl.BLEND);
+        for (var i = 1; i < this.directional.length; i++) {
+            renderLight(context, this.directional[i]);
+        }
+        gl.disable(gl.BLEND);
+        gl.depthMask(true);
+        gl.depthFunc(gl.LESS);
+        gl.disable(gl.DEPTH_TEST);
     },
     renderLight: function(context, light) {
         var shadowSampler;
