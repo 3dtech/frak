@@ -204,6 +204,18 @@ var ModelLoaderGLTF = FrakClass.extend({
 				accessors[i].count * itemCount
 			);
 
+			if (accessors[i].max && itemCount === accessors[i].max.length) {
+				accessor = accessor.map(function(val, idx) {
+					return Math.min(val, accessors[i].max[idx % itemCount]);
+				});
+			}
+
+			if (accessors[i].min && itemCount === accessors[i].min.length) {
+				accessor = accessor.map(function(val, idx) {
+					return Math.max(val, accessors[i].min[idx % itemCount]);
+				});
+			}
+
 			this.accessors.push(accessor);
 		}
 	},
@@ -275,9 +287,13 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 		function setSampler(material, definitions, textureData, name) {
 			if (textureData) {
+				var upperCaseName = name.toUpperCase();
+
 				material.samplers.push(new Sampler(name + '0', textures[textureData.index]));
 
-				definitions.push(name.toUpperCase() + '_TEXTURE');
+				if (definitions.indexOf(upperCaseName + '_TEXTURE') === -1) {
+					definitions.push(upperCaseName + '_TEXTURE');
+				}
 
 				if (textureData.extensions && textureData.extensions.KHR_texture_transform) {
 					var transform = textureData.extensions.KHR_texture_transform;
@@ -311,7 +327,10 @@ var ModelLoaderGLTF = FrakClass.extend({
 						mat3.identity(tmp);
 					}
 
-					definitions.push(name.toUpperCase() + '_UV_TRANSFORM');
+					if (definitions.indexOf(upperCaseName + '_UV_TRANSFORM') === -1) {
+						definitions.push(upperCaseName + '_UV_TRANSFORM');
+					}
+
 					material.uniforms[name + 'UVTransform'] = new UniformMat3(uvMatrix);
 				}
 			}
@@ -360,7 +379,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			}
 
 			material.uniforms.diffuse = new UniformColor(diffuse);
-			material.uniforms.perceptual_roughness = new UniformFloat(roughness);
+			material.uniforms.perceptualRoughness = new UniformFloat(roughness);
 			material.uniforms.reflectance = new UniformFloat(0.5);
 			material.uniforms.metallic = new UniformFloat(metallic);
 			material.uniforms.emissive = new UniformColor(emissive);

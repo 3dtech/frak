@@ -12,7 +12,7 @@ uniform vec4 diffuse;
 uniform vec4 emissive;
 
 uniform float metallic;
-uniform float perceptual_roughness;
+uniform float perceptualRoughness;
 
 uniform float reflectance;
 
@@ -141,8 +141,8 @@ float Fd_Burley(float roughness, float NoV, float NoL, float LoH) {
 const vec4 c0 = vec4(-1, -0.0275, -0.572, 0.022);
 const vec4 c1 = vec4(1, 0.0425, 1.04, -0.04);
 
-vec3 EnvBRDFApprox(vec3 f0, float perceptual_roughness, float NoV) {
-	vec4 r = perceptual_roughness * c0 + c1;
+vec3 EnvBRDFApprox(vec3 f0, float perceptualRoughness, float NoV) {
+	vec4 r = perceptualRoughness * c0 + c1;
 	float a004 = min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
 	vec2 AB = vec2(-1.04, 1.04) * a004 + r.zw;
 	return f0 * AB.x + AB.y;
@@ -153,48 +153,39 @@ float perceptualRoughnessToRoughness(float perceptualRoughness) {
 	return clampedPerceptualRoughness * clampedPerceptualRoughness;
 }
 
-vec3 reinhard(vec3 color) {
-	return color / (1.0 + color);
-}
-
-vec3 reinhard_extended(vec3 color, float max_white) {
-	vec3 numerator = color * (1.0f + (color / vec3(max_white * max_white)));
-	return numerator / (1.0 + color);
-}
-
 float luminance(vec3 v) {
 	return dot(v, vec3(0.2126, 0.7152, 0.0722));
 }
 
-vec3 change_luminance(vec3 c_in, float l_out) {
-	float l_in = luminance(c_in);
-	return c_in * (l_out / l_in);
+vec3 changeLuminance(vec3 cIn, float lOut) {
+	float lIn = luminance(cIn);
+	return cIn * (lOut / lIn);
 }
 
-vec3 reinhard_luminance(vec3 color) {
-	float l_old = luminance(color);
-	float l_new = l_old / (1.0f + l_old);
-	return change_luminance(color, l_new);
+vec3 reinhardLuminance(vec3 color) {
+	float lOld = luminance(color);
+	float lNew = lOld / (1.0f + lOld);
+	return changeLuminance(color, lNew);
 }
 
-vec3 reinhard_extended_luminance(vec3 color, float max_white_l) {
-	float l_old = luminance(color);
-	float numerator = l_old * (1.0f + (l_old / (max_white_l * max_white_l)));
-	float l_new = numerator / (1.0f + l_old);
-	return change_luminance(color, l_new);
+vec3 reinhardExtendedLuminance(vec3 color, float maxWhiteL) {
+	float lOld = luminance(color);
+	float numerator = lOld * (1.0f + (lOld / (maxWhiteL * maxWhiteL)));
+	float lNew = numerator / (1.0f + lOld);
+	return changeLuminance(color, lNew);
 }
 
-vec3 dir_light(vec3 direction, vec4 color, float roughness, float NdotV, vec3 normal, vec3 view, vec3 R, vec3 F0, vec3 diffuseColor) {
-    vec3 incident_light = direction.xyz;
+vec3 dirLight(vec3 direction, vec4 color, float roughness, float NdotV, vec3 normal, vec3 view, vec3 R, vec3 F0, vec3 diffuseColor) {
+    vec3 incidentLight = direction.xyz;
 
-    vec3 half_vector = normalize(incident_light + view);
-    float NoL = saturate(dot(normal, incident_light));
-    float NoH = saturate(dot(normal, half_vector));
-    float LoH = saturate(dot(incident_light, half_vector));
+    vec3 halfVector = normalize(incidentLight + view);
+    float NoL = saturate(dot(normal, incidentLight));
+    float NoH = saturate(dot(normal, halfVector));
+    float LoH = saturate(dot(incidentLight, halfVector));
 
     vec3 diffuse = diffuseColor * Fd_Burley(roughness, NdotV, NoL, LoH);
     float specularIntensity = 1.0;
-    vec3 specular = specular(F0, roughness, half_vector, NdotV, NoL, NoH, LoH, specularIntensity);
+    vec3 specular = specular(F0, roughness, halfVector, NdotV, NoL, NoH, LoH, specularIntensity);
 
     return (specular + diffuse) * color.rgb * NoL;
 	//return specular;
@@ -251,18 +242,18 @@ vec2 emissiveUV() {
 }
 
 void main(void) {
-	vec4 output_color = diffuse;
+	vec4 outputColor = diffuse;
 #ifdef DIFFUSE_TEXTURE
-	output_color *= texture(diffuse0, diffuseUV());
+	outputColor *= texture(diffuse0, diffuseUV());
 #endif
 
 #ifdef METALLICROUGHNESS_TEXTURE
-	vec4 metallic_roughness = texture(metallicRoughness0, metallicRoughnessUV());
-	float metallic = metallic * metallic_roughness.b;
-	float perceptual_roughness = perceptual_roughness * metallic_roughness.g;
+	vec4 metallicRoughness = texture(metallicRoughness0, metallicRoughnessUV());
+	float metallic = metallic * metallicRoughness.b;
+	float perceptualRoughness = perceptualRoughness * metallicRoughness.g;
 #endif
 
-	float roughness = perceptualRoughnessToRoughness(perceptual_roughness);
+	float roughness = perceptualRoughnessToRoughness(perceptualRoughness);
 
 	vec3 N = normalize(worldNormal);
 #ifdef VERTEX_TANGENTS
@@ -289,20 +280,20 @@ void main(void) {
 	vec3 V = normalize(cameraPosition - worldPosition.xyz);
 	float NdotV = max(dot(N, V), 1e-4);
 
-	vec3 F0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + output_color.rgb * metallic;
-	vec3 diffuseColor = output_color.rgb * (1.0 - metallic);
+	vec3 F0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + outputColor.rgb * metallic;
+	vec3 diffuseColor = outputColor.rgb * (1.0 - metallic);
 
 	vec3 R = reflect(-V, N);
 
-	vec3 diffuse_ambient = EnvBRDFApprox(diffuseColor, 1.0, NdotV);
-	vec3 specular_ambient = EnvBRDFApprox(F0, perceptual_roughness, NdotV);
+	vec3 diffuseAmbient = EnvBRDFApprox(diffuseColor, 1.0, NdotV);
+	vec3 specularAmbient = EnvBRDFApprox(F0, perceptualRoughness, NdotV);
 
-	output_color.rgb = dir_light(normalize(lightDirection), lightColor * lightIntensity * 5.2, roughness, NdotV, N, V, R, F0, diffuseColor);
-	output_color.rgb += (diffuse_ambient + specular_ambient) * ambient.rgb * occlusion;
+	outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
+	outputColor.rgb += (diffuseAmbient + specularAmbient) * ambient.rgb * occlusion;
 
-	output_color.rgb = reinhard_luminance(output_color.rgb);
+	outputColor.rgb = reinhardLuminance(outputColor.rgb);
 
-	output_color.rgb += emissive.rgb * output_color.a;
+	outputColor.rgb += emissive.rgb * outputColor.a;
 
-	fragColor = output_color;
+	fragColor = outputColor;
 }
