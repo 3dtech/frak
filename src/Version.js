@@ -1,4 +1,5 @@
-var frakVersion = '1.4.4';
+var frakVersion = '1.5.0';
 
-if (typeof exports !== 'undefined')
+if (typeof exports !== 'undefined') {
 	exports.version = frakVersion;
+}
