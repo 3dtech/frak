@@ -105,8 +105,6 @@ var ModelLoaderJSON = FrakClass.extend({
 		// Color uniforms
 		if (parsedMaterial.color.ambient)
 			uniforms["ambient"] = new UniformColor(parsedMaterial.color.ambient);
-		else
-			uniforms["ambient"] = new UniformColor(new Color(0.2, 0.2, 0.2, 1.0));
 
 		if (parsedMaterial.color.diffuse)
 			uniforms["diffuse"] = new UniformColor(parsedMaterial.color.diffuse);

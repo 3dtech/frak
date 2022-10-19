@@ -50,11 +50,8 @@ var MaterialRenderStage = RenderStage.extend({
 			"view": new UniformMat4(mat4.create()),
 			"viewInverse": new UniformMat4(mat4.create()),
 			"projection": new UniformMat4(mat4.create()),
-			'cameraPosition': new UniformVec3(vec3.create())
-		};
-
-		this.ambientUniform = {
-			ambient: new UniformColor()
+			'cameraPosition': new UniformVec3(vec3.create()),
+			ambient: new UniformColor(0, 0, 0),
 		};
 
 		// Renderer uniforms cache
@@ -123,7 +120,7 @@ var MaterialRenderStage = RenderStage.extend({
 
 	/** Prepares Light uniforms that are shared between all materials. */
 	prepareLightContext: function(context, scene) {
-		vec4.set(this.ambientUniform.ambient.value, 0, 0, 0, 1);
+		vec4.set(this.sharedUniforms.ambient.value, 0, 0, 0, 1);
 
 		for (var i = 0; i < scene.lights.length; i++) {
 			var light = scene.lights[i];
@@ -149,10 +146,9 @@ var MaterialRenderStage = RenderStage.extend({
 					};
 				}
 			} else if (light instanceof AmbientLight) {
-				context.ambient = true;
-				this.ambientUniform.ambient.value[0] += light.color.r;
-				this.ambientUniform.ambient.value[1] += light.color.g;
-				this.ambientUniform.ambient.value[2] += light.color.b;
+				this.sharedUniforms.ambient.value[0] += light.color.r;
+				this.sharedUniforms.ambient.value[1] += light.color.g;
+				this.sharedUniforms.ambient.value[2] += light.color.b;
 			}
 		}
 	},
@@ -191,7 +187,6 @@ var MaterialRenderStage = RenderStage.extend({
 		// Remove stage data from context
 		context.shadow = false;
 		context.light = false;
-		context.ambient = false;
 	},
 
 	/** Renders renderers in batches by material */
@@ -236,11 +231,6 @@ var MaterialRenderStage = RenderStage.extend({
 
 				// Bind material uniforms
 				shader.bindUniforms(material.uniforms);
-
-				// Bind ambient light after material's ambient if present
-				if (context.ambient) {
-					shader.bindUniforms(this.ambientUniform);
-				}
 
 				for (var j = 0, bl = batch.length; j < bl; ++j) {
 					renderer = batch.get(j);
