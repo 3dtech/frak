@@ -138,8 +138,6 @@ var SubmeshRenderer = Renderer.extend({
 		// to prevent nonintuitive rendering problems
 		if (!material.uniforms.diffuse)
 			material.uniforms.diffuse = new UniformColor(new Color(1.0, 1.0, 1.0, 1.0));
-		if (!material.uniforms.ambient)
-			material.uniforms.ambient = new UniformColor(new Color(0.2, 0.2, 0.2, 1.0));
 		if (!material.uniforms.specularStrength)
 			material.uniforms.specularStrength = new UniformFloat(0.0);
 		if (!material.uniforms.specularPower)
