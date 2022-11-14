@@ -14423,19 +14423,13 @@ var EmptyNode = Serializable.extend({
             node = this.scene.root;
             parts.shift();
         }
-        if (parts.length > 2) {
-            var _parts = parts.slice(0, 1);
-            var __parts = parts.slice(1, parts.length).join("/");
-            parts = _parts;
-            parts.push(__parts);
-        }
         for (var i = 0; i < parts.length; i++) {
-            node = node.findChildWithName(parts[i], path);
+            node = node.findChildWithName(parts[i]);
             if (node === false) return false;
         }
         return node;
     },
-    findChildWithName: function(name, path) {
+    findChildWithName: function(name) {
         for (var i = 0; i < this.subnodes.length; i++) {
             if (this.subnodes[i].name === name) return this.subnodes[i];
         }
