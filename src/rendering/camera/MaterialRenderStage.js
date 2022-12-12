@@ -49,7 +49,9 @@ var MaterialRenderStage = RenderStage.extend({
 		this.sharedUniforms = {
 			"view": new UniformMat4(mat4.create()),
 			"viewInverse": new UniformMat4(mat4.create()),
-			"projection": new UniformMat4(mat4.create())
+			"projection": new UniformMat4(mat4.create()),
+			'cameraPosition': new UniformVec3(vec3.create()),
+			ambient: new UniformColor(0, 0, 0),
 		};
 
 		// Renderer uniforms cache
@@ -117,30 +119,36 @@ var MaterialRenderStage = RenderStage.extend({
 	},
 
 	/** Prepares Light uniforms that are shared between all materials. */
-	prepareLightContext: function (context, scene) {
+	prepareLightContext: function(context, scene) {
+		vec4.set(this.sharedUniforms.ambient.value, 0, 0, 0, 1);
+
 		for (var i = 0; i < scene.lights.length; i++) {
 			var light = scene.lights[i];
-			if (!(light instanceof DirectionalLight))
+			if (!light.enabled) {
 				continue;
-			if (!light.enabled)
-				continue;
-
-			if (light.uniforms) {
-				vec3.copy(light.uniforms.lightDirection.value, light.direction);
-				light.uniforms.lightIntensity.value = light.intensity;
-				light.uniforms.lightColor.value[0] = light.color.r;
-				light.uniforms.lightColor.value[1] = light.color.g;
-				light.uniforms.lightColor.value[2] = light.color.b;
-				light.uniforms.lightColor.value[3] = light.color.a;
-				light.uniforms.useShadows.value = light.shadowCasting ? 1 : 0;
 			}
-			else {
-				light.uniforms = {
-					'lightDirection': new UniformVec3(light.direction),
-					'lightColor': new UniformColor(light.color),
-					'lightIntensity': new UniformFloat(light.intensity),
-					'useShadows': new UniformInt(light.shadowCasting ? 1 : 0)
-				};
+
+			if (light instanceof DirectionalLight) {
+				if (light.uniforms) {
+					vec3.copy(light.uniforms.lightDirection.value, light.direction);
+					light.uniforms.lightIntensity.value = light.intensity;
+					light.uniforms.lightColor.value[0] = light.color.r;
+					light.uniforms.lightColor.value[1] = light.color.g;
+					light.uniforms.lightColor.value[2] = light.color.b;
+					light.uniforms.lightColor.value[3] = light.color.a;
+					light.uniforms.useShadows.value = light.shadowCasting ? 1 : 0;
+				} else {
+					light.uniforms = {
+						lightDirection: new UniformVec3(light.direction),
+						lightColor: new UniformColor(light.color),
+						lightIntensity: new UniformFloat(light.intensity),
+						useShadows: new UniformInt(light.shadowCasting ? 1 : 0)
+					};
+				}
+			} else if (light instanceof AmbientLight) {
+				this.sharedUniforms.ambient.value[0] += light.color.r;
+				this.sharedUniforms.ambient.value[1] += light.color.g;
+				this.sharedUniforms.ambient.value[2] += light.color.b;
 			}
 		}
 	},
@@ -155,6 +163,7 @@ var MaterialRenderStage = RenderStage.extend({
 		mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
 		mat4.copy(this.sharedUniforms.view.value, context.camera.viewMatrix);
 		mat4.copy(this.sharedUniforms.viewInverse.value, context.camera.viewInverseMatrix);
+		vec3.copy(this.sharedUniforms.cameraPosition.value, context.camera.getPosition());
 	},
 
 	/** Acquires and organizes the visible renderers. */

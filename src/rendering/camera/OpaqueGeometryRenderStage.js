@@ -41,9 +41,11 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 
 		if (this.parent.organizer.enableDynamicBatching) {
 			this.parent.renderBatched(context, this.parent.organizer.opaqueBatchList);
+			this.parent.renderBatched(context, this.parent.organizer.customBatchList);
 		}
 		else {
 			this.parent.renderBruteForce(context, this.parent.organizer.solidRenderers);
+			this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
 		}
 
 		// Render solid geometry with the rest of the lights
@@ -60,9 +62,11 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 				context.light = lights[l];
 				if (this.parent.organizer.enableDynamicBatching) {
 					this.parent.renderBatched(context, this.parent.organizer.opaqueBatchList);
+					this.parent.renderBatched(context, this.parent.organizer.customBatchList);
 				}
 				else {
 					this.parent.renderBruteForce(context, this.parent.organizer.solidRenderers);
+					this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
 				}
 			}
 			gl.disable(gl.BLEND);

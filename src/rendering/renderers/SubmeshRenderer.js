@@ -106,6 +106,14 @@ var SubmeshRenderer = Renderer.extend({
 				this.buffer.add("tangent", submesh.tangents, 3);
 			}
 		}
+		if (submesh.tangents4D) {
+			if (submesh.tangents4D.length / 4 != pointCount) {
+				console.warn("Wrong number of tangents ({0}). Must be the same as positions ({1}).".format(submesh.tangents4D.length / 4, pointCount));
+			}
+			else {
+				this.buffer.add("tangent4d", submesh.tangents4D, 4);
+			}
+		}
 		if (submesh.bitangents) {
 			if (submesh.positions.length != submesh.bitangents.length) {
 				console.warn("Wrong number of bitangents. Must be the same as positions.");
@@ -130,8 +138,6 @@ var SubmeshRenderer = Renderer.extend({
 		// to prevent nonintuitive rendering problems
 		if (!material.uniforms.diffuse)
 			material.uniforms.diffuse = new UniformColor(new Color(1.0, 1.0, 1.0, 1.0));
-		if (!material.uniforms.ambient)
-			material.uniforms.ambient = new UniformColor(new Color(0.2, 0.2, 0.2, 1.0));
 		if (!material.uniforms.specularStrength)
 			material.uniforms.specularStrength = new UniformFloat(0.0);
 		if (!material.uniforms.specularPower)

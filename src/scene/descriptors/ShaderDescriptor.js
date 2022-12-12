@@ -5,7 +5,7 @@ var ShaderDescriptor=Descriptor.extend({
 		@param vertexOrUnifiedSource Vertex program path or path to both vertex and fragment
 		                             programs (omit extension), if fragmentSource is not given
 		@param fragmentSource Fragment program path [optional] */
-	init: function(vertexOrUnifiedSource, fragmentSource) {
+	init: function(vertexOrUnifiedSource, fragmentSource, definitions) {
 		this._super();
 		if(!fragmentSource) {
 			this.vertexSource=vertexOrUnifiedSource+".vert";
@@ -15,6 +15,12 @@ var ShaderDescriptor=Descriptor.extend({
 			this.vertexSource=vertexOrUnifiedSource;
 			this.fragmentSource=fragmentSource;
 		}
+
+		this.definitions = [];
+
+		if (definitions) {
+			this.definitions = definitions;
+		}
 	},
 
 	type: function() {
@@ -23,7 +29,7 @@ var ShaderDescriptor=Descriptor.extend({
 
 	equals: function(other) {
 		if(!this._super(other)) return false;
-		return this.vertexSource==other.vertexSource && this.fragmentSource==other.fragmentSource;
+		return this.vertexSource==other.vertexSource && this.fragmentSource==other.fragmentSource && this.definitions == other.definitions;
 	},
 
 	getVertexShaderPath: function() {

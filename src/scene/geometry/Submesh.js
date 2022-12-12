@@ -7,18 +7,34 @@ var Submesh=FrakClass.extend({
 	/** Constructor */
 	init: function() {
 		this.materialIndex=-1;
-		this.faces=[];			//< Faces as triangle indices [i0, j0, k0, ..., in, jn, kn]
-		this.positions=[];	//< Positions as [x0, y0, z0, ..., xn, yn, zn]
-		this.texCoords1D=[];//< Texture coordinates as [x0, ..., xn]
-		this.texCoords2D=[];//< Texture coordinates as [x0, y0, ..., xn, yn]
-		this.texCoords3D=[];//< Texture coordinates as [x0, y0, z0, ..., xn, yn, zn]
-		this.texCoords4D=[];//< Texture coordinates as [x0, y0, z0, w0, ..., xn, yn, zn, wn]
-		this.tangents=false;//< Tangents as [x0, y0, z0, ..., xn, yn, zn]
-		this.normals=false;	//< Normals as [x0, y0, z0, ..., xn, yn, zn]
-		this.bitangents=false;	//< Bitangents as [x0, y0, z0, ..., xn, yn, zn]
-		this.barycentric=false;	//< Barycentric coordinates as [x0, y0, z0, ..., xn, yn, zn]
+		this.faces=[];			// < Faces as triangle indices [i0, j0, k0, ..., in, jn, kn]
+		this.positions=[];	// < Positions as [x0, y0, z0, ..., xn, yn, zn]
+		this.texCoords1D=[];// < Texture coordinates as [x0, ..., xn]
+		this.texCoords2D=[];// < Texture coordinates as [x0, y0, ..., xn, yn]
+		this.texCoords3D=[];// < Texture coordinates as [x0, y0, z0, ..., xn, yn, zn]
+		this.texCoords4D=[];// < Texture coordinates as [x0, y0, z0, w0, ..., xn, yn, zn, wn]
+		this.tangents=false;// < Tangents as [x0, y0, z0, ..., xn, yn, zn]
+		this.tangents4D=false;// < Tangents as [x0, y0, z0, w0, ..., xn, yn, zn, wn]
+		this.normals=false;	// < Normals as [x0, y0, z0, ..., xn, yn, zn]
+		this.bitangents=false;	// < Bitangents as [x0, y0, z0, ..., xn, yn, zn]
+		this.barycentric=false;	// < Barycentric coordinates as [x0, y0, z0, ..., xn, yn, zn]
 		this.boundingBox=new BoundingBox();
 		this.boundingSphere=new BoundingSphere();
+	},
+
+	_calculateTangents4D: function() {
+		if (!this.tangents) {
+			return;
+		}
+
+		this.tangents4D = new Float32Array(this.positions.length / 3 * 4);
+
+		for (var i = 0; i < this.tangents4D.length; i += 4) {
+			this.tangents4D[i] = this.tangents[i];
+			this.tangents4D[i+1] = this.tangents[i+1];
+			this.tangents4D[i+2] = this.tangents[i+2];
+			this.tangents4D[i+3] = 1;
+		}
 	},
 
 	/**
@@ -68,6 +84,7 @@ var Submesh=FrakClass.extend({
 			var t2 = w3[1] - w1[1];
 
 			var r = 1.0 / (s1 * t2 - s2 * t1);
+
 			vec3.set(sdir, (t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
 			vec3.set(tdir, (s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
 
@@ -126,11 +143,14 @@ var Submesh=FrakClass.extend({
 
 		delete tan1;
 		delete tan2;
+
+		this._calculateTangents4D();
 	},
 
 	/** Calculates barycentric coordinates. This may not be entirely correct if the mesh has shared vertices. */
 	calculateBarycentric: function() {
 		this.barycentric = new Float32Array(this.positions.length);
+
 		for (var i=0; i<this.faces.length; i+=3) {
 			var idx0 = this.faces[i];
 			var idx1 = this.faces[i+1];
@@ -154,6 +174,7 @@ var Submesh=FrakClass.extend({
 	recalculateBounds: function() {
 		this.boundingBox=new BoundingBox();
 		this.boundingSphere=new BoundingSphere();
+
 		for(var i=0, l = this.positions.length; i < l; i+=3) {
 			this.boundingBox.encapsulatePoint(vec3.fromValues(this.positions[i+0], this.positions[i+1], this.positions[i+2]));
 			this.boundingSphere.encapsulatePoint(vec3.fromValues(this.positions[i+0], this.positions[i+1], this.positions[i+2]));
@@ -163,15 +184,17 @@ var Submesh=FrakClass.extend({
 	/** Generates edges for the submesh */
 	generateEdges: function() {
 		var me=this;
+
 		this.edges={};
 		function insert(a, b) {
 			if(!me.edges[me.faces[a]]) me.edges[a]={};
 			me.edges[me.faces[a]][me.faces[b]]=true;
 		}
+
 		for(var i=0, l = this.faces.length; i<l; i+=3) {
-			insert(i  , i+1); insert(i+1, i);
+			insert(i , i+1); insert(i+1, i);
 			insert(i+1, i+2); insert(i+2, i+1);
-			insert(i+2, i);   insert(i  , i+2);
+			insert(i+2, i); insert(i , i+2);
 		}
 	}
 });

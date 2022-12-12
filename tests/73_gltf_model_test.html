@@ -31,13 +31,13 @@
 			onStart: function(context, engine) {
 				var material = new Material(
 					engine.assetsManager.addShaderSource("transparent"), {
-						"diffuse": new UniformColor({
-							r: 1.0,
-							g: 1.0,
-							b: 0.0,
-							a: 0.5
-						})
-					},
+					"diffuse": new UniformColor({
+						r: 1.0,
+						g: 1.0,
+						b: 0.0,
+						a: 0.5
+					})
+				},
 					[]
 				);
 
@@ -92,7 +92,7 @@
 
 		function setupLights(scene) {
 			var lights = scene.root.addNode(new Node('lights'));
-			var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.8, 0.8, 0.8)));
+			var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
 			var lightDirectional = scene.light;
 			lightDirectional.setLightDirection([1, 1, 1]);
 			lightDirectional.intensity = 0.8;
@@ -106,8 +106,9 @@
 			var lines = grid.addComponent(new LineRendererComponent(new Color(0.5, 0.5, 0.5, 1.0)));
 			lines.addGrid([0, 0, 0], [100, 100], [1.0, 1.0]);
 
-			var boxRGB = scene.engine.assetsManager.addModel('data/gltf/TextureCoordinateTest.gltf');
+			var boxRGB = scene.engine.assetsManager.addModel('data/gltf/WaterBottle.glb');
 			scene.root.addNode(boxRGB);
+			boxRGB.transform.scale([40, 40, 40]);
 		}
 
 		var engine;

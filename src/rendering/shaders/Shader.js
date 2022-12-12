@@ -6,8 +6,9 @@ var Shader=Serializable.extend({
 		@param context Rendering context
 		@param descriptor Shader source descriptor normally passed to shader by ShadersManager to make it identifiable later [optional] */
 	init: function(context, descriptor) {
-		if (!context)
-			throw "Shader: RenderingContext required";
+		if (!context) {
+			throw 'Shader: RenderingContext required';
+		}
 
 		this._super();
 
@@ -21,6 +22,8 @@ var Shader=Serializable.extend({
 		this.uniformLocations = {};
 
 		this.bindings = {};
+
+		this.definitions = descriptor.definitions;
 	},
 
 	excluded: function() {
@@ -28,13 +31,14 @@ var Shader=Serializable.extend({
 	},
 
 	included: function() {
-		return ["descriptor"];
+		return ['descriptor'];
 	},
 
 	/** Creates a fragment shader from given code and adds it to this shader program
 		@param code Shader code */
 	addVertexShader: function(code) {
 		var shader=new VertexShader(this, code);
+
 		this.addShader(shader);
 	},
 
@@ -42,6 +46,7 @@ var Shader=Serializable.extend({
 		@param code Shader code */
 	addFragmentShader: function(code) {
 		var shader=new FragmentShader(this, code);
+
 		this.addShader(shader);
 	},
 
@@ -54,11 +59,12 @@ var Shader=Serializable.extend({
 
 	/** Compiles and links the shader program */
 	link: function() {
-		if (this.failed)
+		if (this.failed) {
 			return;
+		}
 
 		for (var i=0; i<this.shaders.length; i++) {
-			this.shaders[i].compile(this.context);
+			this.shaders[i].compile(this.context, this.definitions);
 		}
 
 		for (var name in ExplicitAttributeLocations) {
@@ -73,12 +79,14 @@ var Shader=Serializable.extend({
 			console.error('Shader linking failed: ', this.context.gl.getProgramInfoLog(this.program));
 			this.linked = false;
 			this.failed = true;
+
 			return;
 		}
 
 		// if supported, map standard binding blocks immediately
-		if (this.context.isWebGL2())
+		if (this.context.isWebGL2()) {
 			this.updateBlockBindings(this.context);
+		}
 	},
 
 	/** Uses the shader program. Links automatically, if not linked
@@ -86,8 +94,11 @@ var Shader=Serializable.extend({
 		                that will be passed to shader [optional] */
 	use: function(uniforms) {
 		if(this.failed) return;
+
 		if(this.shaders.length<2) return;	// Don't try to use, there are not enough added subshaders (ie vertex and fragment)
+
 		if(!this.linked) this.link();
+
 		if(!this.linked) return;
 		this.context.gl.useProgram(this.program);
 		this.bindUniforms(uniforms);
@@ -97,6 +108,7 @@ var Shader=Serializable.extend({
 		if (bufferName in ExplicitAttributeLocations) {
 			return ExplicitAttributeLocations[bufferName];
 		}
+
 		return this.context.gl.getAttribLocation(this.program, bufferName);
 	},
 
@@ -104,6 +116,7 @@ var Shader=Serializable.extend({
 		if (!(uniformName in this.uniformLocations)) {
 			this.uniformLocations[uniformName] = this.context.gl.getUniformLocation(this.program, uniformName);
 		}
+
 		return this.uniformLocations[uniformName];
 	},
 
@@ -113,19 +126,25 @@ var Shader=Serializable.extend({
 		@param uniforms Uniform variables that will be passed to shader
 	*/
 	bindUniforms: function(uniforms) {
-		if (!uniforms)
+		if (!uniforms) {
 			return;
-		if (!this.linked)
+		}
+
+		if (!this.linked) {
 			return;
+		}
+
 		for (var uniformName in uniforms) {
 			var uniformLocation = this.getUniformLocation(uniformName);
 
-			if (!uniformLocation || uniformLocation == -1)
+			if (!uniformLocation || uniformLocation == -1) {
 				continue;
+			}
 
 			var uniform = uniforms[uniformName];
-			if (!uniform)
-				throw "Uniform '"+uniformName+"' is undefined.";
+			if (!uniform) {
+				throw 'Uniform \''+uniformName+'\' is undefined.';
+			}
 
 			uniform.bind(this.context, uniformLocation);
 		}
@@ -135,20 +154,27 @@ var Shader=Serializable.extend({
 		@param samplers Array of named texture samplers (values must be instances
 		                of of Sampler). Eg [new Sampler("texture1", texture)] */
 	bindSamplers: function(samplers) {
-		if (!samplers || samplers.length == 0 || !this.linked)
+		if (!samplers || samplers.length == 0 || !this.linked) {
 			return;
+		}
+
 		var gl = this.context.gl;
 		var slotIndex = 0;
 		for (var i = 0; i < samplers.length; ++i) {
 			var sampler = samplers[i];
-			if (!sampler)
+			if (!sampler) {
 				break;
+			}
+
 			var uniformLocation = this.getUniformLocation(sampler.name);
-			if (uniformLocation == -1)
+			if (uniformLocation == -1) {
 				continue;
+			}
+
 			sampler.bind(this.context, uniformLocation, slotIndex);
 			slotIndex++;
 		}
+
 		gl.activeTexture(gl.TEXTURE0);
 	},
 
@@ -156,20 +182,27 @@ var Shader=Serializable.extend({
 		@param samplers Array of named texture samplers (values must be instances
 		                of of Sampler). Eg [new Sampler("texture1", texture)] */
 	unbindSamplers: function(samplers) {
-		if (!samplers || samplers.length == 0 || !this.linked)
+		if (!samplers || samplers.length == 0 || !this.linked) {
 			return;
+		}
+
 		var gl = this.context.gl;
 		var slotIndex = 0;
 		for (var i = 0; i < samplers.length; ++i) {
 			var sampler = samplers[i];
-			if (!sampler)
+			if (!sampler) {
 				break;
+			}
+
 			var uniformLocation = this.getUniformLocation(sampler.name);
-			if(uniformLocation == -1)
+			if(uniformLocation == -1) {
 				continue;
+			}
+
 			sampler.unbind(this.context, uniformLocation, slotIndex);
 			slotIndex++;
 		}
+
 		gl.activeTexture(gl.TEXTURE0);
 	},
 
@@ -179,30 +212,34 @@ var Shader=Serializable.extend({
 		this.uniformLocations = {};
 		this.failed = false;
 		this.linked = false;
+
 		for (var i=0; i<this.shaders.length; ++i) {
 			this.shaders[i].onContextRestored(context);
 		}
+
 		this.link();
 	},
 
 	updateBlockBindings: function(context) {
 		var blocks = [
 			'Transform',
-			'Material',
+			'Material'
 		];
 
 		this.bindings = {};
+
 		for (var i = 0; i < blocks.length; ++i) {
 			var bindingPoint = i + 1;
 			var blockName = blocks[i];
 			var blockIndex = context.gl.getUniformBlockIndex(this.program, blockName);
-			if (blockIndex == context.gl.INVALID_INDEX)
+			if (blockIndex == context.gl.INVALID_INDEX) {
 				continue;
+			}
 
 			this.bindings[blockName] = {
 				index: blockIndex,
 				name: blockName,
-				bindingPoint: bindingPoint,
+				bindingPoint: bindingPoint
 			};
 		}
 	}

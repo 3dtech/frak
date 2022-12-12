@@ -4331,9 +4331,21 @@ var Subshader = FrakClass.extend({
     getFilename: function() {
         return "Unknown";
     },
-    compile: function() {
+    addDefinitions: function(context, definitions) {
+        var lines = this.code.split("\n");
+        for (var i = 0; i < definitions.length; i++) {
+            var def = definitions[i];
+            var line = context.isWebGL2() ? 1 : 0;
+            lines.splice(line, 0, "#define " + def);
+        }
+        this.code = lines.join("\n");
+    },
+    compile: function(context, definitions) {
         if (this.failedCompilation) return;
         if (!this.compiledShader) throw "WebGL shader has not been created. FragmentShader or VertexShader class instances should be used, not Shader.";
+        if (definitions) {
+            this.addDefinitions(context, definitions);
+        }
         this.context.gl.shaderSource(this.compiledShader, this.code);
         this.context.gl.compileShader(this.compiledShader);
         var status = this.context.gl.getShaderParameter(this.compiledShader, this.context.gl.COMPILE_STATUS);
@@ -4395,7 +4407,9 @@ var ShaderRequirements = FrakClass.extend({
 
 var Shader = Serializable.extend({
     init: function(context, descriptor) {
-        if (!context) throw "Shader: RenderingContext required";
+        if (!context) {
+            throw "Shader: RenderingContext required";
+        }
         this._super();
         this.descriptor = descriptor;
         this.context = context;
@@ -4406,6 +4420,7 @@ var Shader = Serializable.extend({
         this.failed = false;
         this.uniformLocations = {};
         this.bindings = {};
+        this.definitions = descriptor.definitions;
     },
     excluded: function() {
         return true;
@@ -4426,9 +4441,11 @@ var Shader = Serializable.extend({
         shader.attach();
     },
     link: function() {
-        if (this.failed) return;
+        if (this.failed) {
+            return;
+        }
         for (var i = 0; i < this.shaders.length; i++) {
-            this.shaders[i].compile(this.context);
+            this.shaders[i].compile(this.context, this.definitions);
         }
         for (var name in ExplicitAttributeLocations) {
             this.context.gl.bindAttribLocation(this.program, ExplicitAttributeLocations[name], name);
@@ -4443,7 +4460,9 @@ var Shader = Serializable.extend({
             this.failed = true;
             return;
         }
-        if (this.context.isWebGL2()) this.updateBlockBindings(this.context);
+        if (this.context.isWebGL2()) {
+            this.updateBlockBindings(this.context);
+        }
     },
     use: function(uniforms) {
         if (this.failed) return;
@@ -4466,39 +4485,59 @@ var Shader = Serializable.extend({
         return this.uniformLocations[uniformName];
     },
     bindUniforms: function(uniforms) {
-        if (!uniforms) return;
-        if (!this.linked) return;
+        if (!uniforms) {
+            return;
+        }
+        if (!this.linked) {
+            return;
+        }
         for (var uniformName in uniforms) {
             var uniformLocation = this.getUniformLocation(uniformName);
-            if (!uniformLocation || uniformLocation == -1) continue;
+            if (!uniformLocation || uniformLocation == -1) {
+                continue;
+            }
             var uniform = uniforms[uniformName];
-            if (!uniform) throw "Uniform '" + uniformName + "' is undefined.";
+            if (!uniform) {
+                throw "Uniform '" + uniformName + "' is undefined.";
+            }
             uniform.bind(this.context, uniformLocation);
         }
     },
     bindSamplers: function(samplers) {
-        if (!samplers || samplers.length == 0 || !this.linked) return;
+        if (!samplers || samplers.length == 0 || !this.linked) {
+            return;
+        }
         var gl = this.context.gl;
         var slotIndex = 0;
         for (var i = 0; i < samplers.length; ++i) {
             var sampler = samplers[i];
-            if (!sampler) break;
+            if (!sampler) {
+                break;
+            }
             var uniformLocation = this.getUniformLocation(sampler.name);
-            if (uniformLocation == -1) continue;
+            if (uniformLocation == -1) {
+                continue;
+            }
             sampler.bind(this.context, uniformLocation, slotIndex);
             slotIndex++;
         }
         gl.activeTexture(gl.TEXTURE0);
     },
     unbindSamplers: function(samplers) {
-        if (!samplers || samplers.length == 0 || !this.linked) return;
+        if (!samplers || samplers.length == 0 || !this.linked) {
+            return;
+        }
         var gl = this.context.gl;
         var slotIndex = 0;
         for (var i = 0; i < samplers.length; ++i) {
             var sampler = samplers[i];
-            if (!sampler) break;
+            if (!sampler) {
+                break;
+            }
             var uniformLocation = this.getUniformLocation(sampler.name);
-            if (uniformLocation == -1) continue;
+            if (uniformLocation == -1) {
+                continue;
+            }
             sampler.unbind(this.context, uniformLocation, slotIndex);
             slotIndex++;
         }
@@ -4522,7 +4561,9 @@ var Shader = Serializable.extend({
             var bindingPoint = i + 1;
             var blockName = blocks[i];
             var blockIndex = context.gl.getUniformBlockIndex(this.program, blockName);
-            if (blockIndex == context.gl.INVALID_INDEX) continue;
+            if (blockIndex == context.gl.INVALID_INDEX) {
+                continue;
+            }
             this.bindings[blockName] = {
                 index: blockIndex,
                 name: blockName,
@@ -4968,20 +5009,25 @@ var RendererOrganizer = FrakClass.extend({
         this.enableDynamicBatching = true;
         this.solidRenderers = [];
         this.transparentRenderers = [];
+        this.customRenderers = [];
         this.unlitRenderers = [];
         this.opaqueBatchList = [];
         this.transparentBatchList = [];
+        this.customBatchList = [];
         this.unlitBatchList = [];
         this.batchIndex = {};
         this.renderers = new CollectionReference([]);
         this.viewSolidRenderers = new CollectionView(this.renderers, function(renderer) {
-            return !renderer.transparent && !renderer.unlit;
+            return !renderer.transparent && !renderer.customShader && !renderer.unlit;
         });
         this.viewTransparentRenderers = new CollectionView(this.renderers, function(renderer) {
-            return renderer.transparent && !renderer.unlit;
+            return renderer.transparent && !renderer.customShader && !renderer.unlit;
+        });
+        this.viewCustomRenderers = new CollectionView(this.renderers, function(renderer) {
+            return !renderer.transparent && renderer.customShader && !renderer.unlit;
         });
         this.viewUnlitRenderers = new CollectionView(this.renderers, function(renderer) {
-            return renderer.unlit;
+            return !renderer.transparent && !renderer.customShader && renderer.unlit;
         });
         this.visibleRenderers = 0;
         this.visibleSolidRenderers = 0;
@@ -4990,6 +5036,9 @@ var RendererOrganizer = FrakClass.extend({
         this.visibleTransparentRenderers = 0;
         this.visibleTransparentFaces = 0;
         this.visibleTransparentBatches = 0;
+        this.visibleCustomRenderers = 0;
+        this.visibleCustomFaces = 0;
+        this.visibleCustomBatches = 0;
         this.visibleUnlitRenderers = 0;
         this.visibleUnlitFaces = 0;
         this.visibleUnlitBatches = 0;
@@ -4997,8 +5046,9 @@ var RendererOrganizer = FrakClass.extend({
     updateStats: function() {
         this.visibleSolidRenderers = this.viewSolidRenderers.length;
         this.visibleTransparentRenderers = this.viewTransparentRenderers.length;
+        this.visibleCustomRenderers = this.viewCustomRenderers.length;
         this.visibleUnlitRenderers = this.viewUnlitRenderers.length;
-        this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleUnlitRenderers;
+        this.visibleRenderers = this.visibleSolidRenderers + this.visibleTransparentRenderers + this.visibleCustomRenderers + this.visibleUnlitRenderers;
     },
     batch: function(batchList, renderers) {
         var i;
@@ -5028,15 +5078,18 @@ var RendererOrganizer = FrakClass.extend({
         this.renderers.list = renderers;
         this.viewSolidRenderers.filter();
         this.viewTransparentRenderers.filter();
+        this.viewCustomRenderers.filter();
         this.viewUnlitRenderers.filter();
         this.solidRenderers = this.viewSolidRenderers.view;
         this.transparentRenderers = this.viewTransparentRenderers.view;
+        this.customRenderers = this.viewCustomRenderers.view;
         this.unlitRenderers = this.viewUnlitRenderers.view;
         if (this.enableDynamicBatching) {
             if (engine.options.transparencyMode != "sorted") {
                 this.batch(this.transparentBatchList, this.transparentRenderers);
             }
             this.batch(this.opaqueBatchList, this.solidRenderers);
+            this.batch(this.customBatchList, this.customRenderers);
             this.batch(this.unlitBatchList, this.unlitRenderers);
         }
         if (engine.options.transparencyMode == "sorted" && eyePosition) {
@@ -5214,7 +5267,11 @@ var MaterialRenderStage = RenderStage.extend({
         this.sharedUniforms = {
             view: new UniformMat4(mat4.create()),
             viewInverse: new UniformMat4(mat4.create()),
-            projection: new UniformMat4(mat4.create())
+            projection: new UniformMat4(mat4.create()),
+            cameraPosition: new UniformVec3(vec3.create())
+        };
+        this.ambientUniform = {
+            ambient: new UniformColor()
         };
         this.rendererUniforms = {
             model: new UniformMat4(null),
@@ -5261,25 +5318,34 @@ var MaterialRenderStage = RenderStage.extend({
         context.shadow.shadow0 = light.shadowSampler;
     },
     prepareLightContext: function(context, scene) {
+        vec4.set(this.ambientUniform.ambient.value, 0, 0, 0, 1);
         for (var i = 0; i < scene.lights.length; i++) {
             var light = scene.lights[i];
-            if (!(light instanceof DirectionalLight)) continue;
-            if (!light.enabled) continue;
-            if (light.uniforms) {
-                vec3.copy(light.uniforms.lightDirection.value, light.direction);
-                light.uniforms.lightIntensity.value = light.intensity;
-                light.uniforms.lightColor.value[0] = light.color.r;
-                light.uniforms.lightColor.value[1] = light.color.g;
-                light.uniforms.lightColor.value[2] = light.color.b;
-                light.uniforms.lightColor.value[3] = light.color.a;
-                light.uniforms.useShadows.value = light.shadowCasting ? 1 : 0;
-            } else {
-                light.uniforms = {
-                    lightDirection: new UniformVec3(light.direction),
-                    lightColor: new UniformColor(light.color),
-                    lightIntensity: new UniformFloat(light.intensity),
-                    useShadows: new UniformInt(light.shadowCasting ? 1 : 0)
-                };
+            if (!light.enabled) {
+                continue;
+            }
+            if (light instanceof DirectionalLight) {
+                if (light.uniforms) {
+                    vec3.copy(light.uniforms.lightDirection.value, light.direction);
+                    light.uniforms.lightIntensity.value = light.intensity;
+                    light.uniforms.lightColor.value[0] = light.color.r;
+                    light.uniforms.lightColor.value[1] = light.color.g;
+                    light.uniforms.lightColor.value[2] = light.color.b;
+                    light.uniforms.lightColor.value[3] = light.color.a;
+                    light.uniforms.useShadows.value = light.shadowCasting ? 1 : 0;
+                } else {
+                    light.uniforms = {
+                        lightDirection: new UniformVec3(light.direction),
+                        lightColor: new UniformColor(light.color),
+                        lightIntensity: new UniformFloat(light.intensity),
+                        useShadows: new UniformInt(light.shadowCasting ? 1 : 0)
+                    };
+                }
+            } else if (light instanceof AmbientLight) {
+                context.ambient = true;
+                this.ambientUniform.ambient.value[0] += light.color.r;
+                this.ambientUniform.ambient.value[1] += light.color.g;
+                this.ambientUniform.ambient.value[2] += light.color.b;
             }
         }
     },
@@ -5289,6 +5355,7 @@ var MaterialRenderStage = RenderStage.extend({
         mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
         mat4.copy(this.sharedUniforms.view.value, context.camera.viewMatrix);
         mat4.copy(this.sharedUniforms.viewInverse.value, context.camera.viewInverseMatrix);
+        vec3.copy(this.sharedUniforms.cameraPosition.value, context.camera.getPosition());
     },
     onPreRender: function(context, scene, camera) {
         this.prepareShared(context);
@@ -5304,6 +5371,7 @@ var MaterialRenderStage = RenderStage.extend({
     onPostRender: function(context, scene, camera) {
         context.shadow = false;
         context.light = false;
+        context.ambient = false;
     },
     renderBatched: function(context, batches) {
         var usedShader = false;
@@ -5329,6 +5397,9 @@ var MaterialRenderStage = RenderStage.extend({
                 }
                 shader.bindSamplers(this.samplerAccum.samplers);
                 shader.bindUniforms(material.uniforms);
+                if (context.ambient) {
+                    shader.bindUniforms(this.ambientUniform);
+                }
                 for (var j = 0, bl = batch.length; j < bl; ++j) {
                     renderer = batch.get(j);
                     context.modelview.push();
@@ -5798,8 +5869,10 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
         if (lights.length > 0 && lights[0]) context.light = lights[0];
         if (this.parent.organizer.enableDynamicBatching) {
             this.parent.renderBatched(context, this.parent.organizer.opaqueBatchList);
+            this.parent.renderBatched(context, this.parent.organizer.customBatchList);
         } else {
             this.parent.renderBruteForce(context, this.parent.organizer.solidRenderers);
+            this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
         }
         if (lights.length > 1 && lights[1]) {
             gl.depthMask(false);
@@ -5811,8 +5884,10 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
                 context.light = lights[l];
                 if (this.parent.organizer.enableDynamicBatching) {
                     this.parent.renderBatched(context, this.parent.organizer.opaqueBatchList);
+                    this.parent.renderBatched(context, this.parent.organizer.customBatchList);
                 } else {
                     this.parent.renderBruteForce(context, this.parent.organizer.solidRenderers);
+                    this.parent.renderBruteForce(context, this.parent.organizer.customRenderers);
                 }
             }
             gl.disable(gl.BLEND);
@@ -5832,17 +5907,6 @@ var OpaqueGeometryRenderStage = RenderStage.extend({
 var UnlitGeometryRenderStage = RenderStage.extend({
     init: function() {
         this._super();
-        this.sharedUniforms = {
-            view: new UniformMat4(mat4.create()),
-            viewInverse: new UniformMat4(mat4.create()),
-            projection: new UniformMat4(mat4.create())
-        };
-        this.rendererUniforms = {
-            model: new UniformMat4(null),
-            modelview: new UniformMat4(null),
-            receiveShadows: new UniformInt(1)
-        };
-        this.samplerAccum = new SamplerAccumulator();
     },
     onPostRender: function(context, scene, camera) {
         var gl = context.gl;
@@ -5850,62 +5914,11 @@ var UnlitGeometryRenderStage = RenderStage.extend({
         gl.depthFunc(gl.LESS);
         gl.depthMask(true);
         if (this.parent.organizer.enableDynamicBatching) {
-            this.renderBatched(context, this.parent.organizer.unlitBatchList);
+            this.parent.renderBatched(context, this.parent.organizer.unlitBatchList);
         } else {
-            this.renderBruteForce(context, this.parent.organizer.unlitRenderers);
+            this.parent.renderBruteForce(context, this.parent.organizer.unlitRenderers);
         }
         gl.disable(gl.DEPTH_TEST);
-    },
-    renderBatched: function(context, batches) {
-        var usedShader = false;
-        var material, batch, shader, renderer;
-        for (var i = 0, l = batches.length; i < l; ++i) {
-            batch = batches[i];
-            if (batch.get(0)) {
-                material = batch.get(0).material;
-                shader = material.shader;
-                if (shader != usedShader) {
-                    shader.use();
-                    usedShader = shader;
-                    shader.bindUniforms(this.parent.sharedUniforms);
-                }
-                this.samplerAccum.add(context.shadow.shadow0);
-                for (var j = 0, msl = material.samplers.length; j < msl; ++j) {
-                    this.samplerAccum.add(material.samplers[j]);
-                }
-                if (this.samplerAccum.length === 0) {
-                    this.samplerAccum.add(this.parent.diffuseFallback);
-                }
-                shader.bindSamplers(this.samplerAccum.samplers);
-                shader.bindUniforms(material.uniforms);
-                for (var j = 0, bl = batch.length; j < bl; ++j) {
-                    renderer = batch.get(j);
-                    context.modelview.push();
-                    context.modelview.multiply(renderer.matrix);
-                    this.rendererUniforms.model.value = renderer.matrix;
-                    this.rendererUniforms.modelview.value = context.modelview.top();
-                    this.rendererUniforms.receiveShadows.value = renderer.receiveShadows;
-                    shader.bindUniforms(this.rendererUniforms);
-                    renderer.render(context);
-                    context.modelview.pop();
-                }
-                shader.unbindSamplers(this.samplerAccum.samplers);
-                this.samplerAccum.clear();
-            }
-        }
-    },
-    renderBruteForce: function(context, renderers) {
-        for (var j = 0; j < renderers.length; ++j) {
-            var renderer = renderers[j];
-            if (!renderer) break;
-            context.modelview.push();
-            context.modelview.multiply(renderer.matrix);
-            this.cachedUniforms = renderer.getDefaultUniforms(context, null);
-            renderer.material.bind(this.cachedUniforms, context.shadow.shadow0);
-            renderer.render(context);
-            renderer.material.unbind();
-            context.modelview.pop();
-        }
     }
 });
 
@@ -6434,7 +6447,7 @@ var DeferredShadingRenderStage = RenderStage.extend({
         this.softShadowsStage = this.addStage(new SoftShadowsRenderStage()).disable();
         this.addStage(this.bindCameraTarget);
         this.lightsStage = this.addStage(new LightsRenderStage());
-        this.unlitStage = this.addStage(new UnlitGeometryRenderStage());
+        this.customStage = this.addStage(new UnlitGeometryRenderStage());
         this.addStage(this.unbindCameraTarget);
         this.sharedUniforms = {
             view: new UniformMat4(mat4.create()),
@@ -6446,11 +6459,14 @@ var DeferredShadingRenderStage = RenderStage.extend({
             modelview: new UniformMat4(null),
             receiveShadows: new UniformInt(1)
         };
+        this.samplerAccum = new SamplerAccumulator();
     },
     onStart: function(context, engine, camera) {
         this.diffuseFallback = new Sampler("diffuse0", engine.WhiteTexture);
         vec2.copy(this.size, this.parent.size);
-        if (engine.options.softShadows) this.softShadowsStage.enable();
+        if (engine.options.softShadows) {
+            this.softShadowsStage.enable();
+        }
     },
     prepareShared: function(context) {
         mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
@@ -6463,7 +6479,60 @@ var DeferredShadingRenderStage = RenderStage.extend({
         var renderers = scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask);
         this.organizer.sort(scene.engine, renderers);
     },
-    onPostRender: function(context, scene, camera) {}
+    onPostRender: function(context, scene, camera) {},
+    renderBatched: function(context, batches, uniforms) {
+        var usedShader = false;
+        var material, batch, shader, renderer;
+        for (var i = 0, l = batches.length; i < l; ++i) {
+            batch = batches[i];
+            if (batch.get(0)) {
+                material = batch.get(0).material;
+                shader = material.shader;
+                if (shader != usedShader) {
+                    shader.use();
+                    usedShader = shader;
+                    shader.bindUniforms(this.sharedUniforms);
+                    shader.bindUniforms(uniforms);
+                }
+                for (var j = 0, msl = material.samplers.length; j < msl; ++j) {
+                    this.samplerAccum.add(material.samplers[j]);
+                }
+                if (this.samplerAccum.length === 0) {
+                    this.samplerAccum.add(this.diffuseFallback);
+                }
+                shader.bindSamplers(this.samplerAccum.samplers);
+                shader.bindUniforms(material.uniforms);
+                for (var j = 0, bl = batch.length; j < bl; ++j) {
+                    renderer = batch.get(j);
+                    context.modelview.push();
+                    context.modelview.multiply(renderer.matrix);
+                    this.rendererUniforms.model.value = renderer.matrix;
+                    this.rendererUniforms.modelview.value = context.modelview.top();
+                    this.rendererUniforms.receiveShadows.value = renderer.receiveShadows;
+                    shader.bindUniforms(this.rendererUniforms);
+                    renderer.render(context);
+                    context.modelview.pop();
+                }
+                shader.unbindSamplers(this.samplerAccum.samplers);
+                this.samplerAccum.clear();
+            }
+        }
+    },
+    renderBruteForce: function(context, renderers, uniforms) {
+        for (var j = 0; j < renderers.length; ++j) {
+            var renderer = renderers[j];
+            if (!renderer) {
+                break;
+            }
+            context.modelview.push();
+            context.modelview.multiply(renderer.matrix);
+            this.cachedUniforms = renderer.getDefaultUniforms(context, uniforms);
+            renderer.material.bind(this.cachedUniforms);
+            renderer.render(context);
+            renderer.material.unbind();
+            context.modelview.pop();
+        }
+    }
 });
 
 var DeferredShadowRenderStage = RenderStage.extend({
@@ -6832,30 +6901,44 @@ var LightsRenderStage = RenderStage.extend({
         this.sharedUniforms = {
             cameraPosition: new UniformVec3(vec3.create()),
             shadowOnly: new UniformInt(0),
-            useSoftShadows: new UniformInt(1)
+            useSoftShadows: new UniformInt(1),
+            ambient: new UniformColor(new Color(0, 0, 0, 1)),
+            lightDirection: new UniformVec3(vec3.create()),
+            lightColor: new UniformColor(),
+            lightIntensity: new UniformFloat(),
+            useShadows: new UniformInt()
         };
         this.sharedSamplers = [];
+        this.directional = [];
         this.skyboxRenderStage = new SkyboxRenderStage();
     },
     getLightsWithGeometry: function(scene) {
+        vec4.set(this.sharedUniforms.ambient.value, 0, 0, 0, 1);
+        this.directional = [];
         var ambient = [];
-        var directional = [];
         var other = [];
         for (var i = 0; i < scene.lights.length; i++) {
             var light = scene.lights[i];
-            if (!light.enabled) continue;
-            if (!light.geometry) continue;
+            if (!light.enabled) {
+                continue;
+            }
+            if (!light.geometry) {
+                continue;
+            }
             if (light instanceof AmbientLight) {
                 ambient.push(light);
+                this.sharedUniforms.ambient.value[0] += light.color.r;
+                this.sharedUniforms.ambient.value[1] += light.color.g;
+                this.sharedUniforms.ambient.value[2] += light.color.b;
                 continue;
             }
             if (light instanceof DirectionalLight) {
-                directional.push(light);
+                this.directional.push(light);
                 continue;
             }
             other.push(light);
         }
-        return ambient.concat(directional).concat(other);
+        return ambient.concat(this.directional).concat(other);
     },
     onStart: function(context, engine, camera) {
         var gb = this.parent.gbufferStage.buffer;
@@ -6897,6 +6980,43 @@ var LightsRenderStage = RenderStage.extend({
         gl.disable(gl.BLEND);
         gl.stencilMask(255);
         gl.disable(gl.STENCIL_TEST);
+        this.renderCustom(context, scene, camera);
+    },
+    renderCustom: function(context, scene, camera) {
+        var self = this;
+        function renderLight(context, light) {
+            vec3.copy(self.sharedUniforms.lightDirection.value, light.direction);
+            self.sharedUniforms.lightIntensity.value = light.intensity;
+            self.sharedUniforms.lightColor.value[0] = light.color.r;
+            self.sharedUniforms.lightColor.value[1] = light.color.g;
+            self.sharedUniforms.lightColor.value[2] = light.color.b;
+            self.sharedUniforms.lightColor.value[3] = light.color.a;
+            self.sharedUniforms.useShadows.value = light.shadowCasting ? 1 : 0;
+            if (self.parent.organizer.enableDynamicBatching) {
+                self.parent.renderBatched(context, self.parent.organizer.customBatchList, self.sharedUniforms);
+            } else {
+                self.parent.renderBruteForce(context, self.parent.organizer.customRenderers, self.sharedUniforms);
+            }
+        }
+        var gl = context.gl;
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LESS);
+        gl.depthMask(true);
+        gl.disable(gl.CULL_FACE);
+        if (this.directional.length) {
+            renderLight(context, this.directional[0]);
+        }
+        gl.depthMask(false);
+        gl.depthFunc(gl.LEQUAL);
+        gl.blendFunc(gl.ONE, gl.ONE);
+        gl.enable(gl.BLEND);
+        for (var i = 1; i < this.directional.length; i++) {
+            renderLight(context, this.directional[i]);
+        }
+        gl.disable(gl.BLEND);
+        gl.depthMask(true);
+        gl.depthFunc(gl.LESS);
+        gl.disable(gl.DEPTH_TEST);
     },
     renderLight: function(context, light) {
         var shadowSampler;
@@ -8293,7 +8413,7 @@ var Renderer = FrakClass.extend({
         this.lightContribution = 1;
         this.reflectivity = 0;
         this.transparent = false;
-        this.unlit = false;
+        this.customShader = false;
         this.localBoundingBox = new BoundingBox();
         this.localBoundingSphere = new BoundingSphere();
         this.globalBoundingBox = new BoundingBox();
@@ -8324,6 +8444,7 @@ var Renderer = FrakClass.extend({
             if (context.camera.far) {
                 if (uniforms.hasOwnProperty("zFar")) uniforms.zFar.value = context.camera.far; else uniforms.zFar = new UniformFloat(context.camera.far);
             }
+            if (uniforms.hasOwnProperty("cameraPosition")) vec3.copy(uniforms.cameraPosition.value, context.camera.getPosition()); else uniforms.cameraPosition = new UniformVec3(context.camera.getPosition());
         }
         if (context.light && context.light.uniforms) {
             uniforms.lightDirection = context.light.uniforms.lightDirection;
@@ -8512,6 +8633,13 @@ var SubmeshRenderer = Renderer.extend({
                 console.warn("Wrong number of tangents. Must be the same as positions.");
             } else {
                 this.buffer.add("tangent", submesh.tangents, 3);
+            }
+        }
+        if (submesh.tangents4D) {
+            if (submesh.tangents4D.length / 4 != pointCount) {
+                console.warn("Wrong number of tangents ({0}). Must be the same as positions ({1}).".format(submesh.tangents4D.length / 4, pointCount));
+            } else {
+                this.buffer.add("tangent4d", submesh.tangents4D, 4);
             }
         }
         if (submesh.bitangents) {
@@ -9799,26 +9927,22 @@ var ModelLoaderGLTF = FrakClass.extend({
         this.materials = [];
         this.meshes = [];
     },
-    createDefaultTextureSampler: function(context) {
-        if (this.defaultTexture) return;
-        if (!context.engine) return;
-        this.defaultTexture = context.engine.WhiteTexture;
-        this.defaultSampler = new Sampler("diffuse0", this.defaultTexture);
-    },
     load: function(node, data, cb) {
         var parsedData;
         if (!this.binary) {
             parsedData = data;
         } else {
             var view = new DataView(data);
-            if (view.getUint32(0, true) == 1179937895 && view.getUint32(4, true) == 2 && view.getUint32(8, true) == data.byteLength) {
+            if (view.getUint32(0, true) === 1179937895 && view.getUint32(4, true) === 2 && view.getUint32(8, true) === data.byteLength) {
                 parsedData = this.parseJSON(view);
                 this.binaryBuffer = this.parseBinaryBuffer(view);
             } else {
                 throw "Invalid data";
             }
         }
-        if (FRAK.isEmptyObject(parsedData) || FRAK.isEmptyObject(parsedData.asset) || parsedData.asset.version[0] !== "2") return;
+        if (FRAK.isEmptyObject(parsedData) || FRAK.isEmptyObject(parsedData.asset) || parsedData.asset.version[0] !== "2") {
+            return;
+        }
         var scope = this;
         this.loadBuffers(parsedData.buffers, function() {
             scope.loadBufferViews(parsedData.bufferViews || []);
@@ -9850,7 +9974,7 @@ var ModelLoaderGLTF = FrakClass.extend({
             return;
         } else {
             var length = view.getUint32(20 + jsonLength, true);
-            if (28 + jsonLength + length != view.byteLength) {
+            if (28 + jsonLength + length !== view.byteLength) {
                 return;
             }
             if (view.getUint32(24 + jsonLength, true) !== 5130562) {
@@ -9858,6 +9982,14 @@ var ModelLoaderGLTF = FrakClass.extend({
             }
             return view.buffer.slice(28 + jsonLength, 28 + jsonLength + length);
         }
+    },
+    absoluteURI: function(uri) {
+        if (new RegExp("^//|(?:[a-z]+:)", "i").test(uri)) {
+            return uri;
+        }
+        var path = this.descriptor.getFullPath();
+        var start = new RegExp("(.*/).*?$").exec(path)[1];
+        return start + uri;
     },
     loadBuffers: function(buffers, cb) {
         var count = 0;
@@ -9873,7 +10005,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 count--;
                 continue;
             }
-            Logistics.getBinary(buffers[i].uri, function(binaryData) {
+            Logistics.getBinary(this.absoluteURI(buffers[i].uri), function(binaryData) {
                 count--;
                 if (!binaryData || binaryData.byteLength !== byteLength) {
                     return;
@@ -9930,14 +10062,18 @@ var ModelLoaderGLTF = FrakClass.extend({
             }
             var arrays = [ Int8Array, Uint8Array, Int16Array, Uint16Array, undefined, Uint32Array, Float32Array ];
             accessor = new arrays[accessors[i].componentType - 5120](view.buffer, view.byteOffset + (accessors[i].byteOffset || 0), accessors[i].count * itemCount);
+            if (accessors[i].max && itemCount === accessors[i].max.length) {
+                accessor = accessor.map(function(val, idx) {
+                    return Math.min(val, accessors[i].max[idx % itemCount]);
+                });
+            }
+            if (accessors[i].min && itemCount === accessors[i].min.length) {
+                accessor = accessor.map(function(val, idx) {
+                    return Math.max(val, accessors[i].min[idx % itemCount]);
+                });
+            }
             this.accessors.push(accessor);
         }
-    },
-    defaultMaterial: function() {
-        this.createDefaultTextureSampler(this.shadersManager.context);
-        return new Material(this.shadersManager.addSource("diffuse"), {
-            diffuse: new UniformColor(new Color())
-        }, [ this.defaultSampler ]);
     },
     loadImages: function(images) {
         for (var i = 0, l = images.length; i < l; i++) {
@@ -9951,15 +10087,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 uri = URL.createObjectURL(blob);
             }
             if (uri) {
-                var notRelative = new RegExp("^//|(?:[a-z]+:)?", "i");
-                var locked = false;
-                if (notRelative.test(uri)) {
-                    locked = true;
-                }
-                this.images.push({
-                    locked: locked,
-                    uri: uri
-                });
+                this.images.push(this.absoluteURI(uri));
             }
         }
     },
@@ -9973,8 +10101,7 @@ var ModelLoaderGLTF = FrakClass.extend({
                 continue;
             }
             var descriptorImage = this.images[texture.source];
-            var descriptor = new TextureDescriptor(descriptorImage.uri);
-            descriptor.locked = descriptorImage.locked;
+            var descriptor = new TextureDescriptor(descriptorImage);
             descriptor.glTFID = i;
             var image = this.texturesManager.addDescriptor(descriptor);
             image.flipY = false;
@@ -9999,8 +10126,48 @@ var ModelLoaderGLTF = FrakClass.extend({
         }
     },
     loadMaterials: function(materials) {
+        var textures = this.textures;
+        function setSampler(material, definitions, textureData, name) {
+            if (textureData) {
+                var upperCaseName = name.toUpperCase();
+                material.samplers.push(new Sampler(name + "0", textures[textureData.index]));
+                if (definitions.indexOf(upperCaseName + "_TEXTURE") === -1) {
+                    definitions.push(upperCaseName + "_TEXTURE");
+                }
+                if (textureData.extensions && textureData.extensions.KHR_texture_transform) {
+                    var transform = textureData.extensions.KHR_texture_transform;
+                    var uvMatrix = mat3.create();
+                    var tmp = mat3.create();
+                    if (transform.offset) {
+                        tmp[6] = transform.offset[0];
+                        tmp[7] = transform.offset[1];
+                        mat3.mul(uvMatrix, uvMatrix, tmp);
+                        mat3.identity(tmp);
+                    }
+                    if (transform.rotation) {
+                        var s = Math.sin(transform.rotation);
+                        var c = Math.cos(transform.rotation);
+                        tmp[0] = tmp[4] = c;
+                        tmp[1] = -s;
+                        tmp[3] = s;
+                        mat3.mul(uvMatrix, uvMatrix, tmp);
+                        mat3.identity(tmp);
+                    }
+                    if (transform.scale) {
+                        tmp[0] = transform.scale[0];
+                        tmp[4] = transform.scale[1];
+                        mat3.mul(uvMatrix, uvMatrix, tmp);
+                        mat3.identity(tmp);
+                    }
+                    if (definitions.indexOf(upperCaseName + "_UV_TRANSFORM") === -1) {
+                        definitions.push(upperCaseName + "_UV_TRANSFORM");
+                    }
+                    material.uniforms[name + "UVTransform"] = new UniformMat3(uvMatrix);
+                }
+            }
+        }
         for (var i = 0, l = materials.length; i < l; i++) {
-            var material = this.defaultMaterial();
+            var material = new Material(this.shadersManager.addSource("pbr"), {}, []);
             if (materials[i].name) {
                 material.name = materials[i].name;
             }
@@ -10008,20 +10175,41 @@ var ModelLoaderGLTF = FrakClass.extend({
                 material.shader = this.shadersManager.addSource("transparent");
                 material.shader.requirements.transparent = true;
             }
+            var definitions = [];
             var diffuse = new Color();
+            var emissive = new Color(0, 0, 0);
+            var metallic = 1;
+            var roughness = 1;
             if (materials[i].pbrMetallicRoughness) {
-                var bcf = materials[i].pbrMetallicRoughness.baseColorFactor;
+                var mr = materials[i].pbrMetallicRoughness;
+                var bcf = mr.baseColorFactor;
                 if (bcf) {
                     diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
                 }
-                var texture = materials[i].pbrMetallicRoughness.baseColorTexture;
-                if (texture) {
-                    material.samplers = [ new Sampler("diffuse0", this.textures[texture.index]) ];
+                var metallicFactor = mr.metallicFactor;
+                if (!isNaN(parseFloat(metallicFactor))) {
+                    metallic = metallicFactor;
                 }
+                var roughnessFactor = mr.roughnessFactor;
+                if (!isNaN(parseFloat(roughnessFactor))) {
+                    roughness = roughnessFactor;
+                }
+                setSampler(material, definitions, mr.baseColorTexture, "diffuse");
+                setSampler(material, definitions, mr.metallicRoughnessTexture, "metallicRoughness");
             }
-            material.uniforms = {
-                diffuse: new UniformColor(diffuse)
-            };
+            var eF = materials[i].emissiveFactor;
+            if (eF && eF.length > 2) {
+                emissive.set(eF[0], eF[1], eF[2]);
+            }
+            material.uniforms.diffuse = new UniformColor(diffuse);
+            material.uniforms.perceptualRoughness = new UniformFloat(roughness);
+            material.uniforms.reflectance = new UniformFloat(.5);
+            material.uniforms.metallic = new UniformFloat(metallic);
+            material.uniforms.emissive = new UniformColor(emissive);
+            setSampler(material, definitions, materials[i].normalTexture, "normal");
+            setSampler(material, definitions, materials[i].occlusionTexture, "occlusion");
+            setSampler(material, definitions, materials[i].emissiveTexture, "emissive");
+            material.shader = this.shadersManager.addSource("pbr", definitions);
             this.materials.push(material);
         }
     },
@@ -10033,45 +10221,70 @@ var ModelLoaderGLTF = FrakClass.extend({
                 if (!isNaN(parseInt(meshes[i].primitives[j].material))) {
                     material = this.materials[meshes[i].primitives[j].material];
                 } else {
-                    material = this.defaultMaterial();
+                    material = new Material(this.shadersManager.addSource("pbr", []), {}, []);
                 }
-                var submesh = this.loadSubmesh(meshes[i].primitives[j]);
-                if (submesh) mesh.addSubmesh(submesh, material); else continue;
+                var submesh = this.loadSubmesh(meshes[i].primitives[j], material);
+                if (submesh) {
+                    mesh.addSubmesh(submesh, material);
+                } else {
+                    continue;
+                }
             }
             this.meshes.push(mesh);
         }
     },
-    loadSubmesh: function(primitive) {
+    loadSubmesh: function(primitive, material) {
         var submesh = new Submesh();
-        if (isNaN(parseInt(primitive.indices)) || isNaN(parseInt(primitive.attributes.POSITION))) return;
+        if (isNaN(parseInt(primitive.indices)) || isNaN(parseInt(primitive.attributes.POSITION))) {
+            return;
+        }
         submesh.faces = this.accessors[primitive.indices];
         submesh.positions = this.accessors[primitive.attributes.POSITION];
-        if (!isNaN(parseInt(primitive.attributes.NORMAL))) submesh.normals = this.accessors[primitive.attributes.NORMAL];
-        if (!isNaN(parseInt(primitive.attributes.TEXCOORD_0))) submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
+        if (!isNaN(parseInt(primitive.attributes.NORMAL))) {
+            submesh.normals = this.accessors[primitive.attributes.NORMAL];
+        }
+        if (!isNaN(parseInt(primitive.attributes.TEXCOORD_0))) {
+            submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
+        }
+        if (!isNaN(parseInt(primitive.attributes.TANGENT))) {
+            submesh.tangents4D = this.accessors[primitive.attributes.TANGENT];
+            submesh.tangents = submesh.tangents4D.filter(function(_, i) {
+                return i % 4 !== 3;
+            });
+            material.shader.definitions.push("VERTEX_TANGENTS");
+        } else if (submesh.texCoords2D.length) {
+            submesh.calculateTangents();
+            material.shader.definitions.push("VERTEX_TANGENTS");
+        }
         submesh.recalculateBounds();
         return submesh;
     },
     loadScene: function(node, parsedData) {
+        var i;
         if (!parsedData.scenes || isNaN(parseInt(parsedData.scene))) {
-            for (var i = 0, l = this.meshes.length; i < l; i++) {
+            for (i = 0, l = this.meshes.length; i < l; i++) {
                 var meshNode = new Node();
+                var renderer = new MeshRendererComponent();
+                renderer.customShader = true;
                 meshNode.addComponent(new MeshComponent(this.meshes[i]));
-                meshNode.addComponent(new MeshRendererComponent());
+                meshNode.addComponent(renderer);
                 meshNode.addComponent(new MeshCollider());
             }
         } else {
             var scene = parsedData.scenes[parsedData.scene];
-            for (var i = 0, l = scene.nodes && scene.nodes.length || 0; i < l; i++) {
+            for (i = 0, l = scene.nodes && scene.nodes.length || 0; i < l; i++) {
                 node.addNode(this.loadNode(parsedData.nodes, scene.nodes[i]));
             }
         }
     },
-    loadNode: function(nodes, i) {
-        var node = nodes[i];
+    loadNode: function(nodes, index) {
+        var node = nodes[index];
         var sceneNode = new Node(node.name);
+        var renderer = new MeshRendererComponent();
+        renderer.customShader = true;
         if (!isNaN(parseInt(node.mesh))) {
             sceneNode.addComponent(new MeshComponent(this.meshes[node.mesh]));
-            sceneNode.addComponent(new MeshRendererComponent());
+            sceneNode.addComponent(renderer);
             sceneNode.addComponent(new MeshCollider());
         }
         if (node.matrix) {
@@ -10260,6 +10473,7 @@ var ShadersManager = Manager.extend({
             reflective: this.bundle("reflective"),
             reflective_masked: this.bundle("reflective_masked"),
             lines: this.bundle("lines"),
+            pbr: this.bundle("pbr"),
             test: this.bundle("test"),
             fallback: this.bundle("fallback"),
             depthrgba: this.bundle("depthrgba"),
@@ -10274,11 +10488,11 @@ var ShadersManager = Manager.extend({
         fragmentSource = this.sourceCallback(fragmentSource);
         return this.addDescriptor(new ShaderDescriptor(vertexSource, fragmentSource));
     },
-    addSource: function(source) {
+    addSource: function(source, definitions) {
         var alias = source.toLowerCase();
         if (alias in this.aliases) source = this.aliases[alias];
         source = this.sourceCallback(source);
-        return this.addDescriptor(new ShaderDescriptor(source + ".vert", source + ".frag"));
+        return this.addDescriptor(new ShaderDescriptor(source + ".vert", source + ".frag", definitions));
     },
     createResource: function(shaderDescriptor) {
         return new Shader(this.context, shaderDescriptor);
@@ -11305,11 +11519,24 @@ var Submesh = FrakClass.extend({
         this.texCoords3D = [];
         this.texCoords4D = [];
         this.tangents = false;
+        this.tangents4D = false;
         this.normals = false;
         this.bitangents = false;
         this.barycentric = false;
         this.boundingBox = new BoundingBox();
         this.boundingSphere = new BoundingSphere();
+    },
+    _calculateTangents4D: function() {
+        if (!this.tangents) {
+            return;
+        }
+        this.tangents4D = new Float32Array(this.positions.length / 3 * 4);
+        for (var i = 0; i < this.tangents4D.length; i += 4) {
+            this.tangents4D[i] = this.tangents[i];
+            this.tangents4D[i + 1] = this.tangents[i + 1];
+            this.tangents4D[i + 2] = this.tangents[i + 2];
+            this.tangents4D[i + 3] = 1;
+        }
     },
     calculateTangents: function() {
         var tan1 = new Float32Array(this.positions.length);
@@ -11393,6 +11620,7 @@ var Submesh = FrakClass.extend({
         }
         delete tan1;
         delete tan2;
+        this._calculateTangents4D();
     },
     calculateBarycentric: function() {
         this.barycentric = new Float32Array(this.positions.length);
@@ -12290,6 +12518,7 @@ var RendererComponent = Component.extend({
         this.receiveShadows = true;
         this.lightContribution = 1;
         this.reflectivity = 0;
+        this.customShader = false;
     },
     type: function() {
         return "RendererComponent";
@@ -12300,6 +12529,7 @@ var RendererComponent = Component.extend({
         instance.receiveShadows = this.receiveShadows;
         instance.lightContribution = this.lightContribution;
         instance.reflectivity = this.reflectivity;
+        instance.customShader = this.customShader;
         return instance;
     },
     onContextRestored: function(context) {}
@@ -12317,7 +12547,9 @@ var MeshRendererComponent = RendererComponent.extend({
         return this._super().concat([ "meshRenderers" ]);
     },
     createRenderer: function(context, matrix, submesh, material) {
-        return new SubmeshRenderer(context, matrix, submesh, material);
+        var renderer = new SubmeshRenderer(context, matrix, submesh, material);
+        renderer.customShader = this.customShader;
+        return renderer;
     },
     onStart: function(context, engine) {
         this.updateRenderers(context, engine);
@@ -14051,7 +14283,7 @@ var ModelDescriptor = Descriptor.extend({
 });
 
 var ShaderDescriptor = Descriptor.extend({
-    init: function(vertexOrUnifiedSource, fragmentSource) {
+    init: function(vertexOrUnifiedSource, fragmentSource, definitions) {
         this._super();
         if (!fragmentSource) {
             this.vertexSource = vertexOrUnifiedSource + ".vert";
@@ -14060,13 +14292,17 @@ var ShaderDescriptor = Descriptor.extend({
             this.vertexSource = vertexOrUnifiedSource;
             this.fragmentSource = fragmentSource;
         }
+        this.definitions = [];
+        if (definitions) {
+            this.definitions = definitions;
+        }
     },
     type: function() {
         return "ShaderDescriptor";
     },
     equals: function(other) {
         if (!this._super(other)) return false;
-        return this.vertexSource == other.vertexSource && this.fragmentSource == other.fragmentSource;
+        return this.vertexSource == other.vertexSource && this.fragmentSource == other.fragmentSource && this.definitions == other.definitions;
     },
     getVertexShaderPath: function() {
         var path = this.getParentDirectory() + this.vertexSource;
@@ -14131,7 +14367,6 @@ var TextureDescriptor = Descriptor.extend({
         this._source = source;
         this.width = width;
         this.height = height;
-        this.locked = locked;
     },
     type: function() {
         return "TextureDescriptor";
@@ -14139,13 +14374,6 @@ var TextureDescriptor = Descriptor.extend({
     equals: function(other) {
         if (!this._super(other)) return false;
         return this.source == other.source && this.width == other.width && height == other.height;
-    },
-    getFullPath: function() {
-        if (this.locked) {
-            return this._source;
-        } else {
-            return this._super();
-        }
     }
 });
 

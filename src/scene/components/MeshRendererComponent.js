@@ -14,7 +14,11 @@ var MeshRendererComponent=RendererComponent.extend({
 	},
 
 	createRenderer: function(context, matrix, submesh, material) {
-		return new SubmeshRenderer(context, matrix, submesh, material);
+		var renderer = new SubmeshRenderer(context, matrix, submesh, material);
+
+		renderer.customShader = this.customShader;
+
+		return renderer;
 	},
 
 	onStart: function(context, engine) {
