@@ -54,6 +54,8 @@ var MeshRendererComponent=RendererComponent.extend({
 		for (var i=0; i<this.meshRenderers.length; i++) {
 			this.getScene().dynamicSpace.removeRenderer(this.meshRenderers[i]);
 		}
+
+		this.meshRenderers = [];
 	},
 
 	updateRenderers: function(context, engine) {
