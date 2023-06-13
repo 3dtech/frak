@@ -10,7 +10,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 		this.textureUniformMap = {
 			texturesDiffuse: 'diffuse',
-			texturesNormals: 'normal'
+			texturesNormals: 'normal',
 		}
 
 		this.binary = format === 'glb';
@@ -76,12 +76,8 @@ var ModelLoaderGLTF = FrakClass.extend({
 		}
 
 		var data = new Uint8Array(view.buffer, 20, length);
-		var str = '';
-		for (var i = 0; i < length; i++) {
-			str += String.fromCodePoint(data[i]);
-		}
 
-		return JSON.parse(str);
+		return JSON.parse(new TextDecoder().decode(data));
 	},
 
 	parseBinaryBuffer: function(view) {
@@ -109,7 +105,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 			var byteLength = buffers[i].byteLength;
 			var buffer = {
-				length: byteLength
+				length: byteLength,
 			};
 
 			this.buffers.push(buffer);
@@ -223,7 +219,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 			if (uri) {
 				this.images.push({
 					locked: (new RegExp('^//|(?:[a-z]+:)', 'i')).test(uri),
-					uri: uri
+					uri: uri,
 				});
 			}
 		}
@@ -336,9 +332,9 @@ var ModelLoaderGLTF = FrakClass.extend({
 				material.name = materials[i].name;
 			}
 
+			var transparent = false;
 			if (materials[i].alphaMode === 'BLEND') {
-				material.shader = this.shadersManager.addSource('transparent');
-				material.shader.requirements.transparent = true;
+				transparent = true;
 			}
 
 			var definitions = [];
@@ -351,15 +347,19 @@ var ModelLoaderGLTF = FrakClass.extend({
 				var bcf = mr.baseColorFactor;
 				if (bcf) {
 					diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
+
+					if (bcf[3] < 1.0) {
+						transparent = true;	// Legacy compatibility
+					}
 				}
 
-				var metallicFactor = mr.metallicFactor;
-				if (!isNaN(parseFloat((metallicFactor)))) {
+				var metallicFactor = parseFloat(mr.metallicFactor);
+				if (!isNaN(metallicFactor)) {
 					metallic = metallicFactor;
 				}
 
-				var roughnessFactor = mr.roughnessFactor;
-				if (!isNaN(parseFloat((roughnessFactor)))) {
+				var roughnessFactor = parseFloat(mr.roughnessFactor);
+				if (!isNaN(roughnessFactor)) {
 					roughness = roughnessFactor;
 				}
 
@@ -382,7 +382,12 @@ var ModelLoaderGLTF = FrakClass.extend({
 			setSampler(material, definitions, materials[i].occlusionTexture, 'occlusion');
 			setSampler(material, definitions, materials[i].emissiveTexture, 'emissive');
 
-			material.shader = this.shadersManager.addSource('pbr', definitions);
+			if (transparent) {
+				material.shader = this.shadersManager.addSource('transparent');
+				material.shader.requirements.transparent = true;
+			} else {
+				material.shader = this.shadersManager.addSource('pbr', definitions);
+			}
 
 			this.materials.push(material);
 		}
@@ -505,5 +510,5 @@ var ModelLoaderGLTF = FrakClass.extend({
 		}
 
 		return sceneNode;
-	}
+	},
 });

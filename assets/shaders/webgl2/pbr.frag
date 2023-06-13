@@ -247,6 +247,8 @@ void main(void) {
 	outputColor *= texture(diffuse0, diffuseUV());
 #endif
 
+outputColor.a = 1.0;	// We only use this shader with alphaMode == 'OPAQUE'
+
 #ifdef METALLICROUGHNESS_TEXTURE
 	vec4 metallicRoughness = texture(metallicRoughness0, metallicRoughnessUV());
 	float metallic = metallic * metallicRoughness.b;
@@ -293,7 +295,7 @@ void main(void) {
 
 	outputColor.rgb = reinhardLuminance(outputColor.rgb);
 
-	outputColor.rgb += emissive.rgb * outputColor.a;
+	outputColor.rgb += emissive.rgb;
 
 	fragColor = outputColor;
 }

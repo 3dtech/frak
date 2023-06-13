@@ -75,7 +75,7 @@ var RendererOrganizer = FrakClass.extend({
 			return !renderer.transparent && !renderer.customShader && !renderer.unlit;
 		});
 		this.viewTransparentRenderers = new CollectionView(this.renderers, function(renderer) {
-			return renderer.transparent && !renderer.customShader && !renderer.unlit;
+			return renderer.transparent && !renderer.unlit;
 		});
 		this.viewCustomRenderers = new CollectionView(this.renderers, function(renderer) {
 			return !renderer.transparent && renderer.customShader && !renderer.unlit;
