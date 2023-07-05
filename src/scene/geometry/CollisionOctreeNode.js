@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 var CollisionOctreeNode=FrakClass.extend({
 	/** Constructor
 		@param center The center of the node. Instance of {vec3}
@@ -25,7 +26,7 @@ var CollisionOctreeNode=FrakClass.extend({
 				vec3.create(),
 				vec3.create(),
 				vec3.create(),
-				vec3.create()
+				vec3.create(),
 			];
 		}
 
@@ -35,10 +36,12 @@ var CollisionOctreeNode=FrakClass.extend({
 
 	clone: function(parent) {
 		var copy = new CollisionOctreeNode(this.bounds.center, this.bounds.size[0], parent ? parent : false);
+
 		copy.depth = this.depth;
 
 		if (this.nodes) {
 			copy.nodes = {};
+
 			for (var nodeID in this.nodes) {
 				copy.nodes[nodeID] = this.nodes[nodeID];
 			}
@@ -46,6 +49,7 @@ var CollisionOctreeNode=FrakClass.extend({
 
 		if (this.submeshes) {
 			copy.submeshes = {};
+
 			for (var meshID in this.submeshes) {
 				copy.submeshes[meshID] = this.submeshes[meshID];
 			}
@@ -67,6 +71,7 @@ var CollisionOctreeNode=FrakClass.extend({
 
 		if (this.subnodes) {
 			copy.subnodes = [];
+
 			for (var i=0; i<this.subnodes.length; i++) {
 				copy.subnodes.push(this.subnodes[i].clone(copy));
 			}
@@ -76,10 +81,11 @@ var CollisionOctreeNode=FrakClass.extend({
 	},
 
 	getNodeID: function() {
-		var id = "/";
-		var subnodeIndex = "root";
+		var id = '/';
+		var subnodeIndex = 'root';
 		if (this.parent) {
 			id = this.parent.getNodeID();
+
 			for (var subnode in this.parent.subnodes) {
 				if (this.parent.subnodes[subnode] === this) {
 					subnodeIndex = subnode;
@@ -87,6 +93,7 @@ var CollisionOctreeNode=FrakClass.extend({
 				}
 			}
 		}
+
 		return '{0}{1}/'.format(id, subnodeIndex);
 	},
 
@@ -107,12 +114,13 @@ var CollisionOctreeNode=FrakClass.extend({
 		var size = this.bounds.size[0]*0.5;
 		var extent = size*0.5;
 		var c = vec3.create();
-		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [ extent,  extent,  extent]), size, this)); // RTB
-		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [-extent,  extent,  extent]), size, this)); // LTB
-		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [ extent, -extent,  extent]), size, this)); // RBB
-		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [-extent, -extent,  extent]), size, this)); // LBB
-		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [ extent,  extent, -extent]), size, this)); // RTF
-		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [-extent,  extent, -extent]), size, this)); // LTF
+
+		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [ extent, extent, extent]), size, this)); // RTB
+		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [-extent, extent, extent]), size, this)); // LTB
+		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [ extent, -extent, extent]), size, this)); // RBB
+		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [-extent, -extent, extent]), size, this)); // LBB
+		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [ extent, extent, -extent]), size, this)); // RTF
+		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [-extent, extent, -extent]), size, this)); // LTF
 		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [ extent, -extent, -extent]), size, this)); // RBF
 		this.subnodes.push(new CollisionOctreeNode(vec3.add(c, this.bounds.center, [-extent, -extent, -extent]), size, this)); // LBF
 	},
@@ -120,14 +128,17 @@ var CollisionOctreeNode=FrakClass.extend({
 	optimize: function() {
 		// Remove useless subdivisions
 		if (!this.isLeaf()) {
-			for (var i in this.subnodes)
+			for (var i in this.subnodes) {
 				this.subnodes[i].optimize();
+			}
 
 			var empty = 0;
 			for (var i = 0; i < this.subnodes.length; i++) {
-				if (!this.subnodes[i].hasGeometry() && this.subnodes[i].isLeaf())
+				if (!this.subnodes[i].hasGeometry() && this.subnodes[i].isLeaf()) {
 					empty++;
+				}
 			}
+
 			if (empty==8) {
 				delete this.subnodes;
 				this.subnodes=false;
@@ -200,6 +211,7 @@ var CollisionOctreeNode=FrakClass.extend({
 		var dir = ray.getDirection(this.root.cache[0]);
 		var tmin = this.root.cache[1];
 		var tmax = this.root.cache[2];
+
 		dir[0] = 1.0 / dir[0];
 		dir[1] = 1.0 / dir[1];
 		dir[2] = 1.0 / dir[2];
@@ -213,26 +225,33 @@ var CollisionOctreeNode=FrakClass.extend({
 		var t0 = Math.max(Math.min(tmin[0], tmax[0]), Math.min(tmin[1], tmax[1]), Math.min(tmin[2], tmax[2]));
 		var t1 = Math.min(Math.max(tmin[0], tmax[0]), Math.max(tmin[1], tmax[1]), Math.max(tmin[2], tmax[2]));
 
-		if (t1<0.0 || t0>t1)
+		if (t1<0.0 || t0>t1) {
 			return false;
-		if (ray.infinite)
+		}
+
+		if (ray.infinite) {
 			return t0;
+		}
 
 		// This handles rays that start and/or end inside the AABB
 		if (t0*t0 > vec3.sqrDist(ray.origin, ray.destination)) {
 			if ((ray.origin[0]<this.bounds.min[0] || ray.origin[1]<this.bounds.min[1] || ray.origin[2]<this.bounds.min[2] ||
 				ray.origin[0]>this.bounds.max[0] || ray.origin[1]>this.bounds.max[1] || ray.origin[2]>this.bounds.max[2]) &&
 				(ray.destination[0]<this.bounds.min[0] || ray.destination[1]<this.bounds.min[1] || ray.destination[2]<this.bounds.min[2] ||
-				ray.destination[0]>this.bounds.max[0] || ray.destination[1]>this.bounds.max[1] || ray.destination[2]>this.bounds.max[2]))
+				ray.destination[0]>this.bounds.max[0] || ray.destination[1]>this.bounds.max[1] || ray.destination[2]>this.bounds.max[2])) {
 				return false;
+			}
 		}
+
 		return t0;
 	},
 
 	rayIntersectGeometry: function(worldRay, collideInvisible) {
-		if (!this.hasGeometry())
+		if (!this.hasGeometry()) {
 			return false;
-		var result = {'submesh': false, 'node': false, 't': Infinity, 'normal': vec3.create()};
+		}
+
+		var result = { submesh: false, node: false, t: Infinity, normal: vec3.create() };
 		var a=this.root.cache[0];
 		var b=this.root.cache[1];
 		var c=this.root.cache[2];
@@ -244,8 +263,13 @@ var CollisionOctreeNode=FrakClass.extend({
 				mat4.invert(inv, this.root.nodes[nodeIndex].transform.absolute);
 				localRay.transform(inv);
 			}
+
 			var meshRendererComponent = this.root.nodes[nodeIndex].getComponent(MeshRendererComponent);
 			for (var meshIndex in this.faces[nodeIndex]) {
+				if (!this.root.submeshes[meshIndex]) {
+					continue;
+				}
+
 				var visible;
 				if (meshRendererComponent) {
 					for (var i in meshRendererComponent.meshRenderers) {
@@ -255,6 +279,7 @@ var CollisionOctreeNode=FrakClass.extend({
 						}
 					}
 				}
+
 				var faces = this.faces[nodeIndex][meshIndex];
 				var positions = this.root.submeshes[meshIndex].positions;
 				for (var i=0; i<faces.length; i+=3) {
@@ -282,6 +307,7 @@ var CollisionOctreeNode=FrakClass.extend({
 				}
 			}
 		}
+
 		return result;
 	},
 
@@ -296,14 +322,18 @@ var CollisionOctreeNode=FrakClass.extend({
 			if (this.hasGeometry()) {
 				var i=0;
 				for (; i<list.length; i++) {
-					if (list[i].t>t)
+					if (list[i].t>t) {
 						break;
+					}
 				}
-				list.splice(i, 0, {'t': t, 'octreeNode': this});
+
+				list.splice(i, 0, { t: t, octreeNode: this });
 			}
+
 			if (!this.isLeaf()) {
-				for (var i = 0; i < this.subnodes.length; i++)
+				for (var i = 0; i < this.subnodes.length; i++) {
 					this.subnodes[i].getNodesWithGeometry(ray, list);
+				}
 			}
 		}
 	},
@@ -313,13 +343,15 @@ var CollisionOctreeNode=FrakClass.extend({
 		*/
 	getNearestRayCollision: function(localRay, worldRay, collideInvisible) {
 		var nodes=[];
+
 		this.getNodesWithGeometry(localRay, nodes);
-		var result={'t': Infinity, 'octreeNode': false, 'submesh': false, 'node': false, 'normal': false};
+		var result={ t: Infinity, octreeNode: false, submesh: false, node: false, normal: false };
 		for (var i=0; i<nodes.length; i++) {
 			// Early out for nodes on the same level
 			if (result.octreeNode!==false && nodes[i].depth==result.octreeNode.depth && nodes[i].t>result.t) {
 				continue;
 			}
+
 			var collision=nodes[i].octreeNode.rayIntersectGeometry(worldRay, collideInvisible);
 			if (collision.t<result.t) {
 				result.t=collision.t;
@@ -329,6 +361,7 @@ var CollisionOctreeNode=FrakClass.extend({
 				result.normal=collision.normal;
 			}
 		}
+
 		return result;
-	}
+	},
 });
