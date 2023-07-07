@@ -59,12 +59,12 @@ var DeferredShadowRenderStage = RenderStage.extend({
 		vec3.set(this.sceneAABB.extents, 0, 0, 0);
 		this.sceneAABB.recalculate();
 
-		var opaque = this.parent.organizer.solidRenderers;
+		var opaque = this.parent.organizer.solidAndCustomRenderers;
 		var transparent = this.parent.organizer.transparentRenderers;
 
 		for (var i = 0; i < opaque.length; ++i) {
 			if (!opaque[i])
-				break;
+				continue;
 			if (!opaque[i].castShadows)
 				continue;
 			this.sceneAABB.encapsulateBox(opaque[i].globalBoundingBox);
@@ -119,10 +119,10 @@ var DeferredShadowRenderStage = RenderStage.extend({
 
 		// Render opaque geometry
 		this.material.bind();
-		var renderers = this.parent.organizer.solidRenderers;
+		var renderers = this.parent.organizer.solidAndCustomRenderers;
 		for (var i = 0; i < renderers.length; ++i) {
 			if (!renderers[i])
-				break;
+				continue;
 
 			if (!(renderers[i].layer & light.shadowMask))
 				continue;

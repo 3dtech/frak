@@ -63,10 +63,10 @@ var DepthRenderStage = RenderStage.extend({
 
 		// Render opaque geometry
 		this.material.bind();
-		var renderers = this.parent.organizer.solidRenderers;
+		var renderers = this.parent.organizer.solidAndCustomRenderers;
 		for (var i=0; i<renderers.length; ++i) {
 			if (!renderers[i])
-				break;
+				continue;
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
 			this.material.shader.bindUniforms(renderers[i].material.uniforms);

@@ -63,6 +63,7 @@ var RendererOrganizer = FrakClass.extend({
 		this.transparentRenderers = [];
 		this.customRenderers = [];
 		this.unlitRenderers = [];
+		this.solidAndCustomRenderers = [];
 
 		this.opaqueBatchList = [];
 		this.transparentBatchList = [];
@@ -155,6 +156,7 @@ var RendererOrganizer = FrakClass.extend({
 		this.transparentRenderers = this.viewTransparentRenderers.view;
 		this.customRenderers = this.viewCustomRenderers.view;
 		this.unlitRenderers = this.viewUnlitRenderers.view;
+		this.solidAndCustomRenderers = this.solidRenderers.concat(this.customRenderers);
 
 		// Batch renderers by material.id
 		if (this.enableDynamicBatching) {

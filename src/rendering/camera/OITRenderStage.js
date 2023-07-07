@@ -209,10 +209,10 @@ var OITRenderStage = RenderStage.extend({
 		shader.bindUniforms(this.opaqueDepthMaterial.uniforms);
 		shader.bindSamplers(this.opaqueDepthMaterial.samplers);
 
-		var renderers = this.parent.organizer.solidRenderers;
+		var renderers = this.parent.organizer.solidAndCustomRenderers;
 		for (var i=0; i<renderers.length; ++i) {
 			if (!renderers[i])
-				break;
+				continue;
 			context.modelview.push();
 			context.modelview.multiply(renderers[i].matrix);
 
