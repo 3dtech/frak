@@ -14,7 +14,7 @@ Primitives
 TerrainMesh
  */
 
-interface File {
+interface SourceFile {
 	directory: string;
 	extension?: string;
 	name: string;
@@ -44,27 +44,51 @@ for (const directory of directories) {
 	}
 }
 
-function transform(data: string, file: File) {
+const imports: {[className: string]: string} = {};
+async function parseImports(file: SourceFile) {
+	const data = await Deno.readTextFile(srcPath + file.path);
+	const classMatch = /^(?<preamble>[^]*?)(?:var|const|let)\s+(?<className>\w+)\s*=\s*(?<super>\w+)\.extend\s*\((?<content>[^]*)\)/.exec(data);
+	if (classMatch) {
+		imports[classMatch.groups!.className] = file.path;
+	}
+
+	return [data, file];
+}
+
+function transform(data: string, file: SourceFile) {
 	const classMatch = /^(?<preamble>[^]*?)(?:var|const|let)\s+(?<className>\w+)\s*=\s*(?<super>\w+)\.extend\s*\((?<content>[^]*)\)/.exec(data);
 
 	let out = data;
+	const usedImports = [];
 	if (classMatch) {
 		const { className, content, preamble, super: superClass } = classMatch.groups!;
 
-		out = preamble;
+		if (superClass !== 'FrakClass') {
+			usedImports.push(superClass);
+		}
+
+		let classContent = `class ${className}${superClass !== 'FrakClass' ? ` extends ${superClass}` : ''} {`;
+		classContent += '}';
+
+		out = `${
+			usedImports.map(i => `import ${i} from '/${imports[i]}'`).join('\n')
+		}
+
+		${preamble}
+		${classContent}
+
+		globalThis.${className} = ${className}`;
 	}
 
 	return out;
 }
 
-async function parseFile(file: File) {
+async function parseFile(data: string, file: SourceFile) {
 	await Deno.mkdir(dstPath + file.directory, { recursive: true });
 
-	const source = await Deno.readTextFile(srcPath + file.path);
-
-	const data = transform(source, file);
+	data = transform(data, file);
 
 	await Deno.writeTextFile(`${dstPath + file.directory + file.name}.ts`, data);
 }
 
-files.forEach(parseFile);
+(await Promise.all(files.map(parseImports))).forEach(([data, file]) => parseFile(data as string, file as SourceFile));
