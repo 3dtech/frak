@@ -55,11 +55,11 @@ async function parseImports(file: SourceFile) {
 	return [data, file];
 }
 
-function transform(data: string, file: SourceFile) {
+function transform(data: string, _file: SourceFile) {
 	const classMatch = /^(?<preamble>[^]*?)(?:var|const|let)\s+(?<className>\w+)\s*=\s*(?<super>\w+)\.extend\s*\((?<content>[^]*)\)/.exec(data);
 
 	let out = data;
-	const usedImports = [];
+	const usedImports: string[] = [];
 	if (classMatch) {
 		const { className, content, preamble, super: superClass } = classMatch.groups!;
 
@@ -67,17 +67,39 @@ function transform(data: string, file: SourceFile) {
 			usedImports.push(superClass);
 		}
 
-		let classContent = `class ${className}${superClass !== 'FrakClass' ? ` extends ${superClass}` : ''} {`;
-		classContent += '}';
-
-		out = `${
-			usedImports.map(i => `import ${i} from '/${imports[i]}'`).join('\n')
+		let innerContent = content;
+		const contentMatch = /{(?<inner>[^]*)}/.exec(content);
+		if (contentMatch) {
+			innerContent = contentMatch.groups!.inner;
 		}
 
-		${preamble}
-		${classContent}
+		innerContent = innerContent
+			.replace(/(?<name>\w+):\s*function\s*\((?<args>.*?)\)\s*{(?<content>[^]*?)},/g, (...args) => {
+				const groups = args[args.length - 1];
+				const name = groups.name !== 'init' ? groups.name : 'constructor';
+				const content = groups.content.replace(
+					'this._super',
+					() => name === 'constructor' ? 'super' : `super.${name}`
+				);
 
-		globalThis.${className} = ${className}`;
+				return `${name}(${groups.args}) {${content}}`;
+			})
+			.replace(/(?<name>\w+):\s*?function/, '$name');	// Last function
+
+		const classContent = `class ${className}${superClass !== 'FrakClass' ? ` extends ${superClass}` : ''} {
+	${innerContent}
+}`;
+
+		out = `${
+	usedImports.map(i => `import ${i} from '${imports[i]}'`).join('\n')
+}
+
+${preamble}
+${classContent}
+
+globalThis.${className} = ${className}
+
+export default ${className}`;
 	}
 
 	return out;
