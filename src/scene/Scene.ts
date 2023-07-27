@@ -4,6 +4,7 @@ import DynamicSpace from 'rendering/spaces/DynamicSpace.js'
 import Component from 'scene/components/Component.js'
 import MeshComponent from 'scene/components/MeshComponent.js'
 import Light from 'scene/components/Light.js'
+import Camera from 'rendering/camera/Camera'
 
 /** Scene keeps track of components and nodes, cameras etc */
 
@@ -22,8 +23,9 @@ class Scene extends Serializable {
 	updatedComponents: any;
 	processPreRenderList: any;
 	processPostRenderList: any;
-	
+
 	constructor() {
+		super();
 		this.root = new Node(); ///< Root node of the scene
 		this.root.scene = this;
 		this.dynamicSpace = new DynamicSpace(); ///< Dynamic space where all the mesh renderers go
@@ -149,11 +151,11 @@ class Scene extends Serializable {
 	render(context): any {
 		if (!this.started)
 			return; // Make sure we don't render before starting the scene
-		var camera = false;
+		var camera: Camera;
 
 		for (var cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {
 			camera = this.cameras[cameraIndex];
-			camera.render(context, this, this.processPreRenderList, this.processPostRenderLists);
+			camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
 		}
 	}
 

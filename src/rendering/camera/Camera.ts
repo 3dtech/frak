@@ -4,6 +4,7 @@ import Plane from 'scene/geometry/Plane.js'
 import BoundingBox from 'scene/geometry/BoundingBox.js'
 import BoundingSphere from 'scene/geometry/BoundingSphere.js'
 import BoundingVolume from 'scene/geometry/BoundingVolume.js'
+import Color from 'rendering/Color'
 
 /** Camera is used to render to render target.
 	@param viewMatrix Camera view matrix {mat4}
@@ -35,9 +36,10 @@ class Camera extends Serializable {
 	_cacheQuat: any;
 	_strafe: any;
 	_translation: any;
-	
+
 	/** Constructor */
 	constructor(viewMatrix, projectionMatrix, renderStage) {
+		super();
 		this.viewMatrix = viewMatrix;
 		this.projectionMatrix = projectionMatrix;
 		this.viewInverseMatrix = mat4.create();
@@ -209,7 +211,7 @@ class Camera extends Serializable {
 	/** Returns camera direction (for perspective view).
 		@param out Instance of {vec3} (optional)
 		@return Camera direction. Instance of {vec3} */
-	getDirection(out): any {
+	getDirection(out?): any {
 		if (!out)
 			out=vec3.create();
 		out[0]=-this.viewMatrix[8];
@@ -221,7 +223,7 @@ class Camera extends Serializable {
 	/** Returns camera up vector (for perspective view).
 		@param out Instance of {vec3} (optional)
 		@return Camera up vector. Instance of {vec3} */
-	getUpVector(out): any {
+	getUpVector(out?): any {
 		if (!out)
 			out=vec3.create();
 		out[0]=this.viewMatrix[4];
@@ -233,7 +235,7 @@ class Camera extends Serializable {
 	/** Returns camera strafe vector (for perspective view).
 		@param out Instance of {vec3} (optional)
 		@return Camera strafe vector. Instance of {vec3} */
-	getStrafeVector(out): any {
+	getStrafeVector(out?): any {
 		if (!out)
 			out=vec3.create();
 		out[0]=this.viewMatrix[0];
@@ -245,7 +247,7 @@ class Camera extends Serializable {
 	/** Returns camera world position.
 		@param out Instance of {vec3} (optional)
 		@return Camera world position. Instance of {vec3} */
-	getPosition(out): any {
+	getPosition(out?): any {
 		if (!out)
 			out=vec3.create();
 		mat4.translation(out, this.viewInverseMatrix);

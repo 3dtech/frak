@@ -7,17 +7,12 @@ class PerspectiveCamera extends CameraComponent {
 	aspect: any;
 	near: any;
 	far: any;
-	
-	constructor(fov, aspect, near, far) {
+
+	constructor(fov?, aspect?, near?, far?) {
 		if(!fov) fov=45.0;
 		if(!near) near=0.3;
 		if(!far) far=1000.0;
 		if(!aspect) aspect=4/3;
-
-		this.fov=fov;
-		this.aspect=aspect;
-		this.near=near;
-		this.far=far;
 
 		// View matrix is stored in column-major order as follows:
 		// | vx ux -nx -ex |
@@ -30,11 +25,20 @@ class PerspectiveCamera extends CameraComponent {
 		// n - Look direction vector
 		// e - Eye position vector
 
+		super(mat4.create(), mat4.create());
+
+		this.fov=fov;
+		this.aspect=aspect;
+		this.near=near;
+		this.far=far;
+
 		var lookAt=mat4.create();
 		mat4.lookAt(lookAt, [0.0, 0.0, -100.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 
+		this.camera.viewMatrix = lookAt;
+		mat4.invert(this.camera.viewInverseMatrix, lookAt);
+		this.camera.projectionMatrix = this.calculatePerspective();
 
-		super(lookAt, this.calculatePerspective());
 		this.camera.near = this.near;
 		this.camera.far = this.far;
 	}

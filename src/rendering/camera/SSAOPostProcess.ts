@@ -10,7 +10,7 @@ class SSAOPostProcess extends PostProcess {
 	ssaoOnly: any;
 	material: any;
 
-	constructor(size) {
+	constructor() {
 		super();
 		this.ssaoOnly = false;
 	}

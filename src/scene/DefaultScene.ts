@@ -2,6 +2,7 @@ import Scene from 'scene/Scene.js'
 import Node from 'scene/Node.js'
 import PerspectiveCamera from 'scene/components/PerspectiveCamera.js'
 import DirectionalLight from 'scene/lights/DirectionalLight.js'
+import Color from 'rendering/Color';
 
 /** Default scene sets is a scene that has automatically created camera node. */
 
@@ -11,9 +12,9 @@ class DefaultScene extends Scene {
 	camera: any;
 	lightNode: any;
 	light: any;
-	
-	init() {
-		this._super();
+
+	constructor() {
+		super();
 
 		// Create default camera node and add camera component to it
 		this.root.name="Root";

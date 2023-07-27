@@ -10,6 +10,7 @@ import Node from 'scene/Node.js'
 import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
 import MeshComponent from 'scene/components/MeshComponent.js'
 import MeshCollider from 'scene/components/MeshCollider.js'
+import Color from 'rendering/Color'
 
 /** Loads models to scene hierarchy from JSON data */
 

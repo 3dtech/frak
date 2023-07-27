@@ -6,7 +6,7 @@ class RenderTarget {
 	viewport: any;
 	size: any;
 
-	constructor(size) {
+	constructor(size?) {
 		this.viewport = {
 			position: vec2.create(),
 			size: vec2.create()

@@ -32,7 +32,7 @@ class DirectionalLight extends Light {
 	lightView: any;
 	lightProj: any;
 
-	constructor(direction, color) {
+	constructor(direction?, color?) {
 		super();
 
 		this.intensity = 1.0;

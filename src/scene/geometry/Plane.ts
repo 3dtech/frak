@@ -74,7 +74,7 @@ class Plane {
 		@param point Instance of {vec3}
 		@param out Instance of {vec3}. If present the output is written to out instead. [optional]
 		@return {vec3} The projected point on the plane (the same as out, if out is present) */
-	projectToPlane(point, out): any {
+	projectToPlane(point, out?): any {
 		if (!out) out=vec3.create();
 		vec3.scale(out, this.normal, this.getDistanceToPoint(point));
 		vec3.sub(out, point, out);

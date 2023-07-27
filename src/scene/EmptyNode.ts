@@ -1,5 +1,7 @@
 import Serializable from 'scene/Serializable.js'
 import Node from 'scene/Node.js'
+import Transform from './components/Transform';
+import Component from './components/Component';
 
 /** Scene-node class that keeps only subnodes and components. Transform component is omitted */
 
@@ -11,7 +13,9 @@ class EmptyNode extends Serializable {
 	parent: any;
 	layer: any;
 	tags: any;
-	
+	transform: Transform;
+	isInstanced: boolean;
+
 	/** Constructs new node */
 	constructor(name) {
 		super();
@@ -22,7 +26,6 @@ class EmptyNode extends Serializable {
 		this.parent=false;
 		this.layer=1;
 		this.tags=[];
-		this._super();
 	}
 
 	excluded(): any {
@@ -332,7 +335,7 @@ class EmptyNode extends Serializable {
 	find(path): any {
 		var parts = path.split("/");
 		if (parts.length==0) return false;
-		var node = this;
+		var node: any = this;
 		if (parts[0]==="") {
 			if (!this.scene)
 				return false;

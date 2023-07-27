@@ -1,3 +1,4 @@
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import BoundingBox from 'scene/geometry/BoundingBox.js'
 
 /* eslint-disable no-restricted-syntax */
@@ -13,7 +14,7 @@ class CollisionOctreeNode {
 	submeshes: any;
 	cache: any;
 	faces: any;
-	
+
 	/** Constructor
 		@param center The center of the node. Instance of {vec3}
 		@param size The size of the node. {number}
@@ -140,14 +141,15 @@ class CollisionOctreeNode {
 	}
 
 	optimize(): any {
+		var i: any;
 		// Remove useless subdivisions
 		if (!this.isLeaf()) {
-			for (var i in this.subnodes) {
+			for (i in this.subnodes) {
 				this.subnodes[i].optimize();
 			}
 
 			var empty = 0;
-			for (var i = 0; i < this.subnodes.length; i++) {
+			for (i = 0; i < this.subnodes.length; i++) {
 				if (!this.subnodes[i].hasGeometry() && this.subnodes[i].isLeaf()) {
 					empty++;
 				}
@@ -272,6 +274,7 @@ class CollisionOctreeNode {
 		var inv = mat4.create();
 
 		for (var nodeIndex in this.faces) {
+			var i: any;
 			var localRay = worldRay.clone();
 			if (!mat4.isIdentity(this.root.nodes[nodeIndex].transform.absolute)) {
 				mat4.invert(inv, this.root.nodes[nodeIndex].transform.absolute);
@@ -286,7 +289,7 @@ class CollisionOctreeNode {
 
 				var visible;
 				if (meshRendererComponent) {
-					for (var i in meshRendererComponent.meshRenderers) {
+					for (i in meshRendererComponent.meshRenderers) {
 						if (meshRendererComponent.meshRenderers[i].submesh == this.root.submeshes[meshIndex]) {
 							visible = meshRendererComponent.meshRenderers[i].visible;
 							break;
@@ -296,7 +299,7 @@ class CollisionOctreeNode {
 
 				var faces = this.faces[nodeIndex][meshIndex];
 				var positions = this.root.submeshes[meshIndex].positions;
-				for (var i=0; i<faces.length; i+=3) {
+				for (i=0; i<faces.length; i+=3) {
 					a[0]=positions[faces[i]*3];
 					a[1]=positions[faces[i]*3+1];
 					a[2]=positions[faces[i]*3+2];
@@ -359,7 +362,7 @@ class CollisionOctreeNode {
 		var nodes=[];
 
 		this.getNodesWithGeometry(localRay, nodes);
-		var result={ t: Infinity, octreeNode: false, submesh: false, node: false, normal: false };
+		var result: any ={ t: Infinity, octreeNode: false, submesh: false, node: false, normal: false };
 		for (var i=0; i<nodes.length; i++) {
 			// Early out for nodes on the same level
 			if (result.octreeNode!==false && nodes[i].depth==result.octreeNode.depth && nodes[i].t>result.t) {

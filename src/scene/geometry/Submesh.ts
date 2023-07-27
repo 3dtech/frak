@@ -26,7 +26,7 @@ class Submesh {
 	boundingBox: any;
 	boundingSphere: any;
 	edges: any;
-	
+
 	/** Constructor */
 	constructor() {
 		this.materialIndex=-1;
@@ -163,9 +163,6 @@ class Submesh {
 			this.bitangents[i+1] = tan[1];
 			this.bitangents[i+2] = tan[2];
 		}
-
-		delete tan1;
-		delete tan2;
 
 		this._calculateTangents4D();
 	}

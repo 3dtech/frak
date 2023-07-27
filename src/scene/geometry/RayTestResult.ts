@@ -8,7 +8,7 @@ class RayTestResult {
 	ray: any;
 	hits: any;
 	addCallback: any;
-	
+
 	/** Constructor
 		@param ray Instance of {Ray}. The given ray is cloned internally. */
 	constructor(ray) {
@@ -66,6 +66,12 @@ class RayTestResult {
 
 }
 
-globalThis.RayTestResult = RayTestResult;
+globalThis.RayTestLocalCache = [
+	vec3.create(),
+	vec3.create(),
+	vec3.create(),
+	vec3.create()
+];
 
+globalThis.RayTestResult = RayTestResult;
 export default RayTestResult;

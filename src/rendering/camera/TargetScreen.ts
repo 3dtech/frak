@@ -3,8 +3,8 @@ import RenderTarget from 'rendering/camera/RenderTarget.js'
 
 class TargetScreen extends RenderTarget {
 	position: any;
-	
-	constructor(size) {
+
+	constructor(size?) {
 		super(size);
 		this.position = vec2.create();
 	}

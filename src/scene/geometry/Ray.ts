@@ -8,7 +8,7 @@ class Ray {
 	infinite: any;
 	origin: any;
 	destination: any;
-	
+
 	/** Constructor
 		@param origin The origin point of the ray {vec3}
 		@param destination The destination point of the ray {vec3} */
@@ -37,7 +37,7 @@ class Ray {
 	/** Returns the normalized direction vector of this ray.
 		@param out Instance of {vec3}. If present, the vector is written to out [optional]
 		@return The normalized direction vector of this ray */
-	getDirection(out): any {
+	getDirection(out?): any {
 		if (!out) out=vec3.create();
 		this.getVector(out);
 		vec3.normalize(out, out);
@@ -47,7 +47,7 @@ class Ray {
 	/** Returns the direction vector of this ray.
 		@param out Instance of {vec3}. If present, the vector is written to out [optional]
 		@return The direction vector of this ray */
-	getVector(out): any {
+	getVector(out?): any {
 		if (!out) out=vec3.create();
 		vec3.subtract(out, this.destination, this.origin);
 		return out;

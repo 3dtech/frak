@@ -32,7 +32,7 @@ function TerrainMesh() {
 			return (p + halfSize) / meshSize;
 		}
 
-		function addOctoFan(position, cellSize, sideA, sideB) {
+		function addOctoFan(position, cellSize, sideA?, sideB?) {
 			positions.push(position[0], position[1], position[2]);
 			uv.push(mapuv(position[0]), mapuv(position[2]));
 			normals.push(0.0, 1.0, 0.0);
@@ -127,7 +127,7 @@ function TerrainMesh() {
 			}
 		}
 
-		function genCone(size, cellSize, gridStep, prevBounds) {
+		function genCone(size, cellSize, gridStep, prevBounds?) {
 			var origin = vec3.create();
 			var count = size/cellSize;
 			var x = -(size - cellSize) / 2.0;

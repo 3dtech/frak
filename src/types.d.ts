@@ -11,6 +11,7 @@ declare global {
 	var jDataView: any;
 
 	var BoundingVolumeVectorCache: any[];
+	var RayTestLocalCache: any[];
 	var AABBPlaneCache: Plane;
 	var fallbackCubeTexture: any;
 	var fallbackTexture: any;

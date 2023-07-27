@@ -4,7 +4,7 @@ import Descriptor from 'scene/descriptors/Descriptor.js'
 
 class TextDescriptor extends Descriptor {
 	source: any;
-	
+
 	/** Constructor
 		@param source Path to text */
 	constructor(source) {
@@ -17,7 +17,7 @@ class TextDescriptor extends Descriptor {
 	}
 
 	equals(other) {
-		if(!this._super(other)) return false;
+		if(!super.equals(other)) return false;
 		return this.source==other.source;
 	}
 
