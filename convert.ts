@@ -23,7 +23,7 @@ interface SourceFile {
 
 const srcPath = '../frak/src/';
 const dstPath = 'src/';
-const files = [];
+const files: SourceFile[] = [];
 
 const directories = [''];
 for (const directory of directories) {
@@ -59,12 +59,12 @@ function transform(data: string, _file: SourceFile) {
 	const classMatch = /^(?<preamble>[^]*?)(?:var|const|let)\s+(?<className>\w+)\s*=\s*(?<super>\w+)\.extend\s*\((?<content>[^]*)\)/.exec(data);
 
 	let out = data;
-	const usedImports: string[] = [];
+	const usedImports: Set<string> = new Set();
 	if (classMatch) {
 		const { className, content, preamble, super: superClass } = classMatch.groups!;
 
 		if (superClass !== 'FrakClass') {
-			usedImports.push(superClass);
+			usedImports.add(superClass);
 		}
 
 		let innerContent = content;
@@ -73,8 +73,16 @@ function transform(data: string, _file: SourceFile) {
 			innerContent = contentMatch.groups!.inner;
 		}
 
+		const members = new Set([...innerContent.matchAll(
+				/this\.(?<member>[\w\d_]+)\s*?=/g
+			)].map(m => m.groups!.member));
+
+		[...innerContent.matchAll(
+			/\s(?<name>[A-Z][\w\d_]*)/g
+		)].forEach(i => usedImports.add(i.groups!.name));
+
 		innerContent = innerContent
-			.replace(/(?<name>\w+):\s*function\s*\((?<args>.*?)\)\s*{(?<content>[^]*?)},/g, (...args) => {
+			.replace(/(?<name>[\w\d_]+):\s*function\s*\((?<args>.*?)\)\s*{(?<content>[^]*?)},/g, (...args) => {
 				const groups = args[args.length - 1];
 				const name = groups.name !== 'init' ? groups.name : 'constructor';
 				const content = groups.content.replace(
@@ -82,16 +90,25 @@ function transform(data: string, _file: SourceFile) {
 					() => name === 'constructor' ? 'super' : `super.${name}`
 				);
 
-				return `${name}(${groups.args}) {${content}}`;
+				return `${name}(${groups.args})${name !== 'constructor' ? ': any' : ''} {${content}}`;
 			})
-			.replace(/(?<name>\w+):\s*?function/, '$name');	// Last function
+			.replace(/(?<name>[\w\d_]+):\s*?function/, '$<name>');	// Last function
 
-		const classContent = `class ${className}${superClass !== 'FrakClass' ? ` extends ${superClass}` : ''} {
+		const classContent =
+`class ${className}${superClass !== 'FrakClass' ? ` extends ${superClass}` : ''} {
+${
+	[...members].map(m => `\t${m}: any;`).join('\n')
+}
+
 	${innerContent}
 }`;
 
-		out = `${
-	usedImports.map(i => `import ${i} from '${imports[i]}'`).join('\n')
+	out =
+`${
+	[...usedImports]
+		.filter(i => i !== className && !!imports[i])
+		.map(i => `import ${i} from '${imports[i]}'`)
+		.join('\n')
 }
 
 ${preamble}
