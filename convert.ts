@@ -99,7 +99,6 @@ function transform(data: string, _file: SourceFile) {
 ${
 	[...members].map(m => `\t${m}: any;`).join('\n')
 }
-
 	${innerContent}
 }`;
 
@@ -114,9 +113,9 @@ ${
 ${preamble}
 ${classContent}
 
-globalThis.${className} = ${className}
+globalThis.${className} = ${className};
 
-export default ${className}`;
+export default ${className};`;
 	}
 
 	return out;
