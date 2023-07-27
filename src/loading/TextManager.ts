@@ -14,12 +14,12 @@ import TextDescriptor from 'scene/descriptors/TextDescriptor.js'
 
 class TextManager extends Manager {
 
-	
+
 	/**
 	 * Constructor
 	 * @param assetsPath Default search path for any assets requested
 	 */
-	constructor(assetsPath) {
+	constructor(assetsPath?) {
 		super(assetsPath);
 	}
 

@@ -5,6 +5,7 @@ import Material from 'rendering/materials/Material.js'
 import UniformInt from 'rendering/shaders/UniformInt.js'
 import UniformColor from 'rendering/shaders/UniformColor.js'
 import Shader from 'rendering/shaders/Shader.js'
+import Color from 'rendering/Color'
 
 /**
  * Render-stage for rendering order-independent transparency.
@@ -21,7 +22,7 @@ class OITRenderStage extends RenderStage {
 	transparencyAccum: any;
 	envFallback: any;
 	opaqueDepthMaterial: any;
-	
+
 	constructor() {
 		super();
 
@@ -65,7 +66,7 @@ class OITRenderStage extends RenderStage {
 				'render_mode': new UniformInt(0),
 				'useNormalmap': new UniformInt(0),
 				'useReflection': new UniformInt(0),
-			}
+			},
 			[]);
 
 		this.opaqueDepthMaterial = new Material(
@@ -81,7 +82,7 @@ class OITRenderStage extends RenderStage {
 			]);
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPostRender(context, scene, camera): any {
 		this.transparencyTarget.resetViewport();

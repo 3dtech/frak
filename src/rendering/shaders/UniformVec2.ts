@@ -4,8 +4,8 @@ import Uniform from 'rendering/shaders/Uniform.js'
 
 class UniformVec2 extends Uniform {
 
-	
-	constructor(value) {
+
+	constructor(value?) {
 		if (!value)
 			value = vec2.create();
 
@@ -13,7 +13,7 @@ class UniformVec2 extends Uniform {
 			super(value);
 		}
 		else {
-			this._super(new Float32Array(value));
+			super(new Float32Array(value));
 		}
 	}
 
@@ -26,7 +26,7 @@ class UniformVec2 extends Uniform {
 	}
 
 	clone() {
-		var c = this._super();
+		var c = super.clone();
 		c.value = vec2.clone(this.value);
 		return c;
 	}

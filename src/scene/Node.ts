@@ -7,12 +7,13 @@ import BoundingSphere from 'scene/geometry/BoundingSphere.js'
 /** Scene-node class that keeps transformation, subnodes and components. */
 
 class Node extends EmptyNode {
+	isInstanced: boolean;
 	name: any;
 	transform: any;
 	localCollisionID: any;
-	
+
 	/** Constructs new node */
-	constructor(name) {
+	constructor(name?) {
 		super(name);
 		this.name=name?name:"Node";
 		this.transform=this.addComponent(new Transform());
@@ -96,6 +97,6 @@ class Node extends EmptyNode {
 
 }
 
-globalThis.Node = Node;
+(globalThis as any).Node = Node;
 
 export default Node;

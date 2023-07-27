@@ -17,6 +17,7 @@ import TargetTextureFloat from 'rendering/camera/TargetTextureFloat.js'
 import Light from 'scene/components/Light.js'
 import DirectionalLight from 'scene/lights/DirectionalLight.js'
 import AmbientLight from 'scene/lights/AmbientLight.js'
+import UniformVec4 from 'rendering/shaders/UniformVec4'
 
 /** Render-stage that uses forward rendering to render meshes with materials and directional lighting */
 
@@ -44,7 +45,7 @@ class MaterialRenderStage extends RenderStage {
 	cachedUniforms: any;
 	samplerAccum: any;
 	_shadowContext: any;
-	
+
 	constructor() {
 		super();
 		this.organizer = new RendererOrganizer();
@@ -61,7 +62,7 @@ class MaterialRenderStage extends RenderStage {
 		this.bindCameraTarget = {
 			started: true,
 			start () {
-			}
+			},
 			render(context, scene, camera): any {
 				camera.target.bind(context);
 			}
@@ -70,7 +71,7 @@ class MaterialRenderStage extends RenderStage {
 		this.unbindCameraTarget = {
 			started: true,
 			start: function () {
-			}
+			},
 			render(context, scene, camera): any {
 				camera.target.unbind(context);
 			}
@@ -96,7 +97,7 @@ class MaterialRenderStage extends RenderStage {
 			"viewInverse": new UniformMat4(mat4.create()),
 			"projection": new UniformMat4(mat4.create()),
 			'cameraPosition': new UniformVec3(vec3.create()),
-			ambient: new UniformColor(0, 0, 0),
+			ambient: new UniformVec4(vec4.create()),
 		};
 
 		// Renderer uniforms cache
@@ -174,6 +175,7 @@ class MaterialRenderStage extends RenderStage {
 			}
 
 			if (light instanceof DirectionalLight) {
+				light = light as any;
 				if (light.uniforms) {
 					vec3.copy(light.uniforms.lightDirection.value, light.direction);
 					light.uniforms.lightIntensity.value = light.intensity;
@@ -302,7 +304,7 @@ class MaterialRenderStage extends RenderStage {
 	}
 
 	/** Renders without dynamic batching */
-	renderBruteForce: function (context, renderers) {
+	renderBruteForce(context, renderers): any {
 		for (var j = 0; j < renderers.length; ++j) {
 			var renderer = renderers[j];
 			if (!renderer)

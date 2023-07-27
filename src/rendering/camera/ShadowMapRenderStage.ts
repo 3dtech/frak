@@ -4,6 +4,7 @@ import Material from 'rendering/materials/Material.js'
 import UniformInt from 'rendering/shaders/UniformInt.js'
 import TargetTextureFloat from 'rendering/camera/TargetTextureFloat.js'
 import DirectionalLight from 'scene/lights/DirectionalLight.js'
+import Color from 'rendering/Color'
 
 /**
  * Shadow map generator for the forward renderer
@@ -19,8 +20,8 @@ class ShadowMapRenderStage extends RenderStage {
 	sceneAABB: any;
 	lightFrustum: any;
 	extStandardDerivatives: any;
-	
-	constructor(size) {
+
+	constructor() {
 		super();
 
 		this.material = null;
@@ -56,12 +57,12 @@ class ShadowMapRenderStage extends RenderStage {
 			),
 			{
 				'hasFloat': new UniformInt(1)
-			}
+			},
 			[]
 		);
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPostRender(context, scene, camera): any {
 		var light = this.getFirstShadowCastingLight(scene, false);

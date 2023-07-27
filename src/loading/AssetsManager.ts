@@ -33,7 +33,7 @@ class AssetsManager {
 	textManager: any;
 	materialsManager: any;
 	materialSourcesManager: any;
-	
+
 	/**
 	 * Constructor
 	 * @param renderingContext Instance of RenderingContext
@@ -153,7 +153,7 @@ class AssetsManager {
 			for (var i=0; i < me.managers.length; i++){
 				if(me.managers[i]){
 					progress += me.managers[i].getProgress();
-				}			
+				}
 				else
 					progress += 1.0;
 			}
@@ -161,7 +161,7 @@ class AssetsManager {
 		}
 
 		for(var m = 0; m < this.managers.length; m++) {
-			this.managers[m].load(function() {} onProgress);
+			this.managers[m].load(function() {}, onProgress);
 		}
 	}
 

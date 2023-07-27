@@ -5,7 +5,7 @@
 class Plane {
 	normal: any;
 	distance: any;
-	
+
 	/** Constructor */
 	constructor() {
 		this.normal = vec3.create();
@@ -119,6 +119,8 @@ class Plane {
 	}
 
 }
+
+globalThis.AABBPlaneCache = new Plane();
 
 globalThis.Plane = Plane;
 

@@ -5,9 +5,9 @@ import BoundingVolume from 'scene/geometry/BoundingVolume.js'
 class BoundingSphere extends BoundingVolume {
 	radius: any;
 	center: any;
-	
+
 	/** Constructor */
-	constructor(center, radius) {
+	constructor(center?, radius?) {
 		super(center);
 		this.radius=0.0;
 		if (radius) this.radius=radius;

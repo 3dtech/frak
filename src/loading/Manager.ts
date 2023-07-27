@@ -16,12 +16,12 @@ class Manager {
 	descriptorCallback: any;
 	onAddToQueue: any;
 	onLoaded: any;
-	
+
 	/**
 	 * Constructor
 	 * @param assetsPath Default search path for any assets requested
 	 */
-	constructor(assetsPath) {
+	constructor(assetsPath?) {
 		var scope = this;
 
 		// Ensure valid path for concatenation
@@ -177,7 +177,7 @@ class Manager {
 				me.removeLoadedResource(d);
 				me.onLoaded(d);
 				me.keepLoading();
-			}
+			},
 			function(d) {
 				console.warn("Failed to load resource with descriptor: ", d.serialize(['id']));
 				me.removeLoadedResource(d);
@@ -185,7 +185,7 @@ class Manager {
 				if (d.getFullPath) console.warn('Full path: ', d.getFullPath());
 				me.keepLoading(); // Continue loading despite errors
 			});
-	},
+	}
 
 	removeLoadedResource(descriptor): any {
 		for (var i in this.loading) {
@@ -206,7 +206,7 @@ class Manager {
 
 	// Protected methods
 	/** Must be overridden by child class to create resources of appropriate type */
-	createResource(): any {
+	createResource(descriptor): any {
 		throw "createResource not implemented by this instance of Manager";
 	}
 

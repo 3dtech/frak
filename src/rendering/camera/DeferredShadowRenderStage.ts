@@ -2,6 +2,7 @@ import RenderStage from 'rendering/camera/RenderStage.js'
 import BoundingBox from 'scene/geometry/BoundingBox.js'
 import Material from 'rendering/materials/Material.js'
 import DirectionalLight from 'scene/lights/DirectionalLight.js'
+import Color from 'rendering/Color';
 
 /**
  * Shadow map generator for the deferred renderer
@@ -18,7 +19,7 @@ class DeferredShadowRenderStage extends RenderStage {
 	sceneAABB: any;
 	lightFrustum: any;
 	extStandardDerivatives: any;
-	
+
 	constructor() {
 		super();
 		this.material = null;
@@ -44,12 +45,12 @@ class DeferredShadowRenderStage extends RenderStage {
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/deferred_shadow_directional"),
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_shadow_directional')),
-			{}
+			{},
 			[]
 		);
 
 		engine.assetsManager.load();
-	},
+	}
 
 	/** Collects all shadow casting lights */
 	collectLights(scene): any {

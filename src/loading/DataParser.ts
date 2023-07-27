@@ -18,7 +18,7 @@ class DataParser {
 	flipX: any;
 	warnOnUnknownChunks: any;
 	isFunction: any;
-	
+
 	/**
 	 * Constructor
 	 * @param data - The binary data of the model file
@@ -27,7 +27,7 @@ class DataParser {
 	 * @param cbOnProgress - Callback that will be called periodically to notify the external application of the parsing progress
 	 * @param userdata - Userdata that will be passed to all callbacks in the last argument
 	 */
-	constructor(data, cbOnComplete, cbOnError, cbOnProgress, userdata) {
+	constructor(data, cbOnComplete, cbOnError, cbOnProgress, userdata?) {
 		this.VERSION = 1;
 		this.view=new jDataView(data);
 		this.onComplete=cbOnComplete;

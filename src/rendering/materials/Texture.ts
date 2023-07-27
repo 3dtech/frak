@@ -18,7 +18,7 @@ class Texture extends BaseTexture {
 	wrapS: any;
 	wrapT: any;
 	loaded: any;
-	
+
 	/**
 	 * Constructor
 	 * @param context RenderingContext (optional)
@@ -73,7 +73,7 @@ class Texture extends BaseTexture {
 	 * @param color Color of the image
 	 * @param size {number} The size of the texture side in pixels
 	 */
-	clearImage(context, color, size): any {
+	clearImage(context, color, size?): any {
 		if (this.glTexture === null)
 			this.create(context);
 		size = size || 1;
@@ -116,7 +116,7 @@ class Texture extends BaseTexture {
 	/** Updates texture by uploading new image
 		@param context RenderingContext instance
 		@param inputImage Image or canvas element */
-	setImage(context, inputImage, noResize): any {
+	setImage(context, inputImage, noResize?): any {
 		if (!this.glTexture)
 			this.create(context);
 

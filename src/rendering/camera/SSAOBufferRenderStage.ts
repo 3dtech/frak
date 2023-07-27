@@ -13,7 +13,7 @@ class SSAOBufferRenderStage extends RenderStage {
 	quad: any;
 	target: any;
 	material: any;
-	
+
 	constructor() {
 		super();
 
@@ -45,7 +45,7 @@ class SSAOBufferRenderStage extends RenderStage {
 				"ssaoGDisplace": new UniformFloat((engine.options.ssaoGDisplace) ? engine.options.ssaoGDisplace : 6.0),
 				"ssaoRadius": new UniformFloat((engine.options.ssaoRadius) ? engine.options.ssaoRadius : 8.0),
 				"ssaoDivider": new UniformFloat((engine.options.ssaoDivider) ? engine.options.ssaoDivider : 0.5)
-			}
+			},
 			[ new Sampler( "position0", this.parent.positionBufferStage.target.texture )]);
 		this.material.name = "SSAO";
 
@@ -57,7 +57,7 @@ class SSAOBufferRenderStage extends RenderStage {
 		this.quad.add('texcoord2d0', uvs, 2);
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPreRender(context, scene, camera): any {
 		var cameraTarget = camera.target;

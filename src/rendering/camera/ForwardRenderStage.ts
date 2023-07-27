@@ -11,7 +11,7 @@ import DirectionalLight from 'scene/lights/DirectionalLight.js'
 class ForwardRenderStage extends PostProcessRenderStage {
 	debugActive: any;
 	debugger: any;
-	
+
 	constructor() {
 		super();
 
@@ -31,7 +31,7 @@ class ForwardRenderStage extends PostProcessRenderStage {
 			context.modelview.push();
 			for (var i=0; i<this.debugger.quads.length; i++) {
 				this.debugger.sampler.texture = this.debugger.quads[i].texture;
-				this.material.bind({} [this.debugger.sampler]);
+				this.material.bind({}, [this.debugger.sampler]);
 				this.debugger.quads[i].quad.render(this.material.shader);
 				this.material.unbind([this.debugger.sampler]);
 			}
@@ -44,7 +44,7 @@ class ForwardRenderStage extends PostProcessRenderStage {
 
 			context.modelview.pop();
 		}
-	},
+	}
 
 	debug(val): any {
 		this.debugActive = !(val === false);

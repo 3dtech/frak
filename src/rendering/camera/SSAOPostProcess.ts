@@ -9,7 +9,7 @@ import Sampler from 'rendering/shaders/Sampler.js'
 class SSAOPostProcess extends PostProcess {
 	ssaoOnly: any;
 	material: any;
-	
+
 	constructor(size) {
 		super();
 		this.ssaoOnly = false;
@@ -26,7 +26,7 @@ class SSAOPostProcess extends PostProcess {
 				"radius": new UniformFloat((engine.options.ssaoRadius) ? engine.options.ssaoRadius : 2.0),
 				"luminanceInfluence": new UniformFloat((engine.options.ssaoLuminanceInfluence) ? engine.options.ssaoLuminanceInfluence : 0.7),
 				"brightness": new UniformFloat((engine.options.ssaoBrightness) ? engine.options.ssaoBrightness : 1.0),
-			}
+			},
 			[
 				this.parent.generator.depthStage.sampler
 			]
@@ -41,10 +41,10 @@ class SSAOPostProcess extends PostProcess {
 		}
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPreRender(context, scene, camera) {
-		this._super(context, scene, camera);
+		super.onPreRender(context, scene, camera);
 
 		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.src.size[0], this.parent.src.size[1]);
 		this.material.uniforms.ssaoOnly.value = (this.ssaoOnly === true) ? 1 : 0;

@@ -8,6 +8,7 @@ import AmbientLight from 'scene/lights/AmbientLight.js'
 import DirectionalLight from 'scene/lights/DirectionalLight.js'
 import Sampler from 'rendering/shaders/Sampler.js'
 import Material from 'rendering/materials/Material.js'
+import Color from 'rendering/Color'
 
 /**
  * Deferred shading light accumulation pass
@@ -19,7 +20,7 @@ class LightsRenderStage extends RenderStage {
 	directional: any;
 	skyboxRenderStage: any;
 	backgroundMaterial: any;
-	
+
 	constructor() {
 		super();
 
@@ -92,14 +93,14 @@ class LightsRenderStage extends RenderStage {
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_background')),
 			{
 				color: new UniformColor(new Color(1.0, 1.0, 1.0, 1.0))
-			}
+			},
 			[]
 		);
 
 		engine.assetsManager.load();
 
 		this.skyboxRenderStage.start(context, engine, camera);
-	},
+	}
 
 	onPreRender(context, scene, camera): any {
 		this.sharedUniforms.useSoftShadows.value = this.parent.softShadowsStage.enabled ? 1 : 0;

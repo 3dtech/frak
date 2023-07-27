@@ -31,8 +31,8 @@ class ModelLoaderGLTF {
 	textures: any;
 	materials: any;
 	meshes: any;
-	
-	constructor(context, descriptor, shadersManager, texturesManager, format) {
+
+	constructor(descriptor, shadersManager, texturesManager, format) {
 		this.descriptor = descriptor;
 		this.shadersManager = shadersManager;
 		this.texturesManager = texturesManager;
@@ -137,6 +137,7 @@ class ModelLoaderGLTF {
 
 			var byteLength = buffers[i].byteLength;
 			var buffer = {
+				data: undefined,
 				length: byteLength,
 			};
 
@@ -274,7 +275,7 @@ class ModelLoaderGLTF {
 			descriptor.locked = descriptorImage.locked;
 
 			// Hack to enable multiple textures with different settings but same image
-			descriptor.glTFID = i;
+			(descriptor as any).glTFID = i;
 
 			var image = this.texturesManager.addDescriptor(descriptor);
 
@@ -359,7 +360,7 @@ class ModelLoaderGLTF {
 		}
 
 		for (var i = 0, l = materials.length; i < l; i++) {
-			var material = new Material(this.shadersManager.addSource('pbr'), {} []);
+			var material = new Material(this.shadersManager.addSource('pbr'), {}, []);
 			if (materials[i].name) {
 				material.name = materials[i].name;
 			}
@@ -423,7 +424,7 @@ class ModelLoaderGLTF {
 
 			this.materials.push(material);
 		}
-	},
+	}
 
 	loadMeshes(meshes): any {
 		for (var i = 0, l = meshes.length; i < l; i++) {
@@ -436,7 +437,7 @@ class ModelLoaderGLTF {
 				} else {
 					material = new Material(
 						this.shadersManager.addSource('pbr', []),
-						{}
+						{},
 						[]
 					);
 				}
@@ -451,7 +452,7 @@ class ModelLoaderGLTF {
 
 			this.meshes.push(mesh);
 		}
-	},
+	}
 
 	loadSubmesh(primitive, material): any {
 		var submesh = new Submesh();
@@ -491,7 +492,7 @@ class ModelLoaderGLTF {
 	}
 
 	loadScene(node, parsedData): any {
-		var i;
+		var i, l;
 
 		if (!parsedData.scenes || isNaN(parseInt(parsedData.scene))) {
 			// Just add all meshes

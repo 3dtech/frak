@@ -12,7 +12,7 @@ class PositionBufferRenderStage extends RenderStage {
 	target: any;
 	material: any;
 	quad: any;
-	
+
 	constructor(size) {
 		super();
 
@@ -31,7 +31,7 @@ class PositionBufferRenderStage extends RenderStage {
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('positionbuffer')),
 			{
 				"ViewportSize": new UniformVec2(vec2.clone(engine.scene.camera.target.size))
-			}
+			},
 			[]
 		);
 
@@ -43,7 +43,7 @@ class PositionBufferRenderStage extends RenderStage {
 		this.quad.add('texcoord2d0', uvs, 2);
 
 		engine.assetsManager.load(function(){});
-	},
+	}
 
 	onPreRender(context, scene, camera): any {
 		vec2.set(this.material.uniforms.ViewportSize.value, camera.target.size[0], camera.target.size[1]);

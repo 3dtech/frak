@@ -7,9 +7,9 @@ import Descriptor from 'scene/descriptors/Descriptor.js'
 class CubeTextureDescriptor extends Descriptor {
 	sources: any;
 	source: any;
-	
+
 	/** Constructor. */
-	constructor(sources) {
+	constructor(sources?) {
 		super();
 		this.sources = sources || [];
 	}

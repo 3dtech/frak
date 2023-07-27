@@ -3,6 +3,8 @@ import Material from 'rendering/materials/Material.js'
 import UniformColor from 'rendering/shaders/UniformColor.js'
 import UniformVec3 from 'rendering/shaders/UniformVec3.js'
 import UniformFloat from 'rendering/shaders/UniformFloat.js'
+import Color from 'rendering/Color'
+import MeshRendererComponent from 'scene/components/MeshRendererComponent'
 
 /**
  * Omni-directional light (sphere)
@@ -14,7 +16,7 @@ class OmniLight extends Light {
 	intensity: any;
 	geometry: any;
 	material: any;
-	
+
 	constructor(size, color) {
 		super();
 		this.size = size || 1.0;
@@ -29,7 +31,7 @@ class OmniLight extends Light {
 	}
 
 	onStart(context, engine): any {
-		super.onStart();
+		super.onStart(context, engine);
 
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/deferred_light_omni"),
@@ -39,7 +41,7 @@ class OmniLight extends Light {
 				'lightPosition': new UniformVec3(vec3.create()),
 				'lightIntensity': new UniformFloat(this.intensity),
 				'lightRadius': new UniformFloat(this.size)
-			}
+			},
 			[]
 		);
 
@@ -48,7 +50,7 @@ class OmniLight extends Light {
 		this.node.addNode(this.geometry);
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPreRender(): any {
 		vec4.set(this.material.uniforms.lightColor.value, this.color.r, this.color.g, this.color.b, this.color.a);

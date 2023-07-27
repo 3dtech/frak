@@ -4,30 +4,21 @@ function FRAK(callback) {
 		callback();
 }
 
-FRAK.raf = window.requestAnimationFrame ||
-window.webkitRequestAnimationFrame ||
-window.mozRequestAnimationFrame ||
-window.msRequestAnimationFrame ||
-window.oRequestAnimationFrame;
+FRAK.raf = window.requestAnimationFrame;
 
-FRAK.caf = window.cancelAnimationFrame ||
-window.webkitCancelRequestAnimationFrame ||
-window.mozCancelRequestAnimationFrame ||
-window.oCancelRequestAnimationFrame ||
-window.msCancelRequestAnimationFrame;
+FRAK.caf = window.cancelAnimationFrame;
 
-FRAK.performance = typeof window !== 'undefined' ? (window.performance ? window.performance.now : false) : false; 
+FRAK.performance = typeof window !== 'undefined' ? (window.performance ? window.performance.now : false) : false;
 FRAK.performanceNOW = function() {
 	return window.performance.now.apply(window.performance);
 };
-FRAK.extend = function() {
-	for (var i=1; i < arguments.length; ++i) {
-		for (var key in arguments[i]) {
-			if (key in arguments[i])
-				arguments[0][key] = arguments[i][key];
-		}
+FRAK.extend = function(...args) {
+	for (var i=1; i < args.length; ++i) {
+		Object.entries(args[i]).forEach(([k, v]) => {
+			args[0][k] = v;
+		});
 	}
-	return arguments[0];
+	return args[0];
 };
 
 FRAK.isFunction = function(f) {
@@ -55,7 +46,7 @@ FRAK.parseJSON = function(s) {
 FRAK.timestamp = function() {
 	if (FRAK.performance)
 		return FRAK.performanceNOW;
-		
+
 	return Date.now;
 }();
 
@@ -85,9 +76,9 @@ FRAK.cancelAnimationFrame = function() {
 FRAK.fullscreenEnabled = function() {
 	if(typeof document !== 'undefined') {
 		return document.fullscreenEnabled ||
-		document.webkitFullscreenEnabled ||
-		document.mozFullScreenEnabled ||
-		document.msFullscreenEnabled;
+		(document as any).webkitFullscreenEnabled ||
+		(document as any).mozFullScreenEnabled ||
+		(document as any).msFullscreenEnabled;
 	}
 	else return false;
 
@@ -108,26 +99,26 @@ FRAK.requestFullscreen = function(element) {
 
 FRAK.exitFullscreen = function() {
 	(document.exitFullscreen ||
-		document.exitFullScreen ||
-		document.webkitExitFullscreen ||
-		document.webkitExitFullScreen ||
-		document.mozExitFullscreen ||
-		document.mozExitFullScreen ||
-		document.msExitFullscreen ||
-		document.msExitFullScreen ||
+		(document as any).exitFullScreen ||
+		(document as any).webkitExitFullscreen ||
+		(document as any).webkitExitFullScreen ||
+		(document as any).mozExitFullscreen ||
+		(document as any).mozExitFullScreen ||
+		(document as any).msExitFullscreen ||
+		(document as any).msExitFullScreen ||
 		function(){})
 	.call(document);
 };
 
 FRAK.isFullscreen = function() {
-	return (document.isFullScreen ||
-		document.isFullscreen ||
-		document.webkitIsFullscreen ||
-		document.webkitIsFullScreen ||
-		document.mozIsFullscreen ||
-		document.mozIsFullScreen ||
-		document.msIsFullscreen ||
-		document.msIsFullScreen);
+	return ((document as any).isFullScreen ||
+		(document as any).isFullscreen ||
+		(document as any).webkitIsFullscreen ||
+		(document as any).webkitIsFullScreen ||
+		(document as any).mozIsFullscreen ||
+		(document as any).mozIsFullScreen ||
+		(document as any).msIsFullscreen ||
+		(document as any).msIsFullScreen);
 };
 
 FRAK.isWebGLSupported = function() {

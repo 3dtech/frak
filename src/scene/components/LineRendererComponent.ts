@@ -5,6 +5,7 @@ import UniformVec2 from 'rendering/shaders/UniformVec2.js'
 import LineRenderer from 'rendering/renderers/LineRenderer.js'
 import BoundingBox from 'scene/geometry/BoundingBox.js'
 import LinesRenderBuffer from 'rendering/buffers/LinesRenderBuffer.js'
+import Color from 'rendering/Color'
 
 /**
  * Can be used to render lines in 3D space.
@@ -25,7 +26,7 @@ class LineRendererComponent extends RendererComponent {
 	material: any;
 	overlay: any;
 	lines: any;
-	
+
 	constructor(color, width) {
 		super();
 
@@ -50,11 +51,11 @@ class LineRendererComponent extends RendererComponent {
 
 		this.material = new Material(null, {
 			viewport: new UniformVec2(),
-		} []);
+		}, []);
 		this.overlay = false; ///< If set to true the lines are rendered in onPostRender instead of the usual pipeline
 
 		this.lines = [];
-	},
+	}
 
 	type(): any {
 		return "LineRendererComponent";
@@ -248,7 +249,7 @@ class LineRendererComponent extends RendererComponent {
 	 *  @param color {Color?} Color of the line
 	 *  @param width {number?} Width of the line
 	 */
-	addLine(a, b, color, width): any {
+	addLine(a, b, color?, width?): any {
 		var lineID = this.lines.length;
 
 		this.lines.push({
@@ -351,7 +352,7 @@ class LineRendererComponent extends RendererComponent {
 	}
 
 	onContextRestored(context) {
-		this._super(context);
+		super.onContextRestored(context);
 
 		if (this.renderer) {
 			this.damaged = true;

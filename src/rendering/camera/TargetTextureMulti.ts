@@ -1,3 +1,4 @@
+import Color from 'rendering/Color';
 import RenderTarget from 'rendering/camera/RenderTarget.js'
 import Texture from 'rendering/materials/Texture.js'
 
@@ -16,15 +17,17 @@ class TargetTextureMulti extends RenderTarget {
 	depth: any;
 	frameBuffer: any;
 	rebuild: any;
-	
+
 	constructor(context, size, options) {
+		super(size);
+
 		this.options = FRAK.extend({
 			dataType: 'float', // possible values: float, unsigned
 			filtering: 'linear', // possible values: linear, nearest
 			depth: false,
 			stencil: false,
 			numTargets: 2
-		} options);
+		}, options);
 
 		this.extDrawBuffers = null;
 		this.extTextureFloat = null;
@@ -80,14 +83,12 @@ class TargetTextureMulti extends RenderTarget {
 			}
 		}
 
-		this._super(size);
-
 		this.targets = [];
 		this.depth = null;
 		this.frameBuffer = null;
 
 		this.build(context);
-	},
+	}
 
 	type(): any {
 		return 'TargetTextureMulti';
@@ -142,7 +143,7 @@ class TargetTextureMulti extends RenderTarget {
 		return context.gl.NEAREST;
 	}
 
-	createBuffer(context, filtering, dataType, format): any {
+	createBuffer(context, filtering?, dataType?, format?): any {
 		var gl = context.gl;
 		var texture = new Texture(context);
 
@@ -307,7 +308,7 @@ class TargetTextureMulti extends RenderTarget {
 	}
 
 	unbind(context) {
-		this._super(context);
+		super.unbind(context);
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
 	}
 

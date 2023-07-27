@@ -6,10 +6,10 @@ import Component from 'scene/components/Component.js'
 class Transform extends Component {
 	relative: any;
 	absolute: any;
-	
+
 	/** Constructor
 		@param relative Relative 4x4 transformation matrix [optional]. If omitted an identity matrix is created instead */
-	constructor(relative) {
+	constructor(relative?) {
 		super();
 		if(relative) {
 			this.relative=relative;

@@ -36,7 +36,7 @@ class Engine {
 	_externallyPaused: any;
 	_savedCanvasStyles: any;
 	_currentAnimationFrame: any;
-	
+
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
 		@param options Engine options [optional]
@@ -63,7 +63,7 @@ class Engine {
 			'builtinShaders': true,
 			'directionalShadowResolution': 2048,
 			'shadowManualUpdate': false,
-		} options);
+		}, options);
 		this.validateOptions(canvas);
 
 		this.context = this.options.context;
@@ -113,7 +113,7 @@ class Engine {
 		}
 
 		this.setupInput();
-	},
+	}
 
 	onContextLost(event): any {
 		console.log('FRAK: Rendering context lost');
@@ -193,7 +193,7 @@ class Engine {
 				canvas.setAttribute('width', width);
 				canvas.setAttribute('height', height);
 				scope.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-			}
+			},
 			2000 / this.options.requestedFPS);
 		}
 		else {
@@ -221,7 +221,7 @@ class Engine {
 				delete this._savedCanvasStyles;
 			}
 		}
-	},
+	}
 
 	setupInput(): any {
 		this.input = new Input(this, this.context.canvas);
@@ -422,8 +422,8 @@ class Engine {
 			canvas.height = this.debugWidth / 2;
 
 			canvas.style.position = 'absolute';
-			canvas.style.top = 0;
-			canvas.style.zIndex = 100;
+			canvas.style.top = "0";
+			canvas.style.zIndex = "100";
 			canvas.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
 
 			var parent = this.context.canvas.parentNode;
@@ -448,7 +448,7 @@ class Engine {
 
 			ctx.fillText('RequestedFPS: ' + this.options.requestedFPS, this.debugWidth / 2, 45);
 			ctx.fillText('WebGL: ' + this.context.version, this.debugWidth / 2, 60);
-			
+
 			var gl = this.context.gl;
 			var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
 			if (debugInfo) {
@@ -464,18 +464,18 @@ class Engine {
 			}
 			var x = this.debugWidth / 2;
 			var y = 25;
-			
+
 			for(var i = 0; i < this.debugFPS.length; i++) {
 				if (this.debugFPS[i] < 20)
 					ctx.fillStyle = "#FF0000";
-				else if (this.debugFPS[i] < 30) 
+				else if (this.debugFPS[i] < 30)
 					ctx.fillStyle = "#f6921e";
-				else 
+				else
 					ctx.fillStyle = "#00FF00";
 
 				ctx.fillRect(x + (i * 2), y - (this.debugFPS[i] / 60) * 20, 2, 2);
 			}
-			
+
 			this.debugCount = Math.max(3, Math.floor(this.fps.getAverage() / 2));
 		}
 		this.debugCount--;

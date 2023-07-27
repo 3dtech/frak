@@ -3,6 +3,7 @@ import Sampler from 'rendering/shaders/Sampler.js'
 import TargetTextureFloat from 'rendering/camera/TargetTextureFloat.js'
 import Material from 'rendering/materials/Material.js'
 import UniformFloat from 'rendering/shaders/UniformFloat.js'
+import Color from 'rendering/Color'
 
 /**
  * Renders scene depth to a texture
@@ -14,8 +15,8 @@ class DepthRenderStage extends RenderStage {
 	size: any;
 	clearColor: any;
 	material: any;
-	
-	constructor(size) {
+
+	constructor(size?) {
 		super();
 		this.target = null;
 		this.sampler = new Sampler('depth0', null);
@@ -43,10 +44,10 @@ class DepthRenderStage extends RenderStage {
 			{
 				'zNear': new UniformFloat(0.1),
 				'zFar': new UniformFloat(1000.0)
-			}
+			},
 			[]
 		);
-	},
+	}
 
 	onPreRender(context, scene, camera): any {
 		this.target.resetViewport();

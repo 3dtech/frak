@@ -6,6 +6,8 @@ import Material from 'rendering/materials/Material.js'
 import UniformColor from 'rendering/shaders/UniformColor.js'
 import Texture from 'rendering/materials/Texture.js'
 import Submesh from 'scene/geometry/Submesh.js'
+import Color from 'rendering/Color'
+import TextRendererComponent from './TextRendererComponent'
 
 /** Text component is used to render text at given node */
 
@@ -32,7 +34,7 @@ class TextComponent extends MeshComponent {
 	textHeight: any;
 	font: any;
 	text: any;
-	
+
 	/** Constructor
 		@param text Default text to display */
 	constructor(text, wrap) {
@@ -100,11 +102,11 @@ class TextComponent extends MeshComponent {
 		var ctx = canvas.getContext("2d");
 		this.applyTextStyles(ctx);
 		this.lines = [this.text];
-		
+
 		if(this.wrap) {
 			this.lines = this.getLines(this.text, this.wrap);
 		}
-		
+
 		for(var l in this.lines) {
 			this.textLength = Math.max(this.textLength, ctx.measureText(this.lines[l]).width);
 		}
@@ -122,13 +124,13 @@ class TextComponent extends MeshComponent {
 		// Draw text outline
 		if (this.outline) {
 			for(var l in this.lines) {
-				ctx.strokeText(this.lines[l], canvas.width/2, (1.2 * this.fontSize * l ) + top + (this.fontSize * 0.6));
+				ctx.strokeText(this.lines[l], canvas.width/2, (1.2 * this.fontSize * (l as any) ) + top + (this.fontSize * 0.6));
 			}
 		}
-			
+
 		// Draw text
 		for(var l in this.lines) {
-			ctx.fillText(this.lines[l], canvas.width/2, (1.2 * this.fontSize * l ) + top + (this.fontSize * 0.6));
+			ctx.fillText(this.lines[l], canvas.width/2, (1.2 * this.fontSize * (l as any) ) + top + (this.fontSize * 0.6));
 		}
 
 		if (!this.context) return;
@@ -164,7 +166,7 @@ class TextComponent extends MeshComponent {
 			engine.assetsManager.addShaderSource("transparent"),
 			{
 				"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0})
-			}
+			},
 			[ this.sampler ]
 		);
 		this.material.shader.requirements.transparent = true;
@@ -193,7 +195,7 @@ class TextComponent extends MeshComponent {
 		this.mesh.addSubmesh(submesh, this.material);
 
 		this.updateText();
-	},
+	}
 
 	/** Sets text and generates text mesh */
 	setText(text): any {

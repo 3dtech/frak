@@ -14,7 +14,7 @@ import ThreadedDataParser from 'loading/ThreadedDataParser.js'
 class ModelsManager extends Manager {
 	shadersManager: any;
 	texturesManager: any;
-	
+
 	constructor(context, assetsPath, shadersManager, texturesManager) {
 		super(assetsPath);
 
@@ -54,7 +54,7 @@ class ModelsManager extends Manager {
 		var scope = this;
 		var format = modelDescriptor.getFormat();
 		function loadGLTF(data) {
-			var modelLoader = new ModelLoaderGLTF(scope.context, descriptor, scope.shadersManager, scope.texturesManager, format);
+			var modelLoader = new ModelLoaderGLTF(descriptor, scope.shadersManager, scope.texturesManager, format);
 			modelLoader.load(resource, data, function() {
 				loadedCallback(descriptor, resource);
 
@@ -65,7 +65,7 @@ class ModelsManager extends Manager {
 
 		if (format == 'json') {
 			Logistics.getJSON(descriptor.getFullPath(), function (data) {
-				var modelLoader = new ModelLoaderJSON(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
+				var modelLoader = new ModelLoaderJSON(descriptor, scope.shadersManager, scope.texturesManager);
 				modelLoader.load(resource, data);
 				loadedCallback(descriptor, resource);
 
@@ -89,14 +89,14 @@ class ModelsManager extends Manager {
 					var parser = scope.createParser(
 						binaryData,
 						function(parsedData, userdata) {
-							var modelLoader = new ModelLoader(scope.context, descriptor, scope.shadersManager, scope.texturesManager);
+							var modelLoader = new ModelLoader(descriptor, scope.shadersManager, scope.texturesManager);
 							modelLoader.load(resource, parsedData);
 
 							loadedCallback(descriptor, resource);
 
 							scope.shadersManager.load(function() {});
 							scope.texturesManager.load(function() {});
-						}
+						},
 						function(errors, userdata) {
 							failedCallback(descriptor);
 						},
@@ -106,10 +106,10 @@ class ModelsManager extends Manager {
 				}
 			);
 		}
-	},
+	}
 
 	/** This function can be overridden to provide alternative parser instances */
-	createParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata) {
+	createParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata?) {
 		return new ThreadedDataParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata);
 	}
 

@@ -16,7 +16,7 @@ import Serializable from 'scene/Serializable.js'
 
 class Serializer {
 	serializables: any;
-	
+
 	constructor() {
 		this.serializables={};	// All serializable objects found during serialization. These will be referenced by their respective IDs through reference type
 	}
@@ -64,8 +64,8 @@ class Serializer {
 	serialize(object, excluded, maximumDepth): any {
 		this.serializables={};	// Clear all serializable objects
 		var r=this.serializableCopy([], object, excluded, 0, maximumDepth);
-		return JSON.stringify({'_root_': r, '_serializables_': this.serializables} undefined, 2);
-	},
+		return JSON.stringify({'_root_': r, '_serializables_': this.serializables}, undefined, 2);
+	}
 
 	/** Unserializes all serializable objects */
 	unserializeSerializables(data): any {
@@ -91,7 +91,7 @@ class Serializer {
 			}
 			// This is an actual serialized Serializable object, unserialize it nice and proper (should only be found under _serializables_)
 			else if(v._type_) {
-				var t=new window[v._type_]();
+				var t=new (window as any)[v._type_]();
 				t.onBeforeUnserialize();
 				for(var p in v._properties_) {
 					t[p]=this.unserializeCopy(v._properties_[p]);

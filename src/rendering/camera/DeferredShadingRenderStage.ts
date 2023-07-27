@@ -31,7 +31,7 @@ class DeferredShadingRenderStage extends RenderStage {
 	rendererUniforms: any;
 	samplerAccum: any;
 	cachedUniforms: any;
-	
+
 	constructor() {
 		super();
 		this.organizer = new RendererOrganizer();
@@ -40,7 +40,7 @@ class DeferredShadingRenderStage extends RenderStage {
 
 		this.bindCameraTarget = {
 			started: true,
-			start() {}
+			start() {},
 			render(context, scene, camera): any {
 				camera.target.bind(context, true);
 			}
@@ -48,7 +48,7 @@ class DeferredShadingRenderStage extends RenderStage {
 
 		this.unbindCameraTarget = {
 			started: true,
-			start: function() {}
+			start: function() {},
 			render(context, scene, camera): any {
 				camera.target.unbind(context);
 			}
@@ -173,7 +173,7 @@ class DeferredShadingRenderStage extends RenderStage {
 	}
 
 	/** Renders without dynamic batching */
-	renderBruteForce: function(context, renderers, uniforms) {
+	renderBruteForce(context, renderers, uniforms) {
 		for (var j = 0; j < renderers.length; ++j) {
 			var renderer = renderers[j];
 			if (!renderer) {

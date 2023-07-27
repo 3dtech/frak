@@ -15,13 +15,13 @@ class ShadersManager extends Manager {
 	shaderBundle: any;
 	textManager: any;
 	aliases: any;
-	
+
 	/**
 	 * Constructor
 	 * @param renderingContext Instance of RenderingContext
 	 * @param assetsPath Default search path for any assets requested
 	 */
-	constructor(context, assetsPath) {
+	constructor(context, assetsPath?) {
 		super(assetsPath);
 		this.sourceCallback = function(source) {
 			return source;

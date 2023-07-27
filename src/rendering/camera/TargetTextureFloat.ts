@@ -11,8 +11,9 @@ class TargetTextureFloat extends TargetTexture {
 	frameBuffer: any;
 	texture: any;
 	depth: any;
-	
-	constructor(sizeOrTexture, context, useDepthTexture, useNearestFiltering) {
+
+	constructor(sizeOrTexture, context, useDepthTexture, useNearestFiltering?) {
+		super(sizeOrTexture, context, useDepthTexture);
 		if (context.isWebGL2()) {
 			this.extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
 			if (!this.extColorFloat)
@@ -31,8 +32,6 @@ class TargetTextureFloat extends TargetTexture {
 				this.linearHalf = context.gl.getExtension('OES_texture_half_float_linear');
 			}
 		}
-
-		super(sizeOrTexture, context, useDepthTexture);
 	}
 
 	type(): any {

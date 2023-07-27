@@ -1,5 +1,6 @@
 import Renderer from 'rendering/renderers/Renderer.js'
 import LinesRenderBuffer from 'rendering/buffers/LinesRenderBuffer.js'
+import LinesRenderBufferInstanced from 'rendering/buffers/LinesRenderBufferInstanced.js'
 
 /**
  * Line renderer
@@ -12,7 +13,7 @@ class LineRenderer extends Renderer {
 	unlit: any;
 	count: any;
 	_cache: any;
-	
+
 	constructor(context, matrix, material) {
 		super(matrix);
 		this.material = material;

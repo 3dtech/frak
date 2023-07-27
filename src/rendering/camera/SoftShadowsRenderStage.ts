@@ -5,6 +5,7 @@ import DirectionalLight from 'scene/lights/DirectionalLight.js'
 import Sampler from 'rendering/shaders/Sampler.js'
 import TargetTexture from 'rendering/camera/TargetTexture.js'
 import Material from 'rendering/materials/Material.js'
+import Color from 'rendering/Color'
 
 /**
  * Soft shadows render stage for deferred renderer
@@ -21,7 +22,7 @@ class SoftShadowsRenderStage extends RenderStage {
 	blurSampler: any;
 	blurHorizontal: any;
 	blurVertical: any;
-	
+
 	constructor() {
 		super();
 		this.quality = 1.0;
@@ -79,7 +80,7 @@ class SoftShadowsRenderStage extends RenderStage {
 				engine.assetsManager.shadersManager.bundle('shadow_blurh.vert'),
 				engine.assetsManager.shadersManager.bundle('shadow_blur.frag')
 			),
-			{}
+			{},
 			[]
 		);
 		this.blurVertical = new Material(
@@ -93,7 +94,7 @@ class SoftShadowsRenderStage extends RenderStage {
 		);
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPreRender(context, scene, camera): any {
 		if (this.damaged) {

@@ -13,8 +13,9 @@ var nextSerializableID=1;
 class Serializable extends Cloneable {
 	serializable: any;
 	id: any;
-	
+
 	constructor() {
+		super();
 		this.serializable=true;				//< If this flag is set to false, instance of serializable will not be serialized. Used for loading models
 		this.id=nextSerializableID++;
 	}
@@ -39,10 +40,11 @@ class Serializable extends Cloneable {
 		if(included===false && excluded===false) throw "Quantum classes not allowed. A subclass of Serializable tries both not to include and not to exclude all fields.";
 		if(included===false || excluded===true) return {};	 // Nothing to include, empty object will be serialized
 
-		var fields={};
+		var fields: any={};
+		var t: any;
 		if(included===true) {
 			// Add all existing fields
-			for(var t in this) {
+			for(t in this) {
 				var getType = {};
 				if(this[t] && getType.toString.call(this[t])=='[object Function]' || t=="serializable" || t=='_super') continue;
 				fields[t]=this[t];
@@ -57,7 +59,7 @@ class Serializable extends Cloneable {
 		if(excluded===true) {
 			fields=[];
 			for(var i=0; i<included.length; i++) {
-				var t=included[i];
+				t=included[i];
 				var getType = {};
 				if(this[t] && getType.toString.call(this[t])=='[object Function]' || t=="serializable" || t=='_super') continue;
 				fields[t]=this[t];

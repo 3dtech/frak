@@ -3,6 +3,7 @@ import TargetTexture from 'rendering/camera/TargetTexture.js'
 import Sampler from 'rendering/shaders/Sampler.js'
 import Material from 'rendering/materials/Material.js'
 import MaterialRenderStage from 'rendering/camera/MaterialRenderStage.js'
+import ScreenQuad from './ScreenQuad'
 
 /**
  * Render-stage used to render MaterialRenderStage to a texture,
@@ -20,7 +21,7 @@ class PostProcessRenderStage extends RenderStage {
 	screenQuad: any;
 	material: any;
 	generator: any;
-	
+
 	constructor() {
 		super();
 		this.size = false;
@@ -61,7 +62,7 @@ class PostProcessRenderStage extends RenderStage {
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"),
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('ScreenQuad')),
-			{}
+			{},
 			[]
 		);
 		this.material.name = 'To Screen';
@@ -72,7 +73,7 @@ class PostProcessRenderStage extends RenderStage {
 		engine.assetsManager.load();
 
 		this.generator.start(context, engine, camera);
-	},
+	}
 
 	onPreRender(context, scene, camera): any {
 		var cameraTarget = camera.target;
@@ -121,7 +122,7 @@ class PostProcessRenderStage extends RenderStage {
 		this.dstSampler = tmpSampler;
 	}
 
-	renderEffect(context, material, sampler, renderToScreen) {
+	renderEffect(context, material, sampler, renderToScreen?) {
 		var gl = context.gl;
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.CULL_FACE);

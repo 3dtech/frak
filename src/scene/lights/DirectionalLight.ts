@@ -13,6 +13,7 @@ import Submesh from 'scene/geometry/Submesh.js'
 import Node from 'scene/Node.js'
 import MeshComponent from 'scene/components/MeshComponent.js'
 import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
+import Color from 'rendering/Color'
 
 /**
  * Directional light (affects entire buffer)
@@ -30,7 +31,7 @@ class DirectionalLight extends Light {
 	shadowSampler: any;
 	lightView: any;
 	lightProj: any;
-	
+
 	constructor(direction, color) {
 		super();
 
@@ -63,7 +64,7 @@ class DirectionalLight extends Light {
 	}
 
 	onStart(context, engine): any {
-		super.onStart();
+		super.onStart(context, engine);
 
 		vec2.set(this.shadowResolution, engine.options.directionalShadowResolution, engine.options.directionalShadowResolution);
 
@@ -78,7 +79,7 @@ class DirectionalLight extends Light {
 				'lightProjection': new UniformMat4(mat4.create()),
 				'useShadows': new UniformInt(0),
 				'shadowBias': new UniformFloat(0.01)
-			}
+			},
 			[]
 		);
 
@@ -130,7 +131,7 @@ class DirectionalLight extends Light {
 		this.node.addNode(this.geometry);
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onUpdate(engine): any {
 		vec4.set(this.material.uniforms.lightColor.value, this.color.r, this.color.g, this.color.b, this.color.a);

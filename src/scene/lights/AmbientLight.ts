@@ -6,6 +6,7 @@ import Submesh from 'scene/geometry/Submesh.js'
 import Node from 'scene/Node.js'
 import MeshComponent from 'scene/components/MeshComponent.js'
 import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
+import Color from 'rendering/Color'
 
 /**
  * Ambient light (affects entire buffer)
@@ -15,7 +16,7 @@ class AmbientLight extends Light {
 	color: any;
 	geometry: any;
 	material: any;
-	
+
 	constructor(color) {
 		super();
 		this.color = color || new Color(0.2, 0.2, 0.2, 1.0);
@@ -28,14 +29,14 @@ class AmbientLight extends Light {
 	}
 
 	onStart(context, engine): any {
-		super.onStart();
+		super.onStart(context, engine);
 
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/deferred_light_ambient"),
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_light_ambient')),
 			{
 				'lightColor': new UniformColor(this.color)
-			}
+			},
 			[]
 		);
 
@@ -69,7 +70,7 @@ class AmbientLight extends Light {
 		this.node.addNode(this.geometry);
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onUpdate(): any {
 		vec4.set(this.material.uniforms.lightColor.value, this.color.r, this.color.g, this.color.b, this.color.a);

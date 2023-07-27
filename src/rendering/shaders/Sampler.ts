@@ -56,17 +56,18 @@ import CubeTexture from 'rendering/materials/CubeTexture.js'
 	shader.unbindTextures(textures);
 	</pre>
 */
-var fallbackTexture=false;	// Doesn't exist by default, but will be loaded before texture is loaded or if it is not passed to sampler
-var fallbackCubeTexture=false;
+var fallbackTexture: any=false;	// Doesn't exist by default, but will be loaded before texture is loaded or if it is not passed to sampler
+var fallbackCubeTexture: any=false;
 
 class Sampler extends Serializable {
 	name: any;
 	texture: any;
-	
+
 	/** Constructor
 		@param name Name of uniform variable that this sampler will be bound to
 		@param texture An instance of Texture */
-	constructor(name, texture) {
+	constructor(name, texture?) {
+		super();
 		this.name=name;
 		this.texture=texture;
 	}
@@ -132,7 +133,7 @@ class Sampler extends Serializable {
 
 	/** Clones the sampler */
 	clone() {
-		var c=this._super();
+		var c=super.clone();
 		c.name=this.name;
 		c.texture=this.texture;
 		return c;

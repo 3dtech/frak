@@ -20,7 +20,7 @@ class GPUTerrain extends MeshRendererComponent {
 	height: any;
 	color: any;
 	material: any;
-	
+
 	constructor(heightImage, colorImage, options) {
 		super();
 
@@ -29,7 +29,7 @@ class GPUTerrain extends MeshRendererComponent {
 			verticalScale: 64,
 			numCones: 8,
 			initialConeSize: 32
-		} options);
+		}, options);
 
 		this.uvSize = Math.pow(2, this.options.numCones-1) * this.options.initialConeSize;
 
@@ -38,7 +38,7 @@ class GPUTerrain extends MeshRendererComponent {
 
 		// Pre-allocated variables
 		this.cameraPosition = vec3.create();
-	},
+	}
 
 	type(): any {
 		return "TerrainComponent";
@@ -58,7 +58,7 @@ class GPUTerrain extends MeshRendererComponent {
 				"uvOffset": new UniformVec2(vec2.fromValues(0.0, 0.0)),
 				"uvScale": new UniformVec2(vec2.fromValues(1.0, 1.0)),
 				"verticalScale": new UniformFloat(this.options.verticalScale)
-			}
+			},
 			[
 				new Sampler("diffuse0", this.color),
 				new Sampler("height", this.height)
@@ -82,14 +82,14 @@ class GPUTerrain extends MeshRendererComponent {
 		mesh.addSubmesh(submesh, this.material);
 		this.node.addComponent(new MeshComponent(mesh));
 
-		this._super(context, engine);
+		super.onStart(context, engine);
 
 		// this.meshRenderers[0].buffer.generateBarycentric();
 
 		// TODO: in deferred renderer mode disable this.meshRenderers
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPreRender(context, camera) {
 		// Position the terrain mesh straight under camera

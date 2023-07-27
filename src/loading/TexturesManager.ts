@@ -9,13 +9,13 @@ import Texture from 'rendering/materials/Texture.js'
 
 class TexturesManager extends Manager {
 	context: any;
-	
+
 	/**
 	 * Constructor
 	 * @param renderingContext Instance of RenderingContext
 	 * @param assetsPath Default search path for any assets requested
 	 */
-	constructor(context, assetsPath) {
+	constructor(context, assetsPath?) {
 		super(assetsPath);
 		this.context = context;
 	}
@@ -44,15 +44,16 @@ class TexturesManager extends Manager {
 	}
 
 	createResource(textureDescriptor): any {
+		var texture: CubeTexture | Texture;
 		if (textureDescriptor instanceof CubeTextureDescriptor) {
-			var texture = new CubeTexture(this.context);
+			texture = new CubeTexture(this.context);
 			texture.name = 'Cubemap'; // TODO: name from filenames
 			return texture;
+		} else {
+			texture = new Texture(this.context);
+			texture.name = textureDescriptor.source;
+			return texture;
 		}
-
-		var texture = new Texture(this.context);
-		texture.name = textureDescriptor.source;
-		return texture;
 	}
 
 	loadResource(textureDescriptor, textureResource, loadedCallback, failedCallback) {
@@ -76,7 +77,6 @@ class TexturesManager extends Manager {
 				var face = faces.shift();
 				Logistics.getImage(descriptor.getFaceFullPath(face), function(image) {
 					textureResource.setFace(scope.context, face, image);
-					delete image;
 					next();
 				}).
 				error(function() {
@@ -87,7 +87,6 @@ class TexturesManager extends Manager {
 		else {
 			Logistics.getImage(descriptor.getFullPath(), function(image) {
 				textureResource.setImage(scope.context, image);
-				delete image;
 				loadedCallback(descriptor, textureResource);
 			}).
 			error(function() {

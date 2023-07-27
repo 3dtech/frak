@@ -20,7 +20,7 @@ class GBufferRenderStage extends RenderStage {
 	normalmapFallback: any;
 	maskFallback: any;
 	envFallback: any;
-	
+
 	constructor() {
 		super();
 		this.buffer = null;
@@ -54,7 +54,7 @@ class GBufferRenderStage extends RenderStage {
 			{
 				'zNear': new UniformFloat(0.1),
 				'zFar': new UniformFloat(1000.0)
-			}
+			},
 			[]);
 
 		this.normalmapFallback =  new Sampler('normal0');
@@ -64,7 +64,7 @@ class GBufferRenderStage extends RenderStage {
 		this.envFallback.texture = fallbackCubeTexture;
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPreRender(context, scene, camera): any {
 		this.material.uniforms.zNear.value = camera.near;

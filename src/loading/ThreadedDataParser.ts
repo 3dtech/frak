@@ -8,7 +8,7 @@ class ThreadedDataParser extends DataParser {
 	timer: any;
 	inverval: any;
 	onError: any;
-	
+
 	/**
 	 * Constructor
 	 * @param data - The binary data of the model file
@@ -17,7 +17,7 @@ class ThreadedDataParser extends DataParser {
 	 * @param cbOnProgress - Callback that will be called periodically to notify the external application of the parsing progress
 	 * @param userdata - Userdata that will be passed to all callbacks in the last argument
 	 */
-	constructor(data, cbOnComplete, cbOnError, cbOnProgress, userdata) {
+	constructor(data, cbOnComplete, cbOnError, cbOnProgress, userdata?) {
 		super(data, cbOnComplete, cbOnError, cbOnProgress, userdata);
 		this.timer=false;
 		this.inverval=10;

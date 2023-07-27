@@ -3,7 +3,7 @@
 /**
 	Input handles user input (touch, mouse, keyboard).
 	*/
-	
+
 class Input {
 	controllers: any;
 	engine: any;
@@ -24,8 +24,8 @@ class Input {
 	wfPanEnabled: any;
 	keymap: any;
 	pressed: any;
-	
-		constructor(engine, canvas) {
+
+	constructor(engine, canvas) {
 		this.controllers = []; //Holds all Controllers
 		this.engine = engine;
 		this.canvas = canvas;
@@ -198,8 +198,8 @@ class Input {
 
 		this.canvas.addEventListener('contextmenu', function(e) {
 			e.preventDefault();
-		} false);
-	},
+		}, false);
+	}
 
 	registerKeyboardEvents(): any {
 		if(this.canvas){
@@ -232,11 +232,11 @@ class Input {
 
 	}
 
-	sendEvent(funcName): any {
+	sendEvent(funcName, ...args): any {
 		if (!this.engine.running) // Drop events if engine is paused
 			return;
 
-		var args = Array.prototype.slice.call(arguments, 0);
+		args = Array.prototype.slice.call(args, 0);
 		args = args.slice(1, args.length); //remove funcName
 		var activated = [];
 		for (var i=0; i < this.controllers.length; i++) {
@@ -455,7 +455,7 @@ class Input {
 		this.buttons[1]=false;
 		this.buttons[2]=false;
 	}
-});
+}
 
 //Hack for Hammer.js to enable other mouse buttons
 if(typeof HammerWF !== "undefined") {
@@ -585,7 +585,14 @@ HammerWF.PointerEventInput.prototype.handler = function(ev) {
 			pointerType: pointerType,
 			srcEvent: ev,
 			frakButtons: buttons
-		
+		});
+
+		if (removePointer) {
+		// remove from the store
+		store.splice(storeIndex, 1);
+	}
+}
+
 }
 
 globalThis.Input = Input;

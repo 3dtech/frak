@@ -5,7 +5,7 @@
 class RenderTarget {
 	viewport: any;
 	size: any;
-	
+
 	constructor(size) {
 		this.viewport = {
 			position: vec2.create(),
@@ -24,7 +24,7 @@ class RenderTarget {
 	}
 
 	/** Binds this rendertarget. All subsequent draw calls go to this render-target */
-	bind(context): any {
+	bind(context, ...args): any {
 		context.gl.viewport(this.viewport.position[0], this.viewport.position[1], this.viewport.size[0], this.viewport.size[1]);
 		context.gl.scissor(this.viewport.position[0], this.viewport.position[1], this.viewport.size[0], this.viewport.size[1]);
 		context.gl.enable(context.gl.SCISSOR_TEST);

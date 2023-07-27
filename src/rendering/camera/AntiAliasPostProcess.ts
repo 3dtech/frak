@@ -9,7 +9,7 @@ import UniformFloat from 'rendering/shaders/UniformFloat.js'
 
 class AntiAliasPostProcess extends PostProcess {
 	material: any;
-	
+
 	constructor() {
 		super();
 	}
@@ -23,15 +23,15 @@ class AntiAliasPostProcess extends PostProcess {
 				"reduce_min": new UniformFloat(1.0 / 16.0),
 				"reduce_mul": new UniformFloat(1.0 / 8.0),
 				"span_max": new UniformFloat(8.0)
-			}
+			},
 			[]);
 		this.material.name = 'AntiAlias';
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPreRender(context, scene, camera) {
-		this._super(context, scene, camera);
+		super.onPreRender(context, scene, camera);
 
 		vec2.copy(this.material.uniforms.ViewportSize.value, this.parent.src.size);
 	}

@@ -1,3 +1,7 @@
+import TrianglesRenderBuffer from "rendering/buffers/TrianglesRenderBuffer";
+import TrianglesRenderBufferVAO from "rendering/buffers/TrianglesRenderBufferVAO";
+import Sampler from "rendering/shaders/Sampler";
+
 /**
  * Creates a screen-aligned rectangle for rendering. If constructed without
  * parameters a full-screen quad is created.
@@ -9,7 +13,7 @@
  * @param width Width of the rectangle (defaults to 2.0) [optional]
  * @param height Height of the rectangle (defaults to 2.0) [optional]
  */
-function ScreenQuad(context, x, y, width, height) {
+function ScreenQuad(context, x?, y?, width?, height?) {
 	x = x || -1.0;
 	y = y || -1.0;
 	width = width || 2.0;
@@ -68,3 +72,6 @@ ScreenQuad.prototype.render = function(context, material, samplerOrList) {
 	this.quad.render(material.shader);
 	material.unbind(samplers);
 };
+
+globalThis.ScreenQuad = ScreenQuad;
+export default ScreenQuad;

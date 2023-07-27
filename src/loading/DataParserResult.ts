@@ -6,7 +6,7 @@
 
 class DataParserResult {
 	data: any;
-	
+
 	constructor() {
 		this.data={
 			'meshes': [],
@@ -49,12 +49,12 @@ class DataParserResult {
 			'parent': false,
 			'children': [],
 			'meshes': [],
-			'position': {x:0.0, y:0.0, z:0.0}
+			'position': {x:0.0, y:0.0, z:0.0},
 			'rotation': {x:0.0, y:0.0, z:0.0, w:0.0},
 			'scale': {x:0.0, y:0.0, z:0.0},
 			'transform': false
 		};
-	},
+	}
 
 	mapGroupID(group): any {
 		this.data.hierarchyNodesByID[group.id]=group;
@@ -79,7 +79,7 @@ class DataParserResult {
 				'diffuse' : false,
 				'specular': false,
 				'emissive': false
-			}
+			},
 			'twosided': false,
 			'shininess': 0,
 			'shininess_strength': 0,
@@ -98,7 +98,7 @@ class DataParserResult {
 				'reflection':[]
 			}
 		};
-	},
+	}
 
 	addMaterial(material): any {
 		this.data.materials.push(material);
@@ -124,13 +124,13 @@ class DataParserResult {
 
 	createVertex(): any {
 		return {
-			'position': {x:0.0, y:0.0, z:0.0}
+			'position': {x:0.0, y:0.0, z:0.0},
 			'normal': {x:0.0, y:0.0, z:0.0},
 			'texCoord': [],
 			'tangent': {x:0.0, y:0.0, z:0.0},
 			'bitangent': {x:0.0, y:0.0, z:0.0}
 		};
-	},
+	}
 
 	addMesh(mesh): any {
 		this.data.meshes.push(mesh);
@@ -141,11 +141,11 @@ class DataParserResult {
 		return {
 			'parent': false,
 			'children': [],
-			'center': {x:0.0, y:0.0, z:0.0}
+			'center': {x:0.0, y:0.0, z:0.0},
 			'extents': {x:0.0, y:0.0, z:0.0},
 			'faces': false
 		};
-	},
+	}
 
 	addFaceList(collisionNode, nodeID, meshID, indices): any {
 		if (nodeID<0 || meshID<0 || indices.length==0)

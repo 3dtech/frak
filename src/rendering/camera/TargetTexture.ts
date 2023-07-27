@@ -9,18 +9,20 @@ class TargetTexture extends RenderTarget {
 	rebuild: any;
 	frameBuffer: any;
 	depth: any;
-	
-	constructor(sizeOrTexture, context, useDepthTexture, useStencilBuffer) {
+
+	constructor(sizeOrTexture, context, useDepthTexture?, useStencilBuffer?) {
 		var size = sizeOrTexture;
 		if (sizeOrTexture instanceof Texture) {
 			size = sizeOrTexture.size;
+		}
+		super(size);
+		if (sizeOrTexture instanceof Texture) {
 			this.texture = sizeOrTexture;
 		}
+
 		this.useDepthTexture = (useDepthTexture === true);
 		this.useStencilBuffer = (useStencilBuffer === true);
 		this.rebuild = false;
-
-		super(size);
 
 		if (this.useDepthTexture && !context.isWebGL2()) {
 			var depthTextureExt = (
@@ -138,7 +140,7 @@ class TargetTexture extends RenderTarget {
 		}
 	}
 
-	bind(context, doNotClear, clearColor, clearFlags): any {
+	bind(context, doNotClear?, clearColor?, clearFlags?): any {
 		var gl = context.gl;
 
 		if (this.rebuild) {
@@ -201,7 +203,7 @@ class TargetTexture extends RenderTarget {
 	}
 
 	unbind(context) {
-		this._super(context);
+		super.unbind(context);
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
 	}
 

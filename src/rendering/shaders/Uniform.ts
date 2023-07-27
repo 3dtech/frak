@@ -6,8 +6,9 @@ import RenderingContext from 'rendering/RenderingContext.js'
 
 class Uniform extends Cloneable {
 	value: any;
-	
-	constructor(value) {
+
+	constructor(value?) {
+		super();
 		this.value = value;
 	}
 
@@ -17,7 +18,7 @@ class Uniform extends Cloneable {
 	bind(context, uniformLocation): any {}
 
 	clone() {
-		var c = this._super();
+		var c = super.clone();
 		c.value = this.value;
 		return c;
 	}

@@ -10,9 +10,9 @@ class BoundingBox extends BoundingVolume {
 	min: any;
 	max: any;
 	center: any;
-	
+
 	/** Constructor */
-	constructor(center, size) {
+	constructor(center?, size?) {
 		super(center);
 		this.size=vec3.create();
 		if (size) vec3.copy(this.size, size);
@@ -347,7 +347,7 @@ class BoundingBox extends BoundingVolume {
 			"\tsize=("+this.size[0]+", "+this.size[1]+", "+this.size[2]+")\n"+
 		"]\n";
 	}
-});
+}
 
 /** Tests if 2D lines AB and CD intersect.
 	@param a Instance of {vec2}
@@ -356,7 +356,7 @@ class BoundingBox extends BoundingVolume {
 	@param d Instance of {vec2}
 	@param out Instance of {vec2} [optional]
 	@return {boolean} True if lines AB and CD intersect */
-function LineLineIntersection2D(a, b, c, d, out) {
+function LineLineIntersection2D(a, b, c, d, out?) {
 	/*
 			(Ay-Cy)(Dx-Cx)-(Ax-Cx)(Dy-Cy)
 		r = -----------------------------
@@ -393,7 +393,28 @@ function LineRectIntersection2D(a, b, min, max) {
 		LineLineIntersection2D(a, b, min, [max[0], min[1]]))
 		return true;
 	return false;
+}
 
+function PointInTriangle2D(p1, p2, p3, pt) {
+	/*
+		pt = p1 + (p2 - p1) * u + (p3 - p1) * v
+
+		     (y2 - y3)(x - x3) + (x3 - x2)(y - y3)
+		u = ---------------------------------------
+		    (y2 - y3)(x1 - x3) + (x3 - x2)(y1 - y3)
+
+		     (y3 - y1)(x - x3) + (x1 - x3)(y - y3)
+		v = ---------------------------------------
+		    (y2 - y3)(x1 - x3) + (x3 - x2)(y1 - y3)
+	*/
+	var det = (p2[1] - p3[1])*(p1[0] - p3[0]) + (p3[0] - p2[0])*(p1[1] - p3[1]);
+	// if det is 0 (p1,p2,p3) does not form a triangle
+	if (det==0.0) return false;
+	var u = ( (p2[1]-p3[1])*(pt[0]-p3[0]) + (p3[0] - p2[0])*(pt[1] - p3[1]) ) / det;
+	var v = ( (p3[1]-p1[1])*(pt[0]-p3[0]) + (p1[0] - p3[0])*(pt[1] - p3[1]) ) / det;
+	if (u>=0.0 && v>=0.0 && u+v<=1.0)
+		return true;
+	return false;
 }
 
 globalThis.BoundingBox = BoundingBox;

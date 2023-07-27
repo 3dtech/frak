@@ -7,6 +7,13 @@ import Texture from 'rendering/materials/Texture.js'
  */
 
 class CubeTexture extends BaseTexture {
+	static FRONT = 0;
+	static BACK = 1;
+	static LEFT = 2;
+	static RIGHT = 3;
+	static BOTTOM = 4;
+	static TOP = 5;
+
 	glTexture: any;
 	name: any;
 	mipmapped: any;
@@ -15,7 +22,7 @@ class CubeTexture extends BaseTexture {
 	anisotropyFilter: any;
 	images: any;
 	loaded: any;
-	
+
 	/**
 	 * Constructor
 	 * @param context RenderingContext (optional)

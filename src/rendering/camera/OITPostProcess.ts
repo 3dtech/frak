@@ -9,7 +9,7 @@ import UniformInt from 'rendering/shaders/UniformInt.js'
 
 class OITPostProcess extends PostProcess {
 	material: any;
-	
+
 	constructor() {
 		super();
 	}
@@ -21,7 +21,7 @@ class OITPostProcess extends PostProcess {
 			{
 				'ViewportSize': new UniformVec2(vec2.clone(this.parent.src.size)),
 				'render_mode': new UniformInt(0)
-			}
+			},
 			[
 				this.parent.generator.oitStage.transparencySampler,
 				this.parent.generator.oitStage.transparencyWeightSampler
@@ -29,10 +29,10 @@ class OITPostProcess extends PostProcess {
 		this.material.name = 'OIT';
 
 		engine.assetsManager.load();
-	},
+	}
 
 	onPreRender(context, scene, camera) {
-		this._super(context, scene, camera);
+		super.onPreRender(context, scene, camera);
 
 		vec2.copy(this.material.uniforms.ViewportSize.value, this.parent.src.size);
 		switch (scene.engine.options.transparencyMode) {

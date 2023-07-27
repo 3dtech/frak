@@ -5,7 +5,7 @@
  * @param b Blue intensity in range [0, 1]
  * @param a Opacity in range [0, 1]
  */
-var Color = function(r, g, b, a) {
+var Color = function(r?, g?, b?, a?) {
 	this.r=1.0;
 	this.g=1.0;
 	this.b=1.0;
@@ -56,3 +56,6 @@ var Color = function(r, g, b, a) {
 
 	this.set(r, g, b, a);
 }
+
+globalThis.Color = Color;
+export default Color;

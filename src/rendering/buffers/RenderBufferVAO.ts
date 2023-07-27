@@ -9,12 +9,13 @@ class RenderBufferVAO extends RenderBuffer {
 	bindVAO: any;
 	vao: any;
 	damaged: any;
-	
+
 	/** Constructor
 		@param context Rendering context
 		@param faces Faces buffer with size that divides with 3 [f0i, f0j, f0k, f1i, f1j, f1k, ...]
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */
-	constructor(context, faces, type) {
+	constructor(context, faces, type?) {
+		super(context, faces, type);
 		if (context.isWebGL2()) {
 			this.createVAO = context.gl.createVertexArray.bind(context.gl);
 			this.bindVAO = context.gl.bindVertexArray.bind(context.gl);
@@ -31,8 +32,6 @@ class RenderBufferVAO extends RenderBuffer {
 			throw 'RenderBufferVAO: Unable to create vertex array object.';
 
 		this.damaged = true;
-
-		super(context, faces, type);
 	}
 
 	/** Adds a named vertex attribute buffer that will be
@@ -65,7 +64,7 @@ class RenderBufferVAO extends RenderBuffer {
 	 * Binds attribute locations in the vertex array object.
 	 * @param shader {Shader} instance used to query attribute locations for non-standard attribute names [optional]
 	 */
-	bindLocations(shader): any {
+	bindLocations(shader?): any {
 		var gl = this.context.gl;
 
 		this.bindVAO(this.vao);

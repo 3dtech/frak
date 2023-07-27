@@ -5,6 +5,7 @@ import Material from 'rendering/materials/Material.js'
 import UniformColor from 'rendering/shaders/UniformColor.js'
 import Texture from 'rendering/materials/Texture.js'
 import Submesh from 'scene/geometry/Submesh.js'
+import CanvasBoardRendererComponent from './CanvasBoardRendererComponent'
 
 /** Text component is used to render text at given node */
 
@@ -17,7 +18,7 @@ class CanvasBoardComponent extends MeshComponent {
 	canvasContext: any;
 	canvas: any;
 	sampler: any;
-	
+
 	/** Constructor
 		@param text Default text to display */
 	constructor(width, height) {
@@ -90,7 +91,7 @@ class CanvasBoardComponent extends MeshComponent {
 			engine.assetsManager.addShaderSource("transparent"),
 			{
 				"diffuse": new UniformColor({r:1.0, g:1.0, b:1.0, a:1.0})
-			}
+			},
 			[ this.sampler ]
 		);
 		this.material.shader.requirements.transparent = true;
@@ -120,7 +121,7 @@ class CanvasBoardComponent extends MeshComponent {
 		this.mesh.addSubmesh(submesh, this.material);
 
 		this.createContext();
-	},
+	}
 
 	getCanvasContext(){
 		return this.canvasContext;

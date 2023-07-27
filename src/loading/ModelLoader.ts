@@ -23,8 +23,8 @@ class ModelLoader {
 	nodesByID: any;
 	submeshesByID: any;
 	submeshes: any;
-	
-	constructor(context, descriptor, shadersManager, texturesManager) {
+
+	constructor(descriptor, shadersManager, texturesManager) {
 		this.descriptor=descriptor;
 		this.shadersManager=shadersManager;
 		this.texturesManager=texturesManager;
