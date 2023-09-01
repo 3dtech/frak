@@ -12,9 +12,9 @@ class MaterialsManager extends Manager {
 	shadersManager: any;
 	texturesManager: any;
 	context: any;
-	
+
 	/** Constructor */
-	constructor(context, assetsPath, shadersManager, texturesManager) {
+	constructor(context, assetsPath?, shadersManager?, texturesManager?) {
 		super(assetsPath);
 
 		if(shadersManager && !(shadersManager instanceof ShadersManager)) throw "shadersManager is not instance of ShadersManager";

@@ -1,4 +1,5 @@
-import Component from 'scene/components/Component.js'
+import Component from 'scene/components/Component';
+import Color from 'rendering/Color';
 
 /** Base class for all lights */
 
@@ -8,7 +9,7 @@ class Light extends Component {
 	shadowCasting: any;
 	shadowMask: any;
 	damaged: any;
-	
+
 	constructor() {
 		super();
 		this.color = new Color(1.0, 1.0, 1.0, 1.0);

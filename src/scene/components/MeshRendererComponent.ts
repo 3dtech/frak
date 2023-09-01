@@ -9,10 +9,10 @@ import Renderer from 'rendering/renderers/Renderer.js'
 
 class MeshRendererComponent extends RendererComponent {
 	meshRenderers: any;
-	
+
 	constructor() {
-		this.meshRenderers = [];
 		super();
+		this.meshRenderers = [];
 	}
 
 	type(): any {
@@ -150,7 +150,7 @@ class MeshRendererComponent extends RendererComponent {
 	}
 
 	onContextRestored(context) {
-		this._super(context);
+		super.onContextRestored(context);
 		for (var i = 0; i < this.meshRenderers.length; ++i) {
 			this.meshRenderers[i].onContextRestored(context);
 		}

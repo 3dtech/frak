@@ -2,7 +2,7 @@ function CollectionReference(list) {
 	this.list = list;
 }
 
-function CollectionView(listReference, fnFilter, keepExact) {
+function CollectionView(listReference, fnFilter, keepExact?) {
 	this.listReference = listReference;
 	this.view = [];
 	this.keepExact = !!keepExact;

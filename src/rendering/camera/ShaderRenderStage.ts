@@ -5,9 +5,9 @@ import RenderStage from 'rendering/camera/RenderStage.js'
 class ShaderRenderStage extends RenderStage {
 	shader: any;
 	uniforms: any;
-	
+
 	constructor(shader, target) {
-		super(target);
+		super();
 		this.shader=shader;
 		this.uniforms={};				// Extra uniforms
 	}

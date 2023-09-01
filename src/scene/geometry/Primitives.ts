@@ -371,3 +371,6 @@ var Primitives = {
 		return node;
 	}
 };
+
+globalThis.Primitives = Primitives;
+export default Primitives;

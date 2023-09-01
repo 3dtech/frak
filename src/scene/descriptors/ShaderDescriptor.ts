@@ -12,7 +12,7 @@ class ShaderDescriptor extends Descriptor {
 		@param vertexOrUnifiedSource Vertex program path or path to both vertex and fragment
 		                             programs (omit extension), if fragmentSource is not given
 		@param fragmentSource Fragment program path [optional] */
-	constructor(vertexOrUnifiedSource, fragmentSource, definitions?) {
+	constructor(vertexOrUnifiedSource, fragmentSource?, definitions?) {
 		super();
 		if(!fragmentSource) {
 			this.vertexSource=vertexOrUnifiedSource+".vert";

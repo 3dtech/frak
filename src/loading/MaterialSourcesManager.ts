@@ -1,21 +1,21 @@
-import Manager from 'loading/Manager.js'
-import MaterialsManager from 'loading/MaterialsManager.js'
-import TextManager from 'loading/TextManager.js'
-import TextDescriptor from 'scene/descriptors/TextDescriptor.js'
-import MaterialSourceDescriptor from 'scene/descriptors/MaterialSourceDescriptor.js'
-import MaterialSource from 'scene/descriptors/MaterialSource.js'
-import MaterialDescriptor from 'scene/descriptors/MaterialDescriptor.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import UniformMat2 from 'rendering/shaders/UniformMat2.js'
-import UniformVec2 from 'rendering/shaders/UniformVec2.js'
-import UniformMat3 from 'rendering/shaders/UniformMat3.js'
-import UniformVec3 from 'rendering/shaders/UniformVec3.js'
-import UniformMat4 from 'rendering/shaders/UniformMat4.js'
-import UniformVec4 from 'rendering/shaders/UniformVec4.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import TextureDescriptor from 'scene/descriptors/TextureDescriptor.js'
-import ShaderDescriptor from 'scene/descriptors/ShaderDescriptor.js'
+import Manager from 'loading/Manager';
+import MaterialsManager from 'loading/MaterialsManager';
+import TextManager from 'loading/TextManager';
+import TextDescriptor from 'scene/descriptors/TextDescriptor';
+import MaterialSourceDescriptor from 'scene/descriptors/MaterialSourceDescriptor';
+import MaterialSource from 'scene/descriptors/MaterialSource';
+import MaterialDescriptor from 'scene/descriptors/MaterialDescriptor';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import UniformMat2 from 'rendering/shaders/UniformMat2';
+import UniformVec2 from 'rendering/shaders/UniformVec2';
+import UniformMat3 from 'rendering/shaders/UniformMat3';
+import UniformVec3 from 'rendering/shaders/UniformVec3';
+import UniformMat4 from 'rendering/shaders/UniformMat4';
+import UniformVec4 from 'rendering/shaders/UniformVec4';
+import UniformColor from 'rendering/shaders/UniformColor';
+import UniformInt from 'rendering/shaders/UniformInt';
+import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
+import ShaderDescriptor from 'scene/descriptors/ShaderDescriptor';
 
 /** Used to load materials from material sources.
 	Example of usage:
@@ -35,7 +35,7 @@ class MaterialSourcesManager extends Manager {
 	materialsManager: any;
 	textManager: any;
 	context: any;
-	
+
 	/** Constructor */
 	constructor(context, assetsPath, materialsManager, textManager) {
 		super(assetsPath);
@@ -99,10 +99,10 @@ class MaterialSourcesManager extends Manager {
 						}
 					}
 					else if(uniform instanceof Object) {
-						if(!'a' in uniform) uniform.a=0.0;
+						if(!('a' in uniform)) uniform.a=0.0;
 						md.uniforms[u]=new UniformColor(uniform);
 					}
-					else if(typeof uniform==='number' && parseFloat(uniform)==parseInt(uniform)) md.uniforms[u]=new UniformInt(uniform);
+					else if(typeof uniform==='number' && Number.isInteger(uniform)) md.uniforms[u]=new UniformInt(uniform);
 					else md.uniforms[u]=new UniformFloat(uniform);
 				}
 			}

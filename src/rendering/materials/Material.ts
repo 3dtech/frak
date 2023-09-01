@@ -18,7 +18,7 @@ class Material extends Serializable {
 		@param uniforms Shader uniforms as object described in Shader.use
 		@param samplers Shader samplers as array described in Shader.bindSamplers/unbindSamplers
 		@param descriptor MaterialDescriptor instance [optional] */
-	constructor(shader, uniforms?, samplers?, name?, descriptor?) {
+	constructor(shader?, uniforms?, samplers?: Sampler[], name?, descriptor?) {
 		super();
 		this.name = name;
 		if (!this.name)

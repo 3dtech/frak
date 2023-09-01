@@ -1,10 +1,11 @@
-import Light from 'scene/components/Light.js'
-import Material from 'rendering/materials/Material.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import UniformVec3 from 'rendering/shaders/UniformVec3.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
+import Light from 'scene/components/Light'
+import Material from 'rendering/materials/Material'
+import UniformColor from 'rendering/shaders/UniformColor'
+import UniformVec3 from 'rendering/shaders/UniformVec3'
+import UniformFloat from 'rendering/shaders/UniformFloat'
 import Color from 'rendering/Color'
 import MeshRendererComponent from 'scene/components/MeshRendererComponent'
+import Primitives from 'scene/geometry/Primitives';
 
 /**
  * Omni-directional light (sphere)

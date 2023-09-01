@@ -8,11 +8,11 @@ import Material from 'rendering/materials/Material.js'
 
 class MaterialSourceDescriptor extends Descriptor {
 	source: any;
-	
+
 	/** Constructor.
 		@param source Material source path
 		*/
-	constructor(source) {
+	constructor(source?) {
 		super();
 		this.source=source;
 	}

@@ -1,4 +1,4 @@
-import Controller from 'scene/components/Controller.js'
+import Controller from 'scene/components/Controller';
 
 /** Provides free flight mode for any node transform. */
 
@@ -13,7 +13,7 @@ class FlightController extends Controller {
 	rotationFriction: any;
 	tmpRotation: any;
 	tmpImpulse: any;
-	
+
 	constructor() {
 		super();
 
@@ -36,8 +36,8 @@ class FlightController extends Controller {
 		return "FlightController";
 	}
 
-	onAdd(): any {
-		super.onAdd();
+	onAdd(node): any {
+		super.onAdd(node);
 		this.bind('W', 'accelerate', this);
 		this.bind('S', 'decelerate', this);
 		this.bind('A', 'strafeLeft', this);

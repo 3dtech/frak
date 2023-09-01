@@ -5,8 +5,8 @@ import Descriptor from 'scene/descriptors/Descriptor.js'
 class ModelDescriptor extends Descriptor {
 	source: any;
 	format: any;
-	
-	constructor(source, format) {
+
+	constructor(source?, format?) {
 		super();
 		this.source = source;
 		this.format = format || 'auto';

@@ -1,12 +1,12 @@
-import Subshader from 'rendering/shaders/Subshader.js'
+import Subshader, { VERTEX_SHADER } from 'rendering/shaders/Subshader';
 
 /** VertexShader for ShaderProgram. */
 
 class VertexShader extends Subshader {
 	compiledShader: any;
-	
+
 	constructor(shader, code) {
-		super(shader, code, this.VERTEX_SHADER);
+		super(shader, code, VERTEX_SHADER);
 		this.compiledShader = this.context.gl.createShader(this.context.gl.VERTEX_SHADER);
 	}
 
@@ -16,7 +16,7 @@ class VertexShader extends Subshader {
 
 	onContextRestored(context) {
 		this.compiledShader = this.context.gl.createShader(this.context.gl.VERTEX_SHADER);
-		this._super(context);
+		super.onContextRestored(context);
 	}
 
 }

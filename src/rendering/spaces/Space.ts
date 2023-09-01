@@ -4,7 +4,7 @@ import Renderer from 'rendering/renderers/Renderer.js'
 
 class Space {
 
-	
+
 	constructor() {}
 
 	/** Casts a frustum over geometry
@@ -16,7 +16,7 @@ class Space {
 	/** Casts a ray over geometry
 		@param frustum Instance of Frustum
 		@return An array of geometry or intersecting the ray (elements of array are of type Renderer) */
-	rayCast(ray): any { }
+	rayCast(ray, mask?, invisible?): any { }
 
 	/** Casts a line over geometry
 		@param frustum Instance of Frustum

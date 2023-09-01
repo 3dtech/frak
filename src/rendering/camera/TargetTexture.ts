@@ -1,5 +1,6 @@
-import RenderTarget from 'rendering/camera/RenderTarget.js'
-import Texture from 'rendering/materials/Texture.js'
+import RenderTarget from 'rendering/camera/RenderTarget';
+import Texture from 'rendering/materials/Texture';
+import Color from 'rendering/Color';
 
 
 class TargetTexture extends RenderTarget {

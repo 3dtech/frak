@@ -1,12 +1,12 @@
-import Subshader from 'rendering/shaders/Subshader.js'
+import Subshader, { FRAGMENT_SHADER } from 'rendering/shaders/Subshader';
 
 /** FragmentShader for ShaderProgram. */
 
 class FragmentShader extends Subshader {
 	compiledShader: any;
-	
+
 	constructor(shader, code) {
-		super(shader, code, this.FRAGMENT_SHADER);
+		super(shader, code, FRAGMENT_SHADER);
 		this.compiledShader = this.context.gl.createShader(this.context.gl.FRAGMENT_SHADER);
 	}
 
@@ -16,7 +16,7 @@ class FragmentShader extends Subshader {
 
 	onContextRestored(context) {
 		this.compiledShader = this.context.gl.createShader(this.context.gl.FRAGMENT_SHADER);
-		this._super(context);
+		super.onContextRestored(context);
 	}
 
 }

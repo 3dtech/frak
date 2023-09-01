@@ -1,9 +1,10 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import TargetTextureMulti from 'rendering/camera/TargetTextureMulti.js'
-import Material from 'rendering/materials/Material.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import Sampler from 'rendering/shaders/Sampler.js'
+import RenderStage from 'rendering/camera/RenderStage';
+import UniformInt from 'rendering/shaders/UniformInt';
+import TargetTextureMulti from 'rendering/camera/TargetTextureMulti';
+import Material from 'rendering/materials/Material';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import Sampler from 'rendering/shaders/Sampler';
+import Color from 'rendering/Color';
 
 /**
  * G-buffer renderer

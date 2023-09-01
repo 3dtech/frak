@@ -1,12 +1,13 @@
-import Component from 'scene/components/Component.js'
-import Material from 'rendering/materials/Material.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-
+import Component from 'scene/components/Component'
+import MeshRendererComponent from './MeshRendererComponent';
+import Material from 'rendering/materials/Material'
+import Sampler from 'rendering/shaders/Sampler'
+import Primitives from 'scene/geometry/Primitives';
 
 class SkyboxComponent extends Component {
 	cubeTexture: any;
 	meshNode: any;
-	
+
 	constructor() {
 		super();
 	}
@@ -30,7 +31,7 @@ class SkyboxComponent extends Component {
 		}
 		this.meshNode = Primitives.box([0, 0, 0], [extent, extent, extent], new Material(
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('skybox')),
-			{}
+			{},
 			[new Sampler('skybox0', this.cubeTexture)]
 		));
 		this.node.addNode(this.meshNode);

@@ -1,6 +1,6 @@
-import MatrixStack from 'rendering/MatrixStack.js'
-import RendererComponent from 'scene/components/RendererComponent.js'
-import TextComponent from 'scene/components/TextComponent.js'
+import MatrixStack from 'rendering/MatrixStack';
+import RendererComponent from 'scene/components/RendererComponent';
+import TextComponent from 'scene/components/TextComponent';
 
 /** Wraps webgl rendering context of canvas */
 
@@ -14,7 +14,7 @@ class RenderingContext {
 	shadow: any;
 	camera: any;
 	engine: any;
-	
+
 	/** Constructor
 		@param canvas The canvas element that provides rendering context
 	*/
@@ -75,7 +75,7 @@ class RenderingContext {
 			if (!hideError && typeof document !== 'undefined') {
 				var msg = document.createElement('div');
 				msg.style.position = 'relative';
-				msg.style.zIndex = 100;
+				msg.style.zIndex = '100';
 				msg.style.backgroundColor = 'red';
 				msg.style.padding = '8px';
 				msg.textContent = 'WebGL seems to be unavailable in this browser.';
@@ -149,8 +149,8 @@ class RenderingContext {
 		});
 
 		// Restore lights
-		for (var i = 0; i < engine.scene.lights.length; ++i) {
-			engine.scene.lights[i].onContextRestored(ctx);
+		for (var j = 0; j < engine.scene.lights.length; ++j) {
+			engine.scene.lights[j].onContextRestored(ctx);
 		}
 
 		// Restore fallback textures

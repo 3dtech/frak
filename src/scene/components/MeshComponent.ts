@@ -4,18 +4,18 @@ import Component from 'scene/components/Component.js'
 
 class MeshComponent extends Component {
 	mesh: any;
-	
+
 	constructor(mesh) {
-		this.mesh=mesh;
 		super();
+		this.mesh=mesh;
 	}
-	
+
 	type(): any {
 		return "MeshComponent";
 	}
-	
+
 	instantiate() {
-		var c=this._super();
+		var c=super.instantiate();
 		c.mesh=this.mesh;
 		return c;
 	}

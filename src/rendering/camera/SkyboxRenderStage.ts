@@ -1,9 +1,12 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import UniformMat4 from 'rendering/shaders/UniformMat4.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import UniformVec3 from 'rendering/shaders/UniformVec3.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import Sampler from 'rendering/shaders/Sampler.js'
+import RenderStage from 'rendering/camera/RenderStage';
+import UniformMat4 from 'rendering/shaders/UniformMat4';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import UniformVec3 from 'rendering/shaders/UniformVec3';
+import UniformColor from 'rendering/shaders/UniformColor';
+import Sampler from 'rendering/shaders/Sampler';
+import Color from 'rendering/Color';
+import SkyboxComponent from 'scene/components/SkyboxComponent';
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 
 /**
  * Render-stage for rendering the SkyboxComponent.
@@ -12,7 +15,7 @@ import Sampler from 'rendering/shaders/Sampler.js'
 class SkyboxRenderStage extends RenderStage {
 	uniforms: any;
 	shadowFallback: any;
-	
+
 	constructor() {
 		super();
 

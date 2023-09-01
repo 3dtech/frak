@@ -35,7 +35,7 @@ class OrbitController extends FlightController {
 	lookat: any;
 	tmpRotation: any;
 	cbOnChange: any;
-	
+
 	constructor() {
 		super();
 
@@ -97,8 +97,8 @@ class OrbitController extends FlightController {
 		return "OrbitController";
 	}
 
-	onAdd(): any {
-		super.onAdd();
+	onAdd(node): any {
+		super.onAdd(node);
 
 		this.bind('W', 'zoomIn', this);
 		this.bind('S', 'zoomOut', this);
@@ -135,7 +135,7 @@ class OrbitController extends FlightController {
 	}
 
 	/** Zooms in by moving target distance closer */
-	zoomIn(deltaTime): any {
+	zoomIn(deltaTime?): any {
 		if (!this.enabled)
 			return;
 		if(!deltaTime) deltaTime=1.0;
@@ -145,37 +145,37 @@ class OrbitController extends FlightController {
 	}
 
 	/** Zooms out by moving target distance farther */
-	zoomOut(deltaTime): any {
+	zoomOut(deltaTime?): any {
 		if (!this.enabled)
 			return;
 		if(!deltaTime) deltaTime=1.0;
 		this.distance+=deltaTime*this.zoomSpeed*(this.maximumDistance-this.minimumDistance)/this.distanceSteps;
 		if(this.distance>this.maximumDistance) this.distance=this.maximumDistance;
-		this.onChange("distance", this.distance, deltaTime*this.zoomSpeed*(this.maximumDistance-this.minimumDistance)/this.distanceSteps);
+		this.onChange("distance", this.distance);
 	}
 
 	/** Accelerates to the left */
 	rotateLeft(deltaTime): any {
-		this.accelerate([0.0, -this.rotationAcceleration, 0.0], deltaTime);
+		this.accelerateDelta([0.0, -this.rotationAcceleration, 0.0], deltaTime);
 	}
 
 	/** Accelerates to the right */
 	rotateRight(deltaTime): any {
-		this.accelerate([0.0, this.rotationAcceleration, 0.0], deltaTime);
+		this.accelerateDelta([0.0, this.rotationAcceleration, 0.0], deltaTime);
 	}
 
 	/** Accelerates up */
 	rotateUp(deltaTime): any {
-		this.accelerate([this.rotationAcceleration, 0.0, 0.0], deltaTime);
+		this.accelerateDelta([this.rotationAcceleration, 0.0, 0.0], deltaTime);
 	}
 
 	/** Accelerates down */
 	rotateDown(deltaTime): any {
-		this.accelerate([-this.rotationAcceleration, 0.0, 0.0], deltaTime);
+		this.accelerateDelta([-this.rotationAcceleration, 0.0, 0.0], deltaTime);
 	}
 
 	/** Accelerates by acceleration vector */
-	accelerate(accelerationVector, deltaTime): any {
+	accelerateDelta(accelerationVector, deltaTime): any {
 		if (!this.enabled)
 			return;
 		vec3.scale(accelerationVector, accelerationVector, deltaTime);
@@ -221,7 +221,7 @@ class OrbitController extends FlightController {
 		@param position Position of mouse as vec2
 		@param buttons Buttons as array
 		@param delta Mouse movement delta as vec2 */
-	onMouseMove(position, button, delta, type): any {
+	onMouseMove(position, button, delta): any {
 		if(this.rotateButton!==false && button == this.rotateButton) this.rotate(delta[1], delta[0]);
 		if(this.panButton!==false && button == this.panButton) this.move(delta[0], delta[1]);
 	}
@@ -236,7 +236,7 @@ class OrbitController extends FlightController {
 		vec3.add(this.rotation, this.rotation, impulse);
 		this.rotation[0]=Math.max(this.minimumPitch, this.rotation[0]);
 		this.rotation[0]=Math.min(this.maximumPitch, this.rotation[0]);
-		this.onChange("rotate", xDelta, yDelta);
+		this.onChange("rotate", xDelta);
 	}
 
 	move(xDelta, yDelta): any {
@@ -264,7 +264,7 @@ class OrbitController extends FlightController {
 		this.pan[0]=Math.min(this.pan[0], this.maximumPan[0]);
 		this.pan[1]=Math.min(this.pan[1], this.maximumPan[1]);
 		this.pan[2]=Math.min(this.pan[2], this.maximumPan[2]);
-		this.onChange("move", xDelta, yDelta);
+		this.onChange("move", xDelta);
 	}
 
 	onPinch(position, scale): any {

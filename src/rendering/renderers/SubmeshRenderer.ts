@@ -1,9 +1,10 @@
-import Renderer from 'rendering/renderers/Renderer.js'
-import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO.js'
-import TrianglesRenderBuffer from 'rendering/buffers/TrianglesRenderBuffer.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
+import Renderer from 'rendering/renderers/Renderer';
+import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
+import TrianglesRenderBuffer from 'rendering/buffers/TrianglesRenderBuffer';
+import UniformColor from 'rendering/shaders/UniformColor';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import UniformInt from 'rendering/shaders/UniformInt';
+import Color from 'rendering/Color';
 
 /** Renders submeshes dynamically. The transform value may change between calls to onRender.
 	Its technically a render-buffer with attached material reference.
@@ -18,7 +19,7 @@ class SubmeshRenderer extends Renderer {
 	localBoundingBox: any;
 	localBoundingSphere: any;
 	_cache: any;
-	
+
 	constructor(context, matrix, submesh, material) {
 		super(matrix);
 		this.submesh = submesh;

@@ -4,7 +4,7 @@ import Uniform from 'rendering/shaders/Uniform.js'
 
 class UniformMat3 extends Uniform {
 
-	
+
 	bind(context, uniformLocation): any {
 		context.gl.uniformMatrix3fv(uniformLocation, false, this.value);
 	}
@@ -14,7 +14,7 @@ class UniformMat3 extends Uniform {
 	}
 
 	clone() {
-		var c = this._super();
+		var c = super.clone();
 		c.value = mat3.clone(this.value);
 		return c;
 	}

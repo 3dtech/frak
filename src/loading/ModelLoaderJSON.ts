@@ -1,16 +1,17 @@
-import Sampler from 'rendering/shaders/Sampler.js'
-import Material from 'rendering/materials/Material.js'
-import TextureDescriptor from 'scene/descriptors/TextureDescriptor.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import Submesh from 'scene/geometry/Submesh.js'
-import Node from 'scene/Node.js'
-import Mesh from 'scene/geometry/Mesh.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
-import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
-import CollisionOctreeNode from 'scene/geometry/CollisionOctreeNode.js'
-import LargeMeshCollider from 'scene/components/LargeMeshCollider.js'
+import Sampler from 'rendering/shaders/Sampler';
+import Material from 'rendering/materials/Material';
+import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
+import UniformColor from 'rendering/shaders/UniformColor';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import UniformInt from 'rendering/shaders/UniformInt';
+import Submesh from 'scene/geometry/Submesh';
+import Node from 'scene/Node';
+import Mesh from 'scene/geometry/Mesh';
+import MeshComponent from 'scene/components/MeshComponent';
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
+import CollisionOctreeNode from 'scene/geometry/CollisionOctreeNode';
+import LargeMeshCollider from 'scene/components/LargeMeshCollider';
+import Color from 'rendering/Color';
 
 /** Loads models to scene hierarchy from JSON data */
 

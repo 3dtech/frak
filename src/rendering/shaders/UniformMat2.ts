@@ -4,7 +4,7 @@ import Uniform from 'rendering/shaders/Uniform.js'
 
 class UniformMat2 extends Uniform {
 
-	
+
 	type(): any {
 		return "UniformMat2";
 	}
@@ -14,7 +14,7 @@ class UniformMat2 extends Uniform {
 	}
 
 	clone() {
-		var c = this._super();
+		var c = super.clone();
 		c.value = mat2.clone(this.value);
 		return c;
 	}

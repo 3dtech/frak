@@ -9,7 +9,7 @@ class Controller extends Component {
 	oldPosition: any;
 	startDragPosition: any;
 	buttons: any;
-	
+
 	constructor() {
 		super();
 		this.delta=vec2.create();
@@ -58,7 +58,7 @@ class Controller extends Component {
 			this.buttons[i]=false;
 	}
 
-	onUpdate(engine): any {
+	onUpdate(engine, pass): any {
 	}
 
 	/** Called when key is either pressed or released */

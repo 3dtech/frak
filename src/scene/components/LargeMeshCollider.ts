@@ -1,4 +1,4 @@
-import Collider from 'scene/components/Collider.js'
+import Collider from 'scene/components/Collider';
 import BoundingBox from 'scene/geometry/BoundingBox.js'
 import MeshComponent from 'scene/components/MeshComponent.js'
 import CollisionOctreeNode from 'scene/geometry/CollisionOctreeNode.js'
@@ -12,10 +12,10 @@ class LargeMeshCollider extends Collider {
 	meshes: any;
 	damaged: any;
 	invMat: any;
-	
+
 	/** Constructor
 		@param mesh Instance of {Mesh} [optional] */
-	constructor(mesh) {
+	constructor(mesh?) {
 		super();
 		this.tree = false;
 		this.meshes = [];
@@ -45,12 +45,12 @@ class LargeMeshCollider extends Collider {
 	}
 
 	onAdd(node): any {
-		super.onAdd();
+		super.onAdd(node);
 
 		if (this.damaged) {
 			// Remap the nodes in the collision tree to nodes in this sub-tree
 			var root = this.node;
-			function findSubnodeWithCollisionID(id) {
+			const findSubnodeWithCollisionID = function(id) {
 				var needle = null;
 				root.onEachChild(function (subnode) {
 					if (subnode.localCollisionID === id) {

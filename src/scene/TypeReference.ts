@@ -6,18 +6,18 @@ import Serializable from 'scene/Serializable.js'
 class TypeReference extends Serializable {
 	valueType: any;
 	value: any;
-	 
+
 	/** Constructor */
-	constructor(type, value) {
+	constructor(type, value?) {
 		super();
 		this.valueType=type;
 		this.value=value;
 	}
-	
+
 	type(): any {
 		return "TypeReference";
 	}
-	
+
 	isNull() {
 		return !this.value;
 	}

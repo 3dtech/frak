@@ -14,7 +14,7 @@ class TextureDescriptor extends Descriptor {
 		@param width Width of texture. If given and loaded texture has different width, it will be resized [optional]
 		@param height Height of texture. If given and loaded texture has different height, it will be resized [optional]
 		@param locked Whether or not to prevent modification of the source path after creation [optional] */
-	constructor(source, width?, height?, locked?) {
+	constructor(source?, width?, height?, locked?) {
 		super();
 		this.source = source;
 		this._source = source;

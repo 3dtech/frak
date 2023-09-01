@@ -9,8 +9,9 @@ class DynamicSpace extends Space {
 	renderers: any;
 	colliders: any;
 	filteredRenderers: any;
-	
+
 	constructor() {
+		super();
 		this.renderers = [];
 		this.colliders = [];
 		this.filteredRenderers = [];

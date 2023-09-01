@@ -2,28 +2,24 @@ import FragmentShader from 'rendering/shaders/FragmentShader.js'
 import VertexShader from 'rendering/shaders/VertexShader.js'
 import Shader from 'rendering/shaders/Shader.js'
 
+const VERTEX_SHADER = 0;
+const FRAGMENT_SHADER = 1;
+
 /** Subshader is the baseclass that keeps the code that can be linked to shader program later.
 	Use VertexShader and FragmentShader to create appropriate types of shaders for ShaderProgram. */
-
 class Subshader {
 	shader: any;
 	context: any;
 	code: any;
 	type: any;
-	VERTEX_SHADER: any;
-	FRAGMENT_SHADER: any;
 	compiledShader: any;
 	failedCompilation: any;
-	
+
 	constructor(shader, code, type) {
 		this.shader=shader;
 		this.context=shader.context;
 		this.code=code;
 		this.type=type;
-
-		// Declared types
-		this.VERTEX_SHADER=0;
-		this.FRAGMENT_SHADER=1;
 
 		// Created by subclass (either FragmentShader or VertexShader)
 		this.compiledShader=false;
@@ -83,4 +79,4 @@ class Subshader {
 
 globalThis.Subshader = Subshader;
 
-export default Subshader;
+export {Subshader as default, VERTEX_SHADER, FRAGMENT_SHADER};

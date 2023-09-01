@@ -1,13 +1,13 @@
-import PrimitiveRenderer from 'rendering/renderers/PrimitiveRenderer.js'
-import QuadsRenderBuffer from 'rendering/buffers/QuadsRenderBuffer.js'
-import UniformMat4 from 'rendering/shaders/UniformMat4.js'
+import PrimitiveRenderer from 'rendering/renderers/PrimitiveRenderer';
+import QuadsRenderBuffer from 'rendering/buffers/QuadsRenderBuffer';
+import UniformMat4 from 'rendering/shaders/UniformMat4';
 
 /** Renders cube with given size at given transform (assuming the vertex shader works as intended) */
 
 class CubeRenderer extends PrimitiveRenderer {
 	size: any;
 	renderBuffer: any;
-	
+
 	/** Constructor
 		@param context Rendering context
 		@param matrix Transformation matrix

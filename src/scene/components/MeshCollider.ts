@@ -1,10 +1,11 @@
-import Collider from 'scene/components/Collider.js'
+import Collider from 'scene/components/Collider.js';
+import MeshRendererComponent from './MeshRendererComponent';
 
 /** Mesh collider */
 
 class MeshCollider extends Collider {
 
-	
+
 	constructor() {
 		super();
 	}
