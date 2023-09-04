@@ -106,9 +106,7 @@ class Shader extends Serializable {
 		}
 
 		// if supported, map standard binding blocks immediately
-		if (this.context.isWebGL2()) {
-			this.updateBlockBindings(this.context);
-		}
+		this.updateBlockBindings(this.context);
 	}
 
 	/** Uses the shader program. Links automatically, if not linked

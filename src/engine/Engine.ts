@@ -60,7 +60,6 @@ class Engine {
 			'context': false,
 			'contextErrorCallback': null,
 			'captureScreenshot': false,
-			'webGLVersion': 'auto',
 			'builtinShaders': true,
 			'directionalShadowResolution': 2048,
 			'shadowManualUpdate': false,
@@ -349,9 +348,7 @@ class Engine {
 	validateOptions(canvas): any {
 		// Create default rendering context
 		if (!this.options.context)
-			this.options.context = new RenderingContext(canvas, null, this.options.contextErrorCallback, this.options.webGLVersion);
-
-		var gl = this.options.context.gl;
+			this.options.context = new RenderingContext(canvas, null, this.options.contextErrorCallback);
 
 		// Transparency mode validation
 		switch (this.options.transparencyMode) {
@@ -363,25 +360,11 @@ class Engine {
 				this.options.transparencyMode = 'blended';
 				break;
 		}
-		if (this.options.transparencyMode != 'sorted' && !this.options.context.isWebGL2()) {
-			var extFloat = gl.getExtension('OES_texture_float');
-			var extHalfFloat = gl.getExtension('OES_texture_half_float');
-			if (!extFloat && !extHalfFloat) {
-				this.options.transparencyMode = 'sorted';
-			}
-		}
 
 		// Renderer mode validation
 		switch (this.options.renderer) {
 			case 'auto':
-				if (this.options.context.isWebGL2() || (
-					gl.getExtension('WEBGL_draw_buffers') &&
-					gl.getExtension('OES_texture_float') &&
-					gl.getExtension('OES_standard_derivatives'))
-				)
-					this.options.renderer = 'deferred';
-				else
-					this.options.renderer = 'forward';
+				this.options.renderer = 'deferred';
 				break;
 			case 'deferred':
 			case 'forward':
@@ -448,7 +431,6 @@ class Engine {
 			ctx.fillText('Batches: ' + organizer.visibleSolidBatches + " / " + organizer.visibleTransparentBatches, 10, 75);
 
 			ctx.fillText('RequestedFPS: ' + this.options.requestedFPS, this.debugWidth / 2, 45);
-			ctx.fillText('WebGL: ' + this.context.version, this.debugWidth / 2, 60);
 
 			var gl = this.context.gl;
 			var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');

@@ -40,17 +40,7 @@ class SubmeshRenderer extends Renderer {
 		if (!this.submesh)
 			throw Error("SubmeshRenderer.allocBuffer: No submesh set");
 
-		if (context.engine && (context.engine.options.useVAO === true || context.isWebGL2())) {
-			try {
-				this.buffer = new TrianglesRenderBufferVAO(context, this.submesh.faces);
-			}
-			catch(e) {
-				this.buffer = new TrianglesRenderBuffer(context, this.submesh.faces);
-			}
-		}
-		else {
-			this.buffer = new TrianglesRenderBuffer(context, this.submesh.faces);
-		}
+		this.buffer = new TrianglesRenderBufferVAO(context, this.submesh.faces);
 	}
 
 	build(context): any {

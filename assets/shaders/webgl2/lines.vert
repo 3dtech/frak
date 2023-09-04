@@ -14,9 +14,21 @@ uniform mat4 projection;
 out vec4 fragColor;
 out vec4 fragPosition;
 
+vec4 clipNearPlane(vec4 a, vec4 b) {
+	if (a.z > a.w && b.z <= b.w) {
+		float dA = a.z - a.w;
+		float dB = b.z - b.w;
+		float t = dA / (dA - dB);
+		return a + (b - a) * t;
+	}
+	return a;
+}
+
 void main() {
 	vec4 pA = projection * modelview * vec4(pointA, 1.0);
 	vec4 pB = projection * modelview * vec4(pointB, 1.0);
+	pA = clipNearPlane(pA, pB);
+	pB = clipNearPlane(pB, pA);
 
 	vec2 screenA = viewport * (0.5 * pA.xy / pA.w + 0.5);
 	vec2 screenB = viewport * (0.5 * pB.xy / pB.w + 0.5);
@@ -31,6 +43,6 @@ void main() {
 	vec4 clip = mix(pA, pB, position.z);
 
 	fragColor = color;
-	fragPosition=modelview*vec4(position, 1.0);
-	gl_Position=vec4(clip.w * ((2.0 * pt) / viewport - 1.0), clip.z, clip.w);
+	fragPosition = vec4(clip.w * ((2.0 * pt) / viewport - 1.0), clip.z, clip.w);
+	gl_Position = fragPosition;
 }

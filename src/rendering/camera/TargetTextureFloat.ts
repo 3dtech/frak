@@ -3,33 +3,17 @@ import Texture from 'rendering/materials/Texture';
 
 
 class TargetTextureFloat extends TargetTexture {
-	extColorFloat: any;
-	extHalfFloat: any;
-	extFloat: any;
-	linearFloat: any;
-	linearHalf: any;
+	linear: any;
 	texture: any;
 
 	constructor(sizeOrTexture, context, useDepthTexture, useNearestFiltering?) {
-		if (context.isWebGL2()) {
-			var extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
-			if (!extColorFloat)
-				throw('TargetTextureFloat: Floating point COLOR textures are not supported on this system.');
-		}
-		super(sizeOrTexture, context, useDepthTexture);
-		if (!context.isWebGL2()) {
-			this.extHalfFloat = context.gl.getExtension('OES_texture_half_float');
-			this.extFloat = context.gl.getExtension('OES_texture_float');
-			if (!this.extFloat && !this.extHalfFloat)
-				throw('TargetTextureFloat: Floating point textures are not supported on this system.');
+		var extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
+		if (!extColorFloat)
+			throw('TargetTextureFloat: Floating point COLOR textures are not supported on this system.');
 
-			this.linearFloat = null;
-			this.linearHalf = null;
-			if (!useNearestFiltering) {
-				this.linearFloat = context.gl.getExtension('OES_texture_float_linear');
-				this.linearHalf = context.gl.getExtension('OES_texture_half_float_linear');
-			}
-		}
+		super(sizeOrTexture, context, useDepthTexture);
+
+		this.linear = false;
 	}
 
 	type(): any {
@@ -37,34 +21,15 @@ class TargetTextureFloat extends TargetTexture {
 	}
 
 	getDataType(context): any {
-		if (context.isWebGL2()) {
-			return context.gl.FLOAT;
-		}
-
-		if (this.extHalfFloat) {
-			if (!this.extFloat)
-				return this.extHalfFloat.HALF_FLOAT_OES;
-
-			if (navigator) {
-				switch (navigator.platform) {
-					case 'iPad':
-					case 'iPod':
-					case 'iPhone':
-						return this.extHalfFloat.HALF_FLOAT_OES;
-				}
-			}
-		}
 		return context.gl.FLOAT;
 	}
 
 	getInternalFormat(context): any {
-		if (context.isWebGL2())
-			return context.gl.RGBA16F;
-		return context.gl.RGBA;
+		return context.gl.RGBA16F;
 	}
 
 	getTextureFilter(context): any {
-		if (this.linearFloat && this.linearHalf)
+		if (this.linear)
 			return context.gl.LINEAR;
 		return context.gl.NEAREST;
 	}

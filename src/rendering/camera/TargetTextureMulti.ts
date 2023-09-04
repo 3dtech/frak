@@ -39,49 +39,12 @@ class TargetTextureMulti extends RenderTarget {
 		if (this.options.numTargets < 1)
 			throw('TargetTextureMulti: Must have at least one color target.');
 
-		// Test for draw_buffers
-		if (!context.isWebGL2()) {
-			this.extDrawBuffers = context.gl.getExtension('WEBGL_draw_buffers');
-			if (!this.extDrawBuffers)
-				throw('TargetTextureMulti: WEBGL_draw_buffers not available.');
-		}
-
-		// Test for depth texture, if needed
-		if (this.options.depth && !context.isWebGL2()) {
-			var ext = context.gl.getExtension('WEBGL_depth_texture') || context.gl.depthTextureExt;
-			if (!ext) ext = context.gl.getExtension('WEBKIT_WEBGL_depth_texture');
-			if (!ext)
-				throw('TargetTextureMulti: Depth texture reqeusted, but not available.');
-		}
-
 		// Check draw buffer limits
-		if (context.isWebGL2()) {
-			this.maxColorAttachments = context.gl.getParameter(context.gl.MAX_COLOR_ATTACHMENTS);
-			this.maxDrawBuffers = context.gl.getParameter(context.gl.MAX_DRAW_BUFFERS);
-		}
-		else {
-			this.maxColorAttachments = context.gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL);
-			this.maxDrawBuffers = context.gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_WEBGL);
-		}
+		this.maxColorAttachments = context.gl.getParameter(context.gl.MAX_COLOR_ATTACHMENTS);
+		this.maxDrawBuffers = context.gl.getParameter(context.gl.MAX_DRAW_BUFFERS);
 
 		if (this.options.numTargets > this.maxDrawBuffers) {
 			throw('TargetTextureMulti: Too many targets requested. System only supports {0} draw buffers.'.format(this.maxDrawBuffers));
-		}
-
-		// Test for floating point support
-		if (this.options.dataType == 'float' && !context.isWebGL2()) {
-			this.extTextureFloat = context.gl.getExtension('OES_texture_float');
-			this.extTextureHalfFloat = context.gl.getExtension('OES_texture_half_float');
-			if (!this.extTextureFloat && !this.extTextureHalfFloat)
-				throw('TargetTextureMulti: Floating point textures are not supported on this system.');
-
-			// Test for linear filtering of floating point textures
-			if (this.options.filtering == 'linear') {
-				this.extTextureFloatLinear = context.gl.getExtension('OES_texture_float_linear');
-				this.extTextureHalfFloatLinear = context.gl.getExtension('OES_texture_half_float_linear');
-				if (!this.extTextureFloatLinear && !this.extTextureHalfFloatLinear)
-					throw('TargetTextureMulti: Linear filtering requested, but not available.');
-			}
 		}
 
 		this.targets = [];
@@ -104,42 +67,18 @@ class TargetTextureMulti extends RenderTarget {
 		if (this.options.dataType == 'unsigned')
 			return context.gl.UNSIGNED_BYTE;
 
-		if (context.isWebGL2()) {
-			return context.gl.FLOAT;
-		}
-
-		if (this.extTextureHalfFloat) {
-			// System only supports half precision floating point textures
-			if (!this.extTextureFloat) {
-				return this.extTextureHalfFloat.HALF_FLOAT_OES;
-			}
-
-			// iOS says it supports FLOAT, but in reality it requires it to be HALF_FLOAT
-			if (navigator && navigator.platform) {
-				switch (navigator.platform) {
-					case 'iPad':
-					case 'iPod':
-					case 'iPhone':
-						return this.extTextureHalfFloat.HALF_FLOAT_OES;
-					default:
-						return context.gl.FLOAT;
-				}
-			}
-		}
 		return context.gl.FLOAT;
 	}
 
 	getInternalFormat(context): any {
-		if (context.isWebGL2() && this.options.dataType == 'float')
+		if (this.options.dataType == 'float')
 			return context.gl.RGBA16F;
 		return context.gl.RGBA;
 	}
 
 	getTextureFilter(context): any {
 		if (this.options.dataType == 'float') {
-			if (context.isWebGL2() || this.extTextureFloatLinear || this.extTextureHalfFloatLinear)
-				return context.gl.LINEAR;
-			return context.gl.NEAREST;
+			return context.gl.LINEAR;
 		}
 		return context.gl.NEAREST;
 	}
@@ -189,7 +128,7 @@ class TargetTextureMulti extends RenderTarget {
 
 		// Setup color attachments
 		var buffers = [];
-		var COLOR_ATTACHMENT0 = context.isWebGL2() ? context.gl.COLOR_ATTACHMENT0 : this.extDrawBuffers.COLOR_ATTACHMENT0_WEBGL;
+		var COLOR_ATTACHMENT0 = context.gl.COLOR_ATTACHMENT0;
 		for (i=0; i<this.options.numTargets; ++i) {
 			var texture = this.createBuffer(context);
 			this.targets.push(texture);
@@ -214,12 +153,7 @@ class TargetTextureMulti extends RenderTarget {
 		}
 
 		this.checkStatus(context);
-		if (context.isWebGL2()) {
-			gl.drawBuffers(buffers);
-		}
-		else {
-			this.extDrawBuffers.drawBuffersWEBGL(buffers);
-		}
+		gl.drawBuffers(buffers);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	}
 

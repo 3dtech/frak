@@ -14,10 +14,10 @@
 		<button onclick="pauseEngine(this);">PAUSE</button>
 	</div>
 
-	<script src="../builds/frak-latest.debug.js"></script>
+	<script src="../builds/frak-latest.min.js"></script>
 
 	<script type="text/javascript">
-		var ClickController = Controller.extend({
+		/* var ClickController = Controller.extend({
 			init: function() {
 				this._super();
 				this.marker = new Node('marker');
@@ -74,7 +74,7 @@
 					}
 				}
 			}
-		});
+		}); */
 
 		function setupCamera(scene) {
 			scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
@@ -99,7 +99,7 @@
 		}
 
 		function setupScene(scene) {
-			scene.root.addComponent(new ClickController());
+			//scene.root.addComponent(new ClickController());
 
 			// Grid
 			var grid = engine.scene.root.addNode(new Node('grid'));

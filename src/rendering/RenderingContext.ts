@@ -6,7 +6,6 @@ import FRAK from 'FRAK';
 /** Wraps webgl rendering context of canvas */
 
 class RenderingContext {
-	version: any;
 	canvas: any;
 	gl: any;
 	modelview: any;
@@ -19,7 +18,7 @@ class RenderingContext {
 	/** Constructor
 		@param canvas The canvas element that provides rendering context
 	*/
-	constructor(canvas, contextOptions, errorCallback, version) {
+	constructor(canvas, contextOptions, errorCallback) {
 		if (typeof canvas === 'string' && typeof document !== 'undefined') {
 			canvas = document.getElementById(canvas);
 		}
@@ -28,17 +27,8 @@ class RenderingContext {
 			canvas = canvas[0];
 		}
 
-		this.version = version;
-		if (this.version === 'auto') {
-			if ('WebGL2RenderingContext' in window) {
-				this.version = 'webgl2';
-			}
-			else {
-				this.version = 'webgl';
-				if (!('WebGLRenderingContext' in window)) {
-					throw 'Unable to create rendering context, because browser doesn\'t support WebGL';
-				}
-			}
+		if (!('WebGL2RenderingContext' in window)) {
+			throw 'Unable to create rendering context, because browser doesn\'t support WebGL2';
 		}
 
 		if (!canvas)
@@ -54,18 +44,7 @@ class RenderingContext {
 		contextOptions = contextOptions || { alpha: false };
 
 		// Try to get rendering context for WebGL
-		if (this.version === 'webgl2') {
-			this.gl = this.canvas.getContext('webgl2', contextOptions);
-			if (!this.gl && version === 'auto')
-				this.version = 'webgl';
-		}
-
-		if (this.version === 'webgl') {
-			this.gl = this.canvas.getContext('webgl', contextOptions);
-			if (!this.gl) this.gl = this.canvas.getContext('experimental-webgl', contextOptions);
-			if (!this.gl) this.gl = this.canvas.getContext('moz-webgl', contextOptions);
-			if (!this.gl) this.gl = this.canvas.getContext('webkit-3d', contextOptions);
-		}
+		this.gl = this.canvas.getContext('webgl2', contextOptions);
 
 		// Acquiring context failed
 		if (!this.gl) {
@@ -119,10 +98,6 @@ class RenderingContext {
 		if (!this.gl)
 			return true;
 		return this.gl.isContextLost();
-	}
-
-	isWebGL2(): any {
-		return (this.version == 'webgl2');
 	}
 
 	/** Tries to restore the GL state in fresh context. Requires this.engine to be set. */

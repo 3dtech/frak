@@ -39,9 +39,6 @@ class DeferredShadowRenderStage extends RenderStage {
 	}
 
 	onStart(context, engine, camera): any {
-		if (!context.isWebGL2())
-			this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives');
-
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/deferred_shadow_directional"),
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_shadow_directional')),

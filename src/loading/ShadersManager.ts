@@ -29,7 +29,7 @@ class ShadersManager extends Manager {
 		this.context = context;
 		this.builtin = {};
 
-		this.shaderBundle = context.isWebGL2() ? 'webgl2' : 'default';
+		this.shaderBundle = 'webgl2';
 		if (BuiltInShaders && this.shaderBundle in BuiltInShaders) {
 			this.builtin = BuiltInShaders[this.shaderBundle];
 		}

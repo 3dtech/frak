@@ -39,9 +39,8 @@ class Subshader {
 
 		for (var i = 0; i < definitions.length; i++) {
 			var def = definitions[i];
-			var line = context.isWebGL2() ? 1 : 0;
 
-			lines.splice(line, 0, '#define ' + def);
+			lines.splice(1, 0, '#define ' + def);
 		}
 
 		this.code = lines.join('\n');

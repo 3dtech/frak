@@ -9,5 +9,5 @@
 		"./src/**/*.ts",
 		"./lib/*.js"
 	],
-	"exclude": ["classExtend.js"]
+	"exclude": ["./lib/classExtend.js"]
 }

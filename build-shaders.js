@@ -10,12 +10,11 @@ const readdir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
-const OUTPUT_PATH = './src/rendering/shaders/BuiltInShaders.js';
+const OUTPUT_PATH = './src/rendering/shaders/BuiltInShaders.ts';
 const BUNDLE_RELATIVE_PATH = './assets';
 const EXTENSION_FILTER = ['.vert', '.frag'];
 
 let profiles = {
-	'default': './assets/shaders/default',
 	'webgl2': './assets/shaders/webgl2',
 };
 
@@ -43,7 +42,7 @@ async function main() {
 		}
 	}
 
-	let js = `// Generated at ${(new Date()).toISOString()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};\nglobalThis.BuiltInShaders = BuiltInShaders`;
+	let js = `// Generated at ${(new Date()).toISOString()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};\nglobalThis.BuiltInShaders = BuiltInShaders;`;
 	await writeFile(OUTPUT_PATH, js);
 	console.log('Output written to %s', OUTPUT_PATH);
 }

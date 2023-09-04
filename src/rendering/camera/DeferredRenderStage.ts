@@ -19,18 +19,6 @@ class DeferredRenderStage extends PostProcessRenderStage {
 		this.debugger = null;
 	}
 
-	onStart(context, engine, camera): any {
-		// Check that the device can handle deferred rendering
-		if (!context.isWebGL2() && !context.gl.getExtension('WEBGL_draw_buffers'))
-			throw('DeferredRenderStage: WEBGL_draw_buffers not available.');
-		if (!context.isWebGL2() && !context.gl.getExtension('OES_texture_float'))
-			throw('DeferredRenderStage: OES_texture_float not available.');
-		if (!context.isWebGL2() && !context.gl.getExtension('OES_standard_derivatives'))
-			throw('DeferredRenderStage: OES_standard_derivatives not available.');
-
-		super.onStart(context, engine, camera);
-	}
-
 	getGeneratorStage(): any {
 		return new DeferredShadingRenderStage();
 	}

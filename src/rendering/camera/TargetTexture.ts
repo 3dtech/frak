@@ -25,16 +25,6 @@ class TargetTexture extends RenderTarget {
 		this.useStencilBuffer = (useStencilBuffer === true);
 		this.rebuild = false;
 
-		if (this.useDepthTexture && !context.isWebGL2()) {
-			var depthTextureExt = (
-				context.gl.getExtension('WEBGL_depth_texture') ||
-				context.gl.getExtension('WEBKIT_WEBGL_depth_texture') ||
-				context.gl.UNSIGNED_INT_24_8
-			);
-			if (!depthTextureExt)
-				throw('TargetTexture: Depth texture reqeusted, but not available.');
-		}
-
 		this.build(context);
 	}
 

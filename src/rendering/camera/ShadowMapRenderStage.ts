@@ -40,20 +40,10 @@ class ShadowMapRenderStage extends RenderStage {
 	}
 
 	onStart(context, engine): any {
-		var shader = 'forward_shadow';
-		if (context.isWebGL2()) {
-			shader = 'forward_shadow_vsm';
-		}
-		else {
-			this.extStandardDerivatives = context.gl.getExtension('OES_standard_derivatives');
-			if (this.extStandardDerivatives)
-				shader = 'forward_shadow_vsm';
-		}
-
 		this.material = new Material(
 			engine.assetsManager.addShader(
 				engine.assetsManager.shadersManager.bundle('forward_shadow.vert'),
-				engine.assetsManager.shadersManager.bundle('{0}.frag'.format(shader))
+				engine.assetsManager.shadersManager.bundle('forward_shadow_vsm.frag')
 			),
 			{
 				'hasFloat': new UniformInt(1)
