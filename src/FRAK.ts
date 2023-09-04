@@ -144,3 +144,11 @@ FRAK.isWebGLSupported = function() {
 	canvas.remove();
 	return !!_gl;
 };
+
+function FrakCallback(classScope, fnCallback) {
+	return function() { return fnCallback.apply(classScope, arguments); };
+};
+
+globalThis.FrakCallback = FrakCallback;
+globalThis.FRAK = FRAK;
+export {FRAK as default, FrakCallback};

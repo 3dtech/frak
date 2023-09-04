@@ -1,11 +1,11 @@
-import RendererComponent from 'scene/components/RendererComponent.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import Material from 'rendering/materials/Material.js'
-import UniformVec2 from 'rendering/shaders/UniformVec2.js'
-import LineRenderer from 'rendering/renderers/LineRenderer.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import LinesRenderBuffer from 'rendering/buffers/LinesRenderBuffer.js'
-import Color from 'rendering/Color'
+import RendererComponent from 'scene/components/RendererComponent';
+import UniformColor from 'rendering/shaders/UniformColor';
+import Material from 'rendering/materials/Material';
+import UniformVec2 from 'rendering/shaders/UniformVec2';
+import LineRenderer from 'rendering/renderers/LineRenderer';
+import BoundingBox from 'scene/geometry/BoundingBox';
+import LinesRenderBuffer from 'rendering/buffers/LinesRenderBuffer';
+import Color from 'rendering/Color';
 
 /**
  * Can be used to render lines in 3D space.

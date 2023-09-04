@@ -1,6 +1,6 @@
-import Renderer from 'rendering/renderers/Renderer.js'
-import LinesRenderBuffer from 'rendering/buffers/LinesRenderBuffer.js'
-import LinesRenderBufferInstanced from 'rendering/buffers/LinesRenderBufferInstanced.js'
+import Renderer from 'rendering/renderers/Renderer';
+import LinesRenderBuffer from 'rendering/buffers/LinesRenderBuffer';
+import LinesRenderBufferInstanced from 'rendering/buffers/LinesRenderBufferInstanced';
 
 /**
  * Line renderer

@@ -43,7 +43,7 @@ async function main() {
 		}
 	}
 
-	let js = `// Generated at ${(new Date()).toISOString()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};`;
+	let js = `// Generated at ${(new Date()).toISOString()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};\nglobalThis.BuiltInShaders = BuiltInShaders`;
 	await writeFile(OUTPUT_PATH, js);
 	console.log('Output written to %s', OUTPUT_PATH);
 }

@@ -1,4 +1,4 @@
-import RenderTarget from 'rendering/camera/RenderTarget.js'
+import RenderTarget from 'rendering/camera/RenderTarget';
 
 
 class TargetScreen extends RenderTarget {

@@ -1,16 +1,17 @@
-import TextureDescriptor from 'scene/descriptors/TextureDescriptor.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import UniformMat3 from 'rendering/shaders/UniformMat3.js'
-import Material from 'rendering/materials/Material.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import Mesh from 'scene/geometry/Mesh.js'
-import Submesh from 'scene/geometry/Submesh.js'
-import Node from 'scene/Node.js'
-import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
-import MeshCollider from 'scene/components/MeshCollider.js'
-import Color from 'rendering/Color'
+import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
+import Sampler from 'rendering/shaders/Sampler';
+import UniformMat3 from 'rendering/shaders/UniformMat3';
+import Material from 'rendering/materials/Material';
+import UniformColor from 'rendering/shaders/UniformColor';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import Mesh from 'scene/geometry/Mesh';
+import Submesh from 'scene/geometry/Submesh';
+import Node from 'scene/Node';
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
+import MeshComponent from 'scene/components/MeshComponent';
+import MeshCollider from 'scene/components/MeshCollider';
+import Color from 'rendering/Color';
+import FRAK from 'FRAK';
 
 /** Loads models to scene hierarchy from JSON data */
 

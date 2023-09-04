@@ -4,6 +4,9 @@
 	Input handles user input (touch, mouse, keyboard).
 	*/
 
+import { FrakCallback } from "FRAK";
+import HammerWF from '../../lib/hammer.min.js';
+
 class Input {
 	controllers: any;
 	engine: any;

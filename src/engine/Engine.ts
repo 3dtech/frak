@@ -1,14 +1,15 @@
-import Scene from 'scene/Scene.js'
-import DefaultScene from 'scene/DefaultScene.js'
-import FPS from 'engine/FPS.js'
-import AssetsManager from 'loading/AssetsManager.js'
-import Texture from 'rendering/materials/Texture.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import RenderingContext from 'rendering/RenderingContext.js'
-import RenderTarget from 'rendering/camera/RenderTarget.js'
-import Input from 'engine/Input.js'
-import Component from 'scene/components/Component.js'
-import Renderer from 'rendering/renderers/Renderer.js'
+import Scene from 'scene/Scene';
+import DefaultScene from 'scene/DefaultScene';
+import FPS from 'engine/FPS';
+import AssetsManager from 'loading/AssetsManager';
+import Texture from 'rendering/materials/Texture';
+import Sampler from 'rendering/shaders/Sampler';
+import RenderingContext from 'rendering/RenderingContext';
+import RenderTarget from 'rendering/camera/RenderTarget';
+import Input from 'engine/Input';
+import Component from 'scene/components/Component';
+import Renderer from 'rendering/renderers/Renderer';
+import FRAK, { FrakCallback } from 'FRAK';
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.

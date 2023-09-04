@@ -1,11 +1,11 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import TargetTextureFloat from 'rendering/camera/TargetTextureFloat.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import Material from 'rendering/materials/Material.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import Shader from 'rendering/shaders/Shader.js'
-import Color from 'rendering/Color'
+import RenderStage from 'rendering/camera/RenderStage';
+import TargetTextureFloat from 'rendering/camera/TargetTextureFloat';
+import Sampler from 'rendering/shaders/Sampler';
+import Material from 'rendering/materials/Material';
+import UniformInt from 'rendering/shaders/UniformInt';
+import UniformColor from 'rendering/shaders/UniformColor';
+import Shader from 'rendering/shaders/Shader';
+import Color from 'rendering/Color';
 
 /**
  * Render-stage for rendering order-independent transparency.

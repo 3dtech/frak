@@ -1,5 +1,5 @@
-import TargetTexture from 'rendering/camera/TargetTexture.js'
-import Texture from 'rendering/materials/Texture.js'
+import TargetTexture from 'rendering/camera/TargetTexture';
+import Texture from 'rendering/materials/Texture';
 
 
 class TargetTextureFloat extends TargetTexture {
@@ -8,18 +8,16 @@ class TargetTextureFloat extends TargetTexture {
 	extFloat: any;
 	linearFloat: any;
 	linearHalf: any;
-	frameBuffer: any;
 	texture: any;
-	depth: any;
 
 	constructor(sizeOrTexture, context, useDepthTexture, useNearestFiltering?) {
-		super(sizeOrTexture, context, useDepthTexture);
 		if (context.isWebGL2()) {
-			this.extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
-			if (!this.extColorFloat)
+			var extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
+			if (!extColorFloat)
 				throw('TargetTextureFloat: Floating point COLOR textures are not supported on this system.');
 		}
-		else {
+		super(sizeOrTexture, context, useDepthTexture);
+		if (!context.isWebGL2()) {
 			this.extHalfFloat = context.gl.getExtension('OES_texture_half_float');
 			this.extFloat = context.gl.getExtension('OES_texture_float');
 			if (!this.extFloat && !this.extHalfFloat)

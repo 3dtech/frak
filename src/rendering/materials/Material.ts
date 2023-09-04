@@ -1,7 +1,8 @@
-import Serializable from 'scene/Serializable.js'
-import Shader from 'rendering/shaders/Shader.js'
-import MaterialDescriptor from 'scene/descriptors/MaterialDescriptor.js'
-import Sampler from 'rendering/shaders/Sampler.js'
+import Serializable from 'scene/Serializable';
+import Shader from 'rendering/shaders/Shader';
+import MaterialDescriptor from 'scene/descriptors/MaterialDescriptor';
+import Sampler from 'rendering/shaders/Sampler';
+import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
 
 /** Material definition */
 

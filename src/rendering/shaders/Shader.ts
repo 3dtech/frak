@@ -1,11 +1,12 @@
-import Serializable from 'scene/Serializable.js'
-import ShadersManager from 'loading/ShadersManager.js'
-import RenderingContext from 'rendering/RenderingContext.js'
-import ShaderRequirements from 'rendering/shaders/ShaderRequirements.js'
-import VertexShader from 'rendering/shaders/VertexShader.js'
-import FragmentShader from 'rendering/shaders/FragmentShader.js'
-import Uniform from 'rendering/shaders/Uniform.js'
-import Sampler from 'rendering/shaders/Sampler.js'
+import Serializable from 'scene/Serializable';
+import ShadersManager from 'loading/ShadersManager';
+import RenderingContext from 'rendering/RenderingContext';
+import ShaderRequirements from 'rendering/shaders/ShaderRequirements';
+import VertexShader from 'rendering/shaders/VertexShader';
+import FragmentShader from 'rendering/shaders/FragmentShader';
+import Uniform from 'rendering/shaders/Uniform';
+import Sampler from 'rendering/shaders/Sampler';
+import ExplicitAttributeLocations from './AttributeLocations';
 
 /**
  * Used to compile and link vertex and fragment shader to a shader program.
@@ -22,7 +23,7 @@ class Shader extends Serializable {
 	uniformLocations: any;
 	bindings: any;
 	definitions: any;
-	
+
 	/** Constructor
 		@param context Rendering context
 		@param descriptor Shader source descriptor normally passed to shader by ShadersManager to make it identifiable later [optional] */

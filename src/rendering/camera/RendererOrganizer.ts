@@ -1,4 +1,4 @@
-
+import { CollectionReference, CollectionView } from "rendering/CollectionUtils";
 
 /** Transparency sorting function */
 function TransparencySort(a, b) {
@@ -88,7 +88,7 @@ class RendererOrganizer {
 	visibleUnlitRenderers: any;
 	visibleUnlitFaces: any;
 	visibleUnlitBatches: any;
-	
+
 	constructor() {
 		this.enableDynamicBatching = true; ///< Set to false to turn off dynamic batching of renderers by material.
 

@@ -1,17 +1,24 @@
-function SamplerAccumulator() {
-	this.samplers = [];
-	this.length = 0;
+class SamplerAccumulator {
+	samplers: any[];
+	length: number;
 
-	var scope = this;
+	constructor() {
+		this.samplers = [];
+		this.length = 0;
+	}
 
-	this.add = function(sampler) {
-		scope.samplers[scope.length++] = sampler;
+	add(sampler) {
+		this.samplers[this.length++] = sampler;
 	};
 
-	this.clear = function() {
-		for (var i = 0, l = scope.samplers.length; i < l; ++i) {
-			scope.samplers[i] = null;
+	clear = function() {
+		for (var i = 0, l = this.samplers.length; i < l; ++i) {
+			this.samplers[i] = null;
 		}
-		scope.length = 0;
+		this.length = 0;
 	};
 }
+
+globalThis.SamplerAccumulator = SamplerAccumulator;
+
+export default SamplerAccumulator;

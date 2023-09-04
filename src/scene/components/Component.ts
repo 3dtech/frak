@@ -32,13 +32,13 @@ class Component extends Serializable {
 	// Methods
 	/** Call to enable the component */
 	enable(): any {
-		if(!this.enabled) this.onEnable();
+		if(!this.enabled && this.started) this.onEnable();
 		this.enabled=true;
 	}
 
 	/** Call to disable the component */
 	disable(): any {
-		if(this.enabled) this.onDisable();
+		if(this.enabled && this.started) this.onDisable();
 		this.enabled=false;
 	}
 

@@ -1,21 +1,10 @@
 import LinesRenderBuffer from "./LinesRenderBuffer";
 
 class LinesRenderBufferInstanced extends LinesRenderBuffer {
+	divisors: any;
+
 	constructor(context) {
 		super(context);
-
-		if (context.isWebGL2()) {
-			this._drawElementsInstanced = context.gl.drawElementsInstanced.bind(context.gl);
-			this._vertexAttribDivisor = context.gl.vertexAttribDivisor.bind(context.gl);
-		} else {
-			var ext = context.gl.getExtension('ANGLE_instanced_arrays');
-			if (!ext) {
-				throw 'Instancing unsupported';
-			}
-
-			this._drawElementsInstanced = ext.drawElementsInstancedANGLE.bind(ext);
-			this._vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
-		}
 
 		this.divisors = {};
 	}
@@ -88,7 +77,7 @@ class LinesRenderBufferInstanced extends LinesRenderBuffer {
 			gl.enableVertexAttribArray(bufferLocation);
 			locations.push(bufferLocation);
 			gl.vertexAttribPointer(bufferLocation, this.buffers[bufferName].itemSize, gl.FLOAT, false, 0, 0);
-			this._vertexAttribDivisor(bufferLocation, this.divisors[bufferName]);
+			gl.vertexAttribDivisor(bufferLocation, this.divisors[bufferName]);
 		}
 
 		this.drawElements(count);
@@ -100,11 +89,11 @@ class LinesRenderBufferInstanced extends LinesRenderBuffer {
 	drawElements(count) {
 		var gl = this.context.gl;
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
-		this._drawElementsInstanced(gl.TRIANGLES, this.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0, count);
+		gl.drawElementsInstanced(gl.TRIANGLES, this.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0, count);
 	}
 
 }
 
-globalThis.LinesRenderBuffer = LinesRenderBufferInstanced;
+globalThis.LinesRenderBufferInstanced = LinesRenderBufferInstanced;
 
 export default LinesRenderBufferInstanced;

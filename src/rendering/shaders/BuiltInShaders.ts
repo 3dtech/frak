@@ -153,3 +153,4 @@ var BuiltInShaders = {
 		"shaders/webgl2/wireframe.vert": "// Diffuse shader\nattribute vec3 position; \nattribute vec3 barycentric; \n\nuniform mat4 modelview;\nuniform mat4 projection;\n\nvarying vec3 fragBarycentric;\n\nvoid main(void) { \n\tgl_Position=projection*modelview*vec4(position, 1.0); \n\tfragBarycentric = barycentric;\n}"
 	}
 };
+globalThis.BuiltInShaders = BuiltInShaders;

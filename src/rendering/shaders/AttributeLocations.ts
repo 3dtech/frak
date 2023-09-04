@@ -9,3 +9,6 @@ var ExplicitAttributeLocations = {
 	'tangent': 3,
 	'bitangent': 4
 };
+
+globalThis.ExplicitAttributeLocations = ExplicitAttributeLocations;
+export default ExplicitAttributeLocations;

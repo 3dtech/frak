@@ -1,12 +1,11 @@
-import RenderBuffer from 'rendering/buffers/RenderBuffer.js'
+import RenderBuffer from 'rendering/buffers/RenderBuffer';
+import ExplicitAttributeLocations from 'rendering/shaders/AttributeLocations';
 
 /**
  * Render buffer implementation utilizing the vertex array object extension.
  */
 
 class RenderBufferVAO extends RenderBuffer {
-	createVAO: any;
-	bindVAO: any;
 	vao: any;
 	damaged: any;
 
@@ -16,21 +15,7 @@ class RenderBufferVAO extends RenderBuffer {
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */
 	constructor(context, faces, type?) {
 		super(context, faces, type);
-		if (context.isWebGL2()) {
-			this.createVAO = context.gl.createVertexArray.bind(context.gl);
-			this.bindVAO = context.gl.bindVertexArray.bind(context.gl);
-		} else {
-			var extVAO = context.gl.getExtension('OES_vertex_array_object');
-			if (!extVAO)
-				throw 'RenderBufferVAO: Vertex array objects not supported on this device.';
-			this.createVAO = extVAO.createVertexArrayOES.bind(extVAO);
-			this.bindVAO = extVAO.bindVertexArrayOES.bind(extVAO);
-		}
-
-		this.vao = this.createVAO();
-		if (!this.vao)
-			throw 'RenderBufferVAO: Unable to create vertex array object.';
-
+		this.createFacesBuffer(faces);	// Even though RenderBuffer does this, class initialization order deletes the VAO
 		this.damaged = true;
 	}
 
@@ -43,19 +28,25 @@ class RenderBufferVAO extends RenderBuffer {
 		if (items.length / itemSize <= this.maxFaceIndex)
 			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
 
-		this.bindVAO(this.vao);
+		var gl = this.context.gl;
+
+		gl.bindVertexArray(this.vao);
 		super.add(name, items, itemSize);
-		this.bindVAO(null);
+		gl.bindVertexArray(null);
 
 		this.damaged = true;
 	}
 
 	createFacesBuffer(faces): any {
 		var gl = this.context.gl;
-		this.bindVAO(this.vao);
+		this.vao = gl.createVertexArray();
+		if (!this.vao)
+			throw 'RenderBufferVAO: Unable to create vertex array object.';
+
+		gl.bindVertexArray(this.vao);
 		super.createFacesBuffer(faces);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
-		this.bindVAO(null);
+		gl.bindVertexArray(null);
 
 		this.damaged = true;
 	}
@@ -67,7 +58,7 @@ class RenderBufferVAO extends RenderBuffer {
 	bindLocations(shader?): any {
 		var gl = this.context.gl;
 
-		this.bindVAO(this.vao);
+		gl.bindVertexArray(this.vao);
 
 		// Attribute buffers
 		var bufferLocation;
@@ -88,7 +79,7 @@ class RenderBufferVAO extends RenderBuffer {
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 		// Finised setting up VAO
-		this.bindVAO(null);
+		gl.bindVertexArray(null);
 
 		this.damaged = false;
 	}
@@ -102,9 +93,11 @@ class RenderBufferVAO extends RenderBuffer {
 			this.bindLocations();
 		}
 
-		this.bindVAO(this.vao);
+		var gl = this.context.gl;
+
+		gl.bindVertexArray(this.vao);
 		this.drawElements();
-		this.bindVAO(null);
+		gl.bindVertexArray(null);
 	}
 
 }

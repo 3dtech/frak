@@ -5,10 +5,6 @@ import RenderBuffer from 'rendering/buffers/RenderBuffer.js'
  */
 
 class LinesRenderBuffer extends RenderBuffer {
-	_drawElementsInstanced: any;
-	_vertexAttribDivisor: any;
-	divisors: any;
-
 	/** Constructor
 		@param context Rendering context
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */

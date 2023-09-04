@@ -1,10 +1,10 @@
-import Serializable from 'scene/Serializable.js'
-import TargetScreen from 'rendering/camera/TargetScreen.js'
-import Plane from 'scene/geometry/Plane.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import BoundingSphere from 'scene/geometry/BoundingSphere.js'
-import BoundingVolume from 'scene/geometry/BoundingVolume.js'
-import Color from 'rendering/Color'
+import Serializable from 'scene/Serializable';
+import TargetScreen from 'rendering/camera/TargetScreen';
+import Plane from 'scene/geometry/Plane';
+import BoundingBox from 'scene/geometry/BoundingBox';
+import BoundingSphere from 'scene/geometry/BoundingSphere';
+import BoundingVolume from 'scene/geometry/BoundingVolume';
+import Color from 'rendering/Color';
 
 /** Camera is used to render to render target.
 	@param viewMatrix Camera view matrix {mat4}

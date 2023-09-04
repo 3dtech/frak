@@ -50,3 +50,8 @@ function CollectionView(listReference, fnFilter, keepExact?) {
 		throw Error('Accessing element out of bounds');
 	};
 }
+
+globalThis.CollectionReference = CollectionReference;
+globalThis.CollectionView = CollectionView;
+
+export { CollectionReference, CollectionView };
