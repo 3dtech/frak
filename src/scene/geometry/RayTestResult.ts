@@ -1,4 +1,4 @@
-
+import FRAK from 'FRAK';
 
 /** Container for storing ray intersection tests.
 	It also provides some more commonly used functions like

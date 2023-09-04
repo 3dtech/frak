@@ -5,7 +5,6 @@
 	*/
 
 import { FrakCallback } from "FRAK";
-import HammerWF from '../../lib/hammer.min.js';
 
 class Input {
 	controllers: any;
@@ -240,7 +239,6 @@ class Input {
 			return;
 
 		args = Array.prototype.slice.call(args, 0);
-		args = args.slice(1, args.length); //remove funcName
 		var activated = [];
 		for (var i=0; i < this.controllers.length; i++) {
 			if (this.controllers[i][funcName])

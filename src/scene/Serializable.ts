@@ -1,6 +1,7 @@
-import Cloneable from 'scene/Cloneable.js'
-import Serializer from 'scene/Serializer.js'
-import CyclicSerializer from 'scene/CyclicSerializer.js'
+import Cloneable from 'scene/Cloneable';
+import Serializer from 'scene/Serializer';
+import CyclicSerializer from 'scene/CyclicSerializer';
+import FRAK from 'FRAK';
 
 /** Base-class for (partially) serializable classes.
 	The fields method must return a list of serializable

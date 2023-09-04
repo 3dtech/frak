@@ -1,4 +1,4 @@
-
+import FRAK from 'FRAK';
 
 /** FPS class manages frame time measurements.
 	Its instance is accessible from Engine where it is used
@@ -10,7 +10,7 @@ class FPS {
 	lastMeasurement: any;
 	averageMultiplier: any;
 	delta: any;
-	
+
 	constructor() {
 		this.frametime=0.0;														// Average frametime is 0 at first
 		this.lastMeasurement=(new Date()).getTime();	// Store current time

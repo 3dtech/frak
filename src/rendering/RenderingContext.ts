@@ -1,6 +1,7 @@
 import MatrixStack from 'rendering/MatrixStack';
 import RendererComponent from 'scene/components/RendererComponent';
 import TextComponent from 'scene/components/TextComponent';
+import FRAK from 'FRAK';
 
 /** Wraps webgl rendering context of canvas */
 

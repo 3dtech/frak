@@ -1,13 +1,14 @@
-import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
-import TextureDescriptor from 'scene/descriptors/TextureDescriptor.js'
-import Material from 'rendering/materials/Material.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import UniformVec2 from 'rendering/shaders/UniformVec2.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import Mesh from 'scene/geometry/Mesh.js'
-import Submesh from 'scene/geometry/Submesh.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
+import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
+import Material from 'rendering/materials/Material';
+import UniformColor from 'rendering/shaders/UniformColor';
+import UniformVec2 from 'rendering/shaders/UniformVec2';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import Sampler from 'rendering/shaders/Sampler';
+import Mesh from 'scene/geometry/Mesh';
+import Submesh from 'scene/geometry/Submesh';
+import MeshComponent from 'scene/components/MeshComponent';
+import FRAK from 'FRAK';
 
 /** GPU terrain renderer */
 

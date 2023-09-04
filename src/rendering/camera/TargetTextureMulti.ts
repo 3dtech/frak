@@ -1,6 +1,7 @@
 import Color from 'rendering/Color';
-import RenderTarget from 'rendering/camera/RenderTarget.js'
-import Texture from 'rendering/materials/Texture.js'
+import RenderTarget from 'rendering/camera/RenderTarget.js';
+import Texture from 'rendering/materials/Texture.js';
+import FRAK from 'FRAK';
 
 /** Render target with multiple draw buffers */
 

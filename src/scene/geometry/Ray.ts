@@ -1,6 +1,7 @@
-import BoundingVolume from 'scene/geometry/BoundingVolume.js'
-import BoundingSphere from 'scene/geometry/BoundingSphere.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
+import BoundingVolume from 'scene/geometry/BoundingVolume';
+import BoundingSphere from 'scene/geometry/BoundingSphere';
+import BoundingBox from 'scene/geometry/BoundingBox';
+
 
 /** Ray class */
 
@@ -100,7 +101,7 @@ class Ray {
 		@return Distance of point from ray {number} */
 	distanceOfPoint(point): any {
 		if(vec3.dot(this.getDirection(), vec3.subtract(vec3.create(), point, this.origin))<=0) return vec3.distance(point, this.origin);
-		return vec3.distance(vec3.cross(vec3.create(), this.getDirection(), vec3.subtract(vec3.create(), point, this.origin)));
+		return vec3.length(vec3.cross(vec3.create(), this.getDirection(), vec3.subtract(vec3.create(), point, this.origin)));
 	}
 
 	/** Tests if the ray intersects a bounding volume
