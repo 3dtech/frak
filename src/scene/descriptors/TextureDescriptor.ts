@@ -1,9 +1,8 @@
-import Descriptor from 'scene/descriptors/Descriptor.js'
+import Descriptor from 'scene/descriptors/Descriptor';
 
 /** Texture descriptor is used for describing texture sources */
 
 class TextureDescriptor extends Descriptor {
-	source: any;
 	_source: any;
 	width: any;
 	height: any;

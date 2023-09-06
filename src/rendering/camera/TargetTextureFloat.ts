@@ -4,7 +4,6 @@ import Texture from 'rendering/materials/Texture';
 
 class TargetTextureFloat extends TargetTexture {
 	linear: any;
-	texture: any;
 
 	constructor(sizeOrTexture, context, useDepthTexture, useNearestFiltering?) {
 		var extColorFloat = context.gl.getExtension("EXT_color_buffer_float");

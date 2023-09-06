@@ -1,4 +1,4 @@
-import Descriptor from 'scene/descriptors/Descriptor.js'
+import Descriptor from 'scene/descriptors/Descriptor';
 
 /**
  * Cube texture descriptor is used for describing cubemap texture sources
@@ -6,7 +6,6 @@ import Descriptor from 'scene/descriptors/Descriptor.js'
 
 class CubeTextureDescriptor extends Descriptor {
 	sources: any;
-	source: any;
 
 	/** Constructor. */
 	constructor(sources?) {

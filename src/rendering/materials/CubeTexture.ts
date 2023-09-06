@@ -18,10 +18,7 @@ class CubeTexture extends BaseTexture {
 	name: any;
 	mipmapped: any;
 	clampToEdge: any;
-	anisotropic: any;
-	anisotropyFilter: any;
 	images: any;
-	loaded: any;
 
 	/**
 	 * Constructor

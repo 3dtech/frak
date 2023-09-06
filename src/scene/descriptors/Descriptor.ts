@@ -1,11 +1,11 @@
-import Serializable from 'scene/Serializable.js'
+import Serializable from 'scene/Serializable';
 
 /** Descriptor is a class that is used to describe a resource and all its sub-resources. */
 
 class Descriptor extends Serializable {
 	source: any;
 	parentDescriptor: any;
-	
+
 	constructor() {
 		super();
 		this.source = '';
