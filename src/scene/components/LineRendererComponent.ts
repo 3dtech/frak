@@ -4,8 +4,8 @@ import Material from 'rendering/materials/Material';
 import UniformVec2 from 'rendering/shaders/UniformVec2';
 import LineRenderer from 'rendering/renderers/LineRenderer';
 import BoundingBox from 'scene/geometry/BoundingBox';
-import LinesRenderBuffer from 'rendering/buffers/LinesRenderBuffer';
 import Color from 'rendering/Color';
+import LinesRenderBufferInstanced from 'rendering/buffers/LinesRenderBufferInstanced';
 
 /**
  * Can be used to render lines in 3D space.
@@ -357,7 +357,7 @@ class LineRendererComponent extends RendererComponent {
 		if (this.renderer) {
 			this.damaged = true;
 			delete this.renderer.buffer;
-			this.renderer.buffer = new LinesRenderBuffer(context);
+			this.renderer.buffer = new LinesRenderBufferInstanced(context);
 			this.rebuild(context);
 		}
 	}

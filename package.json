@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "esbuild --bundle src/entry.ts --minify --outfile=builds/frak-latest.min.js",
+    "build-debug": "esbuild --bundle src/entry.ts --outfile=builds/frak-latest.debug.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

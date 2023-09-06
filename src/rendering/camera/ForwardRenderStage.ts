@@ -1,8 +1,8 @@
-import PostProcessRenderStage from 'rendering/camera/PostProcessRenderStage.js'
-import Texture from 'rendering/materials/Texture.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import TrianglesRenderBuffer from 'rendering/buffers/TrianglesRenderBuffer.js'
-import DirectionalLight from 'scene/lights/DirectionalLight.js'
+import PostProcessRenderStage from 'rendering/camera/PostProcessRenderStage';
+import Texture from 'rendering/materials/Texture';
+import Sampler from 'rendering/shaders/Sampler';
+import DirectionalLight from 'scene/lights/DirectionalLight';
+import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
 
 /**
  * Forward renderer
@@ -71,7 +71,7 @@ class ForwardRenderStage extends PostProcessRenderStage {
 
 		function createQuad(x, y, width, height) {
 			var vertices = [x,y,0, x,y+height,0, x+width,y+height,0, x+width,y,0];
-			var quad = new TrianglesRenderBuffer(context, [0, 1, 2, 0, 2, 3]);
+			var quad = new TrianglesRenderBufferVAO(context, [0, 1, 2, 0, 2, 3]);
 			quad.add('position', vertices, 3);
 			quad.add("uv0", [0,0, 0,1, 1,1, 1,0], 2);
 			return quad;

@@ -77,10 +77,8 @@ import "rendering/camera/TargetTextureMulti";
 
 import "rendering/buffers/RenderBuffer";
 import "rendering/buffers/LinesRenderBuffer";
-import "rendering/buffers/TrianglesRenderBuffer";
 import "rendering/buffers/RenderBufferVAO";
 import "rendering/buffers/TrianglesRenderBufferVAO";
-import "rendering/buffers/QuadsRenderBuffer";
 
 import "rendering/materials/BaseTexture";
 import "rendering/materials/Texture";
@@ -91,11 +89,8 @@ import "rendering/spaces/Space";
 import "rendering/spaces/DynamicSpace";
 
 import "rendering/renderers/Renderer";
-import "rendering/renderers/PrimitiveRenderer";
-import "rendering/renderers/MeshRenderer";
 import "rendering/renderers/LineRenderer";
 import "rendering/renderers/SubmeshRenderer";
-import "rendering/renderers/CubeRenderer";
 
 import "loading/DownloadBinary";
 import "loading/DataParserTypes";

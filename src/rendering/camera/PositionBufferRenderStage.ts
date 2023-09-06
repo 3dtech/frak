@@ -1,9 +1,9 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import TargetTextureFloat from 'rendering/camera/TargetTextureFloat.js'
-import Material from 'rendering/materials/Material.js'
-import UniformVec2 from 'rendering/shaders/UniformVec2.js'
-import TrianglesRenderBuffer from 'rendering/buffers/TrianglesRenderBuffer.js'
-import MaterialRenderStage from 'rendering/camera/MaterialRenderStage.js'
+import RenderStage from 'rendering/camera/RenderStage';
+import TargetTextureFloat from 'rendering/camera/TargetTextureFloat';
+import Material from 'rendering/materials/Material';
+import UniformVec2 from 'rendering/shaders/UniformVec2';
+import MaterialRenderStage from 'rendering/camera/MaterialRenderStage';
+import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
 
 /** Render-stage used for generating a buffer of normals for use in the SSAO post-process */
 
@@ -38,7 +38,7 @@ class PositionBufferRenderStage extends RenderStage {
 		var vertices = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
 		var uvs = [0,1, 0,0, 1,0, 1,1];
 		var faces = [0, 1, 2, 0, 2, 3];
-		this.quad=new TrianglesRenderBuffer(context, faces);
+		this.quad=new TrianglesRenderBufferVAO(context, faces);
 		this.quad.add('position', vertices, 3);
 		this.quad.add('texcoord2d0', uvs, 2);
 

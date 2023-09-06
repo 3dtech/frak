@@ -9,7 +9,6 @@ class BoundingBox extends BoundingVolume {
 	extents: any;
 	min: any;
 	max: any;
-	center: any;
 
 	/** Constructor */
 	constructor(center?, size?) {

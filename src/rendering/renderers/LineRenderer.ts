@@ -1,5 +1,4 @@
 import Renderer from 'rendering/renderers/Renderer';
-import LinesRenderBuffer from 'rendering/buffers/LinesRenderBuffer';
 import LinesRenderBufferInstanced from 'rendering/buffers/LinesRenderBufferInstanced';
 
 /**
@@ -18,13 +17,8 @@ class LineRenderer extends Renderer {
 		super(matrix);
 		this.material = material;
 
-		try {
-			this.buffer = new LinesRenderBufferInstanced(context);
-			this.instanced = true;
-		} catch (e) {
-			this.buffer = new LinesRenderBuffer(context);
-			this.instanced = false;
-		}
+		this.buffer = new LinesRenderBufferInstanced(context);
+		this.instanced = true;
 
 		this.unlit = true;
 

@@ -56,8 +56,8 @@ import CubeTexture from 'rendering/materials/CubeTexture.js'
 	shader.unbindTextures(textures);
 	</pre>
 */
-var fallbackTexture: any=false;	// Doesn't exist by default, but will be loaded before texture is loaded or if it is not passed to sampler
-var fallbackCubeTexture: any=false;
+globalThis.fallbackTexture=false;	// Doesn't exist by default, but will be loaded before texture is loaded or if it is not passed to sampler
+globalThis.fallbackCubeTexture=false;
 
 class Sampler extends Serializable {
 	name: any;

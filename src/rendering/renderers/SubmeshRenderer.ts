@@ -1,6 +1,5 @@
 import Renderer from 'rendering/renderers/Renderer';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
-import TrianglesRenderBuffer from 'rendering/buffers/TrianglesRenderBuffer';
 import UniformColor from 'rendering/shaders/UniformColor';
 import UniformFloat from 'rendering/shaders/UniformFloat';
 import UniformInt from 'rendering/shaders/UniformInt';
