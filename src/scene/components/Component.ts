@@ -1,23 +1,20 @@
+import EmptyNode from 'scene/EmptyNode';
 import Serializable from 'scene/Serializable';
 
 class Component extends Serializable {
-	updatePasses: any;
-	started: any;
-	node: any;
-	enabled: any;
+	updatePasses: number;
+	started: boolean;
+	node: EmptyNode;
+	enabled: boolean;
 
-	/** Constructor. NOTE! When overriding the constructor of Component ALWAYS call this._super() to
-		call parent constructor, because otherwise for example onStart/onEnd methods won't work as
-		expected and other functionality may be broken. */
 	constructor() {
 		super();
 		this.updatePasses=1;		// Number of passes the onUpdate method is called. If onUpdate does nothing, set this to 0 to avoid unnecessary call to onUpdate
 		this.started=false;
-		this.node=false;
 		this.enable();
 	}
 
-	excluded(): any {
+	excluded(): string[] {
 		return ["started", "node"];
 	}
 
@@ -122,9 +119,7 @@ class Component extends Serializable {
 		@param engine Instance of Engine
 		@param pass Update pass */
 	onUpdate(engine, pass) { }
-
 }
 
 globalThis.Component = Component;
-
 export default Component;

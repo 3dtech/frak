@@ -62,7 +62,7 @@ class Serializable extends Cloneable {
 	}
 
 	/** Serializes class taking into account the properties that are included and excluded */
-	serialize(excluded): any {
+	serialize(excluded?: string[]): any {
 		try {
 			var serializer=new Serializer();
 			return serializer.serialize(this, excluded, 32);

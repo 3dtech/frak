@@ -1,5 +1,4 @@
-import Serializable from 'scene/Serializable.js'
-import Node from 'scene/Node.js'
+import Serializable from 'scene/Serializable';
 import Transform from './components/Transform';
 import Component from './components/Component';
 
@@ -8,7 +7,7 @@ import Component from './components/Component';
 class EmptyNode extends Serializable {
 	name: any;
 	subnodes: any;
-	components: any;
+	components: Component[];
 	scene: any;
 	parent: any;
 	layer: any;
@@ -106,7 +105,7 @@ class EmptyNode extends Serializable {
 	}
 
 	/** Adds component to this node */
-	addComponent(component): any {
+	addComponent(component: Component): Component {
 		if (!component.type())
 			throw "Unable to add a component that doesn't define it's type by returning it from type() method";
 
@@ -126,7 +125,7 @@ class EmptyNode extends Serializable {
 	}
 
 	/** Removes component from this node */
-	removeComponent(component): any {
+	removeComponent(component: Component): Component {
 		for (var c=0; c<this.components.length; c++) {
 			if (this.components[c]===component) {
 				this.components.splice(c, 1);
@@ -142,7 +141,7 @@ class EmptyNode extends Serializable {
 			this.onRemoveComponent(component);
 		}
 		component.onRemove(this);
-		component.node=false;
+		component.node=undefined;
 		return component;
 	}
 
@@ -166,7 +165,7 @@ class EmptyNode extends Serializable {
 				this.onRemoveComponent(removed[i]);
 			}
 			removed[i].onRemove(this);
-			removed[i].node=false;
+			removed[i].node=undefined;
 		}
 		return removed;
 	}

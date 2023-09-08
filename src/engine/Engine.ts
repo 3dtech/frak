@@ -6,27 +6,28 @@ import Sampler from 'rendering/shaders/Sampler';
 import RenderingContext from 'rendering/RenderingContext';
 import Input from 'engine/Input';
 import FRAK, { FrakCallback } from 'Helpers';
+import Scene from 'scene/Scene';
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
  */
 class Engine {
 	options: any;
-	context: any;
-	scene: any;
-	fps: any;
-	running: any;
-	input: any;
+	context: RenderingContext;
+	scene: Scene;
+	fps: FPS;
+	running: boolean;
+	input: Input;
 	screenshot: any;
 	onScreenshotCaptured: any;
 	debugCTX: any;
 	debugWidth: any;
 	debugFPS: any;
 	debugCount: any;
-	assetsManager: any;
-	WhiteTexture: any;
-	WhiteTextureSampler: any;
-	DiffuseFallbackSampler: any;
+	assetsManager: AssetsManager;
+	WhiteTexture: Texture;
+	WhiteTextureSampler: Sampler;
+	DiffuseFallbackSampler: Sampler;
 	useUpscaling: any;
 	_externallyPaused: any;
 	_savedCanvasStyles: any;
@@ -50,17 +51,16 @@ class Engine {
 			'renderer': 'default',
 			'softShadows': false,
 			'runInBackground': false,
-			'context': false,
+			'contextOptions': null,
 			'contextErrorCallback': null,
 			'captureScreenshot': false,
 			'builtinShaders': true,
 			'directionalShadowResolution': 2048,
 			'shadowManualUpdate': false,
 		}, options);
-		this.validateOptions(canvas);
+		this.validateOptions();
 
-		this.context = this.options.context;
-		this.context.engine = this;
+		this.context = new RenderingContext(canvas, this, this.options.contextOptions, this.options.contextErrorCallback);
 
 		if (!scene)
 			scene = new DefaultScene();
@@ -69,7 +69,6 @@ class Engine {
 		this.scene.engine = this;
 		this.fps = new FPS();
 		this.running = false;
-		this.input = false;
 		this.screenshot = false;
 		this.onScreenshotCaptured = false;
 		this.debugCTX = false;
@@ -105,7 +104,7 @@ class Engine {
 			document.addEventListener('MSFullscreenChange', fsHandler);
 		}
 
-		this.setupInput();
+		this.input = new Input(this, this.context.canvas);
 	}
 
 	onContextLost(event): any {
@@ -141,9 +140,6 @@ class Engine {
 	}
 
 	onFullscreenChange(): any {
-		if (!(this.context instanceof RenderingContext))
-			return;
-
 		var canvas;
 		if (FRAK.isFullscreen()) {
 			// Save original canvas state
@@ -181,8 +177,8 @@ class Engine {
 
 				// If not using upscaling then resize the RenderTarget
 				var gl = scope.context.gl;
-				var width = gl.canvas.clientWidth;
-				var height = Math.max(1, gl.canvas.clientHeight);
+				var width = (gl.canvas as HTMLCanvasElement).clientWidth;
+				var height = Math.max(1, (gl.canvas as HTMLCanvasElement).clientHeight);
 				canvas.setAttribute('width', width);
 				canvas.setAttribute('height', height);
 				scope.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -216,10 +212,6 @@ class Engine {
 		}
 	}
 
-	setupInput(): any {
-		this.input = new Input(this, this.context.canvas);
-	}
-
 	/** Starts the engine. The engine will try to draw frames at the "requestedFPS" specified
 		in the options that were passed to the constructor. The default value is 30fps.
 		If requestAnimationFrame function is not available then setTimeout is used. */
@@ -249,7 +241,7 @@ class Engine {
 		}
 
 		if (!this.scene.started)
-			this.scene.start(this.context, this);
+			this.scene.start(this.context);
 
 		this._currentAnimationFrame = FRAK.requestAnimationFrame(draw);
 	}
@@ -267,7 +259,7 @@ class Engine {
 		Subsequent call to run() will start the engine again. */
 	stop(): any {
 		this.pause();
-		if (this.scene.started) this.scene.end(this.context);
+		if (this.scene.started) this.scene.end(this.context, this);
 	}
 
 	/** Pauses the engine, call run to start it again. */
@@ -325,7 +317,7 @@ class Engine {
 	/** Runs engine to render a single frame and do an update */
 	frame(): any {
 		this.context.engine = this;
-		this.input.update(this);
+		this.input.update();
 		this.scene.update(this);
 		this.scene.render(this.context);
 		this.fps.measure();
@@ -338,11 +330,7 @@ class Engine {
 		}
 	}
 
-	validateOptions(canvas): any {
-		// Create default rendering context
-		if (!this.options.context)
-			this.options.context = new RenderingContext(canvas, null, this.options.contextErrorCallback);
-
+	validateOptions(): any {
 		// Transparency mode validation
 		switch (this.options.transparencyMode) {
 			case 'sorted':
@@ -458,7 +446,7 @@ class Engine {
 	}
 
 	_captureScreenshot(): any {
-		var shot = this.context.gl.canvas.toDataURL();
+		var shot = (this.context.gl.canvas as HTMLCanvasElement).toDataURL();
 		if (shot && this.onScreenshotCaptured) {
 			this.options.captureScreenshot = false;
 			this.onScreenshotCaptured(shot);

@@ -14,7 +14,6 @@ import FRAK from 'Helpers';
 	_properties_
 
 	*/
-
 class Serializer {
 	serializables: any;
 
@@ -23,7 +22,7 @@ class Serializer {
 	}
 
 	/** Constructs a serializable copy of this object */
-	serializableCopy(stack, value, excluded, depth, maximumDepth): any {
+	serializableCopy(stack, value: Serializable, excluded, depth, maximumDepth): any {
 		var result={};
 		var fields=value.getSerializableFields(excluded);
 
@@ -62,7 +61,7 @@ class Serializer {
 		@param object Object to be serialized
 		@param excluded Excluded fields for all objects
 		@return List of serializable attributes. Return true to include all fields. */
-	serialize(object, excluded, maximumDepth): any {
+	serialize(object: Serializable, excluded, maximumDepth): any {
 		this.serializables={};	// Clear all serializable objects
 		var r=this.serializableCopy([], object, excluded, 0, maximumDepth);
 		return JSON.stringify({'_root_': r, '_serializables_': this.serializables}, undefined, 2);
@@ -147,9 +146,7 @@ class Serializer {
 
 		return unserialized;
 	}
-
 }
 
 globalThis.Serializer = Serializer;
-
 export default Serializer;

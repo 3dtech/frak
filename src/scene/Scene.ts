@@ -1,19 +1,20 @@
-import Serializable from 'scene/Serializable.js'
-import Node from 'scene/Node.js'
-import DynamicSpace from 'rendering/spaces/DynamicSpace.js'
-import Component from 'scene/components/Component.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
-import Light from 'scene/components/Light.js'
-import Camera from 'rendering/camera/Camera'
+import Serializable from 'scene/Serializable';
+import Node from 'scene/Node';
+import DynamicSpace from 'rendering/spaces/DynamicSpace';
+import MeshComponent from 'scene/components/MeshComponent';
+import Light from 'scene/components/Light';
+import Camera from 'rendering/camera/Camera';
+import Engine from 'engine/Engine';
 
 /** Scene keeps track of components and nodes, cameras etc */
-
 class Scene extends Serializable {
-	root: any;
-	dynamicSpace: any;
+	root: Node;
+	dynamicSpace: DynamicSpace;
+	camera: any;
 	cameras: any;
+	cameraComponent: any;
 	lights: any;
-	engine: any;
+	engine: Engine;
 	starting: any;
 	started: any;
 	startingQueue: any;
@@ -31,7 +32,6 @@ class Scene extends Serializable {
 		this.dynamicSpace = new DynamicSpace(); ///< Dynamic space where all the mesh renderers go
 		this.cameras = []; ///< Scene cameras
 		this.lights = [];
-		this.engine = false; ///< False until scene is added to engine
 		this.starting = false; ///< If scene is being started, it is set to true
 		this.started = false; ///< If scene has started, it's set to true
 		this.startingQueue = []; ///< Starting queue where the components that are still starting can be pushed
@@ -221,9 +221,7 @@ class Scene extends Serializable {
 			}
 		});
 	}
-
 }
 
 globalThis.Scene = Scene;
-
 export default Scene;

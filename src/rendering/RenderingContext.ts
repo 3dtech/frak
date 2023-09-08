@@ -2,23 +2,23 @@ import MatrixStack from 'rendering/MatrixStack';
 import RendererComponent from 'scene/components/RendererComponent';
 import TextComponent from 'scene/components/TextComponent';
 import FRAK from 'Helpers';
+import Engine from 'engine/Engine';
 
 /** Wraps webgl rendering context of canvas */
-
 class RenderingContext {
-	canvas: any;
-	gl: any;
-	modelview: any;
-	projection: any;
+	canvas: HTMLCanvasElement;
+	gl: WebGL2RenderingContext;
+	modelview: MatrixStack;
+	projection: MatrixStack;
 	light: any;
 	shadow: any;
 	camera: any;
-	engine: any;
+	engine: Engine;
 
 	/** Constructor
 		@param canvas The canvas element that provides rendering context
 	*/
-	constructor(canvas, contextOptions, errorCallback) {
+	constructor(canvas, engine: Engine, contextOptions, errorCallback) {
 		if (typeof canvas === 'string' && typeof document !== 'undefined') {
 			canvas = document.getElementById(canvas);
 		}
@@ -38,13 +38,13 @@ class RenderingContext {
 
 		if (typeof WebGLDebugUtils !== 'undefined') {
 			this.canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
-			this.canvas.setRestoreTimeout(2000);
+			(this.canvas as any).setRestoreTimeout(2000);
 		}
 
 		contextOptions = contextOptions || { alpha: false };
 
 		// Try to get rendering context for WebGL
-		this.gl = this.canvas.getContext('webgl2', contextOptions);
+		this.gl = this.canvas.getContext('webgl2', contextOptions as WebGLContextAttributes);
 
 		// Acquiring context failed
 		if (!this.gl) {
@@ -81,7 +81,7 @@ class RenderingContext {
 		this.light = false; ///< Current light used for rendering (forward rendering only)
 		this.shadow = false; ///< Current shadow map (forward rendering only)
 		this.camera = false; ///< Current camera used for rendering (used to populate camera uniforms for shaders)
-		this.engine = false; ///< Current engine used for rendering
+		this.engine = engine; ///< Current engine used for rendering
 	}
 
 	error(): any {
@@ -154,9 +154,7 @@ class RenderingContext {
 
 		return true;
 	}
-
 }
 
 globalThis.RenderingContext = RenderingContext;
-
 export default RenderingContext;

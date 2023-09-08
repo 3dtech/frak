@@ -1,15 +1,12 @@
-import Scene from 'scene/Scene.js'
-import Node from 'scene/Node.js'
-import PerspectiveCamera from 'scene/components/PerspectiveCamera.js'
-import DirectionalLight from 'scene/lights/DirectionalLight.js'
+import Scene from 'scene/Scene';
+import Node from 'scene/Node';
+import PerspectiveCamera from 'scene/components/PerspectiveCamera';
+import DirectionalLight from 'scene/lights/DirectionalLight';
 import Color from 'rendering/Color';
 
 /** Default scene sets is a scene that has automatically created camera node. */
-
 class DefaultScene extends Scene {
 	cameraNode: any;
-	cameraComponent: any;
-	camera: any;
 	lightNode: any;
 	light: any;
 
@@ -33,9 +30,7 @@ class DefaultScene extends Scene {
 		this.lightNode.addComponent(this.light);
 		this.root.addNode(this.lightNode);
 	}
-
 }
 
 globalThis.DefaultScene = DefaultScene;
-
 export default DefaultScene;
