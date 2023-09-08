@@ -1,14 +1,13 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import TargetTextureFloat from 'rendering/camera/TargetTextureFloat.js'
-import Material from 'rendering/materials/Material.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import Color from 'rendering/Color'
+import RenderStage from 'rendering/camera/RenderStage';
+import Sampler from 'rendering/shaders/Sampler';
+import TargetTextureFloat from 'rendering/camera/TargetTextureFloat';
+import Material from 'rendering/materials/Material';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import Color from 'rendering/Color';
 
 /**
  * Renders scene depth to a texture
  */
-
 class DepthRenderStage extends RenderStage {
 	target: any;
 	sampler: any;
@@ -149,9 +148,7 @@ class DepthRenderStage extends RenderStage {
 			shader.unbindSamplers(samplers);
 		}
 	}
-
 }
 
 globalThis.DepthRenderStage = DepthRenderStage;
-
 export default DepthRenderStage;

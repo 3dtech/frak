@@ -1,9 +1,8 @@
-import RenderBuffer from 'rendering/buffers/RenderBuffer.js'
+import RenderBuffer from 'rendering/buffers/RenderBuffer';
 
 /**
  * RenderBuffer for line primitives.
  */
-
 class LinesRenderBuffer extends RenderBuffer {
 	/** Constructor
 		@param context Rendering context
@@ -70,5 +69,4 @@ class LinesRenderBuffer extends RenderBuffer {
 }
 
 globalThis.LinesRenderBuffer = LinesRenderBuffer;
-
 export default LinesRenderBuffer;

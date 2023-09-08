@@ -1,7 +1,4 @@
-
-
 /** Render-target class */
-
 class RenderTarget {
 	viewport: any;
 	size: any;
@@ -62,9 +59,7 @@ class RenderTarget {
 	resetViewport() {
 		this.setViewport(0, 0, this.size[0], this.size[1])
 	}
-
 }
 
 globalThis.RenderTarget = RenderTarget;
-
 export default RenderTarget;

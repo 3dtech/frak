@@ -14,7 +14,6 @@ import Color from 'rendering/Color';
 import FRAK from 'Helpers';
 
 /** Loads models to scene hierarchy from JSON data */
-
 class ModelLoaderGLTF {
 	descriptor: any;
 	shadersManager: any;
@@ -546,9 +545,7 @@ class ModelLoaderGLTF {
 
 		return sceneNode;
 	}
-
 }
 
 globalThis.ModelLoaderGLTF = ModelLoaderGLTF;
-
 export default ModelLoaderGLTF;

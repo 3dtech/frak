@@ -7,7 +7,6 @@ import SoftShadowsRenderStage from 'rendering/camera/SoftShadowsRenderStage';
 import LightsRenderStage from 'rendering/camera/LightsRenderStage';
 import UnlitGeometryRenderStage from 'rendering/camera/UnlitGeometryRenderStage';
 import UniformMat4 from 'rendering/shaders/UniformMat4';
-import Renderer from 'rendering/renderers/Renderer';
 import UniformInt from 'rendering/shaders/UniformInt';
 import Sampler from 'rendering/shaders/Sampler';
 import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
@@ -15,7 +14,6 @@ import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
 /**
  * Deferred shading implementation
  */
-
 class DeferredShadingRenderStage extends RenderStage {
 	organizer: any;
 	diffuseFallback: any;
@@ -196,9 +194,7 @@ class DeferredShadingRenderStage extends RenderStage {
 			context.modelview.pop();
 		}
 	}
-
 }
 
 globalThis.DeferredShadingRenderStage = DeferredShadingRenderStage;
-
 export default DeferredShadingRenderStage;

@@ -7,7 +7,6 @@ import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO
 /**
  * Deferred shading implementation
  */
-
 class DeferredRenderStage extends PostProcessRenderStage {
 	debugActive: any;
 	debugger: any;
@@ -113,11 +112,8 @@ class DeferredRenderStage extends PostProcessRenderStage {
 				x+=size;
 			}
 		}
-
 	}
-
 }
 
 globalThis.DeferredRenderStage = DeferredRenderStage;
-
 export default DeferredRenderStage;

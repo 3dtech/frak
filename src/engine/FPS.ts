@@ -4,7 +4,6 @@ import FRAK from 'Helpers';
 	Its instance is accessible from Engine where it is used
 	to measure time spent on drawing a frame and weighted average frames
 	per second. */
-
 class FPS {
 	frametime: any;
 	lastMeasurement: any;
@@ -39,9 +38,7 @@ class FPS {
 	getDelta() {
 		return this.delta;
 	}
-
 }
 
 globalThis.FPS = FPS;
-
 export default FPS;

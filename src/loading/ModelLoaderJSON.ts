@@ -2,7 +2,6 @@ import Sampler from 'rendering/shaders/Sampler';
 import Material from 'rendering/materials/Material';
 import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
 import UniformColor from 'rendering/shaders/UniformColor';
-import UniformFloat from 'rendering/shaders/UniformFloat';
 import UniformInt from 'rendering/shaders/UniformInt';
 import Submesh from 'scene/geometry/Submesh';
 import Node from 'scene/Node';
@@ -15,7 +14,6 @@ import Color from 'rendering/Color';
 import FRAK from 'Helpers';
 
 /** Loads models to scene hierarchy from JSON data */
-
 class ModelLoaderJSON {
 	descriptor: any;
 	shadersManager: any;
@@ -310,9 +308,7 @@ class ModelLoaderJSON {
 			lmc.tree.submeshes[mesh_id]=this.submeshesByID[mesh_id].submesh;
 		this.loadCollisionNodeSubnodes(lmc.tree, parsedData.collision, parsedData);
 	}
-
 }
 
 globalThis.ModelLoaderJSON = ModelLoaderJSON;
-
 export default ModelLoaderJSON;

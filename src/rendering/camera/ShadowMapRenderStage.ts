@@ -1,15 +1,14 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import Material from 'rendering/materials/Material.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import TargetTextureFloat from 'rendering/camera/TargetTextureFloat.js'
-import DirectionalLight from 'scene/lights/DirectionalLight.js'
-import Color from 'rendering/Color'
+import RenderStage from 'rendering/camera/RenderStage';
+import BoundingBox from 'scene/geometry/BoundingBox';
+import Material from 'rendering/materials/Material';
+import UniformInt from 'rendering/shaders/UniformInt';
+import TargetTextureFloat from 'rendering/camera/TargetTextureFloat';
+import DirectionalLight from 'scene/lights/DirectionalLight';
+import Color from 'rendering/Color';
 
 /**
  * Shadow map generator for the forward renderer
  */
-
 class ShadowMapRenderStage extends RenderStage {
 	material: any;
 	clearColor: any;
@@ -233,9 +232,7 @@ class ShadowMapRenderStage extends RenderStage {
 		}
 		return false;
 	}
-
 }
 
 globalThis.ShadowMapRenderStage = ShadowMapRenderStage;
-
 export default ShadowMapRenderStage;

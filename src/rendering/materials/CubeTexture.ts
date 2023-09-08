@@ -1,11 +1,8 @@
-import BaseTexture from 'rendering/materials/BaseTexture.js'
-import RenderingContext from 'rendering/RenderingContext.js'
-import Texture from 'rendering/materials/Texture.js'
+import BaseTexture from 'rendering/materials/BaseTexture';
 
 /**
  * CubeTexture for using samplerCube type samplers in shaders
  */
-
 class CubeTexture extends BaseTexture {
 	static FRONT = 0;
 	static BACK = 1;
@@ -20,12 +17,8 @@ class CubeTexture extends BaseTexture {
 	clampToEdge: any;
 	images: any;
 
-	/**
-	 * Constructor
-	 * @param context RenderingContext (optional)
-	 */
-	constructor(context) {
-		super(context);
+	constructor(context?) {
+		super();
 
 		this.glTexture = null;
 		this.name = false;		///< Texture name assigned by manager
@@ -146,9 +139,7 @@ class CubeTexture extends BaseTexture {
 			this.setFace(context, parseInt(face), item.image, item.noResize);
 		}
 	}
-
 }
 
 globalThis.CubeTexture = CubeTexture;
-
 export default CubeTexture;

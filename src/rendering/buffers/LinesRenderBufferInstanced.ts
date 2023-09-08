@@ -1,4 +1,4 @@
-import LinesRenderBuffer from "./LinesRenderBuffer";
+import LinesRenderBuffer from './LinesRenderBuffer';
 
 class LinesRenderBufferInstanced extends LinesRenderBuffer {
 	divisors: any;
@@ -91,9 +91,7 @@ class LinesRenderBufferInstanced extends LinesRenderBuffer {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
 		gl.drawElementsInstanced(gl.TRIANGLES, this.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0, count);
 	}
-
 }
 
 globalThis.LinesRenderBufferInstanced = LinesRenderBufferInstanced;
-
 export default LinesRenderBufferInstanced;

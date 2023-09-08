@@ -92,7 +92,6 @@ import "rendering/renderers/Renderer";
 import "rendering/renderers/LineRenderer";
 import "rendering/renderers/SubmeshRenderer";
 
-import "loading/DownloadBinary";
 import "loading/DataParserTypes";
 import "loading/DataParserNode";
 import "loading/DataParserResult";

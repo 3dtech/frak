@@ -1,5 +1,5 @@
-import Manager from 'loading/Manager.js'
-import TextDescriptor from 'scene/descriptors/TextDescriptor.js'
+import Manager from 'loading/Manager';
+import TextDescriptor from 'scene/descriptors/TextDescriptor';
 
 /** Used to load text-based resources.
 	Example of usage:
@@ -11,7 +11,6 @@ import TextDescriptor from 'scene/descriptors/TextDescriptor.js'
 	});
 	</pre>
 	*/
-
 class TextManager extends Manager {
 
 
@@ -45,9 +44,7 @@ class TextManager extends Manager {
 			failedCallback(descriptor);
 		});
 	}
-
 }
 
 globalThis.TextManager = TextManager;
-
 export default TextManager;

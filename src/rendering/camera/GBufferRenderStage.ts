@@ -9,7 +9,6 @@ import Color from 'rendering/Color';
 /**
  * G-buffer renderer
  */
-
 class GBufferRenderStage extends RenderStage {
 	buffer: any;
 	clearColor: any;
@@ -179,9 +178,7 @@ class GBufferRenderStage extends RenderStage {
 			shader.unbindSamplers(samplers);
 		}
 	}
-
 }
 
 globalThis.GBufferRenderStage = GBufferRenderStage;
-
 export default GBufferRenderStage;

@@ -1,10 +1,9 @@
 import { FrakCallback } from 'Helpers';
-import DataParser from 'loading/DataParser.js'
+import DataParser from 'loading/DataParser';
 
 /**
  * Threaded 3DTech DATA format parser
  **/
-
 class ThreadedDataParser extends DataParser {
 	timer: any;
 	inverval: any;
@@ -45,9 +44,7 @@ class ThreadedDataParser extends DataParser {
 		}
 		this.timer=setTimeout(FrakCallback(this, this.threadStep), this.inverval);
 	}
-
 }
 
 globalThis.ThreadedDataParser = ThreadedDataParser;
-
 export default ThreadedDataParser;

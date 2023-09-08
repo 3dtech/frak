@@ -4,14 +4,12 @@ import Sampler from 'rendering/shaders/Sampler';
 import Material from 'rendering/materials/Material';
 import UniformInt from 'rendering/shaders/UniformInt';
 import UniformColor from 'rendering/shaders/UniformColor';
-import Shader from 'rendering/shaders/Shader';
 import Color from 'rendering/Color';
 
 /**
  * Render-stage for rendering order-independent transparency.
  * The final transparency is combined in a post process from the buffers generated here.
  */
-
 class OITRenderStage extends RenderStage {
 	diffuseFallback: any;
 	oitClearColor: any;
@@ -297,9 +295,7 @@ class OITRenderStage extends RenderStage {
 		gl.disable(gl.DEPTH_TEST);
 		gl.depthMask(true);
 	}
-
 }
 
 globalThis.OITRenderStage = OITRenderStage;
-
 export default OITRenderStage;

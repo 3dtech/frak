@@ -1,12 +1,11 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
+import RenderStage from 'rendering/camera/RenderStage';
 
 /**
  * Render-stage for rendering opaque geometry.
  */
-
 class UnlitGeometryRenderStage extends RenderStage {
 
-	
+
 	constructor() {
 		super();
 	}
@@ -26,9 +25,7 @@ class UnlitGeometryRenderStage extends RenderStage {
 
 		gl.disable(gl.DEPTH_TEST);
 	}
-
 }
 
 globalThis.UnlitGeometryRenderStage = UnlitGeometryRenderStage;
-
 export default UnlitGeometryRenderStage;

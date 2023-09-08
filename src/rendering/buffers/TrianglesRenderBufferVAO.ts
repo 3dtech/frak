@@ -1,9 +1,8 @@
-import RenderBufferVAO from 'rendering/buffers/RenderBufferVAO.js'
+import RenderBufferVAO from 'rendering/buffers/RenderBufferVAO';
 
 /**
  * Render buffer for drawing triangle primitives. Uses vertex array objects.
  */
-
 class TrianglesRenderBufferVAO extends RenderBufferVAO {
 
 
@@ -19,9 +18,7 @@ class TrianglesRenderBufferVAO extends RenderBufferVAO {
 		var gl=this.context.gl;
 		gl.drawElements(gl.TRIANGLES, this.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
-
 }
 
 globalThis.TrianglesRenderBufferVAO = TrianglesRenderBufferVAO;
-
 export default TrianglesRenderBufferVAO;

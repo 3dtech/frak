@@ -1,6 +1,5 @@
 import RenderTarget from 'rendering/camera/RenderTarget';
 
-
 class TargetScreen extends RenderTarget {
 	position: any;
 
@@ -25,9 +24,7 @@ class TargetScreen extends RenderTarget {
 	resetViewport() {
 		this.setViewport(this.position[0], this.position[1], this.size[0], this.size[1]);
 	}
-
 }
 
 globalThis.TargetScreen = TargetScreen;
-
 export default TargetScreen;

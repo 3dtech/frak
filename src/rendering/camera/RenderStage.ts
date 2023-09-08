@@ -1,16 +1,13 @@
-
-
 /** Render-stages can be used to model complex rendering pipelines.
 	They are recursive - each render-stage can have be composed of sub render-stages.
 	This allows for creating combined render-stages that use results of child-render
 	stages to provide output. */
-
 class RenderStage {
 	parent: any;
 	substages: any;
 	started: any;
 	enabled: any;
-	
+
 	/** Constructor */
 	constructor() {
 		this.parent = false; ///< Parent RenderStage
@@ -131,9 +128,7 @@ class RenderStage {
 
 	/** Called when the render stage is disabled. */
 	onDisable() {}
-
 }
 
 globalThis.RenderStage = RenderStage;
-
 export default RenderStage;

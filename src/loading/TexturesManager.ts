@@ -1,12 +1,10 @@
-import Manager from 'loading/Manager.js'
-import RenderingContext from 'rendering/RenderingContext.js'
-import TextureDescriptor from 'scene/descriptors/TextureDescriptor.js'
-import CubeTexture from 'rendering/materials/CubeTexture.js'
-import CubeTextureDescriptor from 'scene/descriptors/CubeTextureDescriptor.js'
-import Texture from 'rendering/materials/Texture.js'
+import Manager from 'loading/Manager';
+import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
+import CubeTexture from 'rendering/materials/CubeTexture';
+import CubeTextureDescriptor from 'scene/descriptors/CubeTextureDescriptor';
+import Texture from 'rendering/materials/Texture';
 
 /** External texture instance. */
-
 class TexturesManager extends Manager {
 	context: any;
 
@@ -94,9 +92,7 @@ class TexturesManager extends Manager {
 			});
 		}
 	}
-
 }
 
 globalThis.TexturesManager = TexturesManager;
-
 export default TexturesManager;

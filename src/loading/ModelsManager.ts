@@ -1,16 +1,14 @@
-import Manager from 'loading/Manager.js'
-import ShadersManager from 'loading/ShadersManager.js'
-import TexturesManager from 'loading/TexturesManager.js'
-import ModelDescriptor from 'scene/descriptors/ModelDescriptor.js'
-import Node from 'scene/Node.js'
-import Resource from 'scene/components/resources/Resource.js'
-import ModelLoaderGLTF from 'loading/ModelLoaderGLTF.js'
-import ModelLoaderJSON from 'loading/ModelLoaderJSON.js'
-import ModelLoader from 'loading/ModelLoader.js'
-import ThreadedDataParser from 'loading/ThreadedDataParser.js'
+import Manager from 'loading/Manager';
+import ShadersManager from 'loading/ShadersManager';
+import TexturesManager from 'loading/TexturesManager';
+import ModelDescriptor from 'scene/descriptors/ModelDescriptor';
+import Node from 'scene/Node';
+import ModelLoaderGLTF from 'loading/ModelLoaderGLTF';
+import ModelLoaderJSON from 'loading/ModelLoaderJSON';
+import ModelLoader from 'loading/ModelLoader';
+import ThreadedDataParser from 'loading/ThreadedDataParser';
 
 /** Models manager is used to load entire models together with shaders and textures. */
-
 class ModelsManager extends Manager {
 	shadersManager: any;
 	texturesManager: any;
@@ -112,9 +110,7 @@ class ModelsManager extends Manager {
 	createParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata?) {
 		return new ThreadedDataParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata);
 	}
-
 }
 
 globalThis.ModelsManager = ModelsManager;
-
 export default ModelsManager;

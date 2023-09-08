@@ -1,13 +1,11 @@
-import Manager from 'loading/Manager.js'
-import ShadersManager from 'loading/ShadersManager.js'
-import TexturesManager from 'loading/TexturesManager.js'
-import TextDescriptor from 'scene/descriptors/TextDescriptor.js'
-import MaterialDescriptor from 'scene/descriptors/MaterialDescriptor.js'
-import Material from 'rendering/materials/Material.js'
-import Sampler from 'rendering/shaders/Sampler.js'
+import Manager from 'loading/Manager';
+import ShadersManager from 'loading/ShadersManager';
+import TexturesManager from 'loading/TexturesManager';
+import MaterialDescriptor from 'scene/descriptors/MaterialDescriptor';
+import Material from 'rendering/materials/Material';
+import Sampler from 'rendering/shaders/Sampler';
 
 /** Used to load materials.	*/
-
 class MaterialsManager extends Manager {
 	shadersManager: any;
 	texturesManager: any;
@@ -78,9 +76,7 @@ class MaterialsManager extends Manager {
 			});
 		});
 	}
-
 }
 
 globalThis.MaterialsManager = MaterialsManager;
-
 export default MaterialsManager;

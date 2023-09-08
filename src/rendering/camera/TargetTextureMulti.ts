@@ -1,10 +1,9 @@
 import Color from 'rendering/Color';
-import RenderTarget from 'rendering/camera/RenderTarget.js';
-import Texture from 'rendering/materials/Texture.js';
+import RenderTarget from 'rendering/camera/RenderTarget';
+import Texture from 'rendering/materials/Texture';
 import FRAK from 'Helpers';
 
 /** Render target with multiple draw buffers */
-
 class TargetTextureMulti extends RenderTarget {
 	options: any;
 	extDrawBuffers: any;
@@ -246,9 +245,7 @@ class TargetTextureMulti extends RenderTarget {
 		super.unbind(context);
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
 	}
-
 }
 
 globalThis.TargetTextureMulti = TargetTextureMulti;
-
 export default TargetTextureMulti;

@@ -1,13 +1,11 @@
-import Manager from 'loading/Manager.js'
-import RenderingContext from 'rendering/RenderingContext.js'
-import TextManager from 'loading/TextManager.js'
-import ShaderDescriptor from 'scene/descriptors/ShaderDescriptor.js'
-import Shader from 'rendering/shaders/Shader.js'
+import Manager from 'loading/Manager';
+import TextManager from 'loading/TextManager';
+import ShaderDescriptor from 'scene/descriptors/ShaderDescriptor';
+import Shader from 'rendering/shaders/Shader';
 
 /**
  * Used by AssetsManager to load shaders.
  */
-
 class ShadersManager extends Manager {
 	sourceCallback: any;
 	context: any;
@@ -107,11 +105,8 @@ class ShadersManager extends Manager {
 				loadedCallback(descriptor, shaderResource);
 			});
 		}
-
 	}
-
 }
 
 globalThis.ShadersManager = ShadersManager;
-
 export default ShadersManager;

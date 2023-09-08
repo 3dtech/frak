@@ -1,7 +1,6 @@
 import Manager from 'loading/Manager';
 import MaterialsManager from 'loading/MaterialsManager';
 import TextManager from 'loading/TextManager';
-import TextDescriptor from 'scene/descriptors/TextDescriptor';
 import MaterialSourceDescriptor from 'scene/descriptors/MaterialSourceDescriptor';
 import MaterialSource from 'scene/descriptors/MaterialSource';
 import MaterialDescriptor from 'scene/descriptors/MaterialDescriptor';
@@ -31,7 +30,6 @@ import FRAK from 'Helpers';
 	});
 	</pre>
 	*/
-
 class MaterialSourcesManager extends Manager {
 	materialsManager: any;
 	textManager: any;
@@ -140,9 +138,7 @@ class MaterialSourcesManager extends Manager {
 			});
 		});
 	}
-
 }
 
 globalThis.MaterialSourcesManager = MaterialSourcesManager;
-
 export default MaterialSourcesManager;

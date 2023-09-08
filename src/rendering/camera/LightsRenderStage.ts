@@ -1,19 +1,18 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import UniformVec3 from 'rendering/shaders/UniformVec3.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import SkyboxRenderStage from 'rendering/camera/SkyboxRenderStage.js'
-import AmbientLight from 'scene/lights/AmbientLight.js'
-import DirectionalLight from 'scene/lights/DirectionalLight.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import Material from 'rendering/materials/Material.js'
-import Color from 'rendering/Color'
+import RenderStage from 'rendering/camera/RenderStage';
+import UniformVec3 from 'rendering/shaders/UniformVec3';
+import UniformInt from 'rendering/shaders/UniformInt';
+import UniformColor from 'rendering/shaders/UniformColor';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import SkyboxRenderStage from 'rendering/camera/SkyboxRenderStage';
+import AmbientLight from 'scene/lights/AmbientLight';
+import DirectionalLight from 'scene/lights/DirectionalLight';
+import Sampler from 'rendering/shaders/Sampler';
+import Material from 'rendering/materials/Material';
+import Color from 'rendering/Color';
 
 /**
  * Deferred shading light accumulation pass
  */
-
 class LightsRenderStage extends RenderStage {
 	sharedUniforms: any;
 	sharedSamplers: any;
@@ -235,9 +234,7 @@ class LightsRenderStage extends RenderStage {
 			}
 		}
 	}
-
 }
 
 globalThis.LightsRenderStage = LightsRenderStage;
-
 export default LightsRenderStage;

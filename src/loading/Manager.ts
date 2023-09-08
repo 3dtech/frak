@@ -1,9 +1,5 @@
-import Descriptor from 'scene/descriptors/Descriptor.js'
-import Resource from 'scene/components/resources/Resource.js'
-
 /** Generic manager class extended by all other manager classes
 	except for AssetsManager that groups together instances of other managers. */
-
 class Manager {
 	path: any;
 	queue: any;
@@ -218,9 +214,7 @@ class Manager {
 	loadResource(descriptor, resource, loadedCallback, failedCallback) {
 		throw "loadResource not implemented by this instance of Manager";
 	}
-
 }
 
 globalThis.Manager = Manager;
-
 export default Manager;

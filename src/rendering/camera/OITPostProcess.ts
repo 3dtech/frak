@@ -1,12 +1,11 @@
-import PostProcess from 'rendering/camera/PostProcess.js'
-import Material from 'rendering/materials/Material.js'
-import UniformVec2 from 'rendering/shaders/UniformVec2.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
+import PostProcess from 'rendering/camera/PostProcess';
+import Material from 'rendering/materials/Material';
+import UniformVec2 from 'rendering/shaders/UniformVec2';
+import UniformInt from 'rendering/shaders/UniformInt';
 
 /**
  * Post-processing stage used to do order independent transparency.
  */
-
 class OITPostProcess extends PostProcess {
 	material: any;
 
@@ -44,9 +43,7 @@ class OITPostProcess extends PostProcess {
 				break;
 		}
 	}
-
 }
 
 globalThis.OITPostProcess = OITPostProcess;
-
 export default OITPostProcess;

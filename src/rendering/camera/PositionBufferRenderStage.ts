@@ -6,7 +6,6 @@ import MaterialRenderStage from 'rendering/camera/MaterialRenderStage';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
 
 /** Render-stage used for generating a buffer of normals for use in the SSAO post-process */
-
 class PositionBufferRenderStage extends RenderStage {
 	size: any;
 	target: any;
@@ -91,9 +90,7 @@ class PositionBufferRenderStage extends RenderStage {
 
 		this.target.unbind(context);
 	}
-
 }
 
 globalThis.PositionBufferRenderStage = PositionBufferRenderStage;
-
 export default PositionBufferRenderStage;

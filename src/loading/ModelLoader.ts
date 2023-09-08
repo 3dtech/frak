@@ -7,14 +7,12 @@ import MeshComponent from 'scene/components/MeshComponent';
 import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
 import UniformColor from 'rendering/shaders/UniformColor';
-import UniformFloat from 'rendering/shaders/UniformFloat';
 import UniformInt from 'rendering/shaders/UniformInt';
 import CollisionOctreeNode from 'scene/geometry/CollisionOctreeNode';
 import LargeMeshCollider from 'scene/components/LargeMeshCollider';
 import Color from 'rendering/Color';
 
 /** Loads models to scene hierarchy from given parsed data */
-
 class ModelLoader {
 	descriptor: any;
 	shadersManager: any;
@@ -252,9 +250,7 @@ class ModelLoader {
 			lmc.tree.submeshes[mesh_id]=this.submeshesByID[mesh_id].submesh;
 		this.loadCollisionNodeSubnodes(lmc.tree, parsedData.collision, parsedData);
 	}
-
 }
 
 globalThis.ModelLoader = ModelLoader;
-
 export default ModelLoader;

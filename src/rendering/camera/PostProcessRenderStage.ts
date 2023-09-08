@@ -1,16 +1,15 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import TargetTexture from 'rendering/camera/TargetTexture.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import Material from 'rendering/materials/Material.js'
-import MaterialRenderStage from 'rendering/camera/MaterialRenderStage.js'
-import ScreenQuad from './ScreenQuad'
+import RenderStage from 'rendering/camera/RenderStage';
+import TargetTexture from 'rendering/camera/TargetTexture';
+import Sampler from 'rendering/shaders/Sampler';
+import Material from 'rendering/materials/Material';
+import MaterialRenderStage from 'rendering/camera/MaterialRenderStage';
+import ScreenQuad from './ScreenQuad';
 
 /**
  * Render-stage used to render MaterialRenderStage to a texture,
  * then apply sub-stages to it and then render the resulting texture
  * to a screen-aligned quad that covers the entire viewport.
  */
-
 class PostProcessRenderStage extends RenderStage {
 	size: any;
 	src: any;
@@ -134,9 +133,7 @@ class PostProcessRenderStage extends RenderStage {
 		else
 			this.textureQuad.render(context, material, sampler);
 	}
-
 }
 
 globalThis.PostProcessRenderStage = PostProcessRenderStage;
-
 export default PostProcessRenderStage;

@@ -1,10 +1,9 @@
-import PostProcess from 'rendering/camera/PostProcess.js'
-import Material from 'rendering/materials/Material.js'
-import UniformVec2 from 'rendering/shaders/UniformVec2.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-
+import PostProcess from 'rendering/camera/PostProcess';
+import Material from 'rendering/materials/Material';
+import UniformVec2 from 'rendering/shaders/UniformVec2';
+import UniformInt from 'rendering/shaders/UniformInt';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import Sampler from 'rendering/shaders/Sampler';
 
 class SSAOPostProcess extends PostProcess {
 	ssaoOnly: any;
@@ -49,9 +48,7 @@ class SSAOPostProcess extends PostProcess {
 		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.src.size[0], this.parent.src.size[1]);
 		this.material.uniforms.ssaoOnly.value = (this.ssaoOnly === true) ? 1 : 0;
 	}
-
 }
 
 globalThis.SSAOPostProcess = SSAOPostProcess;
-
 export default SSAOPostProcess;

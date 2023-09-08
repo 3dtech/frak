@@ -3,17 +3,17 @@ import Serializer from 'scene/Serializer';
 import CyclicSerializer from 'scene/CyclicSerializer';
 import FRAK from 'Helpers';
 
+var nextSerializableID=1;
+
 /** Base-class for (partially) serializable classes.
 	The fields method must return a list of serializable
 	attributes of the class. These attributes are then serialized
 	with JSON.stringify, if they don't derive from Serializable.
 	If they derive from Serializable class, a copy will be made
 	from the original with only required fields. */
-var nextSerializableID=1;
-
 class Serializable extends Cloneable {
-	serializable: any;
-	id: any;
+	serializable: boolean;
+	id: number;
 
 	constructor() {
 		super();
@@ -22,18 +22,18 @@ class Serializable extends Cloneable {
 	}
 
 	/** @return List of serializable attributes. Return true to include all fields. */
-	included(): any {
+	included(): string[] | boolean {
 		return true;
 	}
 
 	/** @return Array of fields that will be excluded or true to exclude all fields.
 		Note: If this.included returns true and excluded returns true then exception will be thrown by serialize method. */
-	excluded(): any {
+	excluded(): string[] | boolean {
 		return [];
 	}
 
 	/** @return An object with keys as field names that must be serialized */
-	getSerializableFields(extraExcluded): any {
+	getSerializableFields(extraExcluded?: string[]): any {
 		var included=this.included();
 		var excluded=this.excluded();
 
@@ -55,15 +55,6 @@ class Serializable extends Cloneable {
 				for(var e=0; e<excluded.length; e++) {
 					if(fields[excluded[e]]) delete fields[excluded[e]];
 				}
-			}
-		}
-		if(excluded===true) {
-			fields=[];
-			for(var i=0; i<included.length; i++) {
-				t=included[i];
-				var getType = {};
-				if(this[t] && getType.toString.call(this[t])=='[object Function]' || t=="serializable" || t=='_super') continue;
-				fields[t]=this[t];
 			}
 		}
 
@@ -123,9 +114,7 @@ class Serializable extends Cloneable {
 
 	/** Called immediately after the object and all its properties have been unserialized */
 	onAfterUnserialize() {}
-
 }
 
 globalThis.Serializable = Serializable;
-
 export default Serializable;

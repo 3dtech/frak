@@ -1,12 +1,11 @@
 import { FrakCallback } from 'Helpers';
-import DataParserResult from 'loading/DataParserResult.js'
+import DataParserResult from 'loading/DataParserResult';
 import DataParserNode from './DataParserNode';
 import DataParserTypes from './DataParserTypes';
 
 /**
  * 3DTech DATA format parser
  **/
-
 class DataParser {
 	VERSION: any;
 	view: any;
@@ -626,9 +625,7 @@ class DataParser {
 		}
 		return true;
 	}
-
 }
 
 globalThis.DataParser = DataParser;
-
 export default DataParser;

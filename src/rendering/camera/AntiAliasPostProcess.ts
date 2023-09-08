@@ -1,12 +1,11 @@
-import PostProcess from 'rendering/camera/PostProcess.js'
-import Material from 'rendering/materials/Material.js'
-import UniformVec2 from 'rendering/shaders/UniformVec2.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
+import PostProcess from 'rendering/camera/PostProcess';
+import Material from 'rendering/materials/Material';
+import UniformVec2 from 'rendering/shaders/UniformVec2';
+import UniformFloat from 'rendering/shaders/UniformFloat';
 
 /**
  * Post-processing stage used to do image space anti-aliasing.
  */
-
 class AntiAliasPostProcess extends PostProcess {
 	material: any;
 
@@ -35,9 +34,7 @@ class AntiAliasPostProcess extends PostProcess {
 
 		vec2.copy(this.material.uniforms.ViewportSize.value, this.parent.src.size);
 	}
-
 }
 
 globalThis.AntiAliasPostProcess = AntiAliasPostProcess;
-
 export default AntiAliasPostProcess;

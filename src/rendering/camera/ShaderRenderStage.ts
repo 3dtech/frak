@@ -1,7 +1,6 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
+import RenderStage from 'rendering/camera/RenderStage';
 
 /** Render-stage that outputs geometry using a custom shader. */
-
 class ShaderRenderStage extends RenderStage {
 	shader: any;
 	uniforms: any;
@@ -32,9 +31,7 @@ class ShaderRenderStage extends RenderStage {
 			context.gl.disable(context.gl.BLEND);
 		}
 	}
-
 }
 
 globalThis.ShaderRenderStage = ShaderRenderStage;
-
 export default ShaderRenderStage;

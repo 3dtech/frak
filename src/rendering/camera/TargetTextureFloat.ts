@@ -1,7 +1,6 @@
 import TargetTexture from 'rendering/camera/TargetTexture';
 import Texture from 'rendering/materials/Texture';
 
-
 class TargetTextureFloat extends TargetTexture {
 	linear: any;
 
@@ -81,9 +80,7 @@ class TargetTextureFloat extends TargetTexture {
 
 		this.texture.loaded = true;
 	}
-
 }
 
 globalThis.TargetTextureFloat = TargetTextureFloat;
-
 export default TargetTextureFloat;

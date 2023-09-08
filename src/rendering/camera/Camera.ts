@@ -15,7 +15,6 @@ import Color from 'rendering/Color';
 	@param order Rendering index of this camera. Cameras are rendered from lowest to highest {int}
 	@param layerMask Bitmask for setting layers rendered by this camera {int}
  */
-
 class Camera extends Serializable {
 	viewMatrix: any;
 	projectionMatrix: any;
@@ -303,9 +302,7 @@ class Camera extends Serializable {
 		vec3.add(pos, boundingVolume.center, dir);
 		this.setPosition(pos);
 	}
-
 }
 
 globalThis.Camera = Camera;
-
 export default Camera;

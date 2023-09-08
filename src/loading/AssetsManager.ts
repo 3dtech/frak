@@ -1,10 +1,9 @@
-import RenderingContext from 'rendering/RenderingContext.js'
-import ShadersManager from 'loading/ShadersManager.js'
-import TexturesManager from 'loading/TexturesManager.js'
-import ModelsManager from 'loading/ModelsManager.js'
-import TextManager from 'loading/TextManager.js'
-import MaterialsManager from 'loading/MaterialsManager.js'
-import MaterialSourcesManager from 'loading/MaterialSourcesManager.js'
+import ShadersManager from 'loading/ShadersManager';
+import TexturesManager from 'loading/TexturesManager';
+import ModelsManager from 'loading/ModelsManager';
+import TextManager from 'loading/TextManager';
+import MaterialsManager from 'loading/MaterialsManager';
+import MaterialSourcesManager from 'loading/MaterialSourcesManager';
 
 /** General assets manager.
 	Example of usage:
@@ -21,7 +20,6 @@ assetsManager.load(function() {
 
 </pre>
 	*/
-
 class AssetsManager {
 	managers: any;
 	assetsPath: any;
@@ -164,9 +162,7 @@ class AssetsManager {
 			this.managers[m].load(function() {}, onProgress);
 		}
 	}
-
 }
 
 globalThis.AssetsManager = AssetsManager;
-
 export default AssetsManager;

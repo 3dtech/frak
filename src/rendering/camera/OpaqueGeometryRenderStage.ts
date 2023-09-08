@@ -1,13 +1,12 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import DirectionalLight from 'scene/lights/DirectionalLight.js'
+import RenderStage from 'rendering/camera/RenderStage';
+import DirectionalLight from 'scene/lights/DirectionalLight';
 
 /**
  * Render-stage for rendering opaque geometry.
  */
-
 class OpaqueGeometryRenderStage extends RenderStage {
 	activeLights: any;
-	
+
 	constructor() {
 		super();
 		this.activeLights = [];
@@ -89,10 +88,7 @@ class OpaqueGeometryRenderStage extends RenderStage {
 		gl.disable(gl.DEPTH_TEST);
 		context.light = false;
 	}
-
-
 }
 
 globalThis.OpaqueGeometryRenderStage = OpaqueGeometryRenderStage;
-
 export default OpaqueGeometryRenderStage;

@@ -9,19 +9,16 @@ import TransparentGeometryRenderStage from 'rendering/camera/TransparentGeometry
 import UniformMat4 from 'rendering/shaders/UniformMat4';
 import UniformVec3 from 'rendering/shaders/UniformVec3';
 import UniformColor from 'rendering/shaders/UniformColor';
-import Renderer from 'rendering/renderers/Renderer';
 import UniformInt from 'rendering/shaders/UniformInt';
 import UniformFloat from 'rendering/shaders/UniformFloat';
 import Sampler from 'rendering/shaders/Sampler';
 import TargetTextureFloat from 'rendering/camera/TargetTextureFloat';
-import Light from 'scene/components/Light';
 import DirectionalLight from 'scene/lights/DirectionalLight';
 import AmbientLight from 'scene/lights/AmbientLight';
 import UniformVec4 from 'rendering/shaders/UniformVec4';
 import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
 
 /** Render-stage that uses forward rendering to render meshes with materials and directional lighting */
-
 class MaterialRenderStage extends RenderStage {
 	organizer: any;
 	solidRenderers: any;
@@ -326,9 +323,7 @@ class MaterialRenderStage extends RenderStage {
 			context.modelview.pop();
 		}
 	}
-
 }
 
 globalThis.MaterialRenderStage = MaterialRenderStage;
-
 export default MaterialRenderStage;

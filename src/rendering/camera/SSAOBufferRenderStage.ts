@@ -7,7 +7,6 @@ import Sampler from 'rendering/shaders/Sampler';
 import MaterialRenderStage from 'rendering/camera/MaterialRenderStage';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
 
-
 class SSAOBufferRenderStage extends RenderStage {
 	size: any;
 	quad: any;
@@ -119,9 +118,7 @@ class SSAOBufferRenderStage extends RenderStage {
 
 		this.target.unbind(context);
 	}
-
 }
 
 globalThis.SSAOBufferRenderStage = SSAOBufferRenderStage;
-
 export default SSAOBufferRenderStage;

@@ -1,11 +1,10 @@
-import PostProcess from 'rendering/camera/PostProcess.js'
-import Material from 'rendering/materials/Material.js'
-import UniformVec2 from 'rendering/shaders/UniformVec2.js'
+import PostProcess from 'rendering/camera/PostProcess';
+import Material from 'rendering/materials/Material';
+import UniformVec2 from 'rendering/shaders/UniformVec2';
 
 /**
  * Blur
  */
-
 class BlurPostProcess extends PostProcess {
 	blurSize: any;
 	material: any;
@@ -35,9 +34,7 @@ class BlurPostProcess extends PostProcess {
 		super.onPreRender(context, scene, camera);
 		vec2.set(this.material.uniforms.ViewportSize.value, this.parent.size[0], this.parent.size[1]);
 	}
-
 }
 
 globalThis.BlurPostProcess = BlurPostProcess;
-
 export default BlurPostProcess;

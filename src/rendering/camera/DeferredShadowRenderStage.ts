@@ -1,13 +1,12 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import Material from 'rendering/materials/Material.js'
-import DirectionalLight from 'scene/lights/DirectionalLight.js'
+import RenderStage from 'rendering/camera/RenderStage';
+import BoundingBox from 'scene/geometry/BoundingBox';
+import Material from 'rendering/materials/Material';
+import DirectionalLight from 'scene/lights/DirectionalLight';
 import Color from 'rendering/Color';
 
 /**
  * Shadow map generator for the deferred renderer
  */
-
 class DeferredShadowRenderStage extends RenderStage {
 	material: any;
 	directional: any;
@@ -227,9 +226,7 @@ class DeferredShadowRenderStage extends RenderStage {
 
 	onPostRender(context, scene, camera) {
 	}
-
 }
 
 globalThis.DeferredShadowRenderStage = DeferredShadowRenderStage;
-
 export default DeferredShadowRenderStage;

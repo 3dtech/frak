@@ -1,30 +1,25 @@
-import BaseTexture from 'rendering/materials/BaseTexture.js'
-import RenderingContext from 'rendering/RenderingContext.js'
-import TargetTexture from 'rendering/camera/TargetTexture.js'
+import BaseTexture from 'rendering/materials/BaseTexture';
+import TargetTexture from 'rendering/camera/TargetTexture';
 
 /**
  * 2D texture instance.
  */
-
 class Texture extends BaseTexture {
 	glTexture: any;
 	name: any;
 	mipmapped: any;
 	flipY: any;
 	clampToEdge: any;
-	anisotropic: any;
-	anisotropyFilter: any;
 	image: any;
 	wrapS: any;
 	wrapT: any;
-	loaded: any;
 
 	/**
 	 * Constructor
 	 * @param context RenderingContext (optional)
 	 */
-	constructor(context) {
-		super(context);
+	constructor(context?) {
+		super();
 
 		this.glTexture = null; ///< GL texture ID
 		this.name = false;		///< Texture name assigned by manager
@@ -46,7 +41,7 @@ class Texture extends BaseTexture {
 		return "Texture";
 	}
 
-	excluded(): any {
+	excluded(): string[] {
 		return super.excluded().concat(["glTexture"]);
 	}
 
@@ -207,9 +202,7 @@ class Texture extends BaseTexture {
 			this.setImage(context, this.image);
 		}
 	}
-
 }
 
 globalThis.Texture = Texture;
-
 export default Texture;

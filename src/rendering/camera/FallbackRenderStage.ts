@@ -1,7 +1,6 @@
 import ShaderRenderStage from 'rendering/camera/ShaderRenderStage';
 
 /** Render-stage that outputs geometry using a custom shader. */
-
 class FallbackRenderStage extends ShaderRenderStage {
 	shader: any;
 
@@ -20,9 +19,7 @@ class FallbackRenderStage extends ShaderRenderStage {
 			renderers[i].renderGeometry(context, this.shader);
 		}
 	}
-
 }
 
 globalThis.FallbackRenderStage = FallbackRenderStage;
-
 export default FallbackRenderStage;

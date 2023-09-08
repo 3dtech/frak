@@ -2,7 +2,6 @@ import RenderTarget from 'rendering/camera/RenderTarget';
 import Texture from 'rendering/materials/Texture';
 import Color from 'rendering/Color';
 
-
 class TargetTexture extends RenderTarget {
 	texture: any;
 	useDepthTexture: any;
@@ -197,9 +196,7 @@ class TargetTexture extends RenderTarget {
 		super.unbind(context);
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
 	}
-
 }
 
 globalThis.TargetTexture = TargetTexture;
-
 export default TargetTexture;

@@ -7,7 +7,6 @@ import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO
 /**
  * Forward renderer
  */
-
 class ForwardRenderStage extends PostProcessRenderStage {
 	debugActive: any;
 	debugger: any;
@@ -109,9 +108,7 @@ class ForwardRenderStage extends PostProcessRenderStage {
 			this.debugger.quads.push({ quad: createQuad(x+=size, y, size, size),  texture: this.generator.depthStage.target.texture });
 		}
 	}
-
 }
 
 globalThis.ForwardRenderStage = ForwardRenderStage;
-
 export default ForwardRenderStage;

@@ -1,7 +1,6 @@
 import Serializable from 'scene/Serializable';
 
 /** Descriptor is a class that is used to describe a resource and all its sub-resources. */
-
 class Descriptor extends Serializable {
 	source: any;
 	parentDescriptor: any;
@@ -17,8 +16,8 @@ class Descriptor extends Serializable {
 		return true;
 	}
 
-	excluded(): any {
-		return super.excluded().concat(['parentDescriptor']);
+	excluded(): string[] {
+		return (super.excluded() as string[]).concat(['parentDescriptor']);
 	}
 
 	type(): any {

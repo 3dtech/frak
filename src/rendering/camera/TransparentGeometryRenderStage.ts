@@ -1,12 +1,11 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
+import RenderStage from 'rendering/camera/RenderStage';
 
 /**
  * Render-stage for rendering transparent geometry.
  */
-
 class TransparentGeometryRenderStage extends RenderStage {
 
-	
+
 
 	/** Renders transparent renderers in the given order (assumes they are sorted back-to-front). */
 	renderSorted(context, scene, camera): any {
@@ -34,9 +33,7 @@ class TransparentGeometryRenderStage extends RenderStage {
 			this.parent.oitStage.renderAlphaMapped(context, scene, camera);
 		}
 	}
-
 }
 
 globalThis.TransparentGeometryRenderStage = TransparentGeometryRenderStage;
-
 export default TransparentGeometryRenderStage;

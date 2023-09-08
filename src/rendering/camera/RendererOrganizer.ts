@@ -1,4 +1,4 @@
-import { CollectionReference, CollectionView } from "rendering/CollectionUtils";
+import { CollectionReference, CollectionView } from 'rendering/CollectionUtils';
 
 /** Transparency sorting function */
 function TransparencySort(a, b) {
@@ -209,9 +209,7 @@ class RendererOrganizer {
 
 		this.updateStats();
 	}
-
 }
 
 globalThis.RendererOrganizer = RendererOrganizer;
-
 export default RendererOrganizer;

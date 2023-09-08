@@ -11,7 +11,6 @@ import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 /**
  * Render-stage for rendering the SkyboxComponent.
  */
-
 class SkyboxRenderStage extends RenderStage {
 	uniforms: any;
 	shadowFallback: any;
@@ -63,9 +62,7 @@ class SkyboxRenderStage extends RenderStage {
 			renderer.material.unbind(globalSamplers);
 		}
 	}
-
 }
 
 globalThis.SkyboxRenderStage = SkyboxRenderStage;
-
 export default SkyboxRenderStage;

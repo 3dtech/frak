@@ -4,7 +4,6 @@ import ExplicitAttributeLocations from 'rendering/shaders/AttributeLocations';
 /**
  * Render buffer implementation utilizing the vertex array object extension.
  */
-
 class RenderBufferVAO extends RenderBuffer {
 	vao: any;
 	damaged: any;
@@ -99,9 +98,7 @@ class RenderBufferVAO extends RenderBuffer {
 		this.drawElements();
 		gl.bindVertexArray(null);
 	}
-
 }
 
 globalThis.RenderBufferVAO = RenderBufferVAO;
-
 export default RenderBufferVAO;

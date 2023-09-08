@@ -1,5 +1,5 @@
-import TrianglesRenderBufferVAO from "rendering/buffers/TrianglesRenderBufferVAO";
-import Sampler from "rendering/shaders/Sampler";
+import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
+import Sampler from 'rendering/shaders/Sampler';
 
 class ScreenQuad {
 	quad: TrianglesRenderBufferVAO;

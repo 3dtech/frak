@@ -163,9 +163,7 @@ class DataParserResult {
 	setCollisionTreeRoot(node) {
 		this.data.collision=node;
 	}
-
 }
 
 globalThis.DataParserResult = DataParserResult;
-
 export default DataParserResult;

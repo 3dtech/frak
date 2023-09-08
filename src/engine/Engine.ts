@@ -1,21 +1,15 @@
-import Scene from 'scene/Scene';
 import DefaultScene from 'scene/DefaultScene';
 import FPS from 'engine/FPS';
 import AssetsManager from 'loading/AssetsManager';
 import Texture from 'rendering/materials/Texture';
 import Sampler from 'rendering/shaders/Sampler';
 import RenderingContext from 'rendering/RenderingContext';
-import RenderTarget from 'rendering/camera/RenderTarget';
 import Input from 'engine/Input';
-import Component from 'scene/components/Component';
-import Renderer from 'rendering/renderers/Renderer';
 import FRAK, { FrakCallback } from 'Helpers';
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
  */
-
-
 class Engine {
 	options: any;
 	context: any;
@@ -477,9 +471,7 @@ class Engine {
 			this.onScreenshotCaptured = callback;
 		}
 	}
-
 }
 
 globalThis.Engine = Engine;
-
 export default Engine;

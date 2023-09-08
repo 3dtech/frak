@@ -1,16 +1,15 @@
-import RenderStage from 'rendering/camera/RenderStage.js'
-import UniformVec3 from 'rendering/shaders/UniformVec3.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import DirectionalLight from 'scene/lights/DirectionalLight.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import TargetTexture from 'rendering/camera/TargetTexture.js'
-import Material from 'rendering/materials/Material.js'
-import Color from 'rendering/Color'
+import RenderStage from 'rendering/camera/RenderStage';
+import UniformVec3 from 'rendering/shaders/UniformVec3';
+import UniformInt from 'rendering/shaders/UniformInt';
+import DirectionalLight from 'scene/lights/DirectionalLight';
+import Sampler from 'rendering/shaders/Sampler';
+import TargetTexture from 'rendering/camera/TargetTexture';
+import Material from 'rendering/materials/Material';
+import Color from 'rendering/Color';
 
 /**
  * Soft shadows render stage for deferred renderer
  */
-
 class SoftShadowsRenderStage extends RenderStage {
 	quality: any;
 	damaged: any;
@@ -174,9 +173,7 @@ class SoftShadowsRenderStage extends RenderStage {
 
 		shader.unbindSamplers(samplers);
 	}
-
 }
 
 globalThis.SoftShadowsRenderStage = SoftShadowsRenderStage;
-
 export default SoftShadowsRenderStage;

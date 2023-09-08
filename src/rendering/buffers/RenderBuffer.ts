@@ -1,9 +1,6 @@
-
-
 /**
  * Render buffer (VBO) base class.
  */
-
 class RenderBuffer {
 	type: any;
 	context: any;
@@ -165,9 +162,7 @@ class RenderBuffer {
 		this.facesBuffer.numItems=faces.length;
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	}
-
 }
 
 globalThis.RenderBuffer = RenderBuffer;
-
 export default RenderBuffer;

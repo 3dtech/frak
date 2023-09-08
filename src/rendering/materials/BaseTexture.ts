@@ -1,22 +1,16 @@
-import Serializable from 'scene/Serializable.js'
-import RenderingContext from 'rendering/RenderingContext.js'
+import Serializable from 'scene/Serializable';
 
 /**
  * Generic Texture interface
  */
-
 class BaseTexture extends Serializable {
 	size: any;
 	loaded: any;
 	anisotropic: any;
 	anisotropyFilter: any;
 	extTextureFilterAnisotropic: any;
-	
-	/**
-	 * Constructor
-	 * @param context RenderingContext (optional)
-	 */
-	constructor(context) {
+
+	constructor() {
 		super();
 		this.size = vec2.create();
 		this.loaded = false;
@@ -26,8 +20,8 @@ class BaseTexture extends Serializable {
 		return "BaseTexture";
 	}
 
-	excluded(): any {
-		return super.excluded().concat(['loaded', 'size']);
+	excluded(): string[] {
+		return (super.excluded() as string[]).concat(['loaded', 'size']);
 	}
 
 	/**
