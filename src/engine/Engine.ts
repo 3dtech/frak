@@ -9,7 +9,7 @@ import RenderTarget from 'rendering/camera/RenderTarget';
 import Input from 'engine/Input';
 import Component from 'scene/components/Component';
 import Renderer from 'rendering/renderers/Renderer';
-import FRAK, { FrakCallback } from 'FRAK';
+import FRAK, { FrakCallback } from 'Helpers';
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.

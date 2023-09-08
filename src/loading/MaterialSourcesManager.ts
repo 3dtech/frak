@@ -16,7 +16,7 @@ import UniformColor from 'rendering/shaders/UniformColor';
 import UniformInt from 'rendering/shaders/UniformInt';
 import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
 import ShaderDescriptor from 'scene/descriptors/ShaderDescriptor';
-import FRAK from 'FRAK';
+import FRAK from 'Helpers';
 
 /** Used to load materials from material sources.
 	Example of usage:

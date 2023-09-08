@@ -1,14 +1,11 @@
-import Serializable from 'scene/Serializable.js'
-import Camera from 'rendering/camera/Camera.js'
-import Engine from 'engine/Engine.js'
-
+import Serializable from 'scene/Serializable';
 
 class Component extends Serializable {
 	updatePasses: any;
 	started: any;
 	node: any;
 	enabled: any;
-	
+
 	/** Constructor. NOTE! When overriding the constructor of Component ALWAYS call this._super() to
 		call parent constructor, because otherwise for example onStart/onEnd methods won't work as
 		expected and other functionality may be broken. */

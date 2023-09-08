@@ -11,7 +11,7 @@ import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import MeshComponent from 'scene/components/MeshComponent';
 import MeshCollider from 'scene/components/MeshCollider';
 import Color from 'rendering/Color';
-import FRAK from 'FRAK';
+import FRAK from 'Helpers';
 
 /** Loads models to scene hierarchy from JSON data */
 

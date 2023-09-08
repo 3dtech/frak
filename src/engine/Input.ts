@@ -4,7 +4,7 @@
 	Input handles user input (touch, mouse, keyboard).
 	*/
 
-import { FrakCallback } from "FRAK";
+import { FrakCallback } from "Helpers";
 
 class Input {
 	controllers: any;

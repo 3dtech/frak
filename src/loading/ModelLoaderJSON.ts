@@ -12,7 +12,7 @@ import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import CollisionOctreeNode from 'scene/geometry/CollisionOctreeNode';
 import LargeMeshCollider from 'scene/components/LargeMeshCollider';
 import Color from 'rendering/Color';
-import FRAK from 'FRAK';
+import FRAK from 'Helpers';
 
 /** Loads models to scene hierarchy from JSON data */
 

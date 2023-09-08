@@ -1,7 +1,7 @@
 import Cloneable from 'scene/Cloneable';
 import Serializer from 'scene/Serializer';
 import CyclicSerializer from 'scene/CyclicSerializer';
-import FRAK from 'FRAK';
+import FRAK from 'Helpers';
 
 /** Base-class for (partially) serializable classes.
 	The fields method must return a list of serializable

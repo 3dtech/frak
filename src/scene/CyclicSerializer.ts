@@ -1,5 +1,5 @@
 import Serializable from 'scene/Serializable';
-import FRAK from 'FRAK';
+import FRAK from 'Helpers';
 
 /** Implements serialization of objects. Serializable objects are treated as special
 	and their included/excluded function return values are used to decide which of their fields to serialize.

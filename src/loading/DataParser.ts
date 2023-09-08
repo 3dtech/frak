@@ -1,4 +1,4 @@
-import { FrakCallback } from 'FRAK';
+import { FrakCallback } from 'Helpers';
 import DataParserResult from 'loading/DataParserResult.js'
 
 /**

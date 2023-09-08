@@ -6,7 +6,7 @@ import "../lib/Logistics.js";
 import "../lib/hammer.min.js";
 
 import "Version";
-import "FRAK";
+import "Helpers.js";
 import "scene/Cloneable";
 import "scene/Serializable";
 import "scene/Serializer";
@@ -182,3 +182,5 @@ import "engine/FPS";
 import "engine/Engine";
 import "engine/Input";
 import "rendering/shaders/BuiltInShaders";
+
+import "ClassExtendShim";

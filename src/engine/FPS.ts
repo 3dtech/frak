@@ -1,4 +1,4 @@
-import FRAK from 'FRAK';
+import FRAK from 'Helpers';
 
 /** FPS class manages frame time measurements.
 	Its instance is accessible from Engine where it is used

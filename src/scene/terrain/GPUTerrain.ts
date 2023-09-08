@@ -8,7 +8,7 @@ import Sampler from 'rendering/shaders/Sampler';
 import Mesh from 'scene/geometry/Mesh';
 import Submesh from 'scene/geometry/Submesh';
 import MeshComponent from 'scene/components/MeshComponent';
-import FRAK from 'FRAK';
+import FRAK from 'Helpers';
 
 /** GPU terrain renderer */
 
