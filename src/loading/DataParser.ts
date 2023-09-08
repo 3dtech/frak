@@ -1,5 +1,7 @@
 import { FrakCallback } from 'Helpers';
 import DataParserResult from 'loading/DataParserResult.js'
+import DataParserNode from './DataParserNode';
+import DataParserTypes from './DataParserTypes';
 
 /**
  * 3DTech DATA format parser

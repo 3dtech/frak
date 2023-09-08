@@ -26,7 +26,7 @@ var DataParserTypes = {
 		NODE_TEXTURES_OPACITY						: 0x00002057,
 		NODE_TEXTURES_DISPLACEMENT					: 0x00002058,
 		NODE_TEXTURES_LIGHTMAP						: 0x00002059,
-		NODE_TEXTURES_REFLECTION					: 0x0000205A,      
+		NODE_TEXTURES_REFLECTION					: 0x0000205A,
 			NODE_TEXTURE							: 0x00002100,
 				NODE_TEXTURE_SCALE					: 0x00002101,
 		NODE_SHADER_NAME							: 0x00002200,
@@ -61,8 +61,8 @@ var DataParserTypes = {
 					NODE_FACE_LIST_NODE_ID			: 0x00005010,
 					NODE_FACE_LIST_MESH_REFERENCE	: 0x00005011,
 					NODE_FACE_LIST_INDICES			: 0x00005012,
-	
-	
+
+
 	/** Helper function for getting canonical values for node IDs */
 	getName: function(value) {
 		for (var name in DataParserTypes) {
@@ -72,3 +72,6 @@ var DataParserTypes = {
 		return false;
 	}
 };
+
+globalThis.DataParserTypes = DataParserTypes;
+export default DataParserTypes;

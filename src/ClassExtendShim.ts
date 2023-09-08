@@ -85,25 +85,27 @@ import Submesh from "scene/geometry/Submesh";
 
 		// Copy the properties over onto the new prototype
 		for (var name in prop) {
-			if (typeof prop[name] === 'function' && fnTest.test(prop[name])) {
-				var superFn = name === 'init' && typeof _super[name] !== 'function' ?
-					function() {
-						return new _super.constructor(arguments);
-					} :
-					_super[name];
+			(function(name, fn) {
+				if (typeof fn === 'function' && fnTest.test(fn)) {
+					var superFn = name === 'init' && typeof _super[name] !== 'function' ?
+						function() {
+							return new _super.constructor(arguments);
+						} :
+						_super[name];
 
-					prototype[name] = (function(fn) {
-						return function() {
-							var tmp = this._super;
-							this._super = superFn;
-							var ret = fn.apply(this, arguments);
-							this._super = tmp;
-							return ret;
-						};
-					})(prop[name]);
-			} else {
-				prototype[name] = prop[name];
-			}
+						prototype[name] = (function(fn) {
+							return function() {
+								var tmp = this._super;
+								this._super = superFn;
+								var ret = fn.apply(this, arguments);
+								this._super = tmp;
+								return ret;
+							};
+						})(fn);
+				} else {
+					prototype[name] = fn;
+				}
+			})(name, prop[name]);
 		}
 
 		// The dummy class constructor

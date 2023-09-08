@@ -6,7 +6,7 @@ import "../lib/Logistics.js";
 import "../lib/hammer.min.js";
 
 import "Version";
-import "Helpers.js";
+import "Helpers";
 import "scene/Cloneable";
 import "scene/Serializable";
 import "scene/Serializer";
