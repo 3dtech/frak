@@ -1,9 +1,11 @@
+import RenderingContext from 'rendering/RenderingContext';
+
 /**
  * Render buffer (VBO) base class.
  */
 class RenderBuffer {
 	type: any;
-	context: any;
+	context: RenderingContext;
 	debug: any;
 	buffers: any;
 	maxFaceIndex: any;

@@ -27,7 +27,7 @@ class LineRendererComponent extends RendererComponent {
 	overlay: any;
 	lines: any;
 
-	constructor(color, width) {
+	constructor(color?, width?) {
 		super();
 
 		this.lightContribution = 0.0; // By default we do not want lighting to affect lines
@@ -195,17 +195,7 @@ class LineRendererComponent extends RendererComponent {
 			return count;
 		}
 
-		if (!this.renderer.instanced) {
-			for (var i = 0; i < this.lines.length; i++) {
-				var count = createLineGeometry();
-				for (var j = 0; j < count; j++) {
-					pointsA.push(this.lines[i].a[0], this.lines[i].a[1], this.lines[i].a[2]);
-					pointsB.push(this.lines[i].b[0], this.lines[i].b[1], this.lines[i].b[2]);
-					colors.push(this.lines[i].color.r, this.lines[i].color.g, this.lines[i].color.b, this.lines[i].color.a);
-					widths.push(this.lines[i].width);
-				}
-			}
-		} else if (this.lines.length) {
+		if (this.lines.length) {
 			createLineGeometry();
 			for (var i = 0; i < this.lines.length; i++) {
 				pointsA.push(this.lines[i].a[0], this.lines[i].a[1], this.lines[i].a[2]);

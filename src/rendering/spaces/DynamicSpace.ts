@@ -1,17 +1,12 @@
-import Space from 'rendering/spaces/Space.js'
-import Renderer from 'rendering/renderers/Renderer.js'
-import Ray from 'scene/geometry/Ray.js'
-import RayTestResult from 'scene/geometry/RayTestResult.js'
+import RayTestResult from 'scene/geometry/RayTestResult';
 
 /** Dynamic space contains submesh renderers that can be moved around and the changes will be reflected in queries. Wanna go to space! */
-
-class DynamicSpace extends Space {
+class DynamicSpace {
 	renderers: any;
 	colliders: any;
 	filteredRenderers: any;
 
 	constructor() {
-		super();
 		this.renderers = [];
 		this.colliders = [];
 		this.filteredRenderers = [];
@@ -93,9 +88,7 @@ class DynamicSpace extends Space {
 		}
 		return result;
 	}
-
 }
 
 globalThis.DynamicSpace = DynamicSpace;
-
 export default DynamicSpace;
