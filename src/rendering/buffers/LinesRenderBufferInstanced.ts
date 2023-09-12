@@ -1,10 +1,10 @@
-import LinesRenderBuffer from './LinesRenderBuffer';
+import RenderBuffer from './RenderBuffer';
 
-class LinesRenderBufferInstanced extends LinesRenderBuffer {
+class LinesRenderBufferInstanced extends RenderBuffer {
 	divisors: any;
 
 	constructor(context) {
-		super(context);
+		super(context, [], context.gl.DYNAMIC_DRAW);
 
 		this.divisors = {};
 	}
@@ -14,7 +14,7 @@ class LinesRenderBufferInstanced extends LinesRenderBuffer {
 		@param name Name of the buffer (passed to vertex shader as attribute)
 		@param items Items to be passed to vertex buffer
 		@param itemSize Size of an item (number elements from items array, eg 3 to pass vec3 attribute) */
-	add(name, items, itemSize, divisor): any {
+	add(name, items, itemSize, divisor?): any {
 		if (items.length / itemSize <= this.maxFaceIndex && this.facesBuffer.numItems > 0 && divisor === 0)
 			throw "RenderBuffer: Buffer '{0}' too small ({1} vertices, {2} max index).".format(name, items.length / itemSize, this.maxFaceIndex);
 
@@ -86,7 +86,7 @@ class LinesRenderBufferInstanced extends LinesRenderBuffer {
 		}
 	}
 
-	drawElements(count) {
+	drawElements(count?) {
 		var gl = this.context.gl;
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
 		gl.drawElementsInstanced(gl.TRIANGLES, this.facesBuffer.numItems, gl.UNSIGNED_SHORT, 0, count);

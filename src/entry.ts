@@ -75,7 +75,7 @@ import 'rendering/camera/TargetTextureFloat';
 import 'rendering/camera/TargetTextureMulti';
 
 import 'rendering/buffers/RenderBuffer';
-import 'rendering/buffers/LinesRenderBuffer';
+import 'rendering/buffers/LinesRenderBufferInstanced';
 import 'rendering/buffers/RenderBufferVAO';
 import 'rendering/buffers/TrianglesRenderBufferVAO';
 

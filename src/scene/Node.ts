@@ -382,6 +382,7 @@ class Node extends Serializable {
 		}
 		return '/' + path.reverse().join('/');
 	}
+
 	/** Calculates axis-aligned bounding-box of this node and all its subnodes */
 	getBoundingBox(excludeInvisible): any {
 		var bb = new BoundingBox();
