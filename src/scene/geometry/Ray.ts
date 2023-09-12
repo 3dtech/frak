@@ -4,7 +4,6 @@ import BoundingBox from 'scene/geometry/BoundingBox';
 
 
 /** Ray class */
-
 class Ray {
 	infinite: any;
 	origin: any;
@@ -295,9 +294,7 @@ class Ray {
 	toString() {
 		return 'Ray(' + vec3.str(this.origin) + ', ' + vec3.str(this.destination) + ', infinite = ' + this.infinite +')';
 	}
-
 }
 
 globalThis.Ray = Ray;
-
 export default Ray;

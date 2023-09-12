@@ -1,5 +1,4 @@
-import Component from 'scene/components/Component.js'
-
+import Component from 'scene/components/Component';
 
 class RendererComponent extends Component {
 	castShadows: any;
@@ -7,7 +6,7 @@ class RendererComponent extends Component {
 	lightContribution: any;
 	reflectivity: any;
 	customShader: any;
-	
+
 	constructor() {
 		super();
 		this.castShadows = true;
@@ -32,9 +31,7 @@ class RendererComponent extends Component {
 	}
 
 	onContextRestored(context) {}
-
 }
 
 globalThis.RendererComponent = RendererComponent;
-
 export default RendererComponent;

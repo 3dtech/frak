@@ -1,14 +1,13 @@
-import MeshComponent from 'scene/components/MeshComponent.js'
-import Mesh from 'scene/geometry/Mesh.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import Material from 'rendering/materials/Material.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import Texture from 'rendering/materials/Texture.js'
-import Submesh from 'scene/geometry/Submesh.js'
-import CanvasBoardRendererComponent from './CanvasBoardRendererComponent'
+import MeshComponent from 'scene/components/MeshComponent';
+import Mesh from 'scene/geometry/Mesh';
+import Sampler from 'rendering/shaders/Sampler';
+import Material from 'rendering/materials/Material';
+import UniformColor from 'rendering/shaders/UniformColor';
+import Texture from 'rendering/materials/Texture';
+import Submesh from 'scene/geometry/Submesh';
+import CanvasBoardRendererComponent from './CanvasBoardRendererComponent';
 
 /** Text component is used to render text at given node */
-
 class CanvasBoardComponent extends MeshComponent {
 	width: any;
 	height: any;
@@ -126,9 +125,7 @@ class CanvasBoardComponent extends MeshComponent {
 	getCanvasContext(){
 		return this.canvasContext;
 	}
-
 }
 
 globalThis.CanvasBoardComponent = CanvasBoardComponent;
-
 export default CanvasBoardComponent;

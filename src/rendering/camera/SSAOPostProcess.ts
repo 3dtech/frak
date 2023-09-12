@@ -7,7 +7,6 @@ import Sampler from 'rendering/shaders/Sampler';
 
 class SSAOPostProcess extends PostProcess {
 	ssaoOnly: any;
-	material: any;
 
 	constructor() {
 		super();

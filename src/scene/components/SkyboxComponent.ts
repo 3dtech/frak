@@ -1,7 +1,7 @@
-import Component from 'scene/components/Component'
+import Component from 'scene/components/Component';
 import MeshRendererComponent from './MeshRendererComponent';
-import Material from 'rendering/materials/Material'
-import Sampler from 'rendering/shaders/Sampler'
+import Material from 'rendering/materials/Material';
+import Sampler from 'rendering/shaders/Sampler';
 import Primitives from 'scene/geometry/Primitives';
 
 class SkyboxComponent extends Component {
@@ -41,9 +41,7 @@ class SkyboxComponent extends Component {
 		meshRenderer.disable();
 		meshRenderer.addRenderers(engine.context, engine);
 	}
-
 }
 
 globalThis.SkyboxComponent = SkyboxComponent;
-
 export default SkyboxComponent;

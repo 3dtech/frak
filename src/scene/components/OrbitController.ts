@@ -1,14 +1,11 @@
-import FlightController from 'scene/components/FlightController.js'
-import TypeReference from 'scene/TypeReference.js'
+import FlightController from 'scene/components/FlightController';
+import TypeReference from 'scene/TypeReference';
 
 /** Provides restricted flight mode that is used for orbiting. */
-
 class OrbitController extends FlightController {
 	target: any;
 	panButton: any;
 	rotateButton: any;
-	position: any;
-	velocity: any;
 	pan: any;
 	minimumPan: any;
 	maximumPan: any;
@@ -16,11 +13,8 @@ class OrbitController extends FlightController {
 	panYAxis: any;
 	panSpeed: any;
 	rotation: any;
-	angularVelocity: any;
 	minimumPitch: any;
 	maximumPitch: any;
-	rotationAcceleration: any;
-	rotationFriction: any;
 	lastPinch: any;
 	zoomSpeed: any;
 	doZoomIn: any;
@@ -33,7 +27,6 @@ class OrbitController extends FlightController {
 	cameraPosition: any;
 	targetPosition: any;
 	lookat: any;
-	tmpRotation: any;
 	cbOnChange: any;
 
 	constructor() {
@@ -286,9 +279,7 @@ class OrbitController extends FlightController {
 			this.zoomOut();
 		}
 	}
-
 }
 
 globalThis.OrbitController = OrbitController;
-
 export default OrbitController;

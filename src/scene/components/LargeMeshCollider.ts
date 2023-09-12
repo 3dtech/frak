@@ -1,12 +1,6 @@
 import Collider from 'scene/components/Collider';
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
-import CollisionOctreeNode from 'scene/geometry/CollisionOctreeNode.js'
-import Ray from 'scene/geometry/Ray.js'
-import RayTestResult from 'scene/geometry/RayTestResult.js'
 
 /** Spatially indexed mesh collider component for large meshes with unchanging geometry */
-
 class LargeMeshCollider extends Collider {
 	tree: any;
 	meshes: any;
@@ -145,9 +139,7 @@ class LargeMeshCollider extends Collider {
 		}
 		return (collision!==false);
 	}
-
 }
 
 globalThis.LargeMeshCollider = LargeMeshCollider;
-
 export default LargeMeshCollider;

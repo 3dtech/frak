@@ -2,7 +2,6 @@ import Component from 'scene/components/Component';
 import Color from 'rendering/Color';
 
 /** Base class for all lights */
-
 class Light extends Component {
 	color: any;
 	intensity: any;
@@ -54,9 +53,7 @@ class Light extends Component {
 	undamage() {
 		this.damaged = false;
 	}
-
 }
 
 globalThis.Light = Light;
-
 export default Light;

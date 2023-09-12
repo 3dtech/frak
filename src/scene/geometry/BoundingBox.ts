@@ -1,9 +1,8 @@
-import BoundingVolume from 'scene/geometry/BoundingVolume.js'
+import BoundingVolume from 'scene/geometry/BoundingVolume';
 
 /**
  * Axis aligned bounding box class
  */
-
 class BoundingBox extends BoundingVolume {
 	size: any;
 	extents: any;
@@ -417,5 +416,4 @@ function PointInTriangle2D(p1, p2, p3, pt) {
 }
 
 globalThis.BoundingBox = BoundingBox;
-
 export default BoundingBox;

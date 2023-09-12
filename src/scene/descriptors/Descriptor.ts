@@ -58,9 +58,7 @@ class Descriptor extends Serializable {
 		var path = this.getParentDirectory() + this.source;
 		return path;
 	}
-
 }
 
 globalThis.Descriptor = Descriptor;
-
 export default Descriptor;

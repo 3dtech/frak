@@ -19,13 +19,12 @@ import Renderer from "rendering/renderers/Renderer";
 import SamplerAccumulator from "rendering/shaders/SamplerAccumulator";
 import ShaderRequirements from "rendering/shaders/ShaderRequirements";
 import Subshader from "rendering/shaders/Subshader";
-import Space from "rendering/spaces/Space";
+import DynamicSpace from "rendering/spaces/DynamicSpace";
 import Font from "rendering/text/Font";
 import Cloneable from "scene/Cloneable";
 import CyclicSerializer from "scene/CyclicSerializer";
 import Serializer from "scene/Serializer";
 import CollisionOctreeNode from "scene/geometry/CollisionOctreeNode";
-import InfiniteCone from "scene/geometry/InfiniteCone";
 import Mesh from "scene/geometry/Mesh";
 import Plane from "scene/geometry/Plane";
 import Ray from "scene/geometry/Ray";
@@ -41,11 +40,10 @@ import Submesh from "scene/geometry/Submesh";
 	Ray,
 	Plane,
 	Mesh,
-	InfiniteCone,
 	CollisionOctreeNode,
 	CyclicSerializer,
 	Font,
-	Space,
+	DynamicSpace,
 	Subshader,
 	ShaderRequirements,
 	SamplerAccumulator,

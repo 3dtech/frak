@@ -1,7 +1,6 @@
-import CameraComponent from 'scene/components/CameraComponent.js'
+import CameraComponent from 'scene/components/CameraComponent';
 
 /** Camera component providing perspective projection */
-
 class PerspectiveCamera extends CameraComponent {
 	fov: any;
 	aspect: any;
@@ -108,9 +107,7 @@ class PerspectiveCamera extends CameraComponent {
 		mat4.perspective(perspective, this.fov*(Math.PI*2.0)/360.0, aspect, this.near, this.far);
 		return perspective;
 	}
-
 }
 
 globalThis.PerspectiveCamera = PerspectiveCamera;
-
 export default PerspectiveCamera;

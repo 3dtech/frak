@@ -7,7 +7,6 @@ import UniformVec2 from 'rendering/shaders/UniformVec2';
  */
 class BlurPostProcess extends PostProcess {
 	blurSize: any;
-	material: any;
 
 	constructor(blurSize) {
 		super();

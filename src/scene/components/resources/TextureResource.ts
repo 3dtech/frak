@@ -1,10 +1,8 @@
-import Resource from 'scene/components/resources/Resource.js'
-import TextureDescriptor from 'scene/descriptors/TextureDescriptor.js'
+import Resource from 'scene/components/resources/Resource';
+import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
 
 /** Resource component */
-
 class TextureResource extends Resource {
-	descriptor: any;
 	texture: any;
 	engine: any;
 
@@ -38,9 +36,7 @@ class TextureResource extends Resource {
 
 	/** Called when texture has been loaded */
 	onLoaded() {}
-
 }
 
 globalThis.TextureResource = TextureResource;
-
 export default TextureResource;

@@ -105,7 +105,7 @@ class EmptyNode extends Serializable {
 	}
 
 	/** Adds component to this node */
-	addComponent(component: Component): Component {
+addComponent<T extends Component>(component: T): T {
 		if (!component.type())
 			throw "Unable to add a component that doesn't define it's type by returning it from type() method";
 
@@ -373,9 +373,7 @@ class EmptyNode extends Serializable {
 		}
 		return '/' + path.reverse().join('/');
 	}
-
 }
 
 globalThis.EmptyNode = EmptyNode;
-
 export default EmptyNode;

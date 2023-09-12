@@ -7,12 +7,6 @@ import UniformFloat from 'rendering/shaders/UniformFloat';
  * Post-processing stage used to do image space anti-aliasing.
  */
 class AntiAliasPostProcess extends PostProcess {
-	material: any;
-
-	constructor() {
-		super();
-	}
-
 	onStart(context, engine): any {
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/postprocess_fxaa"),

@@ -1,11 +1,6 @@
-import Descriptor from 'scene/descriptors/Descriptor.js'
-import Shader from 'rendering/shaders/Shader.js'
-import ShaderDescriptor from 'scene/descriptors/ShaderDescriptor.js'
-import Uniform from 'rendering/shaders/Uniform.js'
-import TextureDescriptor from 'scene/descriptors/TextureDescriptor.js'
+import Descriptor from 'scene/descriptors/Descriptor';
 
 /** Material descriptor is used for describing materials */
-
 class MaterialDescriptor extends Descriptor {
 	shaderDescriptor: any;
 	uniforms: any;
@@ -38,9 +33,7 @@ class MaterialDescriptor extends Descriptor {
 	equals(other) {
 		return false;
 	}
-
 }
 
 globalThis.MaterialDescriptor = MaterialDescriptor;
-
 export default MaterialDescriptor;

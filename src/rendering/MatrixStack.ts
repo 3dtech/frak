@@ -1,5 +1,3 @@
-
-
 /**
  * Matrix stack for managing relative transformation trees.
  */
@@ -7,7 +5,7 @@
 class MatrixStack {
 	stack: any;
 	allocated: any;
-	
+
 	/** Constructor */
 	constructor() {
 		this.stack=[mat4.identity(mat4.create())];	///< Matrix stack
@@ -51,9 +49,7 @@ class MatrixStack {
 	size() {
 		return this.stack.length;
 	}
-
 }
 
 globalThis.MatrixStack = MatrixStack;
-
 export default MatrixStack;

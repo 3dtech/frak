@@ -1,15 +1,12 @@
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import BoundingSphere from 'scene/geometry/BoundingSphere.js'
-import Submesh from 'scene/geometry/Submesh.js'
-import Material from 'rendering/materials/Material.js'
-
+import BoundingBox from 'scene/geometry/BoundingBox';
+import BoundingSphere from 'scene/geometry/BoundingSphere';
 
 class Mesh {
 	submeshes: any;
 	materials: any;
 	boundingBox: any;
 	boundingSphere: any;
-	
+
 	constructor() {
 		this.submeshes=[];
 		this.materials=[];
@@ -60,9 +57,7 @@ class Mesh {
 	empty() {
 		return (this.submeshes.length===0);
 	}
-
 }
 
 globalThis.Mesh = Mesh;
-
 export default Mesh;

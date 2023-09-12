@@ -1,15 +1,11 @@
-import Texture from 'rendering/materials/Texture.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import BoundingSphere from 'scene/geometry/BoundingSphere.js'
-import Space from 'rendering/spaces/Space.js'
-import Mesh from 'scene/geometry/Mesh.js'
+import BoundingBox from 'scene/geometry/BoundingBox';
+import BoundingSphere from 'scene/geometry/BoundingSphere';
 
 /** Submesh object. Holds loaded faces, positions, tangents and bitangents.
 	@param materialIndex Index of material that this submesh will refer to when attached to a mesh
 	@param faces All available faces
 
 */
-
 class Submesh {
 	materialIndex: any;
 	faces: any;
@@ -217,9 +213,7 @@ class Submesh {
 			insert(i+2, i); insert(i , i+2);
 		}
 	}
-
 }
 
 globalThis.Submesh = Submesh;
-
 export default Submesh;

@@ -1,8 +1,7 @@
-import Serializable from 'scene/Serializable.js'
+import Serializable from 'scene/Serializable';
 
 /** Class that should be used in components when uninitialized objects are desired and to enable
 	dragging values to serializable object variables for components in editor. */
-
 class TypeReference extends Serializable {
 	valueType: any;
 	value: any;
@@ -21,9 +20,7 @@ class TypeReference extends Serializable {
 	isNull() {
 		return !this.value;
 	}
-
 }
 
 globalThis.TypeReference = TypeReference;
-
 export default TypeReference;

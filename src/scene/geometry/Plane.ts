@@ -1,7 +1,4 @@
-
-
 /** An infinite plane in 3D space */
-
 class Plane {
 	normal: any;
 	distance: any;
@@ -117,11 +114,8 @@ class Plane {
 	toString() {
 		return "Plane["+this.normal[0]+", "+this.normal[1]+", "+this.normal[2]+", "+this.distance+"]";
 	}
-
 }
 
 globalThis.AABBPlaneCache = new Plane();
-
 globalThis.Plane = Plane;
-
 export default Plane;

@@ -1,10 +1,7 @@
-import Descriptor from 'scene/descriptors/Descriptor.js'
+import Descriptor from 'scene/descriptors/Descriptor';
 
 /** Text descriptor is used for describing text sources */
-
 class TextDescriptor extends Descriptor {
-	source: any;
-
 	/** Constructor
 		@param source Path to text */
 	constructor(source) {
@@ -20,9 +17,7 @@ class TextDescriptor extends Descriptor {
 		if(!super.equals(other)) return false;
 		return this.source==other.source;
 	}
-
 }
 
 globalThis.TextDescriptor = TextDescriptor;
-
 export default TextDescriptor;

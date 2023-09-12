@@ -1,13 +1,6 @@
-import RendererComponent from 'scene/components/RendererComponent.js'
-
+import RendererComponent from 'scene/components/RendererComponent';
 
 class CubeRendererComponent extends RendererComponent {
-
-	
-	constructor(size) {
-		super();
-	}
-	
 	type(): any {
 		return "CubeRendererComponent";
 	}
@@ -15,5 +8,4 @@ class CubeRendererComponent extends RendererComponent {
 }
 
 globalThis.CubeRendererComponent = CubeRendererComponent;
-
 export default CubeRendererComponent;

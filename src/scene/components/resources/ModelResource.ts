@@ -1,10 +1,8 @@
-import Resource from 'scene/components/resources/Resource.js'
-import ModelDescriptor from 'scene/descriptors/ModelDescriptor.js'
+import Resource from 'scene/components/resources/Resource';
+import ModelDescriptor from 'scene/descriptors/ModelDescriptor';
 
 /** ModelResource component */
-
 class ModelResource extends Resource {
-	descriptor: any;
 	model: any;
 	engine: any;
 
@@ -44,9 +42,7 @@ class ModelResource extends Resource {
 
 	/** Called when model has been loaded */
 	onLoaded() {}
-
 }
 
 globalThis.ModelResource = ModelResource;
-
 export default ModelResource;

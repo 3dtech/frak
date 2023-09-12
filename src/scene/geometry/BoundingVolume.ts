@@ -1,9 +1,8 @@
-import Serializable from 'scene/Serializable.js'
+import Serializable from 'scene/Serializable';
 
 /**
  * Abstract bounding volume class.
  */
-
 class BoundingVolume extends Serializable {
 	center: any;
 
@@ -29,7 +28,6 @@ class BoundingVolume extends Serializable {
 	toString() {
 		return "BoundingVolume[center=("+this.center[0]+","+this.center[1]+","+this.center[2]+")]";
 	}
-
 }
 
 globalThis.BoundingVolumeVectorCache = [
@@ -39,5 +37,4 @@ globalThis.BoundingVolumeVectorCache = [
 ];
 
 globalThis.BoundingVolume = BoundingVolume;
-
 export default BoundingVolume;

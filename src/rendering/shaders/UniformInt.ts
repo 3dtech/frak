@@ -1,10 +1,7 @@
-import Uniform from 'rendering/shaders/Uniform.js'
+import Uniform from 'rendering/shaders/Uniform';
 
 /** Int uniform */
-
 class UniformInt extends Uniform {
-
-	
 	bind(context, uniformLocation): any {
 		context.gl.uniform1i(uniformLocation, this.value);
 	}
@@ -12,9 +9,7 @@ class UniformInt extends Uniform {
 	type() {
 		return "UniformInt";
 	}
-
 }
 
 globalThis.UniformInt = UniformInt;
-
 export default UniformInt;

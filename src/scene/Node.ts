@@ -1,15 +1,12 @@
-import EmptyNode from 'scene/EmptyNode.js'
-import Transform from 'scene/components/Transform.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
-import BoundingSphere from 'scene/geometry/BoundingSphere.js'
+import EmptyNode from 'scene/EmptyNode';
+import Transform from 'scene/components/Transform';
+import BoundingBox from 'scene/geometry/BoundingBox';
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
+import BoundingSphere from 'scene/geometry/BoundingSphere';
 
 /** Scene-node class that keeps transformation, subnodes and components. */
-
 class Node extends EmptyNode {
 	isInstanced: boolean;
-	name: any;
-	transform: any;
 	localCollisionID: any;
 
 	/** Constructs new node */
@@ -94,9 +91,7 @@ class Node extends EmptyNode {
 		mat4.fromRotationTranslationScale(this.transform.absolute, quat.fromMat4(quat.create(), this.transform.absolute), position, mat4.getScale(vec3.create(), this.transform.absolute));
 		this.transform.calculateRelativeFromAbsolute(this.parent.transform.absolute);
 	}
-
 }
 
 (globalThis as any).Node = Node;
-
 export default Node;

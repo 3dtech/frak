@@ -1,12 +1,12 @@
-import Node from "scene/Node";
-import Mesh from "./Mesh";
-import Submesh from "./Submesh";
-import MeshComponent from "scene/components/MeshComponent";
-import MeshRendererComponent from "scene/components/MeshRendererComponent";
-import TextComponent from "scene/components/TextComponent";
-import TextRendererComponent from "scene/components/TextRendererComponent";
-import CanvasBoardComponent from "scene/components/CanvasBoardComponent";
-import CanvasBoardRendererComponent from "scene/components/CanvasBoardRendererComponent";
+import Node from 'scene/Node';
+import Mesh from './Mesh';
+import Submesh from './Submesh';
+import MeshComponent from 'scene/components/MeshComponent';
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
+import TextComponent from 'scene/components/TextComponent';
+import TextRendererComponent from 'scene/components/TextRendererComponent';
+import CanvasBoardComponent from 'scene/components/CanvasBoardComponent';
+import CanvasBoardRendererComponent from 'scene/components/CanvasBoardRendererComponent';
 
 /** Predefined primiteve generators */
 var Primitives = {

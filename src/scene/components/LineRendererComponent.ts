@@ -13,9 +13,6 @@ import LinesRenderBufferInstanced from 'rendering/buffers/LinesRenderBufferInsta
  */
 
 class LineRendererComponent extends RendererComponent {
-	lightContribution: any;
-	receiveShadows: any;
-	castShadows: any;
 	color: any;
 	defaultColor: any;
 	defaultWidth: any;

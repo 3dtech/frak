@@ -1,19 +1,17 @@
-import Light from 'scene/components/Light.js'
-import Material from 'rendering/materials/Material.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import Mesh from 'scene/geometry/Mesh.js'
-import Submesh from 'scene/geometry/Submesh.js'
-import Node from 'scene/Node.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
-import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
-import Color from 'rendering/Color'
+import Light from 'scene/components/Light';
+import Material from 'rendering/materials/Material';
+import UniformColor from 'rendering/shaders/UniformColor';
+import Mesh from 'scene/geometry/Mesh';
+import Submesh from 'scene/geometry/Submesh';
+import Node from 'scene/Node';
+import MeshComponent from 'scene/components/MeshComponent';
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
+import Color from 'rendering/Color';
 
 /**
  * Ambient light (affects entire buffer)
  */
-
 class AmbientLight extends Light {
-	color: any;
 	geometry: any;
 	material: any;
 
@@ -79,9 +77,7 @@ class AmbientLight extends Light {
 	getGeometryRenderers() {
 		return this.geometry.getComponent(MeshRendererComponent).meshRenderers;
 	}
-
 }
 
 globalThis.AmbientLight = AmbientLight;
-
 export default AmbientLight;

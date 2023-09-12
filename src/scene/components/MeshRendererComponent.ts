@@ -1,12 +1,10 @@
-import RendererComponent from 'scene/components/RendererComponent.js'
-import SubmeshRenderer from 'rendering/renderers/SubmeshRenderer.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import BoundingSphere from 'scene/geometry/BoundingSphere.js'
-import Renderer from 'rendering/renderers/Renderer.js'
+import RendererComponent from 'scene/components/RendererComponent';
+import SubmeshRenderer from 'rendering/renderers/SubmeshRenderer';
+import MeshComponent from 'scene/components/MeshComponent';
+import BoundingBox from 'scene/geometry/BoundingBox';
+import BoundingSphere from 'scene/geometry/BoundingSphere';
 
 /** MeshRendererComponent is used to add meshes to scene rendering spaces */
-
 class MeshRendererComponent extends RendererComponent {
 	meshRenderers: any;
 
@@ -155,9 +153,7 @@ class MeshRendererComponent extends RendererComponent {
 			this.meshRenderers[i].onContextRestored(context);
 		}
 	}
-
 }
 
 globalThis.MeshRendererComponent = MeshRendererComponent;
-
 export default MeshRendererComponent;

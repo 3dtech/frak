@@ -1,5 +1,5 @@
 import MeshRendererComponent from 'scene/components/MeshRendererComponent';
-import BoundingBox from 'scene/geometry/BoundingBox.js'
+import BoundingBox from 'scene/geometry/BoundingBox';
 
 /* eslint-disable no-restricted-syntax */
 
@@ -381,9 +381,7 @@ class CollisionOctreeNode {
 
 		return result;
 	}
-
 }
 
 globalThis.CollisionOctreeNode = CollisionOctreeNode;
-
 export default CollisionOctreeNode;

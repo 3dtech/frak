@@ -1,16 +1,14 @@
-import MeshComponent from 'scene/components/MeshComponent.js'
-import Mesh from 'scene/geometry/Mesh.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import Font from 'rendering/text/Font.js'
-import Material from 'rendering/materials/Material.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import Texture from 'rendering/materials/Texture.js'
-import Submesh from 'scene/geometry/Submesh.js'
-import Color from 'rendering/Color'
-import TextRendererComponent from './TextRendererComponent'
+import MeshComponent from 'scene/components/MeshComponent';
+import Mesh from 'scene/geometry/Mesh';
+import Sampler from 'rendering/shaders/Sampler';
+import Material from 'rendering/materials/Material';
+import UniformColor from 'rendering/shaders/UniformColor';
+import Texture from 'rendering/materials/Texture';
+import Submesh from 'scene/geometry/Submesh';
+import Color from 'rendering/Color';
+import TextRendererComponent from './TextRendererComponent';
 
 /** Text component is used to render text at given node */
-
 class TextComponent extends MeshComponent {
 	context: any;
 	material: any;
@@ -247,9 +245,7 @@ class TextComponent extends MeshComponent {
 		this.texture.clampToEdge = true;
 		this.sampler.texture = this.texture;
 	}
-
 }
 
 globalThis.TextComponent = TextComponent;
-
 export default TextComponent;

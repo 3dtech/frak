@@ -1,7 +1,6 @@
-import Component from 'scene/components/Component.js'
+import Component from 'scene/components/Component';
 
 /** Controller components are used to handle user input. */
-
 class Controller extends Component {
 	delta: any;
 	dragDelta: any;
@@ -92,9 +91,7 @@ class Controller extends Component {
 	onMouseUp(position, button, delta){
 		this.buttons[button] = false;
 	}
-
 }
 
 globalThis.Controller = Controller;
-
 export default Controller;

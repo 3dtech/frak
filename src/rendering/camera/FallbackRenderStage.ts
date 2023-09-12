@@ -2,13 +2,6 @@ import ShaderRenderStage from 'rendering/camera/ShaderRenderStage';
 
 /** Render-stage that outputs geometry using a custom shader. */
 class FallbackRenderStage extends ShaderRenderStage {
-	shader: any;
-
-	constructor(shader, target) {
-		super(shader, target);
-		this.shader=shader;
-	}
-
 	// Events
 	/** Called after rendering substages of this render-stage */
 	onPostRender(context, scene, camera) {

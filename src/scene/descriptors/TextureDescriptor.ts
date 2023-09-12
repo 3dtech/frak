@@ -1,7 +1,6 @@
 import Descriptor from 'scene/descriptors/Descriptor';
 
 /** Texture descriptor is used for describing texture sources */
-
 class TextureDescriptor extends Descriptor {
 	_source: any;
 	width: any;
@@ -38,9 +37,7 @@ class TextureDescriptor extends Descriptor {
 			return super.getFullPath();
 		}
 	}
-
 }
 
 globalThis.TextureDescriptor = TextureDescriptor;
-
 export default TextureDescriptor;

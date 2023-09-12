@@ -3,7 +3,6 @@ import FRAK from 'Helpers';
 /** Container for storing ray intersection tests.
 	It also provides some more commonly used functions like
 	sorting the results and finding the nearest intersection. */
-
 class RayTestResult {
 	ray: any;
 	hits: any;
@@ -63,7 +62,6 @@ class RayTestResult {
 		}
 		return this.hits[minIndex];
 	}
-
 }
 
 globalThis.RayTestLocalCache = [

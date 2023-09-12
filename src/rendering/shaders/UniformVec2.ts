@@ -1,10 +1,7 @@
-import Uniform from 'rendering/shaders/Uniform.js'
+import Uniform from 'rendering/shaders/Uniform';
 
 /** vec2(x, y) uniform */
-
 class UniformVec2 extends Uniform {
-
-
 	constructor(value?) {
 		if (!value)
 			value = vec2.create();
@@ -30,9 +27,7 @@ class UniformVec2 extends Uniform {
 		c.value = vec2.clone(this.value);
 		return c;
 	}
-
 }
 
 globalThis.UniformVec2 = UniformVec2;
-
 export default UniformVec2;

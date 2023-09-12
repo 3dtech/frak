@@ -5,7 +5,6 @@ import '../lib/polyfills.js';
 import '../lib/Logistics.js';
 import '../lib/hammer.min.js';
 
-import 'Version';
 import 'Helpers';
 import 'scene/Cloneable';
 import 'scene/Serializable';
@@ -174,7 +173,6 @@ import 'scene/descriptors/CubeTextureDescriptor';
 import 'scene/EmptyNode';
 import 'scene/Node';
 import 'scene/Scene';
-import 'scene/DefaultScene';
 
 import 'engine/FPS';
 import 'engine/Engine';

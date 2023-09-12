@@ -1,9 +1,6 @@
-import Cloneable from 'scene/Cloneable.js'
-import Shader from 'rendering/shaders/Shader.js'
-import RenderingContext from 'rendering/RenderingContext.js'
+import Cloneable from 'scene/Cloneable';
 
 /** Base uniform class. Uniforms are used as parameters for shaders. */
-
 class Uniform extends Cloneable {
 	value: any;
 
@@ -22,9 +19,7 @@ class Uniform extends Cloneable {
 		c.value = this.value;
 		return c;
 	}
-
 }
 
 globalThis.Uniform = Uniform;
-
 export default Uniform;

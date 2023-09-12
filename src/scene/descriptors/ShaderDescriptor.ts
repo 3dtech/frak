@@ -1,7 +1,6 @@
-import Descriptor from 'scene/descriptors/Descriptor.js'
+import Descriptor from 'scene/descriptors/Descriptor';
 
 /** Shader descriptor is used for describing shader sources */
-
 class ShaderDescriptor extends Descriptor {
 	vertexSource: any;
 	fragmentSource: any;
@@ -48,9 +47,7 @@ class ShaderDescriptor extends Descriptor {
 		var path = this.getParentDirectory() + this.fragmentSource;
 		return path;
 	}
-
 }
 
 globalThis.ShaderDescriptor = ShaderDescriptor;
-
 export default ShaderDescriptor;

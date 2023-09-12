@@ -1,4 +1,3 @@
-import DefaultScene from 'scene/DefaultScene';
 import FPS from 'engine/FPS';
 import AssetsManager from 'loading/AssetsManager';
 import Texture from 'rendering/materials/Texture';
@@ -35,9 +34,8 @@ class Engine {
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
-		@param options Engine options [optional]
-		@param scene Scene to render and update [optional] */
-	constructor(canvas, options, scene) {
+		@param options Engine options [optional] */
+	constructor(canvas, options) {
 		if (!options) options = {};
 		this.options = FRAK.extend({
 			'assetsPath': '',
@@ -62,10 +60,7 @@ class Engine {
 
 		this.context = new RenderingContext(canvas, this, this.options.contextOptions, this.options.contextErrorCallback);
 
-		if (!scene)
-			scene = new DefaultScene();
-
-		this.scene = scene;
+		this.scene = new Scene();
 		this.scene.engine = this;
 		this.fps = new FPS();
 		this.running = false;

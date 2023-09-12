@@ -1,20 +1,17 @@
-import Light from 'scene/components/Light'
-import Material from 'rendering/materials/Material'
-import UniformColor from 'rendering/shaders/UniformColor'
-import UniformVec3 from 'rendering/shaders/UniformVec3'
-import UniformFloat from 'rendering/shaders/UniformFloat'
-import Color from 'rendering/Color'
-import MeshRendererComponent from 'scene/components/MeshRendererComponent'
+import Light from 'scene/components/Light';
+import Material from 'rendering/materials/Material';
+import UniformColor from 'rendering/shaders/UniformColor';
+import UniformVec3 from 'rendering/shaders/UniformVec3';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import Color from 'rendering/Color';
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import Primitives from 'scene/geometry/Primitives';
 
 /**
  * Omni-directional light (sphere)
  */
-
 class OmniLight extends Light {
 	size: any;
-	color: any;
-	intensity: any;
 	geometry: any;
 	material: any;
 
@@ -67,9 +64,7 @@ class OmniLight extends Light {
 	isPositional() {
 		return true;
 	}
-
 }
 
 globalThis.OmniLight = OmniLight;
-
 export default OmniLight;

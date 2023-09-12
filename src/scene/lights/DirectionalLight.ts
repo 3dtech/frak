@@ -1,27 +1,24 @@
-import Light from 'scene/components/Light.js'
-import Material from 'rendering/materials/Material.js'
-import UniformColor from 'rendering/shaders/UniformColor.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import UniformVec3 from 'rendering/shaders/UniformVec3.js'
-import UniformMat4 from 'rendering/shaders/UniformMat4.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import TargetTextureFloat from 'rendering/camera/TargetTextureFloat.js'
-import TargetTexture from 'rendering/camera/TargetTexture.js'
-import Sampler from 'rendering/shaders/Sampler.js'
-import Mesh from 'scene/geometry/Mesh.js'
-import Submesh from 'scene/geometry/Submesh.js'
-import Node from 'scene/Node.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
-import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
-import Color from 'rendering/Color'
+import Light from 'scene/components/Light';
+import Material from 'rendering/materials/Material';
+import UniformColor from 'rendering/shaders/UniformColor';
+import UniformFloat from 'rendering/shaders/UniformFloat';
+import UniformVec3 from 'rendering/shaders/UniformVec3';
+import UniformMat4 from 'rendering/shaders/UniformMat4';
+import UniformInt from 'rendering/shaders/UniformInt';
+import TargetTextureFloat from 'rendering/camera/TargetTextureFloat';
+import TargetTexture from 'rendering/camera/TargetTexture';
+import Sampler from 'rendering/shaders/Sampler';
+import Mesh from 'scene/geometry/Mesh';
+import Submesh from 'scene/geometry/Submesh';
+import Node from 'scene/Node';
+import MeshComponent from 'scene/components/MeshComponent';
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
+import Color from 'rendering/Color';
 
 /**
  * Directional light (affects entire buffer)
  */
-
 class DirectionalLight extends Light {
-	intensity: any;
-	color: any;
 	direction: any;
 	shadowResolution: any;
 	shadowBias: any;
@@ -159,9 +156,7 @@ class DirectionalLight extends Light {
 		delete this.shadow;
 		this.shadow = null;
 	}
-
 }
 
 globalThis.DirectionalLight = DirectionalLight;
-
 export default DirectionalLight;

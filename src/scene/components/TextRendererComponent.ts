@@ -1,11 +1,8 @@
-import MeshRendererComponent from 'scene/components/MeshRendererComponent.js'
+import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import TextComponent from './TextComponent';
 
 /** TextRendererComponent is used to add text components to scene rendering spaces */
-
 class TextRendererComponent extends MeshRendererComponent {
-
-
 	type(): any {
 		return "TextRendererComponent";
 	}
@@ -16,10 +13,7 @@ class TextRendererComponent extends MeshRendererComponent {
 		if (textComponent)
 			textComponent.updateText();
 	}
-
-
 }
 
 globalThis.TextRendererComponent = TextRendererComponent;
-
 export default TextRendererComponent;

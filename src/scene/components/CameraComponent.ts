@@ -1,23 +1,19 @@
-import Component from 'scene/components/Component.js'
-import OrthoCamera from 'scene/components/OrthoCamera.js'
-import PerspectiveCamera from 'scene/components/PerspectiveCamera.js'
-import Camera from 'rendering/camera/Camera.js'
-import ForwardRenderStage from 'rendering/camera/ForwardRenderStage.js'
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import BoundingSphere from 'scene/geometry/BoundingSphere.js'
-import MeshComponent from 'scene/components/MeshComponent.js'
-import TargetScreen from 'rendering/camera/TargetScreen.js'
-import Ray from 'scene/geometry/Ray.js'
-import OITPostProcess from 'rendering/camera/OITPostProcess.js'
-import SSAOPostProcess from 'rendering/camera/SSAOPostProcess.js'
-import DeferredRenderStage from 'rendering/camera/DeferredRenderStage.js'
-import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess.js'
+import Component from 'scene/components/Component';
+import Camera from 'rendering/camera/Camera';
+import ForwardRenderStage from 'rendering/camera/ForwardRenderStage';
+import BoundingBox from 'scene/geometry/BoundingBox';
+import MeshComponent from 'scene/components/MeshComponent';
+import TargetScreen from 'rendering/camera/TargetScreen';
+import Ray from 'scene/geometry/Ray';
+import OITPostProcess from 'rendering/camera/OITPostProcess';
+import SSAOPostProcess from 'rendering/camera/SSAOPostProcess';
+import DeferredRenderStage from 'rendering/camera/DeferredRenderStage';
+import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
 
 /** Camera component */
-
 class CameraComponent extends Component {
 	camera: any;
-	
+
 	constructor(viewMatrix, projectionMatrix) {
 		if(!viewMatrix || !projectionMatrix) {
 			throw "CameraComponent can be initialized only with given viewMatrix and projectionMatrix. Normally one should create OrthoCamera or PerspectiveCamera instead";
@@ -228,9 +224,7 @@ class CameraComponent extends Component {
 		this.camera.renderStage = new ForwardRenderStage();
 		this.initRenderStage(context, context.engine);
 	}
-
 }
 
 globalThis.CameraComponent = CameraComponent;
-
 export default CameraComponent;

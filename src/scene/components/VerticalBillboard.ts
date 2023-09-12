@@ -1,19 +1,12 @@
-import Billboard from 'scene/components/Billboard.js'
-import Camera from 'rendering/camera/Camera.js'
+import Billboard from 'scene/components/Billboard';
+import Camera from 'rendering/camera/Camera';
 
 /** Makes the node always face camera, but is locked in a vertical (Y-axis) position */
-
 class VerticalBillboard extends Billboard {
-
-	 
-	constructor(cameraToLookAt, smoothRotation, rotationSpeed) {
-		super(cameraToLookAt, smoothRotation, rotationSpeed);
-	}
-	
 	type(): any {
 		return "VerticalBillboard";
 	}
-	
+
 	onUpdate(engine) {
 		if (!(this.cameraToLookAt instanceof Camera))
 			throw "VerticalBillboard.cameraToLookAt is not an instance of Camera";
@@ -34,9 +27,7 @@ class VerticalBillboard extends Billboard {
 		var localScale = mat4.getScale(this.cacheVec3[1], this.node.transform.relative);
 		mat4.fromRotationTranslationScale(this.node.transform.relative, rotation, localPosition, localScale);
 	}
-
 }
 
 globalThis.VerticalBillboard = VerticalBillboard;
-
 export default VerticalBillboard;

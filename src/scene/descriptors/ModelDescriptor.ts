@@ -1,9 +1,7 @@
-import Descriptor from 'scene/descriptors/Descriptor.js'
+import Descriptor from 'scene/descriptors/Descriptor';
 
 /** Model descriptor is used for describing model source path */
-
 class ModelDescriptor extends Descriptor {
-	source: any;
 	format: any;
 
 	constructor(source?, format?) {
@@ -30,9 +28,7 @@ class ModelDescriptor extends Descriptor {
 		}
 		return this.format;
 	}
-
 }
 
 globalThis.ModelDescriptor = ModelDescriptor;
-
 export default ModelDescriptor;

@@ -25,9 +25,7 @@ class AnimationComponent extends Serializable {
 	type() {
 		return "AnimationPlayer";
 	}
-
 }
 
 globalThis.AnimationComponent = AnimationComponent;
-
 export default AnimationComponent;

@@ -1,7 +1,3 @@
-import FragmentShader from 'rendering/shaders/FragmentShader.js'
-import VertexShader from 'rendering/shaders/VertexShader.js'
-import Shader from 'rendering/shaders/Shader.js'
-
 const VERTEX_SHADER = 0;
 const FRAGMENT_SHADER = 1;
 
@@ -73,9 +69,7 @@ class Subshader {
 		this.context = context;
 		this.attach();
 	}
-
 }
 
 globalThis.Subshader = Subshader;
-
 export {Subshader as default, VERTEX_SHADER, FRAGMENT_SHADER};

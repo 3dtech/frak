@@ -1,8 +1,7 @@
-import Component from 'scene/components/Component.js'
-import Camera from 'rendering/camera/Camera.js'
+import Component from 'scene/components/Component';
+import Camera from 'rendering/camera/Camera';
 
 /** Makes the node always face camera */
-
 class Billboard extends Component {
 	cameraToLookAt: any;
 	smoothRotation: any;
@@ -10,7 +9,7 @@ class Billboard extends Component {
 	cacheMat4: any;
 	cacheQuat: any;
 	cacheVec3: any;
-	 
+
 	constructor(cameraToLookAt, smoothRotation, rotationSpeed) {
 		super();
 		this.cameraToLookAt=cameraToLookAt;
@@ -23,11 +22,11 @@ class Billboard extends Component {
 		this.cacheQuat=[ quat.create(), quat.create() ];
 		this.cacheVec3=[ vec3.create(), vec3.create() ];
 	}
-	
+
 	type(): any {
 		return "Billboard";
 	}
-	
+
 	onUpdate(engine) {
 		if (!this.enabled)
 			return;
@@ -47,9 +46,7 @@ class Billboard extends Component {
 		var localScale = mat4.getScale(this.cacheVec3[1], this.node.transform.relative);
 		mat4.fromRotationTranslationScale(this.node.transform.relative, rotation, localPosition, localScale);
 	}
-
 }
 
 globalThis.Billboard = Billboard;
-
 export default Billboard;

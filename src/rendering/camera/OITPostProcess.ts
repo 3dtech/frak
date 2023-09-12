@@ -7,12 +7,6 @@ import UniformInt from 'rendering/shaders/UniformInt';
  * Post-processing stage used to do order independent transparency.
  */
 class OITPostProcess extends PostProcess {
-	material: any;
-
-	constructor() {
-		super();
-	}
-
 	onStart(context, engine): any {
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/OITRender"),

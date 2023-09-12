@@ -1,8 +1,7 @@
-import Component from 'scene/components/Component.js'
+import Component from 'scene/components/Component';
 
 /** Transform class holds transformation matrix and provides
   extra functionality for manipulating vectors/matrices and subtransformations. */
-
 class Transform extends Component {
 	relative: any;
 	absolute: any;
@@ -35,7 +34,7 @@ class Transform extends Component {
 
 	/** Given reference transformation matrix calculates relative transformation matrix from this absolute matrix
 		@param referenceMatrix Parent matrix, if not given relative transformation matrix will be made equal to absolute matrix of this Transform [optional] */
-	calculateRelativeFromAbsolute(referenceMatrix): any {
+	calculateRelativeFromAbsolute(referenceMatrix?): any {
 		if(!referenceMatrix) {
 			mat4.copy(this.relative, this.absolute);
 			return;
@@ -103,9 +102,7 @@ class Transform extends Component {
 		t.absolute=mat4.clone(this.absolute);
 		return t;
 	}
-
 }
 
 globalThis.Transform = Transform;
-
 export default Transform;

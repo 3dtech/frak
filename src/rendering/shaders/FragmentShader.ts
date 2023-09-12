@@ -3,8 +3,6 @@ import Subshader, { FRAGMENT_SHADER } from 'rendering/shaders/Subshader';
 /** FragmentShader for ShaderProgram. */
 
 class FragmentShader extends Subshader {
-	compiledShader: any;
-
 	constructor(shader, code) {
 		super(shader, code, FRAGMENT_SHADER);
 		this.compiledShader = this.context.gl.createShader(this.context.gl.FRAGMENT_SHADER);

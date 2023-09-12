@@ -1,10 +1,8 @@
-import BoundingVolume from 'scene/geometry/BoundingVolume.js'
+import BoundingVolume from 'scene/geometry/BoundingVolume';
 
 /** BoundingSphere class */
-
 class BoundingSphere extends BoundingVolume {
 	radius: any;
-	center: any;
 
 	/** Constructor */
 	constructor(center?, radius?) {
@@ -113,9 +111,7 @@ class BoundingSphere extends BoundingVolume {
 			"radius="+this.radius+
 		"]";
 	}
-
 }
 
 globalThis.BoundingSphere = BoundingSphere;
-
 export default BoundingSphere;

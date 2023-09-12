@@ -1,14 +1,13 @@
-import OrbitController from 'scene/components/OrbitController.js'
+import OrbitController from 'scene/components/OrbitController';
 
 /** Provides restricted flight mode that is used for orbiting. */
-
 class SmoothOrbitController extends OrbitController {
 	speed: any;
 	currentRotation: any;
 	currentDistance: any;
 	enableRotatingX: any;
 	enableRotatingY: any;
-	
+
 	constructor() {
 		super();
 
@@ -64,9 +63,7 @@ class SmoothOrbitController extends OrbitController {
 		if(this.doZoomIn) this.zoomIn();
 		if(this.doZoomOut) this.zoomOut();
 	}
-
 }
 
 globalThis.SmoothOrbitController = SmoothOrbitController;
-
 export default SmoothOrbitController;
