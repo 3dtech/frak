@@ -170,7 +170,6 @@ import 'scene/descriptors/MaterialSourceDescriptor';
 import 'scene/descriptors/TextureDescriptor';
 import 'scene/descriptors/CubeTextureDescriptor';
 
-import 'scene/EmptyNode';
 import 'scene/Node';
 import 'scene/Scene';
 

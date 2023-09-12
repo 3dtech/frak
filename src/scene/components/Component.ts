@@ -1,10 +1,10 @@
-import EmptyNode from 'scene/EmptyNode';
+import Node from 'scene/Node';
 import Serializable from 'scene/Serializable';
 
 class Component extends Serializable {
 	updatePasses: number;
 	started: boolean;
-	node: EmptyNode;
+	node: Node;
 	enabled: boolean;
 
 	constructor() {
