@@ -20,7 +20,6 @@ import SamplerAccumulator from "rendering/shaders/SamplerAccumulator";
 import ShaderRequirements from "rendering/shaders/ShaderRequirements";
 import Subshader from "rendering/shaders/Subshader";
 import DynamicSpace from "rendering/spaces/DynamicSpace";
-import Font from "rendering/text/Font";
 import Cloneable from "scene/Cloneable";
 import CyclicSerializer from "scene/CyclicSerializer";
 import Serializer from "scene/Serializer";
@@ -42,7 +41,6 @@ import Submesh from "scene/geometry/Submesh";
 	Mesh,
 	CollisionOctreeNode,
 	CyclicSerializer,
-	Font,
 	DynamicSpace,
 	Subshader,
 	ShaderRequirements,
