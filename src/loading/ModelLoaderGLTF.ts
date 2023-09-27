@@ -420,7 +420,7 @@ class ModelLoaderGLTF {
 				material.shader = this.shadersManager.addSource('transparent');
 				material.shader.requirements.transparent = true;
 			} else {
-				material.shader = this.shadersManager.addSource('pbr', definitions);
+				material.shader = this.shadersManager.addSource('deferred_pbr', definitions);
 			}
 
 			this.materials.push(material);
@@ -501,8 +501,6 @@ class ModelLoaderGLTF {
 				var meshNode = new Node();
 				var renderer = new MeshRendererComponent();
 
-				renderer.customShader = true;
-
 				meshNode.addComponent(new MeshComponent(this.meshes[i]));
 				meshNode.addComponent(renderer);
 				meshNode.addComponent(new MeshCollider());
@@ -519,8 +517,6 @@ class ModelLoaderGLTF {
 		var node = nodes[index];
 		var sceneNode = new Node(node.name);
 		var renderer = new MeshRendererComponent();
-
-		renderer.customShader = true;
 
 		if (!isNaN(parseInt(node.mesh))) {
 			sceneNode.addComponent(new MeshComponent(this.meshes[node.mesh]));

@@ -18,19 +18,24 @@ function TransparencySort(a, b) {
 TransparencySort.cmpValue = vec3.create();
 
 /** Renderer batch that indexes directly into a renderer list */
-function Batch(list) {
-	this.indices = new Array();
-	this.length = 0;
+class Batch {
+	list: any;
+	indices: number[];
+	length: number;
 
-	var scope = this;
+	constructor(list) {
+		this.list = list;
+		this.indices = new Array();
+		this.length = 0;
+	}
 
-	this.clear = function() {
-		for (var i = 0, l = scope.indices.length; i < l; ++i)
-			scope.indices[i] = -1;
-		scope.length = 0;
+	clear() {
+		for (var i = 0, l = this.indices.length; i < l; ++i)
+			this.indices[i] = -1;
+		this.length = 0;
 	};
 
-	this.add = function(index) {
+	add(index) {
 		function indexOfFor(ar, v) {
 			for (var i = 0, l = ar.length; i < l; i++) {
 				if (ar[i] === v) {
@@ -40,16 +45,16 @@ function Batch(list) {
 			return false;
 		}
 
-		if (indexOfFor(scope.indices, index)) return;
+		if (indexOfFor(this.indices, index)) return;
 
-		scope.indices[scope.length++] = index;
+		this.indices[this.length++] = index;
 	};
 
-	this.get = function(index) {
-		if (index >= 0 && index < scope.indices.length) {
-			var listIndex = scope.indices[index];
-			if (listIndex >= 0 && listIndex < list.length)
-				return list[listIndex];
+	get(index) {
+		if (index >= 0 && index < this.indices.length) {
+			var listIndex = this.indices[index];
+			if (listIndex >= 0 && listIndex < this.list.length)
+				return this.list[listIndex];
 		}
 	};
 }
@@ -179,7 +184,7 @@ class RendererOrganizer {
 		}
 	}
 
-	sort(engine, renderers, eyePosition) {
+	sort(engine, renderers, eyePosition?) {
 		this.renderers.list = renderers;
 		this.viewSolidRenderers.filter();
 		this.viewTransparentRenderers.filter();

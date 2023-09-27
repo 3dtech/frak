@@ -2,6 +2,7 @@ import Color from 'rendering/Color';
 import RenderTarget from 'rendering/camera/RenderTarget';
 import Texture from 'rendering/materials/Texture';
 import FRAK from 'Helpers';
+import RenderingContext from 'rendering/RenderingContext';
 
 /** Render target with multiple draw buffers */
 class TargetTextureMulti extends RenderTarget {
@@ -19,6 +20,10 @@ class TargetTextureMulti extends RenderTarget {
 	rebuild: any;
 
 	constructor(context, size, options) {
+		var extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
+		if (!extColorFloat)
+			throw('TargetTextureFloat: Floating point COLOR textures are not supported on this system.');
+
 		super(size);
 
 		this.options = FRAK.extend({
@@ -107,7 +112,7 @@ class TargetTextureMulti extends RenderTarget {
 		return texture;
 	}
 
-	build(context): any {
+	build(context: RenderingContext): any {
 		var i;
 		var gl = context.gl;
 		this.frameBuffer = gl.createFramebuffer();
@@ -146,6 +151,8 @@ class TargetTextureMulti extends RenderTarget {
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
 		}
 
+		this.checkStatus(context);
+
 		// Attach color
 		for (i=0; i<this.targets.length; ++i) {
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, this.targets[i].glTexture, 0);
@@ -175,7 +182,7 @@ class TargetTextureMulti extends RenderTarget {
 		}
 	}
 
-	bind(context, doNotClear, clearColor, clearFlags): any {
+	bind(context, doNotClear, clearColor?, clearFlags?): any {
 		var gl = context.gl;
 
 		if (this.rebuild) {

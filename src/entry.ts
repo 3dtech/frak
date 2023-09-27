@@ -54,6 +54,7 @@ import 'rendering/camera/TransparentGeometryRenderStage';
 import 'rendering/camera/OITRenderStage';
 import 'rendering/camera/PostProcessRenderStage';
 import 'rendering/camera/ForwardRenderStage';
+import 'rendering/camera/PBRRenderStage.js';
 
 import 'rendering/camera/DeferredRenderStage';
 import 'rendering/camera/DeferredShadingRenderStage';

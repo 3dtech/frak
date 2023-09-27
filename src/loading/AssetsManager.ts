@@ -88,8 +88,8 @@ class AssetsManager {
 	/** Adds a new GLSL shader  to shaders loading queue.
 		The shader is loaded from two files: fragment shader from <source>.frag and vertex shader from <source>.vert
 		@param source Path to shader (url) */
-	addShaderSource(source): any {
-		return this.shadersManager.addSource(source);
+	addShaderSource(source, definitions?): any {
+		return this.shadersManager.addSource(source, definitions);
 	}
 
 	/** Adds a new GLSL shader source to shaders loading queue.

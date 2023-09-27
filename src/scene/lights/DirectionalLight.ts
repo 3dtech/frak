@@ -67,7 +67,7 @@ class DirectionalLight extends Light {
 
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/deferred_light_directional"),
-			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_light_directional')),
+			engine.assetsManager.addShaderSource('shaders/pbr_directional'),
 			{
 				'lightColor': new UniformColor(this.color),
 				'lightIntensity': new UniformFloat(this.intensity),

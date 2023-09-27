@@ -2,79 +2,24 @@
 
 precision highp float;
 
-uniform mat4 modelview;
-uniform mat4 view;
+uniform vec4 ambient;
+
+uniform sampler2D color;
+uniform sampler2D normalMetallic;
+uniform sampler2D positionRoughness;
+uniform sampler2D emissiveOcclusion;
 
 uniform vec3 cameraPosition;
-
-uniform vec4 ambient;
-uniform vec4 diffuse;
-uniform vec4 emissive;
-
-uniform float metallic;
-uniform float perceptualRoughness;
-
-uniform float reflectance;
-
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;
 
-#ifdef DIFFUSE_TEXTURE
-uniform sampler2D diffuse0;
-
-#ifdef DIFFUSE_UV_TRANSFORM
-uniform mat3 diffuseUVTransform;
-#endif
-#endif
-
-#ifdef METALLICROUGHNESS_TEXTURE
-uniform sampler2D metallicRoughness0;
-
-#ifdef METALLICROUGHNESS_UV_TRANSFORM
-uniform mat3 metallicRoughnessUVTransform;
-#endif
-#endif
-
-#ifdef NORMAL_TEXTURE
-uniform sampler2D normal0;
-
-#ifdef NORMAL_UV_TRANSFORM
-uniform mat3 normalUVTransform;
-#endif
-#endif
-
-#ifdef OCCLUSION_TEXTURE
-uniform sampler2D occlusion0;
-
-#ifdef OCCLUSION_UV_TRANSFORM
-uniform mat3 occlusionUVTransform;
-#endif
-#endif
-
-#ifdef EMISSIVE_TEXTURE
-uniform sampler2D emissive0;
-
-#ifdef EMISSIVE_UV_TRANSFORM
-uniform mat3 emissiveUVTransform;
-#endif
-#endif
-
-in vec2 uv0;
-in vec4 worldPosition;
-in vec3 worldNormal;
-
-#ifdef VERTEX_TANGENTS
-in vec4 worldTangent;
-#endif
-
-in vec4 viewPosition;
-in vec3 viewNormal;
-in vec4 shadowPosition;
+in vec2 uv;
 
 out vec4 fragColor;
 
 const float PI = 3.1415926535897932384626433832795;
+const float REFLECTANCE = 0.5;
 
 float saturate(float x) {
 	return clamp(x, 0.0, 1.0);
@@ -148,11 +93,6 @@ vec3 EnvBRDFApprox(vec3 f0, float perceptualRoughness, float NoV) {
 	return f0 * AB.x + AB.y;
 }
 
-float perceptualRoughnessToRoughness(float perceptualRoughness) {
-	float clampedPerceptualRoughness = clamp(perceptualRoughness, 0.089, 1.0);
-	return clampedPerceptualRoughness * clampedPerceptualRoughness;
-}
-
 float luminance(vec3 v) {
 	return dot(v, vec3(0.2126, 0.7152, 0.0722));
 }
@@ -191,104 +131,31 @@ vec3 dirLight(vec3 direction, vec4 color, float roughness, float NdotV, vec3 nor
 	//return specular;
 }
 
-vec2 diffuseUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef DIFFUSE_UV_TRANSFORM
-	uv = diffuseUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
-vec2 metallicRoughnessUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef METALLICROUGHNESS_UV_TRANSFORM
-	uv = metallicRoughnessUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
-vec2 normalUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef NORMAL_UV_TRANSFORM
-	uv = normalUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
-vec2 occlusionUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef OCCLUSION_UV_TRANSFORM
-	uv = occlusionUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
-vec2 emissiveUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef EMISSIVE_UV_TRANSFORM
-	uv = emissiveUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
 void main(void) {
-	vec4 outputColor = diffuse;
-#ifdef DIFFUSE_TEXTURE
-	outputColor *= texture(diffuse0, diffuseUV());
-#endif
+	vec4 outputColor = texture(color, uv);
 
-	outputColor.a = 1.0;	// We only use this shader with alphaMode == 'OPAQUE'
+	vec4 nM = texture(normalMetallic, uv);
+	vec3 N = nM.xyz;
+	float metallic = nM.w;
 
-#ifdef METALLICROUGHNESS_TEXTURE
-	vec4 metallicRoughness = texture(metallicRoughness0, metallicRoughnessUV());
-	float metallic = metallic * metallicRoughness.b;
-	float perceptualRoughness = perceptualRoughness * metallicRoughness.g;
-#endif
+	vec4 pR = texture(positionRoughness, uv);
+	vec3 position = pR.xyz;
+	float roughness = pR.w;
 
-	float roughness = perceptualRoughnessToRoughness(perceptualRoughness);
+	vec4 eO = texture(emissiveOcclusion, uv);
+	vec4 emissive = vec4(eO.rgb, 1.0);
+	float occlusion = eO.w;
 
-	vec3 N = normalize(worldNormal);
-#ifdef VERTEX_TANGENTS
-#ifdef NORMAL_TEXTURE
-	vec3 T = normalize(worldTangent.xyz);
-	vec3 B = cross(N, T) * worldTangent.w;
-
-	mat3 TBN = mat3(T, -B, N);
-	N = TBN * normalize(texture(normal0, normalUV()).xyz * 2.0 - 1.0);
-#endif
-#endif
-
-#ifdef OCCLUSION_TEXTURE
-	float occlusion = texture(occlusion0, occlusionUV()).r;
-#else
-	float occlusion = 1.0;
-#endif
-
-#ifdef EMISSIVE_TEXTURE
-	vec4 emissive = emissive;
-	emissive.rgb *= texture(emissive0, emissiveUV()).rgb;
-#endif
-
-	vec3 V = normalize(cameraPosition - worldPosition.xyz);
+	vec3 V = normalize(cameraPosition - position);
 	float NdotV = max(dot(N, V), 1e-4);
 
-	vec3 F0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + outputColor.rgb * metallic;
+	vec3 F0 = 0.16 * REFLECTANCE * REFLECTANCE * (1.0 - metallic) + outputColor.rgb * metallic;
 	vec3 diffuseColor = outputColor.rgb * (1.0 - metallic);
 
 	vec3 R = reflect(-V, N);
 
 	vec3 diffuseAmbient = EnvBRDFApprox(diffuseColor, 1.0, NdotV);
-	vec3 specularAmbient = EnvBRDFApprox(F0, perceptualRoughness, NdotV);
+	vec3 specularAmbient = EnvBRDFApprox(F0, roughness, NdotV);
 
 	outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
 	outputColor.rgb += (diffuseAmbient + specularAmbient) * ambient.rgb * occlusion;

@@ -19,7 +19,7 @@ class CameraComponent extends Component {
 			throw "CameraComponent can be initialized only with given viewMatrix and projectionMatrix. Normally one should create OrthoCamera or PerspectiveCamera instead";
 		}
 		super();
-		this.camera = new Camera(viewMatrix, projectionMatrix, new ForwardRenderStage());
+		this.camera = new Camera(viewMatrix, projectionMatrix);
 	}
 
 	excluded(): any {
@@ -198,7 +198,7 @@ class CameraComponent extends Component {
 			this.camera.target.setSize(canvas.width, canvas.height);
 		}
 
-		if (engine.options.renderer == 'forward') {
+		/* if (engine.options.renderer == 'forward') {
 			if (engine.options.transparencyMode == 'blended' || engine.options.transparencyMode == 'stochastic') {
 				this.camera.renderStage.addStage(new OITPostProcess());
 			}
@@ -215,13 +215,12 @@ class CameraComponent extends Component {
 
 		if (engine.options.antialias === true) {
 			this.camera.renderStage.addStage(new AntiAliasPostProcess());
-		}
+		} */
 
 		this.camera.renderStage.start(context, engine, this.camera);
 	}
 
 	onContextRestored(context) {
-		this.camera.renderStage = new ForwardRenderStage();
 		this.initRenderStage(context, context.engine);
 	}
 }

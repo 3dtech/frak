@@ -18,7 +18,7 @@ class RenderStage {
 
 	/** Adds a substage to this RenderStage.
 		@param stage Instance of {RenderStage} */
-	addStage(stage): any {
+	addStage(stage: RenderStage): any {
 		stage.parent=this;
 		this.substages.push(stage);
 		return stage;

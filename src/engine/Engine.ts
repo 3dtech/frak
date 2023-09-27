@@ -336,19 +336,6 @@ class Engine {
 				this.options.transparencyMode = 'blended';
 				break;
 		}
-
-		// Renderer mode validation
-		switch (this.options.renderer) {
-			case 'auto':
-				this.options.renderer = 'deferred';
-				break;
-			case 'deferred':
-			case 'forward':
-				break;
-			default:
-				this.options.renderer = 'forward';
-				break;
-		}
 	}
 
 	resize(): any {

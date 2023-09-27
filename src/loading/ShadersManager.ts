@@ -51,6 +51,7 @@ class ShadersManager extends Manager {
 			'fallback': this.bundle('fallback'),
 			'depthrgba': this.bundle('depthrgba'),
 			'gaussianblur': this.bundle('gaussianblur'),
+			'deferred_pbr': 'shaders/pbr',
 		};
 	}
 
@@ -65,7 +66,7 @@ class ShadersManager extends Manager {
 	}
 
 	/** Adds both vertex and fragment shader by appending .vert and .frag to source */
-	addSource(source, definitions): any {
+	addSource(source, definitions?): any {
 		var alias = source.toLowerCase();
 		if (alias in this.aliases)
 			source = this.aliases[alias];
