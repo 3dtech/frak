@@ -86,28 +86,15 @@ class PostProcessRenderStage extends RenderStage {
 			this.dst.setSize(cameraTarget.size[0], cameraTarget.size[1]);
 		}
 
-		if (this.substages.length>0) {
-			camera.target = this.src;
-		}
-
+		camera.target = this.src;
 		this.generator.render(context, scene, camera);
 		camera.target = cameraTarget;
 	}
 
 	onPostRender(context, scene, camera): any {
-		if (this.substages.length == 0)
-			return;
-
-		if (camera.target instanceof TargetTexture) {
-			camera.target.bind(context);
-			this.renderEffect(context, this.material, this.srcSampler);
-			camera.target.unbind(context);
-		}
-		else {
-			camera.target.bind(context);
-			this.renderEffect(context, this.material, this.srcSampler, true);
-			camera.target.unbind(context);
-		}
+		camera.target.bind(context);
+		this.renderEffect(context, this.material, this.srcSampler);
+		camera.target.unbind(context);
 
 		this.swapBuffers();
 	}
@@ -128,10 +115,7 @@ class PostProcessRenderStage extends RenderStage {
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
-		if (renderToScreen === true)
-			this.screenQuad.render(context, material, sampler);
-		else
-			this.textureQuad.render(context, material, sampler);
+		this.screenQuad.render(context, material, sampler);
 	}
 }
 

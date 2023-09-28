@@ -12,11 +12,14 @@ import Color from 'rendering/Color';
 import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
 import UniformMat4 from 'rendering/shaders/UniformMat4';
 import RenderingContext from 'rendering/RenderingContext';
+import MainRenderStage from './MainRenderStage';
+import Camera from '../Camera';
 
 /**
  * Deferred shading light accumulation pass
  */
 class PBRLightsRenderStage extends RenderStage {
+	parent: MainRenderStage;
 	sharedUniforms: any;
 	sharedSamplers: any;
 	directional: any;
@@ -107,7 +110,7 @@ class PBRLightsRenderStage extends RenderStage {
 		camera.getPosition(this.sharedUniforms.cameraPosition.value);
 	}
 
-	onPostRender(context: RenderingContext, scene, camera): any {
+	onPostRender(context: RenderingContext, scene, camera: Camera): any {
 		var lights = this.getLightsWithGeometry(scene);
 		if (!lights.length) {
 			return;
@@ -120,31 +123,31 @@ class PBRLightsRenderStage extends RenderStage {
 		gl.disable(gl.DEPTH_TEST);
 		gl.depthMask(false);
 
-		//gl.enable(gl.STENCIL_TEST);
-		//gl.stencilMask(0x00);
+		gl.enable(gl.STENCIL_TEST);
+		gl.stencilMask(0x00);
 
-		//gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
+		gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
 		camera.backgroundColor.toVector(this.backgroundMaterial.uniforms.color.value);
 		this.parent.parent.renderEffect(context, this.backgroundMaterial, []);
 
-		//gl.stencilFunc(gl.EQUAL, 1, 0xFF);
+		gl.stencilFunc(gl.EQUAL, 1, 0xFF);
 		gl.blendEquation(gl.FUNC_ADD);
 		gl.blendFunc(gl.ONE, gl.ONE);
-
-		this.renderLight(context, lights[0]);
 
 		gl.enable(gl.BLEND);
 		gl.enable(gl.CULL_FACE);
 		gl.cullFace(gl.FRONT);
 
-		for (var i=1; i<lights.length; i++) {
+		for (var i=0; i<lights.length; i++) {
 			this.renderLight(context, lights[i]);
 		}
 
 		gl.disable(gl.BLEND);
 
-		//gl.stencilMask(0xFF);
-		//gl.disable(gl.STENCIL_TEST);
+		gl.stencilMask(0xFF);
+		gl.disable(gl.STENCIL_TEST);
+
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null);
 	}
 
 	renderLight(context, light) {

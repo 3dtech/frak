@@ -6,9 +6,9 @@ import Engine from 'engine/Engine';
 import RenderingContext from 'rendering/RenderingContext';
 
 class BuffersRenderStage extends RenderStage {
+	parent: MainRenderStage;
 	clearColor = new Color(0, 0, 0, 0);
 	material: Material;
-	parent: MainRenderStage;
 
 	constructor() {
 		super();
@@ -34,7 +34,7 @@ class BuffersRenderStage extends RenderStage {
 		gl.enable(gl.STENCIL_TEST);
 		gl.stencilMask(0xFF);
 		gl.stencilFunc(gl.ALWAYS, 1, 0xFF);
-		gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 
 		// Render opaque geometry to the g-buffer
 		this.renderBatches(context, scene, camera, this.parent.organizer.opaqueBatchList);
@@ -50,12 +50,6 @@ class BuffersRenderStage extends RenderStage {
 	}
 
 	renderBatches(context, scene, camera, batches) {
-		//var shader = material.shader;
-		//shader.use();
-
-		// Bind shared uniforms
-		//shader.bindUniforms(material.uniforms);
-
 		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
 			var batchMaterial = batch.get(0).material;

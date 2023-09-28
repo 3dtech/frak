@@ -2,7 +2,6 @@ import Sampler from 'rendering/shaders/Sampler';
 import PostProcessRenderStage from './PostProcessRenderStage';
 import MainRenderStage from './pbr/MainRenderStage';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
-import TargetTexture from './TargetTexture';
 
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRRenderStage extends PostProcessRenderStage {
@@ -12,39 +11,15 @@ class PBRRenderStage extends PostProcessRenderStage {
 		return new MainRenderStage();
 	}
 
-	onPreRender(context, scene, camera): any {
-		var cameraTarget = camera.target;
+	onStart(context: any, engine: any, camera: any) {
+		super.onStart(context, engine, camera);
 
-		this.src.resetViewport();
-		this.dst.resetViewport();
-
-		if (cameraTarget.size[0] != this.src.size[0] || cameraTarget.size[1] != this.src.size[1]) {
-			this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-			this.src.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-			this.dst.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-		}
-
-		camera.target = this.src;
-		this.generator.render(context, scene, camera);
-		camera.target = cameraTarget;
+		this.initDebugger(context);
 	}
 
 	onPostRender(context, scene, camera): any {
-		if (camera.target instanceof TargetTexture) {
-			camera.target.bind(context);
-			this.renderEffect(context, this.material, this.srcSampler);
-			camera.target.unbind(context);
-		}
-		else {
-			camera.target.bind(context);
-			this.renderEffect(context, this.material, this.srcSampler, true);
-			camera.target.unbind(context);
-		}
+		super.onPostRender(context, scene, camera);
 
-		this.swapBuffers();
-
-		if (!this.debugger)
-			this.initDebugger(context, scene);
 		var gl = context.gl;
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.CULL_FACE);
@@ -58,7 +33,7 @@ class PBRRenderStage extends PostProcessRenderStage {
 		context.modelview.pop();
 	}
 
-	initDebugger(context, scene) {
+	initDebugger(context) {
 		this.debugger = {
 			quads: [],
 			sampler: new Sampler('tex0', null)

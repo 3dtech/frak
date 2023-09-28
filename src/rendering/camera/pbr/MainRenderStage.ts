@@ -27,7 +27,6 @@ class MainRenderStage extends RenderStage {
 	constructor() {
 		super();
 
-		this.addStage(new OITRenderStage());
 		this.addStage(new BuffersRenderStage());
 		this.addStage(new BindCameraTarget());
 		this.addStage(new PBRLightsRenderStage());
