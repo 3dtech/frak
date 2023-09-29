@@ -14,6 +14,7 @@ import Node from 'scene/Node';
 import MeshComponent from 'scene/components/MeshComponent';
 import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import Color from 'rendering/Color';
+import ShaderDescriptor from "../descriptors/ShaderDescriptor";
 
 /**
  * Directional light (affects entire buffer)
@@ -66,8 +67,9 @@ class DirectionalLight extends Light {
 		vec2.set(this.shadowResolution, engine.options.directionalShadowResolution, engine.options.directionalShadowResolution);
 
 		this.material = new Material(
-			// engine.assetsManager.addShaderSource("shaders/default/deferred_light_directional"),
-			engine.assetsManager.addShaderSource('shaders/pbr_directional'),
+			engine.assetsManager.shadersManager.addDescriptor(
+				new ShaderDescriptor('shaders/uv.vert', 'shaders/pbr_directional.frag'),
+			),
 			{
 				'lightColor': new UniformColor(this.color),
 				'lightIntensity': new UniformFloat(this.intensity),

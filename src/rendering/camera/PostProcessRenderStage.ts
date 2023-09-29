@@ -4,6 +4,7 @@ import Sampler from 'rendering/shaders/Sampler';
 import Material from 'rendering/materials/Material';
 import MaterialRenderStage from 'rendering/camera/MaterialRenderStage';
 import ScreenQuad from './ScreenQuad';
+import TargetTextureFloat from "./TargetTextureFloat";
 
 /**
  * Render-stage used to render MaterialRenderStage to a texture,
@@ -52,10 +53,10 @@ class PostProcessRenderStage extends RenderStage {
 			this.size = vec2.clone(camera.target.size);
 		}
 
-		this.src = new TargetTexture(this.size, context, false, true);
+		this.src = new TargetTextureFloat(this.size, context, false, true);
 		this.srcSampler = new Sampler('src', this.src.texture);
 
-		this.dst = new TargetTexture(this.size, context, false, true);
+		this.dst = new TargetTextureFloat(this.size, context, false, true);
 		this.dstSampler = new Sampler('src', this.dst.texture);
 
 		this.material = new Material(

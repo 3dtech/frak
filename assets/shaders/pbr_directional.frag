@@ -2,12 +2,9 @@
 
 precision highp float;
 
-uniform vec4 ambient;
-
 uniform sampler2D color;
 uniform sampler2D normalMetallic;
 uniform sampler2D positionRoughness;
-uniform sampler2D emissiveOcclusion;
 
 uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
@@ -27,13 +24,6 @@ float saturate(float x) {
 
 float pow5(float x) {
 	return x * x * x * x * x;
-}
-
-float getDistanceAttenuation(float distanceSq, float invRangeSq) {
-	float factor = distanceSq * invRangeSq;
-	float smoothFactor = saturate(1.0 - factor * factor);
-	float attenuation = smoothFactor * smoothFactor;
-	return attenuation * 1.0 / max(distanceSq, 1e-4);
 }
 
 float D_GGX(float roughness, float NdotH) {
@@ -83,38 +73,6 @@ float Fd_Burley(float roughness, float NoV, float NoL, float LoH) {
 	return lightScatter * viewScatter * (1.0 / PI);
 }
 
-const vec4 c0 = vec4(-1, -0.0275, -0.572, 0.022);
-const vec4 c1 = vec4(1, 0.0425, 1.04, -0.04);
-
-vec3 EnvBRDFApprox(vec3 f0, float perceptualRoughness, float NoV) {
-	vec4 r = perceptualRoughness * c0 + c1;
-	float a004 = min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
-	vec2 AB = vec2(-1.04, 1.04) * a004 + r.zw;
-	return f0 * AB.x + AB.y;
-}
-
-float luminance(vec3 v) {
-	return dot(v, vec3(0.2126, 0.7152, 0.0722));
-}
-
-vec3 changeLuminance(vec3 cIn, float lOut) {
-	float lIn = luminance(cIn);
-	return cIn * (lOut / lIn);
-}
-
-vec3 reinhardLuminance(vec3 color) {
-	float lOld = luminance(color);
-	float lNew = lOld / (1.0f + lOld);
-	return changeLuminance(color, lNew);
-}
-
-vec3 reinhardExtendedLuminance(vec3 color, float maxWhiteL) {
-	float lOld = luminance(color);
-	float numerator = lOld * (1.0f + (lOld / (maxWhiteL * maxWhiteL)));
-	float lNew = numerator / (1.0f + lOld);
-	return changeLuminance(color, lNew);
-}
-
 vec3 dirLight(vec3 direction, vec4 color, float roughness, float NdotV, vec3 normal, vec3 view, vec3 R, vec3 F0, vec3 diffuseColor) {
     vec3 incidentLight = direction.xyz;
 
@@ -142,10 +100,6 @@ void main(void) {
 	vec3 position = pR.xyz;
 	float roughness = pR.w;
 
-	vec4 eO = texture(emissiveOcclusion, uv);
-	vec4 emissive = vec4(eO.rgb, 1.0);
-	float occlusion = eO.w;
-
 	vec3 V = normalize(cameraPosition - position);
 	float NdotV = max(dot(N, V), 1e-4);
 
@@ -154,15 +108,7 @@ void main(void) {
 
 	vec3 R = reflect(-V, N);
 
-	vec3 diffuseAmbient = EnvBRDFApprox(diffuseColor, 1.0, NdotV);
-	vec3 specularAmbient = EnvBRDFApprox(F0, roughness, NdotV);
-
 	outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
-	outputColor.rgb += (diffuseAmbient + specularAmbient) * ambient.rgb * occlusion;
-
-	outputColor.rgb = reinhardLuminance(outputColor.rgb);
-
-	outputColor.rgb += emissive.rgb;
 
 	fragColor = outputColor;
 }

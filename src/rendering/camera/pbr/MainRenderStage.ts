@@ -5,7 +5,7 @@ import TargetTextureMulti from "../TargetTextureMulti";
 import BuffersRenderStage from "./BuffersRenderStage";
 import RendererOrganizer from "../RendererOrganizer";
 import PBRLightsRenderStage from "./PBRLightsRenderStage";
-import OITRenderStage from "../OITRenderStage";
+import PBRRenderStage from "../PBRRenderStage";
 
 class BindCameraTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -21,6 +21,7 @@ class UnbindCameraTarget extends RenderStage {
 
 class MainRenderStage extends RenderStage {
 	gbuffer: TargetTextureMulti;
+	parent: PBRRenderStage;
 	organizer = new RendererOrganizer();
 	size = vec2.create();
 

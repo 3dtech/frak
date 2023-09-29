@@ -7,6 +7,7 @@ import Node from 'scene/Node';
 import MeshComponent from 'scene/components/MeshComponent';
 import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import Color from 'rendering/Color';
+import ShaderDescriptor from "../descriptors/ShaderDescriptor";
 
 /**
  * Ambient light (affects entire buffer)
@@ -30,8 +31,9 @@ class AmbientLight extends Light {
 		super.onStart(context, engine);
 
 		this.material = new Material(
-			// engine.assetsManager.addShaderSource("shaders/default/deferred_light_ambient"),
-			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_light_ambient')),
+			engine.assetsManager.shadersManager.addDescriptor(
+				new ShaderDescriptor('shaders/uv.vert', 'shaders/pbr_ambient.frag'),
+			),
 			{
 				'lightColor': new UniformColor(this.color)
 			},

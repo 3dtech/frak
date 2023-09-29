@@ -14,6 +14,7 @@ import UniformMat4 from 'rendering/shaders/UniformMat4';
 import RenderingContext from 'rendering/RenderingContext';
 import MainRenderStage from './MainRenderStage';
 import Camera from '../Camera';
+import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
 
 /**
  * Deferred shading light accumulation pass
@@ -25,22 +26,14 @@ class PBRLightsRenderStage extends RenderStage {
 	directional: any;
 	skyboxRenderStage: any;
 	backgroundMaterial: any;
+	emissiveMaterial: Material;
 	samplerAccum = new SamplerAccumulator();
-	rendererUniforms = {
-		model: new UniformMat4(null),
-		modelview: new UniformMat4(null),
-		receiveShadows: new UniformInt(1)
-	};
 
 	constructor() {
 		super();
 
 		this.sharedUniforms = {
 			cameraPosition: new UniformVec3(vec3.create()),
-			ambient: new UniformColor(new Color(0, 0, 0, 1)),
-			lightDirection: new UniformVec3(vec3.create()),
-			lightColor: new UniformColor(),
-			lightIntensity: new UniformFloat(),
 		};
 
 		this.sharedSamplers = [];
@@ -49,8 +42,6 @@ class PBRLightsRenderStage extends RenderStage {
 	}
 
 	getLightsWithGeometry(scene): any {
-		vec4.set(this.sharedUniforms.ambient.value, 0, 0, 0, 1);
-
 		this.directional = [];
 		var ambient = [];
 		var other = [];
@@ -68,10 +59,6 @@ class PBRLightsRenderStage extends RenderStage {
 			if (light instanceof AmbientLight) {
 				ambient.push(light);
 
-				this.sharedUniforms.ambient.value[0] += light.color.r;
-				this.sharedUniforms.ambient.value[1] += light.color.g;
-				this.sharedUniforms.ambient.value[2] += light.color.b;
-
 				continue;
 			}
 
@@ -83,7 +70,7 @@ class PBRLightsRenderStage extends RenderStage {
 			other.push(light);
 		}
 
-		return this.directional;
+		return ambient.concat(this.directional);
 	}
 
 	onStart(context, engine, camera): any {
@@ -100,6 +87,14 @@ class PBRLightsRenderStage extends RenderStage {
 			{
 				color: new UniformColor(new Color(0.0, 0.0, 1.0, 1.0))
 			},
+			[]
+		);
+
+		this.emissiveMaterial = new Material(
+			engine.assetsManager.shadersManager.addDescriptor(
+				new ShaderDescriptor('shaders/uv.vert', 'shaders/pbr_emissive.frag')
+			),
+			{},
 			[]
 		);
 
@@ -141,6 +136,8 @@ class PBRLightsRenderStage extends RenderStage {
 		for (var i=0; i<lights.length; i++) {
 			this.renderLight(context, lights[i]);
 		}
+
+		this.parent.parent.screenQuad.render(context, this.emissiveMaterial, this.sharedSamplers);
 
 		gl.disable(gl.BLEND);
 
