@@ -36,8 +36,7 @@ vec3 reinhardJodie(vec3 v) {
     return mix(v / (1.0f + l), tv, tv);
 }
 
-vec3 acesApprox(vec3 v)
-{
+vec3 acesApprox(vec3 v) {
     v *= 0.6f;
     float a = 2.51f;
     float b = 0.03f;
@@ -50,5 +49,5 @@ vec3 acesApprox(vec3 v)
 void main(void) {
     vec4 outputColor = texture(src, uv);
 
-    fragColor = vec4(reinhardExtendedLuminance(outputColor.rgb, 3.5), 1.0);
+    fragColor = vec4(reinhardExtendedLuminance(outputColor.rgb, 10.4), 1.0);
 }

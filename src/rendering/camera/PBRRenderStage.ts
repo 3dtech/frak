@@ -2,7 +2,7 @@ import Sampler from 'rendering/shaders/Sampler';
 import PostProcessRenderStage from './PostProcessRenderStage';
 import MainRenderStage from './pbr/MainRenderStage';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
-import TonemapRenderStage from './pbr/TonemapRenderStage';
+import AntiAliasPostProcess from "./AntiAliasPostProcess";
 
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRRenderStage extends PostProcessRenderStage {
@@ -13,7 +13,7 @@ class PBRRenderStage extends PostProcessRenderStage {
 	}
 
 	onStart(context: any, engine: any, camera: any) {
-		this.addStage(new TonemapRenderStage());
+		this.addStage(new AntiAliasPostProcess());
 		super.onStart(context, engine, camera);
 
 		this.initDebugger(context);

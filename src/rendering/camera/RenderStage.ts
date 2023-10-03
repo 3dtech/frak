@@ -1,3 +1,7 @@
+import RenderingContext from "../RenderingContext";
+import Engine from "../../engine/Engine";
+import Camera from "./Camera";
+
 /** Render-stages can be used to model complex rendering pipelines.
 	They are recursive - each render-stage can have be composed of sub render-stages.
 	This allows for creating combined render-stages that use results of child-render
@@ -113,7 +117,7 @@ class RenderStage {
 	// Events
 	/** Called immediately after engine has been started.
 		Loading of render stage specific shaders and other precomputations can be done during this call. */
-	onStart(context, engine, camera): any {}
+	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {}
 
 	/** Called before rendering substages of this render-stage.
 		The target of this render-stage is bound. */

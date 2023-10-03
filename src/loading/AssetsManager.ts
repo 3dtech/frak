@@ -128,7 +128,7 @@ class AssetsManager {
 
 		@param callback Callback that is called when all added sources have been loaded
 		@param progressCallback Callback that is called when either all shaders, all textures or all models have been loaded */
-	load(callback, progressCallback): any {
+	load(callback?, progressCallback?): any {
 		var me = this;
 
 		if(callback) {

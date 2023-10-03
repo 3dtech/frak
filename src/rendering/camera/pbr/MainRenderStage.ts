@@ -6,6 +6,7 @@ import BuffersRenderStage from "./BuffersRenderStage";
 import RendererOrganizer from "../RendererOrganizer";
 import PBRLightsRenderStage from "./PBRLightsRenderStage";
 import PBRRenderStage from "../PBRRenderStage";
+import TonemapRenderStage from "./TonemapRenderStage";
 
 class BindCameraTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -31,6 +32,7 @@ class MainRenderStage extends RenderStage {
 		this.addStage(new BuffersRenderStage());
 		this.addStage(new BindCameraTarget());
 		this.addStage(new PBRLightsRenderStage());
+		this.addStage(new TonemapRenderStage());
 		this.addStage(new UnbindCameraTarget());
 	}
 
