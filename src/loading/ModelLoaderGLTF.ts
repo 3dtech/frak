@@ -151,7 +151,15 @@ class ModelLoaderGLTF {
 				continue;
 			}
 
-			Logistics.getBinary(buffers[i].uri, function(binaryData) {
+			var uri = buffers[i].uri;
+			if (!(new RegExp('^//|(?:[a-z]+:)', 'i')).test(uri)) {
+				var source = this.descriptor.source.split('/');
+				source.pop();
+				source.push(buffers[i].uri);
+				uri = source.join('/');
+			}
+
+			Logistics.getBinary(uri, function(binaryData) {
 				count--;
 
 				if (!binaryData || binaryData.byteLength !== byteLength) {
@@ -244,6 +252,12 @@ class ModelLoaderGLTF {
 			var uri;
 			if (images[i].uri) {
 				uri = images[i].uri;
+				if (!(new RegExp('^//|(?:[a-z]+:)', 'i')).test(uri)) {
+					var source = this.descriptor.source.split('/');
+					source.pop();
+					source.push(uri);
+					uri = source.join('/');
+				}
 			} else if (!isNaN(parseInt(images[i].bufferView)) && images[i].mimeType) {
 				var blob = new Blob([this.bufferViews[images[i].bufferView]], { type: images[i].mimeType });
 
