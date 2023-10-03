@@ -9,6 +9,7 @@ import PBRPipeline from "../PBRPipeline";
 import TonemapRenderStage from "./TonemapRenderStage";
 import Sampler from "../../shaders/Sampler";
 import UniformVec3 from "../../shaders/UniformVec3";
+import EmissiveRenderStage from "./EmissiveRenderStage";
 
 class BindCameraTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -19,6 +20,19 @@ class BindCameraTarget extends RenderStage {
 class UnbindCameraTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
 		camera.target.unbind(context);
+	}
+}
+
+class BindDstTarget extends RenderStage {
+	render(context: RenderingContext, _: any, camera: Camera) {
+		camera.renderStage.dst.bind(context);
+	}
+}
+
+class UnbindDstTarget extends RenderStage {
+	render(context: RenderingContext, _: any, camera: Camera) {
+		camera.renderStage.dst.unbind(context);
+		camera.renderStage.swapBuffers();
 	}
 }
 
@@ -36,10 +50,15 @@ class MainRenderStage extends RenderStage {
 		super();
 
 		this.addStage(new BuffersRenderStage());
+
 		this.addStage(new BindCameraTarget());
 		this.addStage(new PBRLightsRenderStage());
-		this.addStage(new TonemapRenderStage());
 		this.addStage(new UnbindCameraTarget());
+		
+		this.addStage(new BindDstTarget());
+		this.addStage(new TonemapRenderStage());
+		this.addStage(new EmissiveRenderStage());
+		this.addStage(new UnbindDstTarget());
 	}
 
 	onStart(context: any, engine: any, camera: any) {

@@ -24,15 +24,9 @@ class TonemapRenderStage extends PBRRenderStage {
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
 		var gl = context.gl;
 
-		camera.renderStage.dst.bind(context);
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.parent.gbuffer.depth);
-
 		camera.renderStage.screenQuad.render(context, this.material, camera.renderStage.srcSampler);
 
 		super.onPostRender(context, scene, camera);
-
-		camera.renderStage.dst.unbind(context);
-		camera.renderStage.swapBuffers();
 	}
 }
 

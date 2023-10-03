@@ -5,7 +5,6 @@ import Material from 'rendering/materials/Material';
 import Color from 'rendering/Color';
 import RenderingContext from 'rendering/RenderingContext';
 import Camera from '../Camera';
-import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
 import PBRRenderStage from "./PBRRenderStage";
 import Engine from "../../../engine/Engine";
 import Scene from "../../../scene/Scene";
@@ -17,7 +16,6 @@ class PBRLightsRenderStage extends PBRRenderStage {
 	directional: any;
 	skyboxRenderStage: any;
 	backgroundMaterial: any;
-	emissiveMaterial: Material;
 
 	constructor() {
 		super();
@@ -69,14 +67,6 @@ class PBRLightsRenderStage extends PBRRenderStage {
 			[]
 		);
 
-		this.emissiveMaterial = new Material(
-			engine.assetsManager.shadersManager.addDescriptor(
-				new ShaderDescriptor('shaders/uv.vert', 'shaders/pbr_emissive.frag')
-			),
-			{},
-			[]
-		);
-
 		engine.assetsManager.load();
 	}
 
@@ -101,8 +91,6 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		for (var i=0; i<lights.length; i++) {
 			this.renderLight(context, lights[i]);
 		}
-
-		camera.renderStage.screenQuad.render(context, this.emissiveMaterial, this.parent.sharedSamplers);
 
 		gl.disable(gl.BLEND);
 

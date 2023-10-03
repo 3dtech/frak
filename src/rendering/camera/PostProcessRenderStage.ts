@@ -13,8 +13,8 @@ import TargetTextureFloat from "./TargetTextureFloat";
  */
 class PostProcessRenderStage extends RenderStage {
 	size: any;
-	src: any;
-	dst: any;
+	src: TargetTextureFloat;
+	dst: TargetTextureFloat;
 	srcSampler: any;
 	dstSampler: any;
 	textureQuad: any;
@@ -25,8 +25,8 @@ class PostProcessRenderStage extends RenderStage {
 	constructor() {
 		super();
 		this.size = false;
-		this.src = false; ///< TargetTexture, once we receive context
-		this.dst = false; ///< TargetTexture, once we receive context
+		//this.src = false; ///< TargetTexture, once we receive context
+		//this.dst = false; ///< TargetTexture, once we receive context
 		this.srcSampler = false; ///< Sampler for src
 		this.dstSampler = false; ///< Sampler for dst
 		this.textureQuad = false; ///< Quad used to render textures
