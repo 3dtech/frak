@@ -1,42 +1,26 @@
-import RenderStage from 'rendering/camera/RenderStage';
-import UniformVec3 from 'rendering/shaders/UniformVec3';
-import UniformInt from 'rendering/shaders/UniformInt';
 import UniformColor from 'rendering/shaders/UniformColor';
-import UniformFloat from 'rendering/shaders/UniformFloat';
-import SkyboxRenderStage from 'rendering/camera/SkyboxRenderStage';
 import AmbientLight from 'scene/lights/AmbientLight';
 import DirectionalLight from 'scene/lights/DirectionalLight';
-import Sampler from 'rendering/shaders/Sampler';
 import Material from 'rendering/materials/Material';
 import Color from 'rendering/Color';
-import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
-import UniformMat4 from 'rendering/shaders/UniformMat4';
 import RenderingContext from 'rendering/RenderingContext';
-import MainRenderStage from './MainRenderStage';
 import Camera from '../Camera';
 import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
+import PBRRenderStage from "./PBRRenderStage";
+import Engine from "../../../engine/Engine";
+import Scene from "../../../scene/Scene";
 
 /**
  * Deferred shading light accumulation pass
  */
-class PBRLightsRenderStage extends RenderStage {
-	parent: MainRenderStage;
-	sharedUniforms: any;
-	sharedSamplers: any;
+class PBRLightsRenderStage extends PBRRenderStage {
 	directional: any;
 	skyboxRenderStage: any;
 	backgroundMaterial: any;
 	emissiveMaterial: Material;
-	samplerAccum = new SamplerAccumulator();
 
 	constructor() {
 		super();
-
-		this.sharedUniforms = {
-			cameraPosition: new UniformVec3(vec3.create()),
-		};
-
-		this.sharedSamplers = [];
 
 		this.directional = [];
 	}
@@ -73,13 +57,8 @@ class PBRLightsRenderStage extends RenderStage {
 		return ambient.concat(this.directional);
 	}
 
-	onStart(context, engine, camera): any {
-		var gb = this.parent.gbuffer;
-
-		this.sharedSamplers.push(new Sampler('color', gb.targets[0]));
-		this.sharedSamplers.push(new Sampler('normalMetallic', gb.targets[1]));
-		this.sharedSamplers.push(new Sampler('positionRoughness', gb.targets[2]));
-		this.sharedSamplers.push(new Sampler('emissiveOcclusion', gb.targets[3]));
+	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
+		super.onStart(context, engine, camera);
 
 		this.backgroundMaterial = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/deferred_background"),
@@ -101,11 +80,7 @@ class PBRLightsRenderStage extends RenderStage {
 		engine.assetsManager.load();
 	}
 
-	onPreRender(context, scene, camera): any {
-		camera.getPosition(this.sharedUniforms.cameraPosition.value);
-	}
-
-	onPostRender(context: RenderingContext, scene, camera: Camera): any {
+	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
 		var lights = this.getLightsWithGeometry(scene);
 		if (!lights.length) {
 			return;
@@ -113,52 +88,39 @@ class PBRLightsRenderStage extends RenderStage {
 
 		var gl = context.gl;
 
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.parent.gbuffer.depth);
-
-		gl.disable(gl.DEPTH_TEST);
-		gl.depthMask(false);
-
-		gl.enable(gl.STENCIL_TEST);
-		gl.stencilMask(0x00);
-
 		gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
 		camera.backgroundColor.toVector(this.backgroundMaterial.uniforms.color.value);
-		this.parent.parent.renderEffect(context, this.backgroundMaterial, []);
+		camera.renderStage.renderEffect(context, this.backgroundMaterial, []);
 
 		gl.stencilFunc(gl.EQUAL, 1, 0xFF);
 		gl.blendEquation(gl.FUNC_ADD);
 		gl.blendFunc(gl.ONE, gl.ONE);
 
 		gl.enable(gl.BLEND);
-		gl.enable(gl.CULL_FACE);
-		gl.cullFace(gl.FRONT);
 
 		for (var i=0; i<lights.length; i++) {
 			this.renderLight(context, lights[i]);
 		}
 
-		this.parent.parent.screenQuad.render(context, this.emissiveMaterial, this.sharedSamplers);
+		camera.renderStage.screenQuad.render(context, this.emissiveMaterial, this.parent.sharedSamplers);
 
 		gl.disable(gl.BLEND);
 
-		gl.stencilMask(0xFF);
-		gl.disable(gl.STENCIL_TEST);
-
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null);
+		super.onPostRender(context, scene, camera);
 	}
 
 	renderLight(context, light) {
 		var shader = light.material.shader;
 
 		shader.use();
-		shader.bindUniforms(this.sharedUniforms);
+		shader.bindUniforms(this.parent.sharedUniforms);
 		shader.bindUniforms(light.material.uniforms);
 
 		var samplers;
 		if (light.material.samplers.length>0) {
-			samplers = light.material.samplers.concat(this.sharedSamplers);
+			samplers = light.material.samplers.concat(this.parent.sharedSamplers);
 		} else {
-			samplers = this.sharedSamplers;
+			samplers = this.parent.sharedSamplers;
 		}
 
 		shader.bindSamplers(samplers);

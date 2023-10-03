@@ -5,7 +5,7 @@ import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO
 import AntiAliasPostProcess from "./AntiAliasPostProcess";
 
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
-class PBRRenderStage extends PostProcessRenderStage {
+class PBRPipeline extends PostProcessRenderStage {
 	debugger: any;
 
 	getGeneratorStage() {
@@ -61,5 +61,5 @@ class PBRRenderStage extends PostProcessRenderStage {
 	}
 }
 
-globalThis.PBRRenderStage = PBRRenderStage;
-export default PBRRenderStage;
+globalThis.PBRPipeline = PBRPipeline;
+export default PBRPipeline;

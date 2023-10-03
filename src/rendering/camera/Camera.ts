@@ -5,7 +5,7 @@ import BoundingBox from 'scene/geometry/BoundingBox';
 import BoundingSphere from 'scene/geometry/BoundingSphere';
 import BoundingVolume from 'scene/geometry/BoundingVolume';
 import Color from 'rendering/Color';
-import PBRRenderStage from './PBRRenderStage';
+import PBRPipeline from './PBRPipeline';
 import RenderStage from './RenderStage';
 import RenderTarget from './RenderTarget';
 
@@ -22,7 +22,7 @@ class Camera extends Serializable {
 	viewMatrix: any;
 	projectionMatrix: any;
 	viewInverseMatrix: any;
-	renderStage: RenderStage;
+	renderStage: PBRPipeline;
 	target: RenderTarget;
 	backgroundColor: any;
 	clearMask: any;
@@ -46,7 +46,7 @@ class Camera extends Serializable {
 		this.projectionMatrix = projectionMatrix;
 		this.viewInverseMatrix = mat4.create();
 		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-		this.renderStage = new PBRRenderStage();
+		this.renderStage = new PBRPipeline();
 		this.target = new TargetScreen();
 		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
 		this.clearMask = false;
