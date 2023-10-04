@@ -1,6 +1,7 @@
 import RenderingContext from "../RenderingContext";
 import Engine from "../../engine/Engine";
 import Camera from "./Camera";
+import Scene from "../../scene/Scene";
 
 /** Render-stages can be used to model complex rendering pipelines.
 	They are recursive - each render-stage can have be composed of sub render-stages.
@@ -85,7 +86,7 @@ class RenderStage {
 	}
 
 	/** Renders this stage and substages */
-	render(context, scene, camera): any {
+	render(context: RenderingContext, scene: Scene, camera: Camera): any {
 		if (!this.enabled)
 			return;
 
@@ -121,11 +122,11 @@ class RenderStage {
 
 	/** Called before rendering substages of this render-stage.
 		The target of this render-stage is bound. */
-	onPreRender(context, scene, camera): any {}
+	onPreRender(context: RenderingContext, scene: Scene, camera: Camera): any {}
 
 	/** Called after rendering substages of this render-stage.
 		The target of this render-stage is bound. */
-	onPostRender(context, scene, camera): any {}
+	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {}
 
 	/** Called when the render stage is enabled. */
 	onEnable(): any {}

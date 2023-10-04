@@ -4,6 +4,7 @@ import RenderingContext from 'rendering/RenderingContext';
 import Camera from '../Camera';
 import PBRRenderStage from "./PBRRenderStage";
 import Scene from "../../../scene/Scene";
+import PBRPipeline from "../PBRPipeline";
 
 /**
  * Deferred shading light accumulation pass
@@ -60,12 +61,12 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		gl.blendEquation(gl.FUNC_ADD);
 		gl.blendFunc(gl.ONE, gl.ONE);
 
-		this.renderLight(context, lights[0]);
+		this.renderLight(context, camera.renderStage, lights[0]);
 
 		gl.enable(gl.BLEND);
 
 		for (var i=1; i<lights.length; i++) {
-			this.renderLight(context, lights[i]);
+			this.renderLight(context, camera.renderStage, lights[i]);
 		}
 
 		gl.disable(gl.BLEND);
@@ -73,11 +74,11 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		super.onPostRender(context, scene, camera);
 	}
 
-	renderLight(context, light) {
+	renderLight(context, cameraStage: PBRPipeline, light) {
 		var shader = light.material.shader;
 
 		shader.use();
-		shader.bindUniforms(this.parent.sharedUniforms);
+		shader.bindUniforms(cameraStage.sharedUniforms);
 		shader.bindUniforms(light.material.uniforms);
 
 		var samplers;

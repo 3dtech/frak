@@ -4,13 +4,24 @@ import MainRenderStage from './pbr/MainRenderStage';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
 import AntiAliasPostProcess from "./AntiAliasPostProcess";
 import UniformMat4 from "../shaders/UniformMat4";
-import UniformInt from "../shaders/UniformInt";
 import UniformFloat from "../shaders/UniformFloat";
 import UniformVec3 from "../shaders/UniformVec3";
+import RenderingContext from "../RenderingContext";
+import Scene from "../../scene/Scene";
+import Camera from "./Camera";
 
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
 	debugger: any;
+	sharedUniforms = {
+		modelview: new UniformMat4(mat4.create()),
+		projection: new UniformMat4(mat4.create()),
+		view: new UniformMat4(mat4.create()),
+		viewInverse: new UniformMat4(mat4.create()),
+		zNear: new UniformFloat(),
+		zFar: new UniformFloat(),
+		cameraPosition: new UniformVec3(vec3.create()),
+	};
 
 	getGeneratorStage() {
 		return new MainRenderStage();
@@ -21,6 +32,26 @@ class PBRPipeline extends PostProcessRenderStage {
 		super.onStart(context, engine, camera);
 
 		this.initDebugger(context);
+	}
+
+	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
+		mat4.copy(this.sharedUniforms.modelview.value, context.modelview.top());
+		mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
+
+		// Camera uniforms
+		mat4.copy(this.sharedUniforms.view.value, camera.viewMatrix);
+		mat4.copy(this.sharedUniforms.viewInverse.value, camera.viewInverseMatrix);
+        vec3.copy(this.sharedUniforms.cameraPosition.value, camera.getPosition());
+
+		if (camera.near) {
+			this.sharedUniforms.zNear.value = camera.near;
+		}
+
+		if (camera.far) {
+			this.sharedUniforms.zFar.value = camera.far;
+		}
+
+		super.onPreRender(context, scene, camera);
 	}
 
 	onPostRender(context, scene, camera): any {
@@ -37,47 +68,6 @@ class PBRPipeline extends PostProcessRenderStage {
 			this.material.unbind([this.debugger.sampler]);
 		}
 		context.modelview.pop();
-	}
-
-	/**
-	 * Returns default uniforms used commonly for everything.
-	 * @param context Instance of RenderingContext
-	 * @param uniforms Optional previously allocated uniforms object (cache) that the values will be written to.
-	 */
-	getDefaultUniforms(context, uniforms): any {
-		if (typeof uniforms !== 'object' || uniforms === null) {
-			uniforms = {};
-		}
-
-		if (uniforms.hasOwnProperty('modelview')) mat4.copy(uniforms.modelview.value, context.modelview.top());
-		else uniforms.modelview = new UniformMat4(context.modelview.top());
-
-		if (uniforms.hasOwnProperty('projection')) mat4.copy(uniforms.projection.value, context.projection.top());
-		else uniforms.projection = new UniformMat4(context.projection.top());
-
-		// Camera uniforms
-		if (context.camera) {
-			if (uniforms.hasOwnProperty('view')) mat4.copy(uniforms.view.value, context.camera.viewMatrix);
-			else uniforms.view = new UniformMat4(context.camera.viewMatrix);
-
-			if (uniforms.hasOwnProperty('viewInverse')) mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix);
-			else uniforms.viewInverse = new UniformMat4(context.camera.viewInverseMatrix);
-
-			if (context.camera.near) {
-				if (uniforms.hasOwnProperty('zNear')) uniforms.zNear.value = context.camera.near;
-				else uniforms.zNear = new UniformFloat(context.camera.near);
-			}
-
-			if (context.camera.far) {
-				if (uniforms.hasOwnProperty('zFar')) uniforms.zFar.value = context.camera.far;
-				else uniforms.zFar = new UniformFloat(context.camera.far);
-			}
-
-			if (uniforms.hasOwnProperty('cameraPosition')) vec3.copy(uniforms.cameraPosition.value, context.camera.getPosition());
-			else uniforms.cameraPosition = new UniformVec3(context.camera.getPosition());
-		}
-
-		return uniforms;
 	}
 
 	initDebugger(context) {

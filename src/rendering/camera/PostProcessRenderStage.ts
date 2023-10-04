@@ -5,6 +5,9 @@ import Material from 'rendering/materials/Material';
 import MaterialRenderStage from 'rendering/camera/MaterialRenderStage';
 import ScreenQuad from './ScreenQuad';
 import TargetTextureFloat from "./TargetTextureFloat";
+import RenderingContext from "../RenderingContext";
+import Scene from "../../scene/Scene";
+import Camera from "./Camera";
 
 /**
  * Render-stage used to render MaterialRenderStage to a texture,
@@ -15,22 +18,15 @@ class PostProcessRenderStage extends RenderStage {
 	size: any;
 	src: TargetTextureFloat;
 	dst: TargetTextureFloat;
-	srcSampler: any;
-	dstSampler: any;
-	textureQuad: any;
-	screenQuad: any;
+	srcSampler: Sampler;
+	dstSampler: Sampler;
+	screenQuad: ScreenQuad;
 	material: any;
 	generator: any;
 
 	constructor() {
 		super();
 		this.size = false;
-		//this.src = false; ///< TargetTexture, once we receive context
-		//this.dst = false; ///< TargetTexture, once we receive context
-		this.srcSampler = false; ///< Sampler for src
-		this.dstSampler = false; ///< Sampler for dst
-		this.textureQuad = false; ///< Quad used to render textures
-		this.screenQuad = false; ///< Quad used to render to screen
 		this.material = false; ///< Material used to render the final image
 
 		this.generator = this.getGeneratorStage();
@@ -67,7 +63,6 @@ class PostProcessRenderStage extends RenderStage {
 		);
 		this.material.name = 'To Screen';
 
-		this.textureQuad = new ScreenQuad(context);
 		this.screenQuad = new ScreenQuad(context);
 
 		engine.assetsManager.load();
@@ -75,7 +70,7 @@ class PostProcessRenderStage extends RenderStage {
 		this.generator.start(context, engine, camera);
 	}
 
-	onPreRender(context, scene, camera): any {
+	onPreRender(context: RenderingContext, scene: Scene, camera: Camera): any {
 		var cameraTarget = camera.target;
 
 		this.src.resetViewport();
@@ -92,7 +87,7 @@ class PostProcessRenderStage extends RenderStage {
 		camera.target = cameraTarget;
 	}
 
-	onPostRender(context, scene, camera): any {
+	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
 		camera.target.bind(context);
 		this.renderEffect(context, this.material, this.srcSampler);
 		camera.target.unbind(context);
@@ -109,14 +104,14 @@ class PostProcessRenderStage extends RenderStage {
 		this.dstSampler = tmpSampler;
 	}
 
-	renderEffect(context, material, sampler, renderToScreen?) {
+	renderEffect(context, material, sampler, uniforms = {}) {
 		var gl = context.gl;
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.CULL_FACE);
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
-		this.screenQuad.render(context, material, sampler);
+		this.screenQuad.render(context, material, sampler, uniforms);
 	}
 }
 

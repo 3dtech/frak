@@ -7,13 +7,8 @@ import RenderingContext from 'rendering/RenderingContext';
 
 class BuffersRenderStage extends RenderStage {
 	parent: MainRenderStage;
-	clearColor = new Color(0, 0, 0, 0);
 	material: Material;
-
-	constructor() {
-		super();
-		this.clearColor;
-	}
+	clearColor = new Color(0, 0, 0, 0);
 
 	onStart(context: any, engine: Engine, camera: any) {
 		this.material = new Material(engine.assetsManager.addShaderSource('shaders/pbr', [
@@ -59,6 +54,7 @@ class BuffersRenderStage extends RenderStage {
 			var samplers = batchMaterial.samplers.slice();
 
 			// Bind material uniforms and samplers
+			shader.bindUniforms(camera.renderStage.sharedUniforms);
 			shader.bindUniforms(batchMaterial.uniforms);
 			shader.bindSamplers(samplers);
 
@@ -67,7 +63,7 @@ class BuffersRenderStage extends RenderStage {
 				renderer = batch.get(j);
 				context.modelview.push();
 				context.modelview.multiply(renderer.matrix);
-				renderer.renderGeometry(context, shader); // This will bind all default uniforms
+				renderer.renderGeometry(context, shader);
 				context.modelview.pop();
 			}
 

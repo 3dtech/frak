@@ -51,7 +51,7 @@ class ScreenQuad {
 		this.quad.update('position', this.vertices);
 	}
 
-	render(context, material, samplerOrList) {
+	render(context, material, samplerOrList, uniforms = {}) {
 		var gl = context.gl;
 		var samplers;
 		if (samplerOrList) {
@@ -61,7 +61,7 @@ class ScreenQuad {
 				samplers = samplerOrList;
 		}
 
-		material.bind({}, samplers);
+		material.bind(uniforms, samplers);
 		this.quad.render(material.shader);
 		material.unbind(samplers);
 	}

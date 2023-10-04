@@ -16,10 +16,6 @@ class BackgroundRenderStage extends PBRRenderStage {
 	backgroundMaterial: any;
 	skyboxMaterial: Material;
 
-	constructor() {
-		super();
-	}
-
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
 		super.onStart(context, engine, camera);
 
@@ -51,8 +47,7 @@ class BackgroundRenderStage extends PBRRenderStage {
 		camera.renderStage.renderEffect(context, this.backgroundMaterial, []);
 		var skyboxComponent = scene.cameraNode.getComponent(SkyboxComponent);
 		if (skyboxComponent) {
-			camera.renderStage.getDefaultUniforms(context, this.skyboxMaterial.uniforms);
-			camera.renderStage.renderEffect(context, this.skyboxMaterial, skyboxComponent.sampler);
+			camera.renderStage.renderEffect(context, this.skyboxMaterial, skyboxComponent.sampler, camera.renderStage.sharedUniforms);
 		}
 
 		super.onPostRender(context, scene, camera);

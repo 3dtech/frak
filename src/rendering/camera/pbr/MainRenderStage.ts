@@ -12,18 +12,6 @@ import UniformVec3 from "../../shaders/UniformVec3";
 import EmissiveRenderStage from "./EmissiveRenderStage";
 import BackgroundRenderStage from "./BackgroundRenderStage";
 
-class BindCameraTarget extends RenderStage {
-	render(context: RenderingContext, _: any, camera: Camera) {
-		camera.target.bind(context);
-	}
-}
-
-class UnbindCameraTarget extends RenderStage {
-	render(context: RenderingContext, _: any, camera: Camera) {
-		camera.target.unbind(context);
-	}
-}
-
 class BindDstTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
 		camera.renderStage.dst.bind(context);
@@ -43,9 +31,6 @@ class MainRenderStage extends RenderStage {
 	organizer = new RendererOrganizer();
 	size = vec2.create();
 	sharedSamplers: Sampler[] = [];
-	sharedUniforms = {
-		cameraPosition: new UniformVec3(vec3.create()),
-	};
 
 	constructor() {
 		super();
@@ -74,8 +59,6 @@ class MainRenderStage extends RenderStage {
 	}
 
 	onPreRender(context: any, scene: any, camera: any) {
-		camera.getPosition(this.sharedUniforms.cameraPosition.value);
-
 		this.organizer.sort(scene.engine, scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask));
 	}
 }

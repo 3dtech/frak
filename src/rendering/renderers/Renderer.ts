@@ -26,7 +26,7 @@ class Renderer {
 	localBoundingSphere: any;
 	globalBoundingBox: any;
 	globalBoundingSphere: any;
-	
+
 	/** Constructor
 		@param matrix Matrix applied to anything rendered
 		*/
@@ -80,57 +80,6 @@ class Renderer {
 
 		if (uniforms.hasOwnProperty('modelview')) mat4.copy(uniforms.modelview.value, context.modelview.top());
 		else uniforms.modelview = new UniformMat4(context.modelview.top());
-
-		if (uniforms.hasOwnProperty('projection')) mat4.copy(uniforms.projection.value, context.projection.top());
-		else uniforms.projection = new UniformMat4(context.projection.top());
-
-		// if ('castShadows' in uniforms) uniforms.castShadows.value = this.castShadows ? 1 : 0;
-		// else uniforms.castShadows = new UniformInt(this.castShadows ? 1 : 0);
-
-		if (uniforms.hasOwnProperty('receiveShadows')) uniforms.receiveShadows.value = this.receiveShadows ? 1 : 0;
-		else uniforms.receiveShadows = new UniformInt(this.receiveShadows ? 1 : 0);
-
-		if (uniforms.hasOwnProperty('lightContribution')) uniforms.lightContribution.value = this.lightContribution;
-		else uniforms.lightContribution = new UniformFloat(this.lightContribution);
-
-		if (uniforms.hasOwnProperty('reflectivity')) uniforms.reflectivity.value = this.reflectivity;
-		else uniforms.reflectivity = new UniformFloat(this.reflectivity);
-
-		// Camera uniforms
-		if (context.camera) {
-			if (uniforms.hasOwnProperty('view')) mat4.copy(uniforms.view.value, context.camera.viewMatrix);
-			else uniforms.view = new UniformMat4(context.camera.viewMatrix);
-
-			if (uniforms.hasOwnProperty('viewInverse')) mat4.copy(uniforms.viewInverse.value, context.camera.viewInverseMatrix);
-			else uniforms.viewInverse = new UniformMat4(context.camera.viewInverseMatrix);
-
-			if (context.camera.near) {
-				if (uniforms.hasOwnProperty('zNear')) uniforms.zNear.value = context.camera.near;
-				else uniforms.zNear = new UniformFloat(context.camera.near);
-			}
-
-			if (context.camera.far) {
-				if (uniforms.hasOwnProperty('zFar')) uniforms.zFar.value = context.camera.far;
-				else uniforms.zFar = new UniformFloat(context.camera.far);
-			}
-
-			if (uniforms.hasOwnProperty('cameraPosition')) vec3.copy(uniforms.cameraPosition.value, context.camera.getPosition());
-			else uniforms.cameraPosition = new UniformVec3(context.camera.getPosition());
-		}
-
-		// Light uniforms
-		if (context.light && context.light.uniforms) {
-			uniforms.lightDirection = context.light.uniforms.lightDirection;
-			uniforms.lightColor = context.light.uniforms.lightColor;
-			uniforms.lightIntensity = context.light.uniforms.lightIntensity;
-			uniforms.useShadows = context.light.uniforms.useShadows;
-		}
-
-		// Shadow uniforms
-		if (context.shadow) {
-			uniforms.lightView = context.shadow.lightView;
-			uniforms.lightProjection = context.shadow.lightProjection;
-		}
 
 		return uniforms;
 	}

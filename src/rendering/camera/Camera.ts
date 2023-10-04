@@ -31,6 +31,8 @@ class Camera extends Serializable {
 	frustum: any;
 	stereo: any;
 	stereoEyeDistance: any;
+	near: number;
+	far: number;
 	_viewportSize: any;
 	_viewportPosition: any;
 	_originalViewMatrix: any;
