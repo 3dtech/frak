@@ -10,6 +10,7 @@ import TonemapRenderStage from "./TonemapRenderStage";
 import Sampler from "../../shaders/Sampler";
 import UniformVec3 from "../../shaders/UniformVec3";
 import EmissiveRenderStage from "./EmissiveRenderStage";
+import BackgroundRenderStage from "./BackgroundRenderStage";
 
 class BindCameraTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -51,11 +52,12 @@ class MainRenderStage extends RenderStage {
 
 		this.addStage(new BuffersRenderStage());
 
-		this.addStage(new BindCameraTarget());
-		this.addStage(new PBRLightsRenderStage());
-		this.addStage(new UnbindCameraTarget());
-		
 		this.addStage(new BindDstTarget());
+		this.addStage(new PBRLightsRenderStage());
+		this.addStage(new UnbindDstTarget());
+
+		this.addStage(new BindDstTarget());
+		this.addStage(new BackgroundRenderStage());
 		this.addStage(new TonemapRenderStage());
 		this.addStage(new EmissiveRenderStage());
 		this.addStage(new UnbindDstTarget());

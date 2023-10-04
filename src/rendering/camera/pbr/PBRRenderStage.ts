@@ -38,5 +38,5 @@ class PBRRenderStage extends RenderStage {
 	}
 }
 
-globalThis.PBRLightsRenderStage = PBRRenderStage;
+globalThis.PBRRenderStage = PBRRenderStage;
 export default PBRRenderStage;
