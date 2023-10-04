@@ -3,10 +3,12 @@ import MeshRendererComponent from './MeshRendererComponent';
 import Material from 'rendering/materials/Material';
 import Sampler from 'rendering/shaders/Sampler';
 import Primitives from 'scene/geometry/Primitives';
+import CubeTexture from "../../rendering/materials/CubeTexture";
+import ShaderDescriptor from "../descriptors/ShaderDescriptor";
 
 class SkyboxComponent extends Component {
-	cubeTexture: any;
-	meshNode: any;
+	cubeTexture: CubeTexture;
+	sampler: Sampler;
 
 	constructor() {
 		super();
@@ -25,21 +27,7 @@ class SkyboxComponent extends Component {
 			images[4].source,
 			images[5].source
 		]);
-		var extent = 1.0;
-		if (engine.scene && engine.scene.camera && engine.scene.camera.far) {
-			extent = Math.sqrt(engine.scene.camera.far*engine.scene.camera.far / 3.0);
-		}
-		this.meshNode = Primitives.box([0, 0, 0], [extent, extent, extent], new Material(
-			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('skybox')),
-			{},
-			[new Sampler('skybox0', this.cubeTexture)]
-		));
-		this.node.addNode(this.meshNode);
-
-		var meshRenderer = this.meshNode.getComponent(MeshRendererComponent);
-		meshRenderer.castShadows=false;
-		meshRenderer.disable();
-		meshRenderer.addRenderers(engine.context, engine);
+		this.sampler = new Sampler('diffuse0', this.cubeTexture);
 	}
 }
 

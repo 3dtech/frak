@@ -41,35 +41,36 @@
 			var orbitController = scene.cameraNode.addComponent(new OrbitController());
 			var lena = new TextureDescriptor("data/lena.jpg");
 			var barb = new TextureDescriptor("data/barbara.png");
-			var skyboxImages = [lena, barb, barb, lena, lena, barb];
+			var skyboxImages = [lena, lena, lena, lena, lena, lena];
 			//var skyboxImages = ["data/lena.jpg", "data/barbara.png", "data/barbara.png", "data/lena.jpg", "data/lena.jpg", "data/barbara.png"];
 			var skyboxComponent = scene.cameraNode.addComponent(new SkyboxComponent());
+			scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
 			//engine.assetsManager.texturesManager.addCube(skyboxImages);
 			skyboxComponent.setup(engine.assetsManager, engine, skyboxImages);
 			orbitController.target.value = node.transform;
 			orbitController.rotation[0] = 1.5;
 
 			var updates = 0;
-			/* var TestComponent=Component.extend({
+			 var TestComponent=Component.extend({
 					type: function() { return "TestComponent"; },
 					onUpdate: function(pass) {
-						$('#position').html(JSON.stringify(mat4.translation(vec3.create(), scene.cameraNode.transform.relative)));
-						$('#rotation').html(JSON.stringify(mat4.rotation(mat4.create(), scene.cameraNode.transform.relative)));
-						$('#velocity').html(JSON.stringify(orbitController.velocity));
-						$('#angular-velocity').html(JSON.stringify(orbitController.angularVelocity));
+						document.getElementById('position').innerHTML = JSON.stringify(mat4.translation(vec3.create(), scene.cameraNode.transform.relative));
+						document.getElementById('rotation').innerHTML = JSON.stringify(mat4.rotation(mat4.create(), scene.cameraNode.transform.relative));
+						document.getElementById('velocity').innerHTML = JSON.stringify(orbitController.velocity);
+						document.getElementById('angular-velocity').innerHTML = JSON.stringify(orbitController.angularVelocity);
 
-						$('#updates').html(updates);
-						$('#average-fps').html(engine.fps.getAverage());
+						document.getElementById('updates').innerHTML = updates;
+						document.getElementById('average-fps').innerHTML = engine.fps.getAverage();
 						updates++;
 					}
 				});
 
-			var component=scene.root.addComponent(new TestComponent()); */
+			var component=scene.root.addComponent(new TestComponent());
 			scene.cameraComponent.setAspectRatio(1.0);
 
 			engine.assetsManager.load(function() {
-				/* scene.root.addNode(node);
-				scene.cameraComponent.fitNodeToView(node); */
+				 scene.root.addNode(node);
+				scene.cameraComponent.fitNodeToView(node);
 
 				engine.run();
 			});
