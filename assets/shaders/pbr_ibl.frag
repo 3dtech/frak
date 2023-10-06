@@ -6,6 +6,8 @@ uniform sampler2D color;
 uniform sampler2D normalMetallic;
 uniform sampler2D positionRoughness;
 
+uniform samplerCube light0;
+
 uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
@@ -89,6 +91,61 @@ vec3 dirLight(vec3 direction, vec4 color, float roughness, float NdotV, vec3 nor
 	//return specular;
 }
 
+float clampedDot(vec3 x, vec3 y) {
+    return clamp(dot(x, y), 0.0, 1.0);
+}
+
+vec3 getIBLRadianceGGX(vec3 n, vec3 v, float roughness, vec3 F0, float specularWeight) {
+    float NdotV = clampedDot(n, v);
+    vec3 reflection = normalize(reflect(-v, n));
+
+    vec2 brdfSamplePoint = clamp(vec2(NdotV, roughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
+    //vec2 f_ab = texture(u_GGXLUT, brdfSamplePoint).rg;
+    vec2 f_ab = brdfSamplePoint;
+    vec4 specularSample = texture(light0, -reflection);
+
+    vec3 specularLight = specularSample.rgb;
+
+    // see https://bruop.github.io/ibl/#single_scattering_results at Single Scattering Results
+    // Roughness dependent fresnel, from Fdez-Aguera
+    vec3 Fr = max(vec3(1.0 - roughness), F0) - F0;
+    vec3 k_S = F0 + Fr * pow(1.0 - NdotV, 5.0);
+    vec3 FssEss = k_S * f_ab.x + f_ab.y;
+
+    return specularWeight * specularLight * FssEss;
+}
+
+vec3 getIBLRadianceLambertian(vec3 n, vec3 v, float roughness, vec3 diffuseColor, vec3 F0, float specularWeight) {
+    float NdotV = clampedDot(n, v);
+    vec2 brdfSamplePoint = clamp(vec2(NdotV, roughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
+    //vec2 f_ab = texture(u_GGXLUT, brdfSamplePoint).rg;
+    vec2 f_ab = brdfSamplePoint * 0.1;
+
+    vec3 irradiance = texture(light0, n).rgb;
+
+    // see https://bruop.github.io/ibl/#single_scattering_results at Single Scattering Results
+    // Roughness dependent fresnel, from Fdez-Aguera
+
+    vec3 Fr = max(vec3(1.0 - roughness), F0) - F0;
+    vec3 k_S = F0 + Fr * pow(1.0 - NdotV, 5.0);
+    vec3 FssEss = specularWeight * k_S * f_ab.x + f_ab.y; // <--- GGX / specular light contribution (scale it down if the specularWeight is low)
+
+    // Multiple scattering, from Fdez-Aguera
+    float Ems = (1.0 - (f_ab.x + f_ab.y));
+    vec3 F_avg = specularWeight * (F0 + (1.0 - F0) / 21.0);
+    vec3 FmsEms = Ems * FssEss * F_avg / (1.0 - F_avg * Ems);
+    vec3 k_D = diffuseColor * (1.0 - FssEss + FmsEms); // we use +FmsEms as indicated by the formula in the blog post (might be a typo in the implementation)
+
+    return (FmsEms + k_D) * irradiance;
+}
+
+vec3 ibLight(vec3 normal, vec3 view, float roughness, vec3 diffuseColor, vec3 F0, float specularWeight) {
+    vec3 diffuse = getIBLRadianceLambertian(normal, view, roughness, diffuseColor, F0, specularWeight);
+    vec3 specular = getIBLRadianceGGX(normal, view, roughness, F0, specularWeight);
+
+    return /**diffuse + */specular;
+}
+
 void main(void) {
 	vec4 outputColor = texture(color, uv);
 
@@ -108,7 +165,7 @@ void main(void) {
 
 	vec3 R = reflect(-V, N);
 
-	outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
+    outputColor.rgb = ibLight(N, V, roughness, diffuseColor, F0, 1.0);
 
 	fragColor = outputColor;
 }

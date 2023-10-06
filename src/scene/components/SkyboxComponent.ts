@@ -10,8 +10,13 @@ class SkyboxComponent extends Component {
 	cubeTexture: CubeTexture;
 	sampler: Sampler;
 
-	constructor() {
+	constructor(texture?: CubeTexture) {
 		super();
+
+		if (texture) {
+			this.cubeTexture = texture;
+			this.sampler = new Sampler('diffuse0', this.cubeTexture);
+		}
 	}
 
 	type(): any {

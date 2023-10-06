@@ -5,6 +5,7 @@ import Camera from '../Camera';
 import PBRRenderStage from "./PBRRenderStage";
 import Scene from "../../../scene/Scene";
 import PBRPipeline from "../PBRPipeline";
+import ImageBasedLight from "../../../scene/lights/ImageBasedLight";
 
 /**
  * Deferred shading light accumulation pass
@@ -22,6 +23,7 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		this.directional = [];
 		var ambient = [];
 		var other = [];
+		var ibl = [];
 
 		for (var i=0; i<scene.lights.length; i++) {
 			var light = scene.lights[i];
@@ -44,10 +46,15 @@ class PBRLightsRenderStage extends PBRRenderStage {
 				continue;
 			}
 
+			if (light instanceof ImageBasedLight) {
+				ibl.push(light);
+				continue;
+			}
+
 			other.push(light);
 		}
 
-		return ambient.concat(this.directional);
+		return ambient.concat(this.directional).concat(ibl);
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {

@@ -13,7 +13,7 @@ import SkyboxComponent from "../../../scene/components/SkyboxComponent";
  * Deferred shading light accumulation pass
  */
 class BackgroundRenderStage extends PBRRenderStage {
-	backgroundMaterial: any;
+	backgroundMaterial: Material;
 	skyboxMaterial: Material;
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
@@ -22,7 +22,7 @@ class BackgroundRenderStage extends PBRRenderStage {
 		this.backgroundMaterial = new Material(
 			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_background')),
 			{
-				color: new UniformColor(new Color(0.0, 0.0, 1.0, 1.0))
+				color: new UniformColor(new Color(0.8, 0.8, 0.8, 1.0))
 			},
 			[]
 		);
