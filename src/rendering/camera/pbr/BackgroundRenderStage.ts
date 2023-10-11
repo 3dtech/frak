@@ -28,9 +28,7 @@ class BackgroundRenderStage extends PBRRenderStage {
 		);
 
 		this.skyboxMaterial = new Material(
-			engine.assetsManager.shadersManager.addDescriptor(
-				new ShaderDescriptor('shaders/uv.vert', 'shaders/skybox.frag')
-			),
+			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/skybox.frag'),
 			{},
 			[]
 		);

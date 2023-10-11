@@ -85,7 +85,6 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		var shader = light.material.shader;
 
 		shader.use();
-		shader.bindUniforms(cameraStage.sharedUniforms);
 		shader.bindUniforms(light.material.uniforms);
 
 		var samplers;
@@ -110,7 +109,7 @@ class PBRLightsRenderStage extends PBRRenderStage {
 			context.modelview.pop();
 		}
 
-		shader.unbindSamplers(samplers);
+		//shader.unbindSamplers(samplers);
 	}
 }
 

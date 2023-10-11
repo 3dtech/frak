@@ -9,47 +9,89 @@ import UniformVec3 from "../shaders/UniformVec3";
 import RenderingContext from "../RenderingContext";
 import Scene from "../../scene/Scene";
 import Camera from "./Camera";
+import Engine from "../../engine/Engine";
 
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
 	debugger: any;
-	sharedUniforms = {
-		modelview: new UniformMat4(mat4.create()),
-		projection: new UniformMat4(mat4.create()),
-		view: new UniformMat4(mat4.create()),
-		viewInverse: new UniformMat4(mat4.create()),
-		zNear: new UniformFloat(),
-		zFar: new UniformFloat(),
-		cameraPosition: new UniformVec3(vec3.create()),
-	};
+	uboBuffer: WebGLBuffer;
+	uboOffsets = {};
+	zNear = new Float32Array();
+	zFar = new Float32Array();
 
 	getGeneratorStage() {
 		return new MainRenderStage();
 	}
 
-	onStart(context: any, engine: any, camera: any) {
+	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
 		this.addStage(new AntiAliasPostProcess());
 		super.onStart(context, engine, camera);
+
+		// We disable rendering before the shader is loaded and the UBO is created to avoid spamming the console with errors
+		this.disable();
+		this.material.shader = engine.assetsManager.addShader('shaders/uv.vert', 'shaders/quad.frag');
+
+		engine.assetsManager.shadersManager.load(() => {
+			if (!this.material.shader.linked) {
+				this.material.shader.link();
+			}
+
+			const gl = context.gl;
+			const blockIndex = gl.getUniformBlockIndex(this.material.shader.program, "Camera_block_0");
+			const blockSize = gl.getActiveUniformBlockParameter(this.material.shader.program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE);
+
+			this.uboBuffer = gl.createBuffer();
+
+			gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
+			gl.bufferData(gl.UNIFORM_BUFFER, blockSize, gl.DYNAMIC_DRAW);
+			gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+
+			gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, this.uboBuffer);
+
+			const uboVariables = [
+				'projection',
+				'view',
+				'viewInverse',
+				'zNear',
+				'zFar',
+				'cameraPosition'
+			];
+			const uboIndices = gl.getUniformIndices(this.material.shader.program, uboVariables);
+			const uboOffsets = gl.getActiveUniforms(this.material.shader.program, uboIndices, gl.UNIFORM_OFFSET);
+
+			uboVariables.forEach((v, i) => {
+				this.uboOffsets[v] = uboOffsets[i];
+			});
+
+			this.enable();
+		});
 
 		this.initDebugger(context);
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
-		mat4.copy(this.sharedUniforms.modelview.value, context.modelview.top());
-		mat4.copy(this.sharedUniforms.projection.value, context.projection.top());
+		const gl = context.gl;
 
-		// Camera uniforms
-		mat4.copy(this.sharedUniforms.view.value, camera.viewMatrix);
-		mat4.copy(this.sharedUniforms.viewInverse.value, camera.viewInverseMatrix);
-        vec3.copy(this.sharedUniforms.cameraPosition.value, camera.getPosition());
+		gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
+
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['modelview'], context.modelview.top());
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projection'], context.projection.top());
+
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['view'], camera.viewMatrix);
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['viewInverse'], camera.viewInverseMatrix);
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['cameraPosition'], camera.getPosition());
 
 		if (camera.near) {
-			this.sharedUniforms.zNear.value = camera.near;
+			this.zNear[0] = camera.near;
+			gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['zNear'], this.zNear);
 		}
 
 		if (camera.far) {
-			this.sharedUniforms.zFar.value = camera.far;
+			this.zFar[0] = camera.far;
+			gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['zFar'], this.zFar);
 		}
+
+		gl.bindBuffer(gl.UNIFORM_BUFFER, null);
 
 		super.onPreRender(context, scene, camera);
 	}
@@ -65,7 +107,7 @@ class PBRPipeline extends PostProcessRenderStage {
 			this.debugger.sampler.texture = this.debugger.quads[i].texture;
 			this.material.bind({}, [this.debugger.sampler]);
 			this.debugger.quads[i].quad.render(this.material.shader);
-			this.material.unbind([this.debugger.sampler]);
+			this.material.unbind();
 		}
 		context.modelview.pop();
 	}

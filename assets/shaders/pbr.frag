@@ -2,10 +2,15 @@
 
 precision highp float;
 
-uniform mat4 modelview;
-uniform mat4 view;
-
-uniform vec3 cameraPosition;
+uniform Camera_block_0 {
+    mat4 modelview;
+    mat4 projection;
+    mat4 view;
+    mat4 viewInverse;
+    float zNear;
+    float zFar;
+    vec3 cameraPosition;
+};
 
 uniform vec4 ambient;
 uniform vec4 diffuse;

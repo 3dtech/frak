@@ -6,7 +6,16 @@ uniform sampler2D color;
 uniform sampler2D normalMetallic;
 uniform sampler2D positionRoughness;
 
-uniform vec3 cameraPosition;
+uniform Camera_block_0 {
+    mat4 modelview;
+    mat4 projection;
+    mat4 view;
+    mat4 viewInverse;
+    float zNear;
+    float zFar;
+    vec3 cameraPosition;
+};
+
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;

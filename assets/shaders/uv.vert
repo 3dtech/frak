@@ -1,7 +1,14 @@
 #version 300 es
 
-uniform mat4 projection;
-uniform mat4 viewInverse;
+uniform Camera_block_0 {
+    mat4 modelview;
+    mat4 projection;
+    mat4 view;
+    mat4 viewInverse;
+    float zNear;
+    float zFar;
+    vec3 cameraPosition;
+};
 
 in vec3 position;
 in vec2 texcoord2d0;

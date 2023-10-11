@@ -21,13 +21,12 @@ class PostProcessRenderStage extends RenderStage {
 	srcSampler: Sampler;
 	dstSampler: Sampler;
 	screenQuad: ScreenQuad;
-	material: any;
+	material: Material;
 	generator: any;
 
 	constructor() {
 		super();
 		this.size = false;
-		this.material = false; ///< Material used to render the final image
 
 		this.generator = this.getGeneratorStage();
 		this.generator.parent = this;

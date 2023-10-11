@@ -7,7 +7,16 @@ uniform sampler2D normalMetallic;
 uniform sampler2D positionRoughness;
 uniform sampler2D emissiveOcclusion;
 
-uniform vec3 cameraPosition;
+uniform Camera_block_0 {
+    mat4 modelview;
+    mat4 projection;
+    mat4 view;
+    mat4 viewInverse;
+    float zNear;
+    float zFar;
+    vec3 cameraPosition;
+};
+
 uniform vec4 lightColor;
 
 in vec2 uv;

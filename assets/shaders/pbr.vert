@@ -8,9 +8,16 @@ in vec4 tangent4d;
 #endif
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 modelview;
-uniform mat4 projection;
+
+uniform Camera_block_0 {
+    mat4 modelview;
+    mat4 projection;
+    mat4 view;
+    mat4 viewInverse;
+    float zNear;
+    float zFar;
+    vec3 cameraPosition;
+};
 
 out vec2 uv0;
 out vec4 worldPosition;

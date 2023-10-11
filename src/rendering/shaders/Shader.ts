@@ -241,26 +241,9 @@ class Shader extends Serializable {
 	}
 
 	updateBlockBindings(context) {
-		var blocks = [
-			'Transform',
-			'Material'
-		];
-
-		this.bindings = {};
-
-		for (var i = 0; i < blocks.length; ++i) {
-			var bindingPoint = i + 1;
-			var blockName = blocks[i];
-			var blockIndex = context.gl.getUniformBlockIndex(this.program, blockName);
-			if (blockIndex == context.gl.INVALID_INDEX) {
-				continue;
-			}
-
-			this.bindings[blockName] = {
-				index: blockIndex,
-				name: blockName,
-				bindingPoint: bindingPoint
-			};
+		const index = context.gl.getUniformBlockIndex(this.program, 'Camera_block_0');
+		if (index !== context.gl.INVALID_INDEX) {
+			context.gl.uniformBlockBinding(this.program, index, 0);
 		}
 	}
 
