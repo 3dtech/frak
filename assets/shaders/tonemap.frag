@@ -49,5 +49,5 @@ vec3 acesApprox(vec3 v) {
 void main(void) {
     vec4 outputColor = texture(src, uv);
 
-    fragColor = vec4(reinhardExtendedLuminance(outputColor.rgb, 10.4), 1.0);
+    fragColor = vec4(acesApprox(outputColor.rgb), 1.0);
 }
