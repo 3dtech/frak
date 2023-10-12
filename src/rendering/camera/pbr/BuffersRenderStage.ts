@@ -4,16 +4,27 @@ import Color from 'rendering/Color';
 import MainRenderStage from './MainRenderStage';
 import Engine from 'engine/Engine';
 import RenderingContext from 'rendering/RenderingContext';
+import Shader from "../../shaders/Shader";
+
+function stringHash(str, seed = 0) {
+	let hash = seed;
+	if (str.length === 0) return hash;
+	for (let i = 0; i < str.length; i++) {
+		let chr = str.charCodeAt(i);
+		hash = ((hash << 5) - hash) + chr;
+		hash |= 0; // Convert to 32bit integer
+	}
+	return hash;
+}
 
 class BuffersRenderStage extends RenderStage {
 	parent: MainRenderStage;
 	material: Material;
 	clearColor = new Color(0, 0, 0, 0);
+	shaderCache = {};
 
 	onStart(context: any, engine: Engine, camera: any) {
-		this.material = new Material(engine.assetsManager.addShaderSource('shaders/pbr', [
-
-		]), {}, []);
+		this.material = new Material(engine.assetsManager.addShaderSource('shaders/pbr', []), {}, []);
 	}
 
 	onPostRender(context: RenderingContext, scene, camera): any {
@@ -35,7 +46,7 @@ class BuffersRenderStage extends RenderStage {
 		this.renderBatches(context, scene, camera, this.parent.organizer.opaqueBatchList);
 
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
-		this.renderBatches(context, scene, camera, this.parent.organizer.transparentBatchList);
+		// this.renderBatches(context, scene, camera, this.parent.organizer.transparentBatchList);
 
 		gl.stencilMask(0xFF);
 		gl.disable(gl.STENCIL_TEST);
@@ -47,16 +58,18 @@ class BuffersRenderStage extends RenderStage {
 	renderBatches(context, scene, camera, batches) {
 		for (var i=0; i<batches.length; i++) {
 			var batch = batches[i];
-			var batchMaterial = batch.get(0).material;
-			var shader = batchMaterial.shader;
-			shader.use();
+			if (!batch.length) {
+				continue;
+			}
 
-			var samplers = batchMaterial.samplers.slice();
+			var batchMaterial = batch.get(0).material;
+			var shader = this.selectShader(context, batchMaterial.shader.definitions);
+			shader.use();
 
 			// Bind material uniforms and samplers
 			shader.bindUniforms(camera.renderStage.sharedUniforms);
 			shader.bindUniforms(batchMaterial.uniforms);
-			shader.bindSamplers(samplers);
+			shader.bindSamplers(batchMaterial.samplers);
 
 			var renderer;
 			for (var j=0; j<batch.length; ++j) {
@@ -67,8 +80,28 @@ class BuffersRenderStage extends RenderStage {
 				context.modelview.pop();
 			}
 
-			shader.unbindSamplers(samplers);
+			shader.unbindSamplers(batchMaterial.samplers);
 		}
+	}
+
+	selectShader(context: RenderingContext, defines: string[]): Shader {
+		let hash = 0;
+		for (const define of defines) {
+			hash ^= stringHash(define);
+		}
+
+		if (!this.shaderCache[hash]) {
+			const baseShader = this.material.shader;
+
+			const shader = new Shader(context, baseShader.descriptor);
+			shader.addVertexShader(baseShader.vertexShader.code);
+			shader.addFragmentShader(baseShader.fragmentShader.code);
+			shader.definitions = defines.slice();
+
+			this.shaderCache[hash] = shader;
+		}
+
+		return this.shaderCache[hash];
 	}
 }
 

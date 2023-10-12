@@ -422,7 +422,6 @@ class ModelLoaderGLTF {
 
 			material.uniforms.diffuse = new UniformColor(diffuse);
 			material.uniforms.perceptualRoughness = new UniformFloat(roughness);
-			material.uniforms.reflectance = new UniformFloat(0.5);
 			material.uniforms.metallic = new UniformFloat(metallic);
 			material.uniforms.emissive = new UniformColor(emissive);
 

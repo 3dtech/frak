@@ -30,6 +30,26 @@ class Material extends Serializable {
 		this.samplers = samplers; ///< Shader samplers list
 		this.descriptor = descriptor;
 
+		if (this.samplers) {
+			for (const sampler of this.samplers) {
+				switch (sampler.name) {
+					case 'diffuse0':
+						if (this.shader.definitions.indexOf('DIFFUSE_TEXTURE') === -1) {
+							this.shader.definitions.push('DIFFUSE_TEXTURE');
+						}
+
+						break;
+
+					case 'normal0':
+						if (this.shader.definitions.indexOf('NORMAL_TEXTURE') === -1) {
+							this.shader.definitions.push('NORMAL_TEXTURE');
+						}
+
+						break;
+				}
+			}
+		}
+
 		this.boundSamplers = new SamplerAccumulator();
 	}
 

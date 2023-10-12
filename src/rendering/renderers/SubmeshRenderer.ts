@@ -149,6 +149,10 @@ class SubmeshRenderer extends Renderer {
 			material.uniforms.specularStrength = new UniformFloat(0.0);
 		if (!material.uniforms.specularPower)
 			material.uniforms.specularPower = new UniformInt(8);
+		if (!material.uniforms.metallic)
+			material.uniforms.metallic = new UniformFloat(1.0);
+		if (!material.uniforms.perceptualRoughness)
+			material.uniforms.perceptualRoughness = new UniformFloat(1.0);
 
 		// Set this renderer to transparent, if its material is transparent or if diffuse color or ambient color has alpha less than 1
 		this.transparent = material.shader.requirements.transparent ||

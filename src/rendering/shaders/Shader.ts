@@ -23,6 +23,8 @@ class Shader extends Serializable {
 	uniformLocations: any;
 	bindings: any;
 	definitions: any;
+	vertexShader: VertexShader;
+	fragmentShader: FragmentShader;
 
 	/** Constructor
 		@param context Rendering context
@@ -59,17 +61,17 @@ class Shader extends Serializable {
 	/** Creates a fragment shader from given code and adds it to this shader program
 		@param code Shader code */
 	addVertexShader(code): any {
-		var shader=new VertexShader(this, code);
+		this.vertexShader=new VertexShader(this, code);
 
-		this.addShader(shader);
+		this.addShader(this.vertexShader);
 	}
 
 	/** Creates a fragment shader from given code and adds it to this shader program
 		@param code Shader code */
 	addFragmentShader(code): any {
-		var shader=new FragmentShader(this, code);
+		this.fragmentShader=new FragmentShader(this, code);
 
-		this.addShader(shader);
+		this.addShader(this.fragmentShader);
 	}
 
 	/** Adds a shader
@@ -112,7 +114,7 @@ class Shader extends Serializable {
 	/** Uses the shader program. Links automatically, if not linked
 		@param uniforms Object of named uniform variables (all values must be instances of Uniform)
 		                that will be passed to shader [optional] */
-	use(uniforms): any {
+	use(uniforms?): any {
 		if(this.failed) return;
 
 		if(this.shaders.length<2) return;	// Don't try to use, there are not enough added subshaders (ie vertex and fragment)
@@ -145,7 +147,7 @@ class Shader extends Serializable {
 		as well during batching.
 		@param uniforms Uniform variables that will be passed to shader
 	*/
-	bindUniforms(uniforms): any {
+	bindUniforms(uniforms?): any {
 		if (!uniforms) {
 			return;
 		}

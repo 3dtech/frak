@@ -15,7 +15,7 @@ const BUNDLE_RELATIVE_PATH = './assets';
 const EXTENSION_FILTER = ['.vert', '.frag'];
 
 let profiles = {
-	'webgl2': './assets/shaders/webgl2',
+	'webgl2': './assets/shaders',
 };
 
 async function main() {

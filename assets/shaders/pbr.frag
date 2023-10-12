@@ -12,14 +12,11 @@ uniform Camera_block_0 {
     vec3 cameraPosition;
 };
 
-uniform vec4 ambient;
 uniform vec4 diffuse;
 uniform vec4 emissive;
 
 uniform float metallic;
 uniform float perceptualRoughness;
-
-uniform float reflectance;
 
 uniform vec3 lightDirection;
 uniform vec4 lightColor;

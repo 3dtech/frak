@@ -108,8 +108,6 @@ class PBRLightsRenderStage extends PBRRenderStage {
 
 			context.modelview.pop();
 		}
-
-		//shader.unbindSamplers(samplers);
 	}
 }
 
