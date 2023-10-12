@@ -47,7 +47,11 @@ class Shader extends Serializable {
 
 		this.bindings = {};
 
-		this.definitions = descriptor.definitions;
+		this.definitions = [
+			'ALPHAMODE_OPAQUE 0',
+			'ALPHAMODE_MASK 1',
+			'ALPHAMODE_BLEND 2'
+		].concat(descriptor.definitions);
 	}
 
 	excluded(): any {

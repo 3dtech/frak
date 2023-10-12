@@ -93,6 +93,9 @@ class ModelLoaderJSON {
 		// FIXME: shaders should always download the accompanying requirements json file and apply requirements from there
 		if (shaderName.toLowerCase() == 'transparent') {
 			material.shader.requirements.transparent = true;
+			material.shader.definitions.push('ALPHAMODE ALPHAMODE_BLEND');
+		} else {
+			material.shader.definitions.push('ALPHAMODE ALPHAMODE_OPAQUE');
 		}
 
 		material.uniforms = {};

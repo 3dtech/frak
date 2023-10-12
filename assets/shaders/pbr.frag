@@ -12,6 +12,7 @@ uniform Camera_block_0 {
     vec3 cameraPosition;
 };
 
+uniform float alphaCutoff;
 uniform vec4 diffuse;
 uniform vec4 emissive;
 
@@ -141,7 +142,9 @@ void main(void) {
 	outputColor *= texture(diffuse0, diffuseUV());
 #endif
 
-	outputColor.a = 1.0;	// TODO: We only use this shader with alphaMode == 'OPAQUE'
+#if ALPHAMODE == ALPHAMODE_OPAQUE
+	outputColor.a = 1.0;
+#endif
 
 #ifdef METALLICROUGHNESS_TEXTURE
 	vec4 metallicRoughness = texture(metallicRoughness0, metallicRoughnessUV());
@@ -177,4 +180,11 @@ void main(void) {
 	fragNormalMetallic = vec4(N, metallic);
 	fragPositionRoughness = vec4(worldPosition.xyz, roughness);
 	fragEmissiveOcclusion = vec4(emissive.rgb, occlusion);
+
+#if ALPHAMODE == ALPHAMODE_MASK
+    if (outputColor.a < alphaCutoff) {
+        discard;
+    }
+    outputColor.a = 1.0;
+#endif
 }

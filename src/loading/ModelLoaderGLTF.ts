@@ -380,16 +380,12 @@ class ModelLoaderGLTF {
 				material.name = materials[i].name;
 			}
 
-			var transparent = false;
-			if (materials[i].alphaMode === 'BLEND') {
-				transparent = true;
-			}
-
 			var definitions = [];
 			var diffuse = new Color();
 			var emissive = new Color(0.0, 0.0, 0.0);
 			var metallic = 1.0;
 			var roughness = 1.0;
+			var cutoff = 0.5;
 			if (materials[i].pbrMetallicRoughness) {
 				var mr = materials[i].pbrMetallicRoughness;
 				var bcf = mr.baseColorFactor;
@@ -397,7 +393,7 @@ class ModelLoaderGLTF {
 					diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
 
 					if (bcf[3] < 1.0) {
-						transparent = true;	// Legacy compatibility
+						materials[i].alphaMode = 'BLEND';
 					}
 				}
 
@@ -415,6 +411,11 @@ class ModelLoaderGLTF {
 				setSampler(material, definitions, mr.metallicRoughnessTexture, 'metallicRoughness');
 			}
 
+			var alphaCutoff = parseFloat(materials[i].alphaCutoff);
+			if (!isNaN(alphaCutoff)) {
+				cutoff = alphaCutoff;
+			}
+
 			var eF = materials[i].emissiveFactor;
 			if (eF && eF.length > 2) {
 				emissive.set(eF[0], eF[1], eF[2]);
@@ -424,16 +425,18 @@ class ModelLoaderGLTF {
 			material.uniforms.perceptualRoughness = new UniformFloat(roughness);
 			material.uniforms.metallic = new UniformFloat(metallic);
 			material.uniforms.emissive = new UniformColor(emissive);
+			material.uniforms.alphaCutoff = new UniformFloat(cutoff);
 
 			setSampler(material, definitions, materials[i].normalTexture, 'normal');
 			setSampler(material, definitions, materials[i].occlusionTexture, 'occlusion');
 			setSampler(material, definitions, materials[i].emissiveTexture, 'emissive');
 
-			if (transparent) {
-				material.shader = this.shadersManager.addSource('transparent');
+			definitions.push(`ALPHAMODE ALPHAMODE_${materials[i].alphaMode ?? 'OPAQUE'}`);
+
+			material.shader = this.shadersManager.addSource('pbr', definitions);
+
+			if (materials[i].alphaMode === 'BLEND') {
 				material.shader.requirements.transparent = true;
-			} else {
-				material.shader = this.shadersManager.addSource('deferred_pbr', definitions);
 			}
 
 			this.materials.push(material);

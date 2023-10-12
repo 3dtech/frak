@@ -31,6 +31,7 @@ class MainRenderStage extends RenderStage {
 	organizer = new RendererOrganizer();
 	size = vec2.create();
 	sharedSamplers: Sampler[] = [];
+	eyePosition = vec3.create();
 
 	constructor() {
 		super();
@@ -59,7 +60,8 @@ class MainRenderStage extends RenderStage {
 	}
 
 	onPreRender(context: any, scene: any, camera: any) {
-		this.organizer.sort(scene.engine, scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask));
+		mat4.translation(this.eyePosition, camera.viewInverseMatrix);
+		this.organizer.sort(scene.engine, scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask), this.eyePosition);
 	}
 }
 

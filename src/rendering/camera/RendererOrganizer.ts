@@ -198,19 +198,14 @@ class RendererOrganizer {
 
 		// Batch renderers by material.id
 		if (this.enableDynamicBatching) {
-			if (engine.options.transparencyMode != 'sorted') {
-				this.batch(this.transparentBatchList, this.transparentRenderers);
-			}
 			this.batch(this.opaqueBatchList, this.solidRenderers);
 			this.batch(this.customBatchList, this.customRenderers);
 			this.batch(this.unlitBatchList, this.unlitRenderers);
 		}
 
 		// Sort transparent renderers
-		if (engine.options.transparencyMode == 'sorted' && eyePosition) {
-			vec3.copy(TransparencySort.cmpValue, eyePosition);
-			this.transparentRenderers.sort(TransparencySort);
-		}
+		vec3.copy(TransparencySort.cmpValue, eyePosition);
+		this.transparentRenderers.sort(TransparencySort);
 
 		this.updateStats();
 	}
