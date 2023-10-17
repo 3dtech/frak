@@ -11,6 +11,7 @@ import Sampler from "../../shaders/Sampler";
 import UniformVec3 from "../../shaders/UniformVec3";
 import EmissiveRenderStage from "./EmissiveRenderStage";
 import BackgroundRenderStage from "./BackgroundRenderStage";
+import TransparentRenderStage from "./TransparentRenderStage";
 
 class BindDstTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -45,6 +46,7 @@ class MainRenderStage extends RenderStage {
 		this.addStage(new BindDstTarget());
 		this.addStage(new BackgroundRenderStage());
 		this.addStage(new TonemapRenderStage());
+		this.addStage(new TransparentRenderStage());
 		this.addStage(new EmissiveRenderStage());
 		this.addStage(new UnbindDstTarget());
 	}

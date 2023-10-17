@@ -45,7 +45,7 @@ class BackgroundRenderStage extends PBRRenderStage {
 		camera.renderStage.renderEffect(context, this.backgroundMaterial, []);
 		var skyboxComponent = scene.cameraNode.getComponent(SkyboxComponent);
 		if (skyboxComponent) {
-			camera.renderStage.renderEffect(context, this.skyboxMaterial, skyboxComponent.sampler, camera.renderStage.sharedUniforms);
+			camera.renderStage.renderEffect(context, this.skyboxMaterial, skyboxComponent.sampler);
 		}
 
 		super.onPostRender(context, scene, camera);

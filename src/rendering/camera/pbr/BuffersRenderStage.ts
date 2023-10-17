@@ -67,7 +67,6 @@ class BuffersRenderStage extends RenderStage {
 			shader.use();
 
 			// Bind material uniforms and samplers
-			shader.bindUniforms(camera.renderStage.sharedUniforms);
 			shader.bindUniforms(batchMaterial.uniforms);
 			shader.bindSamplers(batchMaterial.samplers);
 
@@ -79,8 +78,6 @@ class BuffersRenderStage extends RenderStage {
 				renderer.renderGeometry(context, shader);
 				context.modelview.pop();
 			}
-
-			shader.unbindSamplers(batchMaterial.samplers);
 		}
 	}
 

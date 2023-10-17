@@ -116,10 +116,6 @@ class ModelLoaderJSON {
 					material.samplers=[];
 				material.samplers.push(new Sampler(samplerName + i, texture));
 				material.shader.definitions.push(`${samplerName.toUpperCase()}_TEXTURE`);
-
-				if (textureType == 'texturesNormals') {
-					material.shader = this.shadersManager.addSource('normalmapped');
-				}
 			}
 		}
 
