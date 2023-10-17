@@ -42,18 +42,16 @@ class TransparentRenderStage extends RenderStage {
 	}
 
 	onStart(context: any, engine: Engine, camera: any) {
-		this.materials['directional'] = new Material(
-			engine.assetsManager.addShader('shaders/pbr.vert', 'shaders/pbr_direct_directional.frag'),
-			{},
-			[]
-		);
+		for (const type of ['directional', 'ibl']) {
+			this.materials[type] = new Material(
+				engine.assetsManager.addShader('shaders/pbr.vert', `shaders/direct_${type}.frag`)
+			);
+		}
 	}
 
-	getLightsWithGeometry(scene): any {
-		this.directional = [];
-		var ambient = [];
-		var other = [];
-		var ibl = [];
+	/// Returns first IBL, if there is one, first directional otherwise;
+	getSingleLight(scene): {type: 'directional' | 'ibl', light: ImageBasedLight | DirectionalLight} {
+		var directional = null;
 
 		for (var i=0; i<scene.lights.length; i++) {
 			var light = scene.lights[i];
@@ -65,26 +63,16 @@ class TransparentRenderStage extends RenderStage {
 				continue;
 			}
 
-			if (light instanceof AmbientLight) {
-				ambient.push(light);
-
-				continue;
-			}
-
-			if (light instanceof DirectionalLight) {
-				this.directional.push(light);
-				continue;
-			}
-
 			if (light instanceof ImageBasedLight) {
-				ibl.push(light);
-				continue;
+				return {type: 'ibl', light};
 			}
 
-			other.push(light);
+			if (light instanceof DirectionalLight && !directional) {
+				directional = light;
+			}
 		}
 
-		return ambient.concat(this.directional).concat(ibl);
+		return {type: 'directional', light: directional};
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera): any {
@@ -99,22 +87,20 @@ class TransparentRenderStage extends RenderStage {
 		gl.disable(gl.CULL_FACE);
 
 		gl.blendEquation(gl.FUNC_ADD);
-		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
 		gl.enable(gl.BLEND);
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
-		var lights = this.getLightsWithGeometry(scene);
-		if (!lights.length) {
+		var light = this.getSingleLight(scene);
+		if (!light) {
 			return;
 		}
 
 		var gl = context.gl;
 
-		for (var i=0; i<lights.length; i++) {
-			this.renderRenderers(context, scene, camera, this.parent.organizer.transparentRenderers);
-		}
+		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+		this.renderRenderers(context, light.type, light.light, this.parent.organizer.transparentRenderers);
 
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.BLEND);
@@ -124,7 +110,7 @@ class TransparentRenderStage extends RenderStage {
 		super.onPostRender(context, scene, camera);
 	}
 
-	renderRenderers(context, scene, camera, renderers) {
+	renderRenderers(context, type, light, renderers) {
 		for (var i=0; i<renderers.length; i++) {
 			var renderer = renderers[i];
 			if (!renderer) {
@@ -132,10 +118,11 @@ class TransparentRenderStage extends RenderStage {
 			}
 
 			var material = renderer.material;
-			var shader = this.selectShader(context, 'directional', material.shader.definitions);
+			var shader = this.selectShader(context, type, material.shader.definitions);
 			shader.use();
 
 			// Bind material uniforms and samplers
+			shader.bindUniforms(light.material.uniforms);
 			shader.bindUniforms(material.uniforms);
 			shader.bindSamplers(material.samplers);
 
