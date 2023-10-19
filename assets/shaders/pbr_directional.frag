@@ -6,9 +6,10 @@ uniform sampler2D color;
 uniform sampler2D normalMetallic;
 uniform sampler2D positionRoughness;
 
-uniform Camera_block_0 {
+uniform Camera {
     mat4 modelview;
     mat4 projection;
+    mat4 projectionInverse;
     mat4 view;
     mat4 viewInverse;
     float zNear;

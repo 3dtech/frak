@@ -56,7 +56,7 @@ class PostProcessRenderStage extends RenderStage {
 
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"),
-			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('ScreenQuad')),
+			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/quad.frag'),
 			{},
 			[]
 		);

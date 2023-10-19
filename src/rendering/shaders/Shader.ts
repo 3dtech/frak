@@ -95,10 +95,6 @@ class Shader extends Serializable {
 			this.shaders[i].compile(this.context, this.definitions);
 		}
 
-		for (var name in ExplicitAttributeLocations) {
-			this.context.gl.bindAttribLocation(this.program, ExplicitAttributeLocations[name], name);
-		}
-
 		this.uniformLocations = {};
 		this.linked = true;
 		this.context.gl.linkProgram(this.program);
@@ -247,7 +243,7 @@ class Shader extends Serializable {
 	}
 
 	updateBlockBindings(context) {
-		const index = context.gl.getUniformBlockIndex(this.program, 'Camera_block_0');
+		const index = context.gl.getUniformBlockIndex(this.program, 'Camera');
 		if (index !== context.gl.INVALID_INDEX) {
 			context.gl.uniformBlockBinding(this.program, index, 0);
 		}

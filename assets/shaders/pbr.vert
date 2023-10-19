@@ -1,17 +1,18 @@
 #version 300 es
 
-in vec3 position;
-in vec3 normal;
-in vec2 texcoord2d0;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec2 texcoord2d0;
 #ifdef VERTEX_TANGENTS
-in vec4 tangent4d;
+layout(location = 3) in vec4 tangent4d;
 #endif
 
 uniform mat4 model;
 
-uniform Camera_block_0 {
+uniform Camera {
     mat4 modelview;
     mat4 projection;
+    mat4 projectionInverse;
     mat4 view;
     mat4 viewInverse;
     float zNear;

@@ -1,4 +1,5 @@
 import RenderBuffer from './RenderBuffer';
+import ExplicitAttributeLocations from "../shaders/AttributeLocations";
 
 class LinesRenderBufferInstanced extends RenderBuffer {
 	divisors: any;
@@ -61,18 +62,23 @@ class LinesRenderBufferInstanced extends RenderBuffer {
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	}
 
-	render(shader, count?): any {
-		if (!shader.linked)
-			return;
-
+	render(shader?, count?): any {
 		var gl = this.context.gl;
 		var locations = [];
+		var bufferLocation;
 		for (var bufferName in this.buffers) {
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[bufferName]);
 
-			var bufferLocation = shader.getAttribLocation(bufferName);
-			if (bufferLocation == -1)
+			bufferLocation = -1;
+			if (bufferName in ExplicitAttributeLocations) {
+				bufferLocation = ExplicitAttributeLocations[bufferName];
+			} else if (shader?.linked) {
+				bufferLocation = shader.getAttribLocation(bufferName);
+			}
+
+			if (bufferLocation == -1) {
 				continue;
+			}
 
 			gl.enableVertexAttribArray(bufferLocation);
 			locations.push(bufferLocation);

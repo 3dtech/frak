@@ -10,7 +10,7 @@ class AntiAliasPostProcess extends PostProcess {
 	onStart(context, engine): any {
 		this.material = new Material(
 			// engine.assetsManager.addShaderSource("shaders/default/postprocess_fxaa"),
-			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('postprocess_fxaa')),
+			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/pp_fxaa.frag'),
 			{
 				"ViewportSize": new UniformVec2(vec2.clone(this.parent.src.size)),
 				"reduce_min": new UniformFloat(1.0 / 16.0),

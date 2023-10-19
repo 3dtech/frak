@@ -211,11 +211,11 @@ class CameraComponent extends Component {
 			delete this.camera.renderStage;
 			this.camera.renderStage = new DeferredRenderStage();
 			this.camera.renderStage.addStage(new OITPostProcess());
-		}
+		} */
 
 		if (engine.options.antialias === true) {
 			this.camera.renderStage.addStage(new AntiAliasPostProcess());
-		} */
+		}
 
 		this.camera.renderStage.start(context, engine, this.camera);
 	}

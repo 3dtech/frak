@@ -20,7 +20,7 @@ class BackgroundRenderStage extends PBRRenderStage {
 		super.onStart(context, engine, camera);
 
 		this.backgroundMaterial = new Material(
-			engine.assetsManager.addShaderSource(engine.assetsManager.shadersManager.bundle('deferred_background')),
+			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/color.frag'),
 			{
 				color: new UniformColor(new Color(0.8, 0.8, 0.8, 1.0))
 			},

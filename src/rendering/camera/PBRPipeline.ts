@@ -18,13 +18,13 @@ class PBRPipeline extends PostProcessRenderStage {
 	uboOffsets = {};
 	zNear = new Float32Array();
 	zFar = new Float32Array();
+	inverseProjection = mat4.create();
 
 	getGeneratorStage() {
 		return new MainRenderStage();
 	}
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
-		this.addStage(new AntiAliasPostProcess());
 		super.onStart(context, engine, camera);
 
 		// We disable rendering before the shader is loaded and the UBO is created to avoid spamming the console with errors
@@ -37,7 +37,7 @@ class PBRPipeline extends PostProcessRenderStage {
 			}
 
 			const gl = context.gl;
-			const blockIndex = gl.getUniformBlockIndex(this.material.shader.program, "Camera_block_0");
+			const blockIndex = gl.getUniformBlockIndex(this.material.shader.program, "Camera");
 			const blockSize = gl.getActiveUniformBlockParameter(this.material.shader.program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE);
 
 			this.uboBuffer = gl.createBuffer();
@@ -50,6 +50,7 @@ class PBRPipeline extends PostProcessRenderStage {
 
 			const uboVariables = [
 				'projection',
+				'projectionInverse',
 				'view',
 				'viewInverse',
 				'zNear',
@@ -76,6 +77,8 @@ class PBRPipeline extends PostProcessRenderStage {
 
 		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['modelview'], context.modelview.top());
 		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projection'], context.projection.top());
+		mat4.invert(this.inverseProjection, context.projection.top());
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projectionInverse'], this.inverseProjection);
 
 		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['view'], camera.viewMatrix);
 		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['viewInverse'], camera.viewInverseMatrix);

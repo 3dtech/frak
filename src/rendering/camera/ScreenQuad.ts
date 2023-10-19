@@ -62,7 +62,7 @@ class ScreenQuad {
 		}
 
 		material.bind(uniforms, samplers);
-		this.quad.render(material.shader);
+		this.quad.render();
 		material.unbind(samplers);
 	}
 }

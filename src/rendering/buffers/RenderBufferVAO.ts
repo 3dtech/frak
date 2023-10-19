@@ -1,5 +1,6 @@
 import RenderBuffer from 'rendering/buffers/RenderBuffer';
 import ExplicitAttributeLocations from 'rendering/shaders/AttributeLocations';
+import Shader from "../shaders/Shader";
 
 /**
  * Render buffer implementation utilizing the vertex array object extension.
@@ -54,7 +55,7 @@ class RenderBufferVAO extends RenderBuffer {
 	 * Binds attribute locations in the vertex array object.
 	 * @param shader {Shader} instance used to query attribute locations for non-standard attribute names [optional]
 	 */
-	bindLocations(shader?): any {
+	bindLocations(shader?: Shader): any {
 		var gl = this.context.gl;
 
 		gl.bindVertexArray(this.vao);
@@ -63,13 +64,15 @@ class RenderBufferVAO extends RenderBuffer {
 		var bufferLocation;
 		for (var name in this.buffers) {
 			bufferLocation = -1;
-			if (name in ExplicitAttributeLocations)
+			if (name in ExplicitAttributeLocations) {
 				bufferLocation = ExplicitAttributeLocations[name];
-			else if (shader)
+			} else if (shader?.linked) {
 				bufferLocation = shader.getAttribLocation(name);
+			}
 
-			if (bufferLocation == -1)
+			if (bufferLocation == -1) {
 				continue;
+			}
 
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[name]);
 			gl.enableVertexAttribArray(bufferLocation);
@@ -84,12 +87,9 @@ class RenderBufferVAO extends RenderBuffer {
 	}
 
 	/** Renders all elements using given shader and binds all attributes */
-	render(shader) {
-		if (!shader.linked)
-			return;
-
+	render(shader?: Shader) {
 		if (this.damaged) {
-			this.bindLocations();
+			this.bindLocations(shader);
 		}
 
 		var gl = this.context.gl;

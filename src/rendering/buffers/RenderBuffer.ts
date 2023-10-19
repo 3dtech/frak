@@ -1,4 +1,5 @@
 import RenderingContext from 'rendering/RenderingContext';
+import ExplicitAttributeLocations from "../shaders/AttributeLocations";
 
 /**
  * Render buffer (VBO) base class.
@@ -97,18 +98,23 @@ class RenderBuffer {
 	}
 
 	/** Renders all elements using given shader and binds all attributes */
-	render(shader): any {
-		if (!shader.linked)
-			return;
-
+	render(shader?): any {
 		var gl = this.context.gl;
 		var locations = [];
+		var bufferLocation;
 		for (var bufferName in this.buffers) {
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[bufferName]);
+			bufferLocation = -1;
+			if (bufferName in ExplicitAttributeLocations) {
+				bufferLocation = ExplicitAttributeLocations[bufferName];
+			} else if (shader?.linked) {
+				bufferLocation = shader.getAttribLocation(bufferName);
+			}
 
-			var bufferLocation = shader.getAttribLocation(bufferName);
-			if (bufferLocation == -1)
+			if (bufferLocation == -1) {
 				continue;
+			}
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[bufferName]);
 
 			gl.enableVertexAttribArray(bufferLocation);
 			locations.push(bufferLocation);
