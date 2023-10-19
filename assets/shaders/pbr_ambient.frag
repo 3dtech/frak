@@ -54,9 +54,8 @@ void main(void) {
     float NdotV = max(dot(N, V), 1e-4);
 
     vec3 F0 = 0.16 * REFLECTANCE * REFLECTANCE * (1.0 - metallic) + outputColor.rgb * metallic;
-    vec3 diffuseColor = outputColor.rgb * (1.0 - metallic);
 
-    vec3 diffuseAmbient = EnvBRDFApprox(diffuseColor, 1.0, NdotV);
+    vec3 diffuseAmbient = outputColor.rgb;
     vec3 specularAmbient = EnvBRDFApprox(F0, roughness, NdotV);
 
     outputColor.rgb = (diffuseAmbient + specularAmbient) * lightColor.rgb * occlusion;
