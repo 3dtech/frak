@@ -8,6 +8,7 @@ import UniformFloat from 'rendering/shaders/UniformFloat.js'
 import Camera from 'rendering/camera/Camera.js'
 import UniformVec3 from 'rendering/shaders/UniformVec3.js'
 import Light from 'scene/components/Light.js'
+import Material from "../materials/Material";
 
 /** Renderer baseclass. Essentially Renderer classes are for containing ready-made buffers
   that are used straight for rendering. To render many at once add them to DynamicSpace. */
@@ -26,6 +27,8 @@ class Renderer {
 	localBoundingSphere: any;
 	globalBoundingBox: any;
 	globalBoundingSphere: any;
+	unlit: boolean;
+	material: Material;
 
 	/** Constructor
 		@param matrix Matrix applied to anything rendered

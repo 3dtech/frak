@@ -12,6 +12,8 @@ import UniformVec3 from "../../shaders/UniformVec3";
 import EmissiveRenderStage from "./EmissiveRenderStage";
 import BackgroundRenderStage from "./BackgroundRenderStage";
 import TransparentRenderStage from "./TransparentRenderStage";
+import Scene from "../../../scene/Scene";
+import Renderer from "../../renderers/Renderer";
 
 class BindDstTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -33,6 +35,7 @@ class MainRenderStage extends RenderStage {
 	size = vec2.create();
 	sharedSamplers: Sampler[] = [];
 	eyePosition = vec3.create();
+	filteredRenderers: Renderer[] = [];
 
 	constructor() {
 		super();
@@ -61,9 +64,16 @@ class MainRenderStage extends RenderStage {
 		this.sharedSamplers.push(new Sampler('emissiveOcclusion', this.gbuffer.targets[3]));
 	}
 
-	onPreRender(context: any, scene: any, camera: any) {
+	onPreRender(context: any, scene: Scene, camera: any) {
 		mat4.translation(this.eyePosition, camera.viewInverseMatrix);
-		this.organizer.sort(scene.engine, scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask), this.eyePosition);
+
+		if (scene.dynamicSpace.damaged) {
+			scene.dynamicSpace.damaged = false;
+			this.organizer.batch(scene.dynamicSpace.renderers);
+		}
+
+		scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask, this.filteredRenderers);
+		this.organizer.sortTransparentRenderers(this.filteredRenderers, this.eyePosition);
 	}
 }
 

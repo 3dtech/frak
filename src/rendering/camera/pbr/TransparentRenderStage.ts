@@ -11,9 +11,6 @@ import MainRenderStage from "./MainRenderStage";
 import Shader from "../../shaders/Shader";
 import Engine from "../../../engine/Engine";
 import Material from "../../materials/Material";
-import {context} from "esbuild";
-import scene from "../../../scene/Scene";
-import camera from "../Camera";
 
 function stringHash(str, seed = 0) {
 	let hash = seed;
@@ -100,7 +97,7 @@ class TransparentRenderStage extends RenderStage {
 		var gl = context.gl;
 
 		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-		this.renderRenderers(context, light.type, light.light, this.parent.organizer.transparentRenderers);
+		this.renderRenderers(context, light.type, light.light, this.parent.organizer.sortedTransparentRenderers);
 
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.BLEND);

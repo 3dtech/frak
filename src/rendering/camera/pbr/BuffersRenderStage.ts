@@ -43,7 +43,7 @@ class BuffersRenderStage extends RenderStage {
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 
 		// Render opaque geometry to the g-buffer
-		this.renderBatches(context, scene, camera, this.parent.organizer.opaqueBatchList);
+		this.renderBatches(context);
 
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
 		// this.renderBatches(context, scene, camera, this.parent.organizer.transparentBatchList);
@@ -55,29 +55,30 @@ class BuffersRenderStage extends RenderStage {
 		this.parent.gbuffer.unbind(context);
 	}
 
-	renderBatches(context, scene, camera, batches) {
-		for (var i=0; i<batches.length; i++) {
-			var batch = batches[i];
-			if (!batch.length) {
-				continue;
-			}
+	renderBatches(context: RenderingContext) {
+		const filteredRenderers = this.parent.filteredRenderers;
+		const opaqueView = this.parent.organizer.opaqueRenderers;
+		opaqueView.start();
 
-			var batchMaterial = batch.get(0).material;
-			var shader = this.selectShader(context, batchMaterial.shader.definitions);
+		let material = opaqueView.nextBatchMaterial(filteredRenderers);
+		while (material) {
+			const shader = this.selectShader(context, material.shader.definitions);
 			shader.use();
 
-			// Bind material uniforms and samplers
-			shader.bindUniforms(batchMaterial.uniforms);
-			shader.bindSamplers(batchMaterial.samplers);
+			shader.bindUniforms(material.uniforms);
+			shader.bindSamplers(material.samplers);
 
-			var renderer;
-			for (var j=0; j<batch.length; ++j) {
-				renderer = batch.get(j);
+			let renderer = opaqueView.next(filteredRenderers);
+			while (renderer) {
 				context.modelview.push();
 				context.modelview.multiply(renderer.matrix);
 				renderer.renderGeometry(context, shader);
 				context.modelview.pop();
+
+				renderer = opaqueView.next(filteredRenderers);
 			}
+
+			material = opaqueView.nextBatchMaterial(filteredRenderers);
 		}
 	}
 

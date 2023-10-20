@@ -4,19 +4,18 @@ import RayTestResult from 'scene/geometry/RayTestResult';
 class DynamicSpace {
 	renderers: any;
 	colliders: any;
-	filteredRenderers: any;
+	damaged = true;
 
 	constructor() {
 		this.renderers = [];
 		this.colliders = [];
-		this.filteredRenderers = [];
 	}
 
 	/** Add new renderer
 		@param renderer Instance of {Renderer} */
 	addRenderer(renderer): any {
 		this.renderers.push(renderer);
-		this.filteredRenderers.push(null);
+		this.damaged = true;
 	}
 
 	/** Removes a renderer
@@ -25,7 +24,7 @@ class DynamicSpace {
 		for (var i=0; i<this.renderers.length; i++) {
 			if (this.renderers[i]===renderer) {
 				this.renderers.splice(i, 1);
-				this.filteredRenderers.pop();
+				this.damaged = true;
 				return true;
 			}
 		}
@@ -55,19 +54,18 @@ class DynamicSpace {
 		@param frustum Instance of Frustum
 		@param layerMask Layer mask (int)
 		@return An array of geometry inside the frustum or intersecting it (elements of array are of type Renderer) */
-	frustumCast(frustum, layerMask): any {
+	frustumCast(frustum, layerMask, out): any {
+		out.length = this.renderers.length;
 		var renderer;
-		var index = 0;
 		for (var i = 0; i < this.renderers.length; ++i) {
 			renderer = this.renderers[i];
 			if (renderer.visible && (renderer.layer & layerMask)) {
-				this.filteredRenderers[index++] = renderer;
+				out[i] = renderer;
+			} else {
+				out[i] = null;
 			}
 		}
-		for (var i = index; i < this.filteredRenderers.length; ++i) {
-			this.filteredRenderers[i] = null;
-		}
-		return this.filteredRenderers;
+		return out;
 	}
 
 	/** Casts a ray over the colliders in this space
