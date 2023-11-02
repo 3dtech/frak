@@ -1,4 +1,7 @@
 #version 300 es
+#define ALPHAMODE_OPAQUE 0
+#define ALPHAMODE_MASK 1
+#define ALPHAMODE_BLEND 2
 
 precision highp float;
 
@@ -199,8 +202,8 @@ vec3 acesApprox(vec3 v) {
     return clamp((v*(a*v+b))/(v*(c*v+d)+e), 0.0f, 1.0f);
 }
 
-float oitWeight(float z, float a) {
-    return clamp(pow(min(1.0, a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - z * 0.9, 3.0), 1e-2, 3e3);
+float oitWeight(float z, vec4 color) {
+    return max(min(1.0, max(max(color.r, color.g), color.b) * color.a), color.a) * clamp(0.03 / (1e-5 + pow(z / 200.0, 4.0)), 1e-2, 3e3);
 }
 
 void main(void) {
@@ -245,8 +248,14 @@ void main(void) {
     outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
     outputColor.rgb = acesApprox(outputColor.rgb);
 
-    outputColor.rgb *= outputColor.a;
-    float w = oitWeight(gl_FragCoord.z, outputColor.a);
-    accum = vec4(outputColor.rgb * w, outputColor.a);
-    reveal = vec4(outputColor.a * w);
+    float weight =
+        max(min(1.0, max(max(outputColor.r, outputColor.g), outputColor.b) * outputColor.a), outputColor.a) *
+        clamp(0.03 / (1e-5 + pow(gl_FragCoord.z / 200.0, 4.0)), 1e-2, 3e3);
+
+    // blend func: GL_ONE, GL_ONE
+    // switch to pre-multiplied alpha and weight
+    accum = vec4(outputColor.rgb * outputColor.a, outputColor.a);
+
+    // blend func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA
+    reveal = vec4(outputColor.a);
 }

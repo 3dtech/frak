@@ -182,7 +182,7 @@ class TargetTextureMulti extends RenderTarget {
 		}
 	}
 
-	bind(context, doNotClear, clearColor?, clearFlags?): any {
+	bind(context, doNotClear?, clearColor?, clearFlags?): any {
 		var gl = context.gl;
 
 		if (this.rebuild) {

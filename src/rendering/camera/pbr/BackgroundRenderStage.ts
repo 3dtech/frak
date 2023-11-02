@@ -20,9 +20,11 @@ class BackgroundRenderStage extends PBRRenderStage {
 		super.onStart(context, engine, camera);
 
 		this.backgroundMaterial = new Material(
-			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/color.frag'),
+			engine.assetsManager.shadersManager.addDescriptor(new ShaderDescriptor(
+				'shaders/uv.vert', 'shaders/color.frag', ['NUM_TARGETS 1']
+			)),
 			{
-				color: new UniformColor(new Color(0.8, 0.8, 0.8, 1.0))
+				color1: new UniformColor(new Color(0.8, 0.8, 0.8, 1.0))
 			},
 			[]
 		);
@@ -41,7 +43,7 @@ class BackgroundRenderStage extends PBRRenderStage {
 
 		gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
 
-		camera.backgroundColor.toVector(this.backgroundMaterial.uniforms.color.value);
+		camera.backgroundColor.toVector(this.backgroundMaterial.uniforms.color1.value);
 		camera.renderStage.renderEffect(context, this.backgroundMaterial, []);
 		var skyboxComponent = scene.cameraNode.getComponent(SkyboxComponent);
 		if (skyboxComponent) {

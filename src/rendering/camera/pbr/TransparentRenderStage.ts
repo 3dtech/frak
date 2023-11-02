@@ -14,6 +14,8 @@ import Material from "../../materials/Material";
 import TargetTextureMulti from "../TargetTextureMulti";
 import Sampler from "../../shaders/Sampler";
 import Color from "../../Color";
+import UniformColor from "../../shaders/UniformColor";
+import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
 
 function stringHash(str, seed = 0) {
 	let hash = seed;
@@ -36,6 +38,7 @@ class TransparentRenderStage extends RenderStage {
 	materials = {};
 	clearColor = new Color(0, 0, 0, 1);
 	revealMaterial: Material;
+	clearMaterial: Material;
 
 	onStart(context: any, engine: Engine, camera: any) {
 		for (const type of ['directional', 'ibl']) {
@@ -48,6 +51,17 @@ class TransparentRenderStage extends RenderStage {
 			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/pp_oit.frag'),
 			{},
 			this.parent.oitSamplers
+		);
+
+		this.clearMaterial = new Material(
+			engine.assetsManager.shadersManager.addDescriptor(new ShaderDescriptor(
+				'shaders/uv.vert', 'shaders/color.frag', ["NUM_TARGETS 2"]
+			)),
+			{
+				color1: new UniformColor(new Color(0, 0, 0, 0)),
+				color2: new UniformColor(new Color(1, 1, 1, 1))
+			},
+			[]
 		);
 	}
 
@@ -85,7 +99,9 @@ class TransparentRenderStage extends RenderStage {
 
 		var gl = context.gl;
 
-		this.parent.oitTargets.bind(context, false, this.clearColor);
+		this.parent.oitTargets.bind(context);
+		gl.disable(gl.BLEND);
+		camera.renderStage.screenQuad.render(context, this.clearMaterial, []);
 
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.parent.gbuffer.depth);
 		gl.enable(gl.DEPTH_TEST);
@@ -106,7 +122,7 @@ class TransparentRenderStage extends RenderStage {
 		this.parent.oitTargets.unbind(context);
 		camera.renderStage.dst.bind(context, true);
 
-		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+		gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA);
 
 		camera.renderStage.screenQuad.render(context, this.revealMaterial, []);
 

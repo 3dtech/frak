@@ -94,6 +94,17 @@ class BuffersRenderStage extends RenderStage {
 			shader.addVertexShader(baseShader.vertexShader.code);
 			shader.addFragmentShader(baseShader.fragmentShader.code);
 			shader.definitions = defines.slice();
+			let hasAlphaModeDefined = false;
+			for (let i = 0; i < defines.length; i++) {
+				if (defines[i].startsWith('ALPHAMODE ')) {
+					hasAlphaModeDefined = true;
+					break;
+				}
+			}
+
+			if (!hasAlphaModeDefined) {
+				shader.definitions.push('ALPHAMODE ALPHAMODE_BLEND');
+			}
 
 			this.shaderCache[hash] = shader;
 		}
