@@ -67,7 +67,8 @@ in vec4 viewPosition;
 in vec3 viewNormal;
 in vec4 shadowPosition;
 
-layout(location = 0) out vec4 fragColor;
+layout(location = 0) out vec4 accum;
+layout(location = 1) out vec4 reveal;
 
 float perceptualRoughnessToRoughness(float perceptualRoughness) {
     float clampedPerceptualRoughness = clamp(perceptualRoughness, 0.089, 1.0);
@@ -198,6 +199,10 @@ vec3 acesApprox(vec3 v) {
     return clamp((v*(a*v+b))/(v*(c*v+d)+e), 0.0f, 1.0f);
 }
 
+float oitWeight(float z, float a) {
+    return clamp(pow(min(1.0, a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - z * 0.9, 3.0), 1e-2, 3e3);
+}
+
 void main(void) {
     vec4 outputColor = diffuse;
 #ifdef DIFFUSE_TEXTURE
@@ -240,5 +245,8 @@ void main(void) {
     outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
     outputColor.rgb = acesApprox(outputColor.rgb);
 
-	fragColor = outputColor;
+    outputColor.rgb *= outputColor.a;
+    float w = oitWeight(gl_FragCoord.z, outputColor.a);
+    accum = vec4(outputColor.rgb * w, outputColor.a);
+    reveal = vec4(outputColor.a * w);
 }

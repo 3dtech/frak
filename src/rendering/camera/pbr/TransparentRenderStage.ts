@@ -11,6 +11,9 @@ import MainRenderStage from "./MainRenderStage";
 import Shader from "../../shaders/Shader";
 import Engine from "../../../engine/Engine";
 import Material from "../../materials/Material";
+import TargetTextureMulti from "../TargetTextureMulti";
+import Sampler from "../../shaders/Sampler";
+import Color from "../../Color";
 
 function stringHash(str, seed = 0) {
 	let hash = seed;
@@ -28,15 +31,11 @@ function stringHash(str, seed = 0) {
  */
 class TransparentRenderStage extends RenderStage {
 	parent: MainRenderStage;
-	directional: any;
+	size = vec2.create();
 	shaderCache = {};
 	materials = {};
-
-	constructor() {
-		super();
-
-		this.directional = [];
-	}
+	clearColor = new Color(0, 0, 0, 1);
+	revealMaterial: Material;
 
 	onStart(context: any, engine: Engine, camera: any) {
 		for (const type of ['directional', 'ibl']) {
@@ -44,6 +43,12 @@ class TransparentRenderStage extends RenderStage {
 				engine.assetsManager.addShader('shaders/pbr.vert', `shaders/direct_${type}.frag`)
 			);
 		}
+
+		this.revealMaterial = new Material(
+			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/pp_oit.frag'),
+			{},
+			this.parent.oitSamplers
+		);
 	}
 
 	/// Returns first IBL, if there is one, first directional otherwise;
@@ -72,22 +77,6 @@ class TransparentRenderStage extends RenderStage {
 		return {type: 'directional', light: directional};
 	}
 
-	onPreRender(context: RenderingContext, scene: Scene, camera: Camera): any {
-		var gl = context.gl;
-
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.parent.gbuffer.depth);
-
-		gl.enable(gl.DEPTH_TEST);
-		gl.depthMask(false);
-
-		gl.disable(gl.STENCIL_TEST);
-		gl.disable(gl.CULL_FACE);
-
-		gl.blendEquation(gl.FUNC_ADD);
-
-		gl.enable(gl.BLEND);
-	}
-
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
 		var light = this.getSingleLight(scene);
 		if (!light) {
@@ -96,15 +85,32 @@ class TransparentRenderStage extends RenderStage {
 
 		var gl = context.gl;
 
-		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+		this.parent.oitTargets.bind(context, false, this.clearColor);
+
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.parent.gbuffer.depth);
+		gl.enable(gl.DEPTH_TEST);
+
+		gl.depthMask(false);
+
+		gl.disable(gl.STENCIL_TEST);
+		gl.disable(gl.CULL_FACE);
+
+		gl.enable(gl.BLEND);
+
+		gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+
 		this.renderRenderers(context, light.type, light.light, this.parent.organizer.sortedTransparentRenderers);
 
 		gl.disable(gl.DEPTH_TEST);
+
+		this.parent.oitTargets.unbind(context);
+		camera.renderStage.dst.bind(context, true);
+
+		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+
+		camera.renderStage.screenQuad.render(context, this.revealMaterial, []);
+
 		gl.disable(gl.BLEND);
-
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null);
-
-		super.onPostRender(context, scene, camera);
 	}
 
 	renderRenderers(context, type, light, renderers) {

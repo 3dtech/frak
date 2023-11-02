@@ -31,9 +31,11 @@ class UnbindDstTarget extends RenderStage {
 class MainRenderStage extends RenderStage {
 	gbuffer: TargetTextureMulti;
 	parent: PBRPipeline;
+	oitTargets: TargetTextureMulti;
 	organizer = new RendererOrganizer();
 	size = vec2.create();
 	sharedSamplers: Sampler[] = [];
+	oitSamplers: Sampler[] = [];
 	eyePosition = vec3.create();
 	filteredRenderers: Renderer[] = [];
 
@@ -62,6 +64,12 @@ class MainRenderStage extends RenderStage {
 		this.sharedSamplers.push(new Sampler('normalMetallic', this.gbuffer.targets[1]));
 		this.sharedSamplers.push(new Sampler('positionRoughness', this.gbuffer.targets[2]));
 		this.sharedSamplers.push(new Sampler('emissiveOcclusion', this.gbuffer.targets[3]));
+
+		// OIT
+		this.oitTargets = new TargetTextureMulti(context, this.size, { numTargets: 2 });
+
+		this.oitSamplers.push(new Sampler('oitAccum', this.oitTargets.targets[0]));
+		this.oitSamplers.push(new Sampler('oitReveal', this.oitTargets.targets[1]));
 	}
 
 	onPreRender(context: any, scene: Scene, camera: any) {

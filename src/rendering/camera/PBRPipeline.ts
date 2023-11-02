@@ -138,6 +138,8 @@ class PBRPipeline extends PostProcessRenderStage {
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[1] });
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[2] });
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[3] });
+		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.oitTargets[0] });
+		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.oitTargets[1] });
 	}
 }
 

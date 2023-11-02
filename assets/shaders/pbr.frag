@@ -187,5 +187,10 @@ void main(void) {
         discard;
     }
     outputColor.a = 1.0;
+#elif ALPHAMODE == ALPHAMODE_BLEND
+    // Only render opaque parts of transparent geometry
+    if (outputColor.a < 0.99) {
+        discard;
+    }
 #endif
 }
