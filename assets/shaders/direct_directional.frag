@@ -1,7 +1,4 @@
 #version 300 es
-#define ALPHAMODE_OPAQUE 0
-#define ALPHAMODE_MASK 1
-#define ALPHAMODE_BLEND 2
 
 precision highp float;
 
@@ -70,8 +67,7 @@ in vec4 viewPosition;
 in vec3 viewNormal;
 in vec4 shadowPosition;
 
-layout(location = 0) out vec4 accum;
-layout(location = 1) out vec4 reveal;
+out vec4 fragColor;
 
 float perceptualRoughnessToRoughness(float perceptualRoughness) {
     float clampedPerceptualRoughness = clamp(perceptualRoughness, 0.089, 1.0);
@@ -203,7 +199,8 @@ vec3 acesApprox(vec3 v) {
 }
 
 float oitWeight(float z, vec4 color) {
-    return max(min(1.0, max(max(color.r, color.g), color.b) * color.a), color.a) * clamp(0.03 / (1e-5 + pow(z / 200.0, 4.0)), 1e-2, 3e3);
+    return max(min(1.0, max(max(color.r, color.g), color.b) * color.a), color.a) *
+        clamp(0.03 / (1e-5 + pow(z / 200.0, 4.0)), 1e-2, 3e3);
 }
 
 void main(void) {
@@ -248,14 +245,5 @@ void main(void) {
     outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
     outputColor.rgb = acesApprox(outputColor.rgb);
 
-    float weight =
-        max(min(1.0, max(max(outputColor.r, outputColor.g), outputColor.b) * outputColor.a), outputColor.a) *
-        clamp(0.03 / (1e-5 + pow(gl_FragCoord.z / 200.0, 4.0)), 1e-2, 3e3);
-
-    // blend func: GL_ONE, GL_ONE
-    // switch to pre-multiplied alpha and weight
-    accum = vec4(outputColor.rgb * outputColor.a, outputColor.a);
-
-    // blend func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA
-    reveal = vec4(outputColor.a);
+    fragColor = vec4(outputColor.rgb * outputColor.a, outputColor.a) * oitWeight(gl_FragCoord.z, outputColor);
 }

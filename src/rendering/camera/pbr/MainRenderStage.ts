@@ -14,6 +14,9 @@ import BackgroundRenderStage from "./BackgroundRenderStage";
 import TransparentRenderStage from "./TransparentRenderStage";
 import Scene from "../../../scene/Scene";
 import Renderer from "../../renderers/Renderer";
+import TargetTextureFloat from "../TargetTextureFloat";
+import Engine from "../../../engine/Engine";
+import TargetTexture from "../TargetTexture";
 
 class BindDstTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -31,7 +34,8 @@ class UnbindDstTarget extends RenderStage {
 class MainRenderStage extends RenderStage {
 	gbuffer: TargetTextureMulti;
 	parent: PBRPipeline;
-	oitTargets: TargetTextureMulti;
+	oitAccum: TargetTextureFloat;
+	oitReveal: TargetTexture;
 	organizer = new RendererOrganizer();
 	size = vec2.create();
 	sharedSamplers: Sampler[] = [];
@@ -56,7 +60,9 @@ class MainRenderStage extends RenderStage {
 		this.addStage(new UnbindDstTarget());
 	}
 
-	onStart(context: any, engine: any, camera: any) {
+	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
+		const gl = context.gl;
+
 		vec2.copy(this.size, this.parent.size);
 		this.gbuffer = new TargetTextureMulti(context, this.size, {numTargets: 4, stencil: true});
 
@@ -66,10 +72,16 @@ class MainRenderStage extends RenderStage {
 		this.sharedSamplers.push(new Sampler('emissiveOcclusion', this.gbuffer.targets[3]));
 
 		// OIT
-		this.oitTargets = new TargetTextureMulti(context, this.size, { numTargets: 2 });
+		this.oitAccum = new TargetTextureFloat(this.size, context, false);
+		this.oitAccum.bind(context);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.gbuffer.depth);
+		this.oitReveal = new TargetTexture(this.size, context, false);
+		this.oitReveal.bind(context);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.gbuffer.depth);
+		this.oitReveal.unbind(context);
 
-		this.oitSamplers.push(new Sampler('oitAccum', this.oitTargets.targets[0]));
-		this.oitSamplers.push(new Sampler('oitReveal', this.oitTargets.targets[1]));
+		this.oitSamplers.push(new Sampler('oitAccum', this.oitAccum.texture));
+		this.oitSamplers.push(new Sampler('oitReveal', this.oitReveal.texture));
 	}
 
 	onPreRender(context: any, scene: Scene, camera: any) {

@@ -36,9 +36,10 @@ class TransparentRenderStage extends RenderStage {
 	size = vec2.create();
 	shaderCache = {};
 	materials = {};
-	clearColor = new Color(0, 0, 0, 1);
+	clearBlack = new Color(0, 0, 0, 0);
+	clearWhite = new Color(1, 1, 1, 1);
 	revealMaterial: Material;
-	clearMaterial: Material;
+	ppMaterial: Material;
 
 	onStart(context: any, engine: Engine, camera: any) {
 		for (const type of ['directional', 'ibl']) {
@@ -48,20 +49,13 @@ class TransparentRenderStage extends RenderStage {
 		}
 
 		this.revealMaterial = new Material(
+			engine.assetsManager.addShader('shaders/pbr.vert', 'shaders/oit_reveal.frag')
+		);
+
+		this.ppMaterial = new Material(
 			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/pp_oit.frag'),
 			{},
 			this.parent.oitSamplers
-		);
-
-		this.clearMaterial = new Material(
-			engine.assetsManager.shadersManager.addDescriptor(new ShaderDescriptor(
-				'shaders/uv.vert', 'shaders/color.frag', ["NUM_TARGETS 2"]
-			)),
-			{
-				color1: new UniformColor(new Color(0, 0, 0, 0)),
-				color2: new UniformColor(new Color(1, 1, 1, 1))
-			},
-			[]
 		);
 	}
 
@@ -98,12 +92,6 @@ class TransparentRenderStage extends RenderStage {
 		}
 
 		var gl = context.gl;
-
-		this.parent.oitTargets.bind(context);
-		gl.disable(gl.BLEND);
-		camera.renderStage.screenQuad.render(context, this.clearMaterial, []);
-
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.parent.gbuffer.depth);
 		gl.enable(gl.DEPTH_TEST);
 
 		gl.depthMask(false);
@@ -113,23 +101,27 @@ class TransparentRenderStage extends RenderStage {
 
 		gl.enable(gl.BLEND);
 
-		gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+		// Accum
+		this.parent.oitAccum.bind(context, false, this.clearBlack);
+		gl.blendFunc(gl.ONE, gl.ONE);
+		this.renderRenderers(context, light.light, this.parent.organizer.sortedTransparentRenderers, this.materials[light.type].shader);
 
-		this.renderRenderers(context, light.type, light.light, this.parent.organizer.sortedTransparentRenderers);
+		// Reveal
+		this.parent.oitReveal.bind(context, false, this.clearWhite);
+		gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+		this.renderRenderers(context, light.light, this.parent.organizer.sortedTransparentRenderers, this.revealMaterial.shader);
 
+		// Draw to screen
 		gl.disable(gl.DEPTH_TEST);
-
-		this.parent.oitTargets.unbind(context);
 		camera.renderStage.dst.bind(context, true);
-
 		gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA);
-
-		camera.renderStage.screenQuad.render(context, this.revealMaterial, []);
+		camera.renderStage.screenQuad.render(context, this.ppMaterial, []);
 
 		gl.disable(gl.BLEND);
+		gl.depthMask(true);
 	}
 
-	renderRenderers(context, type, light, renderers) {
+	renderRenderers(context, light, renderers, baseShader: Shader) {
 		for (var i=0; i<renderers.length; i++) {
 			var renderer = renderers[i];
 			if (!renderer) {
@@ -137,7 +129,7 @@ class TransparentRenderStage extends RenderStage {
 			}
 
 			var material = renderer.material;
-			var shader = this.selectShader(context, type, material.shader.definitions);
+			var shader = this.selectShader(context, material.shader.definitions, baseShader);
 			shader.use();
 
 			// Bind material uniforms and samplers
@@ -152,15 +144,13 @@ class TransparentRenderStage extends RenderStage {
 		}
 	}
 
-	selectShader(context: RenderingContext, type: string, defines: string[]): Shader {
-		let hash = 0;
+	selectShader(context: RenderingContext, defines: string[], baseShader: Shader): Shader {
+		let hash = stringHash(baseShader.descriptor.fragmentSource);	// TODO: Create global cache, hash in Shader
 		for (const define of defines) {
 			hash ^= stringHash(define);
 		}
 
 		if (!this.shaderCache[hash]) {
-			const baseShader = this.materials[type].shader;
-
 			const shader = new Shader(context, baseShader.descriptor);
 			shader.addVertexShader(baseShader.vertexShader.code);
 			shader.addFragmentShader(baseShader.fragmentShader.code);
