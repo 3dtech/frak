@@ -59,14 +59,14 @@ class ShadersManager extends Manager {
 		return 'shaders/{0}/{1}'.format(this.shaderBundle, shaderName);
 	}
 
-	add(vertexSource, fragmentSource): any {
+	add(vertexSource, fragmentSource, definitions?): Shader {
 		vertexSource = this.sourceCallback(vertexSource);
 		fragmentSource = this.sourceCallback(fragmentSource);
-		return this.addDescriptor(new ShaderDescriptor(vertexSource, fragmentSource));
+		return this.addDescriptor(new ShaderDescriptor(vertexSource, fragmentSource, definitions));
 	}
 
 	/** Adds both vertex and fragment shader by appending .vert and .frag to source */
-	addSource(source, definitions?): any {
+	addSource(source, definitions?): Shader {
 		var alias = source.toLowerCase();
 		if (alias in this.aliases)
 			source = this.aliases[alias];

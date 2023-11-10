@@ -7,13 +7,15 @@ import FragmentShader from 'rendering/shaders/FragmentShader';
 import Uniform from 'rendering/shaders/Uniform';
 import Sampler from 'rendering/shaders/Sampler';
 import ExplicitAttributeLocations from './AttributeLocations';
+import {stringHash} from "../../Helpers";
+import ShaderDescriptor from "../../scene/descriptors/ShaderDescriptor";
 
 /**
  * Used to compile and link vertex and fragment shader to a shader program.
  */
 
 class Shader extends Serializable {
-	descriptor: any;
+	descriptor: ShaderDescriptor;
 	context: any;
 	program: any;
 	shaders: any;
@@ -22,14 +24,16 @@ class Shader extends Serializable {
 	failed: any;
 	uniformLocations: any;
 	bindings: any;
-	definitions: any;
+	definitions: string[] = [];
 	vertexShader: VertexShader;
 	fragmentShader: FragmentShader;
+	nameHash: number;
+	hash: number;
 
 	/** Constructor
 		@param context Rendering context
 		@param descriptor Shader source descriptor normally passed to shader by ShadersManager to make it identifiable later [optional] */
-	constructor(context, descriptor) {
+	constructor(context: RenderingContext, descriptor: ShaderDescriptor) {
 		if (!context) {
 			throw 'Shader: RenderingContext required';
 		}
@@ -47,11 +51,14 @@ class Shader extends Serializable {
 
 		this.bindings = {};
 
-		this.definitions = [
-			'ALPHAMODE_OPAQUE 0',
-			'ALPHAMODE_MASK 1',
-			'ALPHAMODE_BLEND 2'
-		].concat(descriptor.definitions);
+		var definitions = [].concat(descriptor.definitions);
+
+		this.nameHash = stringHash(descriptor.vertexSource) ^ stringHash(descriptor.fragmentSource);
+		this.hash = this.nameHash;
+		for (const definition of definitions) {
+			const [name, value] = definition.split(' ');
+			this.addDefinition(name, value);
+		}
 	}
 
 	excluded(): any {
@@ -83,6 +90,27 @@ class Shader extends Serializable {
 	addShader(shader): any {
 		this.shaders.push(shader);
 		shader.attach();
+	}
+
+	/** Add a #define, replacing an existing one if needed */
+	addDefinition(name: string, value?: string) {
+		const definition = `${name}${value ? ` ${value}` : ''}`;
+		// Remove existing definition if value is provided
+		if (value) {
+			for (let i = 0; i < this.definitions.length; i++) {
+				if (this.definitions[i].startsWith(`${name} `)) {
+					this.hash ^= stringHash(this.definitions[i]);	// Remove hash
+					this.definitions.splice(i, 1);
+					break;
+				}
+			}
+		}
+
+		// Add new definition
+		if (value || this.definitions.indexOf(definition) === -1) {
+			this.definitions.push(definition);
+			this.hash ^= stringHash(definition);
+		}
 	}
 
 	/** Compiles and links the shader program */

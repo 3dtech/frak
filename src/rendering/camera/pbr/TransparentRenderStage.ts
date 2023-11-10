@@ -16,26 +16,14 @@ import Sampler from "../../shaders/Sampler";
 import Color from "../../Color";
 import UniformColor from "../../shaders/UniformColor";
 import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
-
-function stringHash(str, seed = 0) {
-	let hash = seed;
-	if (str.length === 0) return hash;
-	for (let i = 0; i < str.length; i++) {
-		let chr = str.charCodeAt(i);
-		hash = ((hash << 5) - hash) + chr;
-		hash |= 0; // Convert to 32bit integer
-	}
-	return hash;
+interface ShaderCache {
+	[key: number]: Shader;
 }
 
-/**
- * Deferred shading light accumulation pass
- */
 class TransparentRenderStage extends RenderStage {
 	parent: MainRenderStage;
 	size = vec2.create();
 	shaderCache = {};
-	materials = {};
 	clearBlack = new Color(0, 0, 0, 0);
 	clearWhite = new Color(1, 1, 1, 1);
 	revealMaterial: Material;
@@ -43,9 +31,7 @@ class TransparentRenderStage extends RenderStage {
 
 	onStart(context: any, engine: Engine, camera: any) {
 		for (const type of ['directional', 'ibl']) {
-			this.materials[type] = new Material(
-				engine.assetsManager.addShader('shaders/pbr.vert', `shaders/direct_${type}.frag`)
-			);
+			this.shaderCache[type] = engine.assetsManager.addShader('shaders/pbr.vert', `shaders/direct_${type}.frag`);
 		}
 
 		this.revealMaterial = new Material(
@@ -104,12 +90,12 @@ class TransparentRenderStage extends RenderStage {
 		// Accum
 		this.parent.oitAccum.bind(context, false, this.clearBlack);
 		gl.blendFunc(gl.ONE, gl.ONE);
-		this.renderRenderers(context, light.light, this.parent.organizer.sortedTransparentRenderers, this.materials[light.type].shader);
+		this.renderBatches(context, camera.renderStage, light.light, this.shaderCache[light.type]);
 
 		// Reveal
 		this.parent.oitReveal.bind(context, false, this.clearWhite);
 		gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
-		this.renderRenderers(context, light.light, this.parent.organizer.sortedTransparentRenderers, this.revealMaterial.shader);
+		this.renderBatches(context, camera.renderStage, light.light, this.revealMaterial.shader);
 
 		// Draw to screen
 		gl.disable(gl.DEPTH_TEST);
@@ -121,45 +107,32 @@ class TransparentRenderStage extends RenderStage {
 		gl.depthMask(true);
 	}
 
-	renderRenderers(context, light, renderers, baseShader: Shader) {
-		for (var i=0; i<renderers.length; i++) {
-			var renderer = renderers[i];
-			if (!renderer) {
-				continue;
-			}
+	renderBatches(context: RenderingContext, pipeline: PBRPipeline, light: DirectionalLight | ImageBasedLight, baseShader: Shader) {
+		const filteredRenderers = this.parent.filteredRenderers;
+		const view = this.parent.organizer.transparentRenderers;
+		view.start();
 
-			var material = renderer.material;
-			var shader = this.selectShader(context, material.shader.definitions, baseShader);
+		let material = view.nextBatchMaterial(filteredRenderers);
+		while (material) {
+			const shader = pipeline.selectShader(context, baseShader, material.shader);
 			shader.use();
 
-			// Bind material uniforms and samplers
 			shader.bindUniforms(light.material.uniforms);
 			shader.bindUniforms(material.uniforms);
 			shader.bindSamplers(material.samplers);
 
-			context.modelview.push();
-			context.modelview.multiply(renderer.matrix);
-			renderer.renderGeometry(context, shader);
-			context.modelview.pop();
+			let renderer = view.next(filteredRenderers);
+			while (renderer) {
+				context.modelview.push();
+				context.modelview.multiply(renderer.matrix);
+				renderer.renderGeometry(context, shader);
+				context.modelview.pop();
+
+				renderer = view.next(filteredRenderers);
+			}
+
+			material = view.nextBatchMaterial(filteredRenderers);
 		}
-	}
-
-	selectShader(context: RenderingContext, defines: string[], baseShader: Shader): Shader {
-		let hash = stringHash(baseShader.descriptor.fragmentSource);	// TODO: Create global cache, hash in Shader
-		for (const define of defines) {
-			hash ^= stringHash(define);
-		}
-
-		if (!this.shaderCache[hash]) {
-			const shader = new Shader(context, baseShader.descriptor);
-			shader.addVertexShader(baseShader.vertexShader.code);
-			shader.addFragmentShader(baseShader.fragmentShader.code);
-			shader.definitions = defines.slice();
-
-			this.shaderCache[hash] = shader;
-		}
-
-		return this.shaderCache[hash];
 	}
 }
 

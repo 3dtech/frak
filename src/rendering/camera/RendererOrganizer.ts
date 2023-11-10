@@ -1,23 +1,6 @@
 import Renderer from "../renderers/Renderer";
 import Material from "../materials/Material";
 
-/** Transparency sorting function */
-function TransparencySort(a, b) {
-	if (!a && !b)
-		return 0;
-	if (a && !b)
-		return -1;
-	if (!a && b)
-		return 1;
-	var d1 = vec3.squaredDistance(TransparencySort.cmpValue, a.globalBoundingSphere.center);
-	var d2 = vec3.squaredDistance(TransparencySort.cmpValue, b.globalBoundingSphere.center);
-	if (d1 > d2) return -1;
-	if (d1 < d2) return 1;
-	return 0;
-}
-
-TransparencySort.cmpValue = vec3.create();
-
 class View {
 	private currentBatchIndex = 0;
 	private currentIndex = 0;
@@ -111,27 +94,7 @@ class RendererOrganizer {
 			this.batches[batchIndex].push(i);
 		}
 	}
-
-	sortTransparentRenderers(filteredRenderers: Renderer[], eyePosition: Float32Array): Renderer[] {
-		vec3.copy(TransparencySort.cmpValue, eyePosition);
-		this.sortedTransparentRenderers.length = 0;
-		this.transparentRenderers.start();
-		let material = this.transparentRenderers.nextBatchMaterial(filteredRenderers);
-		while (material) {
-			let renderer = this.transparentRenderers.next(filteredRenderers);
-			while (renderer) {
-				this.sortedTransparentRenderers.push(renderer);
-				renderer = this.transparentRenderers.next(filteredRenderers);
-			}
-
-			material = this.transparentRenderers.nextBatchMaterial(filteredRenderers);
-		}
-
-		this.sortedTransparentRenderers.sort(TransparencySort);
-
-		return this.sortedTransparentRenderers;
-	}
 }
 
 globalThis.RendererOrganizer = RendererOrganizer;
-export default RendererOrganizer;
+export {RendererOrganizer as default, View};

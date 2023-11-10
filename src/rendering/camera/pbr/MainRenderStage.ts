@@ -40,7 +40,6 @@ class MainRenderStage extends RenderStage {
 	size = vec2.create();
 	sharedSamplers: Sampler[] = [];
 	oitSamplers: Sampler[] = [];
-	eyePosition = vec3.create();
 	filteredRenderers: Renderer[] = [];
 
 	constructor() {
@@ -85,15 +84,12 @@ class MainRenderStage extends RenderStage {
 	}
 
 	onPreRender(context: any, scene: Scene, camera: any) {
-		mat4.translation(this.eyePosition, camera.viewInverseMatrix);
-
 		if (scene.dynamicSpace.damaged) {
 			scene.dynamicSpace.damaged = false;
 			this.organizer.batch(scene.dynamicSpace.renderers);
 		}
 
 		scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask, this.filteredRenderers);
-		this.organizer.sortTransparentRenderers(this.filteredRenderers, this.eyePosition);
 	}
 }
 

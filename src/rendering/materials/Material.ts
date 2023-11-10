@@ -34,16 +34,12 @@ class Material extends Serializable {
 			for (const sampler of this.samplers) {
 				switch (sampler.name) {
 					case 'diffuse0':
-						if (this.shader.definitions.indexOf('DIFFUSE_TEXTURE') === -1) {
-							this.shader.definitions.push('DIFFUSE_TEXTURE');
-						}
+						this.shader.addDefinition('DIFFUSE_TEXTURE');
 
 						break;
 
 					case 'normal0':
-						if (this.shader.definitions.indexOf('NORMAL_TEXTURE') === -1) {
-							this.shader.definitions.push('NORMAL_TEXTURE');
-						}
+						this.shader.addDefinition('NORMAL_TEXTURE');
 
 						break;
 				}

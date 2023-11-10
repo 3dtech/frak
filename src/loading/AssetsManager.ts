@@ -4,6 +4,7 @@ import ModelsManager from 'loading/ModelsManager';
 import TextManager from 'loading/TextManager';
 import MaterialsManager from 'loading/MaterialsManager';
 import MaterialSourcesManager from 'loading/MaterialSourcesManager';
+import Shader from "../rendering/shaders/Shader";
 
 /** General assets manager.
 	Example of usage:
@@ -25,7 +26,7 @@ class AssetsManager {
 	assetsPath: any;
 	loadingCount: any;
 	loadedCallbacks: any;
-	shadersManager: any;
+	shadersManager: ShadersManager;
 	texturesManager: any;
 	modelsManager: any;
 	textManager: any;
@@ -95,8 +96,8 @@ class AssetsManager {
 	/** Adds a new GLSL shader source to shaders loading queue.
 		@param vertexSource Path to vertex shader (url)
 		@param fragmentSource Path to fragment shader (url)	*/
-	addShader(vertexSource, fragmentSource): any {
-		return this.shadersManager.add(vertexSource, fragmentSource);
+	addShader(vertexSource, fragmentSource, definitions?): Shader {
+		return this.shadersManager.add(vertexSource, fragmentSource, definitions);
 	}
 
 	/** Adds text source to texts loading queue.

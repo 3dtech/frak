@@ -497,10 +497,10 @@ class ModelLoaderGLTF {
 				}
 			);
 
-			material.shader.definitions.push('VERTEX_TANGENTS');
+			material.shader.addDefinition('VERTEX_TANGENTS');
 		} else if (submesh.texCoords2D.length) {
 			submesh.calculateTangents();
-			material.shader.definitions.push('VERTEX_TANGENTS');
+			material.shader.addDefinition('VERTEX_TANGENTS');
 		}
 
 		submesh.recalculateBounds();
