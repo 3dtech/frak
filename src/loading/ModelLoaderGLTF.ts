@@ -12,6 +12,7 @@ import MeshComponent from 'scene/components/MeshComponent';
 import MeshCollider from 'scene/components/MeshCollider';
 import Color from 'rendering/Color';
 import FRAK from 'Helpers';
+import DirectionalLight from "../scene/lights/DirectionalLight";
 
 /** Loads models to scene hierarchy from JSON data */
 class ModelLoaderGLTF {
@@ -509,9 +510,21 @@ class ModelLoaderGLTF {
 	}
 
 	loadScene(node, parsedData): any {
+		let hasSceneNodes = false;
 		var i, l;
 
-		if (!parsedData.scenes || isNaN(parseInt(parsedData.scene))) {
+		const sceneId = parseInt(parsedData.scene);
+		if (parsedData.scenes && !isNaN(sceneId)) {
+			const scene = parsedData.scenes[sceneId];
+			if (scene && scene.nodes) {
+				hasSceneNodes = true;
+				for (let i = 0; i < scene.nodes.length; i++) {
+					node.addNode(this.loadNode(parsedData.nodes, scene.nodes[i], parsedData));
+				}
+			}
+		}
+
+		if (!hasSceneNodes) {
 			// Just add all meshes
 			for (i = 0, l = this.meshes.length; i < l; i++) {
 				var meshNode = new Node();
@@ -520,16 +533,13 @@ class ModelLoaderGLTF {
 				meshNode.addComponent(new MeshComponent(this.meshes[i]));
 				meshNode.addComponent(renderer);
 				meshNode.addComponent(new MeshCollider());
-			}
-		} else {
-			var scene = parsedData.scenes[parsedData.scene];
-			for (i = 0, l = (scene.nodes && scene.nodes.length) || 0; i < l; i++) {
-				node.addNode(this.loadNode(parsedData.nodes, scene.nodes[i]));
+
+				node.addNode(meshNode);
 			}
 		}
 	}
 
-	loadNode(nodes, index): any {
+	loadNode(nodes, index, parsedData): any {
 		var node = nodes[index];
 		var sceneNode = new Node(node.name);
 		var renderer = new MeshRendererComponent();
@@ -551,11 +561,50 @@ class ModelLoaderGLTF {
 			);
 		}
 
+		if (node.extensions && node.extensions.KHR_lights_punctual) {
+			const light = this.loadLight(node.extensions.KHR_lights_punctual.light, parsedData, sceneNode.transform.relative);
+			if (light) {
+				sceneNode.addComponent(light);
+			}
+		}
+
 		for (var i = 0, l = (node.children && node.children.length) || 0; i < l; i++) {
-			sceneNode.addNode(this.loadNode(nodes, node.children[i]));
+			sceneNode.addNode(this.loadNode(nodes, node.children[i], parsedData));
 		}
 
 		return sceneNode;
+	}
+
+	loadLight(index, parsedData, transform) {
+		const lightInfo = parsedData.extensions?.KHR_lights_punctual?.lights?.[index];
+		if (!lightInfo) {
+			return;
+		}
+
+		let light;
+		switch (lightInfo.type) {
+			case 'directional':
+				light = new DirectionalLight();
+				const rotation = quat.fromMat4(quat.create(), transform);
+				light.setLightDirection(vec3.transformQuat(light.direction, vec3.fromValues(0, 0, -1), rotation));
+				break;
+
+			case 'point':	// TODO
+			default:
+				return;
+		}
+
+		const intensity = parseFloat(lightInfo.intensity);
+		if (!isNaN(intensity)) {
+			light.intensity = intensity;
+		}
+
+		const color = lightInfo.color
+		if (color) {
+			light.color.set(color[0], color[1], color[2]);
+		}
+
+		return light;
 	}
 }
 
