@@ -9,60 +9,6 @@ class View {
 
 	constructor(private filter: (renderer: Renderer) => boolean) {}
 
-	/** Goes to next batch with an active renderer and returns the Material */
-	/*nextBatchMaterial(activeRenderers: Renderer[]): Material {
-		while (true) {
-			this.currentBatchIndex++;
-			if (this.currentBatchIndex >= this.batches.length) {
-				return null;
-			}
-
-			this.currentIndex = -1;
-
-			const batch = this.batches[this.currentBatchIndex];
-			let renderer: Renderer;
-			while (true) {
-				this.currentIndex++;
-				if (this.currentIndex >= batch.length) {
-					break;	// Go to next batch
-				}
-
-				renderer = activeRenderers[batch[this.currentIndex]];
-				if (!renderer) {
-					continue;
-				}
-
-				if (this.filter(renderer)) {
-					this.currentIndex--;	// So the [next] call doesn't skip this renderer
-					return renderer.material;
-				}
-			}
-		}
-	}*/
-
-	/** Returns the next renderer in the active batch */
-	/*next(activeRenderers: Renderer[]): Renderer {
-		// We expect this.currentBatchIndex to be < batches.length,
-		// because we shouldn't call this if nextBatchMaterial returned null
-		/!*const batch = this.batches[this.currentBatchIndex];
-		let renderer: Renderer;
-		while (true) {
-			this.currentIndex++;
-			if (this.currentIndex >= batch.length) {
-				return null;
-			}
-
-			renderer = activeRenderers[batch[this.currentIndex]];
-			if (!renderer) {
-				continue;
-			}
-
-			if (this.filter(renderer)) {
-				return renderer;
-			}
-		}*!/
-	}*/
-
 	batch(allRenderers: Renderer[], list: number[][][]) {
 		this.batches = [];
 
@@ -89,24 +35,45 @@ class View {
 
 	run(
 		context: RenderingContext,
+		pipeline: PBRPipeline,
 		baseShader: Shader,
 		filteredRenderers: Renderer[],
-		pipeline: PBRPipeline,
-		perShaderFunction = (r: Renderer, s: Shader) => {
+		shaderBind = (s: Shader) => {
 			s.use();
 		},
-		perMaterialFunction = (r: Renderer, s: Shader) => {
-			s.bindUniforms(r.material.uniforms);
-			s.bindSamplers(r.material.samplers);
+		materialBind = (m: Material, s: Shader) => {
+			s.bindUniforms(m.uniforms);
+			s.bindSamplers(m.samplers);
 		},
-		perRendererFunction  = (r: Renderer, s: Shader) => {
+		render = (r: Renderer, s: Shader) => {
 			context.modelview.push();
 			context.modelview.multiply(r.matrix);
 			r.renderGeometry(context, s);
 			context.modelview.pop();
 		}
 	) {
-		// TODO
+		for (const shaderGroup of this.batches) {
+			let shader = null;
+			for (const materialGroup of shaderGroup) {
+				let material = null;
+				for (const i of materialGroup) {
+					const renderer = filteredRenderers[i];
+					if (renderer) {
+						if (!shader) {
+							shader = pipeline.selectShader(context, baseShader, renderer.material.definitions);
+							shaderBind(shader);
+						}
+
+						if (!material) {
+							material = renderer.material;
+							materialBind(material, shader);
+						}
+
+						render(renderer, shader);
+					}
+				}
+			}
+		}
 	}
 }
 

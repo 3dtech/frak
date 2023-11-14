@@ -54,10 +54,12 @@ class BuffersRenderStage extends RenderStage {
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 
 		// Render opaque geometry to the g-buffer
-		this.renderBatches(context, this.opaqueShader, camera.renderStage, this.parent.organizer.opaqueRenderers);
+		// this.renderBatches(context, this.opaqueShader, camera.renderStage, this.parent.organizer.opaqueRenderers);
+		this.parent.organizer.opaqueRenderers.run(context, camera.renderStage, this.opaqueShader, this.parent.filteredRenderers);
 
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
-		this.renderBatches(context, this.blendShader, camera.renderStage, this.parent.organizer.transparentRenderers);
+		// this.renderBatches(context, this.blendShader, camera.renderStage, this.parent.organizer.transparentRenderers);
+		this.parent.organizer.transparentRenderers.run(context, camera.renderStage, this.blendShader, this.parent.filteredRenderers);
 
 		gl.stencilMask(0xFF);
 		gl.disable(gl.STENCIL_TEST);
@@ -66,7 +68,7 @@ class BuffersRenderStage extends RenderStage {
 		this.parent.gbuffer.unbind(context);
 	}
 
-	renderBatches(context: RenderingContext, baseShader: Shader, pipeline: PBRPipeline, view: View) {
+	/*renderBatches(context: RenderingContext, baseShader: Shader, pipeline: PBRPipeline, view: View) {
 		const filteredRenderers = this.parent.filteredRenderers;
 		view.start();
 
@@ -90,7 +92,7 @@ class BuffersRenderStage extends RenderStage {
 
 			material = view.nextBatchMaterial(filteredRenderers);
 		}
-	}
+	}*/
 }
 
 globalThis.BuffersRenderStage = BuffersRenderStage;

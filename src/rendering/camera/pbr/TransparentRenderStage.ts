@@ -90,12 +90,18 @@ class TransparentRenderStage extends RenderStage {
 		// Accum
 		this.parent.oitAccum.bind(context, false, this.clearBlack);
 		gl.blendFunc(gl.ONE, gl.ONE);
-		this.renderBatches(context, camera.renderStage, light.light, this.shaderCache[light.type]);
+		// this.renderBatches(context, camera.renderStage, light.light, this.shaderCache[light.type]);
+		this.parent.organizer.transparentRenderers.run(context, camera.renderStage, this.shaderCache[light.type], this.parent.filteredRenderers, s => {
+			s.use(light.light.material.uniforms);
+		});
 
 		// Reveal
 		this.parent.oitReveal.bind(context, false, this.clearWhite);
 		gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
-		this.renderBatches(context, camera.renderStage, light.light, this.revealMaterial.shader);
+		// this.renderBatches(context, camera.renderStage, light.light, this.revealMaterial.shader);
+		this.parent.organizer.transparentRenderers.run(context, camera.renderStage, this.revealMaterial.shader, this.parent.filteredRenderers, s => {
+			s.use(light.light.material.uniforms);
+		});
 
 		// Draw to screen
 		gl.disable(gl.DEPTH_TEST);
@@ -107,7 +113,7 @@ class TransparentRenderStage extends RenderStage {
 		gl.depthMask(true);
 	}
 
-	renderBatches(context: RenderingContext, pipeline: PBRPipeline, light: DirectionalLight | ImageBasedLight, baseShader: Shader) {
+	/*renderBatches(context: RenderingContext, pipeline: PBRPipeline, light: DirectionalLight | ImageBasedLight, baseShader: Shader) {
 		const filteredRenderers = this.parent.filteredRenderers;
 		const view = this.parent.organizer.transparentRenderers;
 		view.start();
@@ -133,7 +139,7 @@ class TransparentRenderStage extends RenderStage {
 
 			material = view.nextBatchMaterial(filteredRenderers);
 		}
-	}
+	}*/
 }
 
 globalThis.TransparentRenderStage = TransparentRenderStage;
