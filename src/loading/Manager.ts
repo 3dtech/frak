@@ -126,7 +126,7 @@ class Manager {
 		there are no more queued or loading items waiting.
 		@param callback Callback called once all resources have been loaded
 		@param progressCallback Callback called when progress of this manager has changed */
-	load(callback, progressCallback): any {
+	load(callback?, progressCallback?): any {
 		if(progressCallback) {
 			this.progressCallbacks.push(progressCallback);
 		}

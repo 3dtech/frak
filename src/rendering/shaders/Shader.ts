@@ -9,6 +9,7 @@ import Sampler from 'rendering/shaders/Sampler';
 import ExplicitAttributeLocations from './AttributeLocations';
 import {stringHash} from "../../Helpers";
 import ShaderDescriptor from "../../scene/descriptors/ShaderDescriptor";
+import DefinitionsHelper from "../DefinitionsHelper";
 
 /**
  * Used to compile and link vertex and fragment shader to a shader program.
@@ -24,7 +25,7 @@ class Shader extends Serializable {
 	failed: any;
 	uniformLocations: any;
 	bindings: any;
-	definitions: string[] = [];
+	definitions = new DefinitionsHelper();
 	vertexShader: VertexShader;
 	fragmentShader: FragmentShader;
 	nameHash: number;
@@ -51,11 +52,9 @@ class Shader extends Serializable {
 
 		this.bindings = {};
 
-		var definitions = [].concat(descriptor.definitions);
-
 		this.nameHash = stringHash(descriptor.vertexSource) ^ stringHash(descriptor.fragmentSource);
 		this.hash = this.nameHash;
-		for (const definition of definitions) {
+		for (const definition of descriptor.definitions) {
 			const [name, value] = definition.split(' ');
 			this.addDefinition(name, value);
 		}
@@ -94,23 +93,9 @@ class Shader extends Serializable {
 
 	/** Add a #define, replacing an existing one if needed */
 	addDefinition(name: string, value?: string) {
-		const definition = `${name}${value ? ` ${value}` : ''}`;
-		// Remove existing definition if value is provided
-		if (value) {
-			for (let i = 0; i < this.definitions.length; i++) {
-				if (this.definitions[i].startsWith(`${name} `)) {
-					this.hash ^= stringHash(this.definitions[i]);	// Remove hash
-					this.definitions.splice(i, 1);
-					break;
-				}
-			}
-		}
-
-		// Add new definition
-		if (value || this.definitions.indexOf(definition) === -1) {
-			this.definitions.push(definition);
-			this.hash ^= stringHash(definition);
-		}
+		this.hash ^= this.definitions.hash;	// Remove old hash
+		this.definitions.addDefinition(name, value);
+		this.hash ^= this.definitions.hash	// Add new hash
 	}
 
 	/** Compiles and links the shader program */
@@ -120,7 +105,7 @@ class Shader extends Serializable {
 		}
 
 		for (var i=0; i<this.shaders.length; i++) {
-			this.shaders[i].compile(this.context, this.definitions);
+			this.shaders[i].compile(this.context, this.definitions.definitions);
 		}
 
 		this.uniformLocations = {};

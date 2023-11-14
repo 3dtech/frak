@@ -114,7 +114,7 @@ class TransparentRenderStage extends RenderStage {
 
 		let material = view.nextBatchMaterial(filteredRenderers);
 		while (material) {
-			const shader = pipeline.selectShader(context, baseShader, material.shader);
+			const shader = pipeline.selectShader(context, baseShader, material.definitions);
 			shader.use();
 
 			shader.bindUniforms(light.material.uniforms);

@@ -1,8 +1,7 @@
 import Serializable from 'scene/Serializable';
-import Shader from 'rendering/shaders/Shader';
-import MaterialDescriptor from 'scene/descriptors/MaterialDescriptor';
 import Sampler from 'rendering/shaders/Sampler';
 import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
+import DefinitionsHelper from "../DefinitionsHelper";
 
 /** Material definition */
 
@@ -13,6 +12,8 @@ class Material extends Serializable {
 	samplers: any;
 	descriptor: any;
 	boundSamplers: any;
+	transparent = false;	// TODO: Requirements spread across too many files? (Shader, this, SubmeshRenderer)
+	definitions = new DefinitionsHelper();
 
 	/** Constructor
 		@param shader Shader that will be used
@@ -34,12 +35,12 @@ class Material extends Serializable {
 			for (const sampler of this.samplers) {
 				switch (sampler.name) {
 					case 'diffuse0':
-						this.shader.addDefinition('DIFFUSE_TEXTURE');
+						this.definitions.addDefinition('DIFFUSE_TEXTURE');
 
 						break;
 
 					case 'normal0':
-						this.shader.addDefinition('NORMAL_TEXTURE');
+						this.definitions.addDefinition('NORMAL_TEXTURE');
 
 						break;
 				}

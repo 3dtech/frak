@@ -11,6 +11,7 @@ import Scene from "../../scene/Scene";
 import Camera from "./Camera";
 import Engine from "../../engine/Engine";
 import Shader from "../shaders/Shader";
+import DefinitionsHelper from "../DefinitionsHelper";
 
 interface ShaderCache {
 	[key: number]: Shader;
@@ -121,29 +122,16 @@ class PBRPipeline extends PostProcessRenderStage {
 		context.modelview.pop();
 	}
 
-	selectShader(context: RenderingContext, baseShader: Shader, customShader: Shader): Shader {
-		const hash = baseShader.nameHash ^ customShader.hash;
+	selectShader(context: RenderingContext, baseShader: Shader, definitions: DefinitionsHelper): Shader {
+		const hash = baseShader.hash ^ definitions.hash;
 
 		if (!this.shaderCache[hash]) {
 			const shader = new Shader(context, baseShader.descriptor);
 			shader.addVertexShader(baseShader.vertexShader.code);
 			shader.addFragmentShader(baseShader.fragmentShader.code);
-			for (const definition of customShader.definitions) {
+			for (const definition of definitions.definitions) {
 				const [name, value] = definition.split(' ');
-				if (!value) {	// Just a regular define, don't push extra defines
-					if (shader.definitions.indexOf(name) === -1) {
-						shader.definitions.push(name);
-					}
-				} else {	// Defines a value, check if the value is defined previously and remove if so
-					for (let i = 0; i < shader.definitions.length; i++) {
-						if (shader.definitions[i].startsWith(`${name} `)) {
-							shader.definitions.splice(i, 1);
-							break;
-						}
-					}
-
-					shader.definitions.push(`${name} ${value}`);
-				}
+				shader.addDefinition(name, value);
 			}
 
 			this.shaderCache[hash] = shader;

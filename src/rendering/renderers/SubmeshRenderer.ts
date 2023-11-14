@@ -155,7 +155,8 @@ class SubmeshRenderer extends Renderer {
 			material.uniforms.perceptualRoughness = new UniformFloat(1.0);
 
 		// Set this renderer to transparent, if its material is transparent or if diffuse color or ambient color has alpha less than 1
-		this.transparent = material.shader.requirements.transparent ||
+		this.transparent = material.transparent ||
+			(material.shader && material.shader.requirements.transparent) ||
 			(material.uniforms['diffuse'] && material.uniforms['diffuse'].value[3] < 1.0) ||
 			(material.uniforms['ambient'] && material.uniforms['ambient'].value[3] < 1.0);
 

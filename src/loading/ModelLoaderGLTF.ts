@@ -324,15 +324,13 @@ class ModelLoaderGLTF {
 	loadMaterials(materials): any {
 		var textures = this.textures;
 
-		function setSampler(material, definitions, textureData, name) {
+		function setSampler(material: Material, textureData, name) {
 			if (textureData) {
 				var upperCaseName = name.toUpperCase();
 
 				material.samplers.push(new Sampler(name + '0', textures[textureData.index]));
 
-				if (definitions.indexOf(upperCaseName + '_TEXTURE') === -1) {
-					definitions.push(upperCaseName + '_TEXTURE');
-				}
+				material.definitions.addDefinition(upperCaseName + '_TEXTURE');
 
 				if (textureData.extensions && textureData.extensions.KHR_texture_transform) {
 					var transform = textureData.extensions.KHR_texture_transform;
@@ -366,9 +364,7 @@ class ModelLoaderGLTF {
 						mat3.identity(tmp);
 					}
 
-					if (definitions.indexOf(upperCaseName + '_UV_TRANSFORM') === -1) {
-						definitions.push(upperCaseName + '_UV_TRANSFORM');
-					}
+					material.definitions.addDefinition(upperCaseName + '_UV_TRANSFORM');
 
 					material.uniforms[name + 'UVTransform'] = new UniformMat3(uvMatrix);
 				}
@@ -376,12 +372,11 @@ class ModelLoaderGLTF {
 		}
 
 		for (var i = 0, l = materials.length; i < l; i++) {
-			var material = new Material(this.shadersManager.addSource('pbr'), {}, []);
+			var material = new Material(null, {}, []);
 			if (materials[i].name) {
 				material.name = materials[i].name;
 			}
 
-			var definitions = [];
 			var diffuse = new Color();
 			var emissive = new Color(0.0, 0.0, 0.0);
 			var metallic = 1.0;
@@ -408,8 +403,8 @@ class ModelLoaderGLTF {
 					roughness = roughnessFactor;
 				}
 
-				setSampler(material, definitions, mr.baseColorTexture, 'diffuse');
-				setSampler(material, definitions, mr.metallicRoughnessTexture, 'metallicRoughness');
+				setSampler(material, mr.baseColorTexture, 'diffuse');
+				setSampler(material, mr.metallicRoughnessTexture, 'metallicRoughness');
 			}
 
 			var alphaCutoff = parseFloat(materials[i].alphaCutoff);
@@ -428,16 +423,16 @@ class ModelLoaderGLTF {
 			material.uniforms.emissive = new UniformColor(emissive);
 			material.uniforms.alphaCutoff = new UniformFloat(cutoff);
 
-			setSampler(material, definitions, materials[i].normalTexture, 'normal');
-			setSampler(material, definitions, materials[i].occlusionTexture, 'occlusion');
-			setSampler(material, definitions, materials[i].emissiveTexture, 'emissive');
+			setSampler(material, materials[i].normalTexture, 'normal');
+			setSampler(material, materials[i].occlusionTexture, 'occlusion');
+			setSampler(material, materials[i].emissiveTexture, 'emissive');
 
-			definitions.push(`ALPHAMODE ALPHAMODE_${materials[i].alphaMode ?? 'OPAQUE'}`);
-
-			material.shader = this.shadersManager.addSource('pbr', definitions);
+			if (materials[i].alphaMode) {
+				material.definitions.addDefinition('ALPHAMODE', `ALPHAMODE_${materials[i].alphaMode}`);
+			}
 
 			if (materials[i].alphaMode === 'BLEND') {
-				material.shader.requirements.transparent = true;
+				material.transparent = true;
 			}
 
 			this.materials.push(material);
@@ -498,10 +493,10 @@ class ModelLoaderGLTF {
 				}
 			);
 
-			material.shader.addDefinition('VERTEX_TANGENTS');
+			material.definitions.addDefinition('VERTEX_TANGENTS');
 		} else if (submesh.texCoords2D.length) {
 			submesh.calculateTangents();
-			material.shader.addDefinition('VERTEX_TANGENTS');
+			material.definitions.addDefinition('VERTEX_TANGENTS');
 		}
 
 		submesh.recalculateBounds();
