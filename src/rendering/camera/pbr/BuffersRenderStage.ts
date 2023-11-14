@@ -15,17 +15,22 @@ class BuffersRenderStage extends RenderStage {
 	opaqueShader: Shader;
 	blendShader: Shader;
 	clearColor = new Color(0, 0, 0, 0);
-	shaderCache = {};
 
 	onStart(context: any, engine: Engine, camera: any) {
-		this.opaqueShader = engine.assetsManager.addShaderSource('shaders/pbr', [
+		this.opaqueShader = engine.assetsManager.addShader(
+			'shaders/mesh.vert',
+			'shaders/pbr.frag',
+			[
 				'ALPHAMODE_OPAQUE 0',
 				'ALPHAMODE_MASK 1',
 				'ALPHAMODE_BLEND 2',
 				'ALPHAMODE ALPHAMODE_OPAQUE'
 			]);
 
-		this.blendShader = engine.assetsManager.addShaderSource('shaders/pbr', [
+		this.blendShader = engine.assetsManager.addShader(
+			'shaders/mesh.vert',
+			'shaders/pbr.frag',
+			[
 				'ALPHAMODE_OPAQUE 0',
 				'ALPHAMODE_MASK 1',
 				'ALPHAMODE_BLEND 2',

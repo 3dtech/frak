@@ -31,11 +31,11 @@ class TransparentRenderStage extends RenderStage {
 
 	onStart(context: any, engine: Engine, camera: any) {
 		for (const type of ['directional', 'ibl']) {
-			this.shaderCache[type] = engine.assetsManager.addShader('shaders/pbr.vert', `shaders/direct_${type}.frag`);
+			this.shaderCache[type] = engine.assetsManager.addShader('shaders/mesh.vert', `shaders/direct_${type}.frag`);
 		}
 
 		this.revealMaterial = new Material(
-			engine.assetsManager.addShader('shaders/pbr.vert', 'shaders/oit_reveal.frag')
+			engine.assetsManager.addShader('shaders/mesh.vert', 'shaders/oit_reveal.frag')
 		);
 
 		this.ppMaterial = new Material(
