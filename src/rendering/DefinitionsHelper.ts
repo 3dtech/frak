@@ -3,7 +3,11 @@ import {stringHash} from "../Helpers";
 class DefinitionsHelper {
 	hash = 0;
 
-	constructor(public definitions: string[] = []) {}
+	constructor(public definitions: string[] = []) {
+		for (const definition of definitions) {
+			this.hash ^= stringHash(definition);
+		}
+	}
 
 	/** Add a #define, replacing an existing one if needed */
 	addDefinition(name: string, value?: string) {
@@ -24,6 +28,10 @@ class DefinitionsHelper {
 			this.definitions.push(definition);
 			this.hash ^= stringHash(definition);
 		}
+	}
+
+	clone() {
+		return new DefinitionsHelper(this.definitions.slice());
 	}
 }
 

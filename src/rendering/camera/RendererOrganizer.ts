@@ -35,7 +35,6 @@ class View {
 
 	run(
 		context: RenderingContext,
-		pipeline: PBRPipeline,
 		baseShader: Shader,
 		filteredRenderers: Renderer[],
 		shaderBind = (s: Shader) => {
@@ -60,7 +59,7 @@ class View {
 					const renderer = filteredRenderers[i];
 					if (renderer) {
 						if (!shader) {
-							shader = pipeline.selectShader(context, baseShader, renderer.material.definitions);
+							shader = context.selectShader(context, baseShader, renderer.material.definitions);
 							shaderBind(shader);
 						}
 

@@ -3,6 +3,12 @@ import RendererComponent from 'scene/components/RendererComponent';
 import TextComponent from 'scene/components/TextComponent';
 import FRAK from 'Helpers';
 import Engine from 'engine/Engine';
+import Shader from "./shaders/Shader";
+import DefinitionsHelper from "./DefinitionsHelper";
+
+interface ShaderCache {
+	[key: number]: Shader;
+}
 
 /** Wraps webgl rendering context of canvas */
 class RenderingContext {
@@ -14,6 +20,7 @@ class RenderingContext {
 	shadow: any;
 	camera: any;
 	engine: Engine;
+	shaderCache: ShaderCache = {};
 
 	/** Constructor
 		@param canvas The canvas element that provides rendering context
@@ -82,6 +89,25 @@ class RenderingContext {
 		this.shadow = false; ///< Current shadow map (forward rendering only)
 		this.camera = false; ///< Current camera used for rendering (used to populate camera uniforms for shaders)
 		this.engine = engine; ///< Current engine used for rendering
+	}
+
+	selectShader(context: RenderingContext, baseShader: Shader, definitions: DefinitionsHelper): Shader {
+		const hash = baseShader.hash ^ definitions.hash;
+
+		if (!this.shaderCache[hash]) {
+			const shader = new Shader(context, baseShader.descriptor);
+			shader.definitions = baseShader.definitions.clone();	// In case there were definitions not in the descriptor
+			shader.addVertexShader(baseShader.vertexShader.code);
+			shader.addFragmentShader(baseShader.fragmentShader.code);
+			for (const definition of definitions.definitions) {
+				const [name, value] = definition.split(' ');
+				shader.addDefinition(name, value);
+			}
+
+			this.shaderCache[hash] = shader;
+		}
+
+		return this.shaderCache[hash];
 	}
 
 	error(): any {

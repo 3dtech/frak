@@ -13,10 +13,6 @@ import Engine from "../../engine/Engine";
 import Shader from "../shaders/Shader";
 import DefinitionsHelper from "../DefinitionsHelper";
 
-interface ShaderCache {
-	[key: number]: Shader;
-}
-
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
 	debugger: any;
@@ -25,7 +21,6 @@ class PBRPipeline extends PostProcessRenderStage {
 	zNear = new Float32Array();
 	zFar = new Float32Array();
 	inverseProjection = mat4.create();
-	shaderCache: ShaderCache = {};
 
 	getGeneratorStage() {
 		return new MainRenderStage();
@@ -120,24 +115,6 @@ class PBRPipeline extends PostProcessRenderStage {
 			this.material.unbind();
 		}
 		context.modelview.pop();
-	}
-
-	selectShader(context: RenderingContext, baseShader: Shader, definitions: DefinitionsHelper): Shader {
-		const hash = baseShader.hash ^ definitions.hash;
-
-		if (!this.shaderCache[hash]) {
-			const shader = new Shader(context, baseShader.descriptor);
-			shader.addVertexShader(baseShader.vertexShader.code);
-			shader.addFragmentShader(baseShader.fragmentShader.code);
-			for (const definition of definitions.definitions) {
-				const [name, value] = definition.split(' ');
-				shader.addDefinition(name, value);
-			}
-
-			this.shaderCache[hash] = shader;
-		}
-
-		return this.shaderCache[hash];
 	}
 
 	initDebugger(context) {

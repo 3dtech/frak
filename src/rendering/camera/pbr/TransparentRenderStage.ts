@@ -90,16 +90,14 @@ class TransparentRenderStage extends RenderStage {
 		// Accum
 		this.parent.oitAccum.bind(context, false, this.clearBlack);
 		gl.blendFunc(gl.ONE, gl.ONE);
-		// this.renderBatches(context, camera.renderStage, light.light, this.shaderCache[light.type]);
-		this.parent.organizer.transparentRenderers.run(context, camera.renderStage, this.shaderCache[light.type], this.parent.filteredRenderers, s => {
+		this.parent.organizer.transparentRenderers.run(context, this.shaderCache[light.type], this.parent.filteredRenderers, s => {
 			s.use(light.light.material.uniforms);
 		});
 
 		// Reveal
 		this.parent.oitReveal.bind(context, false, this.clearWhite);
 		gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
-		// this.renderBatches(context, camera.renderStage, light.light, this.revealMaterial.shader);
-		this.parent.organizer.transparentRenderers.run(context, camera.renderStage, this.revealMaterial.shader, this.parent.filteredRenderers, s => {
+		this.parent.organizer.transparentRenderers.run(context, this.revealMaterial.shader, this.parent.filteredRenderers, s => {
 			s.use(light.light.material.uniforms);
 		});
 
@@ -112,34 +110,6 @@ class TransparentRenderStage extends RenderStage {
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
 	}
-
-	/*renderBatches(context: RenderingContext, pipeline: PBRPipeline, light: DirectionalLight | ImageBasedLight, baseShader: Shader) {
-		const filteredRenderers = this.parent.filteredRenderers;
-		const view = this.parent.organizer.transparentRenderers;
-		view.start();
-
-		let material = view.nextBatchMaterial(filteredRenderers);
-		while (material) {
-			const shader = pipeline.selectShader(context, baseShader, material.definitions);
-			shader.use();
-
-			shader.bindUniforms(light.material.uniforms);
-			shader.bindUniforms(material.uniforms);
-			shader.bindSamplers(material.samplers);
-
-			let renderer = view.next(filteredRenderers);
-			while (renderer) {
-				context.modelview.push();
-				context.modelview.multiply(renderer.matrix);
-				renderer.renderGeometry(context, shader);
-				context.modelview.pop();
-
-				renderer = view.next(filteredRenderers);
-			}
-
-			material = view.nextBatchMaterial(filteredRenderers);
-		}
-	}*/
 }
 
 globalThis.TransparentRenderStage = TransparentRenderStage;
