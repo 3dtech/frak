@@ -17,25 +17,29 @@ class BuffersRenderStage extends RenderStage {
 	clearColor = new Color(0, 0, 0, 0);
 
 	onStart(context: any, engine: Engine, camera: any) {
+		const defs = [
+			'ALPHAMODE_OPAQUE 0',
+			'ALPHAMODE_MASK 1',
+			'ALPHAMODE_BLEND 2',
+		];
+
+		if (engine.options.emissiveEnabled) {
+			defs.push('EMISSIVE_OUT');
+		}
+
 		this.opaqueShader = engine.assetsManager.addShader(
 			'shaders/mesh.vert',
 			'shaders/pbr.frag',
-			[
-				'ALPHAMODE_OPAQUE 0',
-				'ALPHAMODE_MASK 1',
-				'ALPHAMODE_BLEND 2',
+			defs.concat([
 				'ALPHAMODE ALPHAMODE_OPAQUE'
-			]);
+			]));
 
 		this.blendShader = engine.assetsManager.addShader(
 			'shaders/mesh.vert',
 			'shaders/pbr.frag',
-			[
-				'ALPHAMODE_OPAQUE 0',
-				'ALPHAMODE_MASK 1',
-				'ALPHAMODE_BLEND 2',
+			defs.concat([
 				'ALPHAMODE ALPHAMODE_BLEND'
-			]);
+			]));
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {

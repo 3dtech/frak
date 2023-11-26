@@ -2,9 +2,9 @@
 
 precision highp float;
 
-uniform sampler2D color;
-uniform sampler2D normalMetallic;
-uniform sampler2D positionRoughness;
+uniform sampler2D colorMetallic;
+uniform sampler2D normalRoughness;
+uniform sampler2D positionOcclusion;
 
 uniform samplerCube light0;
 
@@ -157,15 +157,16 @@ vec3 ibLight(vec3 normal, vec3 view, float roughness, vec3 diffuseColor, vec3 F0
 }
 
 void main(void) {
-	vec4 outputColor = texture(color, uv);
+	vec4 cM = texture(colorMetallic, uv);
+	vec4 outputColor = vec4(cM.rgb, 1.0);
+	float metallic = cM.w;
 
-	vec4 nM = texture(normalMetallic, uv);
+	vec4 nM = texture(normalRoughness, uv);
 	vec3 N = nM.xyz;
-	float metallic = nM.w;
+	float roughness = nM.w;
 
-	vec4 pR = texture(positionRoughness, uv);
+	vec4 pR = texture(positionOcclusion, uv);
 	vec3 position = pR.xyz;
-	float roughness = pR.w;
 
 	vec3 V = normalize(cameraPosition - position);
 	float NdotV = max(dot(N, V), 1e-4);

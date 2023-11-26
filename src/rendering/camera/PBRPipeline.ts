@@ -16,6 +16,7 @@ import DefinitionsHelper from "../DefinitionsHelper";
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
 	debugger: any;
+	debugActive = true;
 	uboBuffer: WebGLBuffer;
 	uboOffsets = {};
 	zNear = new Float32Array();
@@ -68,8 +69,6 @@ class PBRPipeline extends PostProcessRenderStage {
 
 			this.enable();
 		});
-
-		this.initDebugger(context);
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
@@ -104,17 +103,30 @@ class PBRPipeline extends PostProcessRenderStage {
 	onPostRender(context, scene, camera): any {
 		super.onPostRender(context, scene, camera);
 
-		var gl = context.gl;
-		gl.disable(gl.DEPTH_TEST);
-		gl.disable(gl.CULL_FACE);
-		context.modelview.push();
-		for (var i=0; i<this.debugger.quads.length; i++) {
-			this.debugger.sampler.texture = this.debugger.quads[i].texture;
-			this.material.bind({}, [this.debugger.sampler]);
-			this.debugger.quads[i].quad.render(this.material.shader);
-			this.material.unbind();
+		if (this.debugActive) {
+			if (!this.debugger) {
+				this.initDebugger(context);
+			}
+			var gl = context.gl;
+			gl.clearColor(0, 0, 0, 1);
+			gl.colorMask(false, false, false, true);
+			gl.clear(gl.COLOR_BUFFER_BIT);
+			gl.colorMask(true, true, true, false);
+			gl.disable(gl.DEPTH_TEST);
+			gl.disable(gl.CULL_FACE);
+			context.modelview.push();
+			for (var i = 0; i < this.debugger.quads.length; i++) {
+				this.debugger.sampler.texture = this.debugger.quads[i].texture;
+				this.material.bind({}, [this.debugger.sampler]);
+				this.debugger.quads[i].quad.render(this.material.shader);
+				this.material.unbind();
+			}
+			context.modelview.pop();
 		}
-		context.modelview.pop();
+	}
+
+	debug(v) {
+		this.debugActive = !!v;
 	}
 
 	initDebugger(context) {
@@ -139,7 +151,9 @@ class PBRPipeline extends PostProcessRenderStage {
 		this.debugger.quads.push({ quad: createQuad(x, y, size, size), texture: buffer.targets[0] });
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[1] });
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[2] });
-		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: buffer.targets[3] });
+		if (context.engine.options.emissiveEnabled) {
+			this.debugger.quads.push({quad: createQuad(x += size, y, size, size), texture: buffer.targets[3]});
+		}
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.oitAccum.texture });
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.oitReveal.texture });
 	}

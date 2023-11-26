@@ -6,6 +6,7 @@ import RenderingContext from 'rendering/RenderingContext';
 import Input from 'engine/Input';
 import FRAK, { FrakCallback } from 'Helpers';
 import Scene from 'scene/Scene';
+import PerspectiveCamera from "../scene/components/PerspectiveCamera";
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
@@ -45,8 +46,6 @@ class Engine {
 			'debug': false,
 			'antialias': false,
 			'ssao': false,
-			'transparencyMode': 'default',
-			'renderer': 'default',
 			'softShadows': false,
 			'runInBackground': false,
 			'contextOptions': null,
@@ -55,6 +54,7 @@ class Engine {
 			'builtinShaders': true,
 			'directionalShadowResolution': 2048,
 			'shadowManualUpdate': false,
+			'emissiveEnabled': false,	// TODO: Remove this for an automatic detection
 		}, options);
 		this.validateOptions();
 
@@ -149,7 +149,7 @@ class Engine {
 				height: canvas.style.height,
 				canvasWidth: canvas.getAttribute('width'),
 				canvasHeight: canvas.getAttribute('height'),
-				aspectRatio: this.scene.cameraComponent.aspect
+				aspectRatio: (this.scene.cameraComponent as PerspectiveCamera).aspect
 			};
 
 			// Stretch canvas to fill the entire screen
@@ -166,7 +166,7 @@ class Engine {
 			setTimeout(function() {
 				// Set aspect ratio
 				var bounds = canvas.getBoundingClientRect();
-				scope.scene.cameraComponent.setAspectRatio(bounds.width / bounds.height);
+				(scope.scene.cameraComponent as PerspectiveCamera).setAspectRatio(bounds.width / bounds.height);
 				if (scope.useUpscaling)
 					return;
 
@@ -192,7 +192,7 @@ class Engine {
 				canvas.style.width = this._savedCanvasStyles.width;
 				canvas.style.height = this._savedCanvasStyles.height;
 				if (this._savedCanvasStyles.aspectRatio)
-					this.scene.cameraComponent.setAspectRatio(this._savedCanvasStyles.aspectRatio);
+					(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(this._savedCanvasStyles.aspectRatio);
 
 				// If not using upscaling then resize the RenderTarget
 				if (!this.useUpscaling) {
@@ -343,7 +343,7 @@ class Engine {
 			var gl = this.context.gl;
 			// var width = gl.canvas.clientWidth;
 			// var height = Math.max(1, gl.canvas.clientHeight);
-			this.scene.cameraComponent.setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
+			(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
 			this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 		}
 	}

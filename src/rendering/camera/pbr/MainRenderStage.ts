@@ -40,6 +40,7 @@ class MainRenderStage extends RenderStage {
 	sharedSamplers: Sampler[] = [];
 	oitSamplers: Sampler[] = [];
 	filteredRenderers: Renderer[] = [];
+	emissiveStage: EmissiveRenderStage;
 
 	constructor() {
 		super();
@@ -54,7 +55,7 @@ class MainRenderStage extends RenderStage {
 		this.addStage(new BackgroundRenderStage());
 		this.addStage(new TonemapRenderStage());
 		this.addStage(new TransparentRenderStage());
-		this.addStage(new EmissiveRenderStage());
+		this.emissiveStage = this.addStage(new EmissiveRenderStage()).disable();
 		this.addStage(new UnbindDstTarget());
 	}
 
@@ -62,12 +63,17 @@ class MainRenderStage extends RenderStage {
 		const gl = context.gl;
 
 		vec2.copy(this.size, this.parent.size);
-		this.gbuffer = new TargetTextureMulti(context, this.size, {numTargets: 4, stencil: true});
+		const numTargets = engine.options.emissiveEnabled ? 4 : 3;
+		this.gbuffer = new TargetTextureMulti(context, this.size, {numTargets, stencil: true});
 
-		this.sharedSamplers.push(new Sampler('color', this.gbuffer.targets[0]));
-		this.sharedSamplers.push(new Sampler('normalMetallic', this.gbuffer.targets[1]));
-		this.sharedSamplers.push(new Sampler('positionRoughness', this.gbuffer.targets[2]));
-		this.sharedSamplers.push(new Sampler('emissiveOcclusion', this.gbuffer.targets[3]));
+		this.sharedSamplers.push(new Sampler('colorMetallic', this.gbuffer.targets[0]));
+		this.sharedSamplers.push(new Sampler('normalRoughness', this.gbuffer.targets[1]));
+		this.sharedSamplers.push(new Sampler('positionOcclusion', this.gbuffer.targets[2]));
+
+		if (engine.options.emissiveEnabled) {
+			this.sharedSamplers.push(new Sampler('emissive', this.gbuffer.targets[3]));
+			this.emissiveStage.enable();
+		}
 
 		// OIT
 		this.oitAccum = new TargetTextureFloat(this.size, context, false);

@@ -83,6 +83,8 @@ class TransparentRenderStage extends RenderStage {
 			s.use(light.light.material.uniforms);
 		});
 
+		this.parent.oitReveal.unbind(context);
+
 		// Draw to screen
 		gl.disable(gl.DEPTH_TEST);
 		camera.renderStage.dst.bind(context, true);

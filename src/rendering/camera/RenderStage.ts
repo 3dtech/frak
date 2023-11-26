@@ -23,7 +23,7 @@ class RenderStage {
 
 	/** Adds a substage to this RenderStage.
 		@param stage Instance of {RenderStage} */
-	addStage(stage: RenderStage): any {
+	addStage<T extends RenderStage>(stage: T): T {
 		stage.parent=this;
 		this.substages.push(stage);
 		return stage;
@@ -102,14 +102,14 @@ class RenderStage {
 	}
 
 	/** Enables this render stage. */
-	enable(): any {
+	enable(): this {
 		this.enabled = true;
 		this.onEnable();
 		return this;
 	}
 
 	/** Disables this render stage. */
-	disable(): any {
+	disable(): this {
 		this.enabled = false;
 		this.onDisable();
 		return this;

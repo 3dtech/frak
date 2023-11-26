@@ -25,7 +25,7 @@ class RenderingContext {
 	/** Constructor
 		@param canvas The canvas element that provides rendering context
 	*/
-	constructor(canvas, engine: Engine, contextOptions, errorCallback) {
+	constructor(canvas, engine: Engine, contextOptions?: WebGLContextAttributes, errorCallback?) {
 		if (typeof canvas === 'string' && typeof document !== 'undefined') {
 			canvas = document.getElementById(canvas);
 		}
@@ -48,10 +48,8 @@ class RenderingContext {
 			(this.canvas as any).setRestoreTimeout(2000);
 		}
 
-		contextOptions = contextOptions || { alpha: false };
-
 		// Try to get rendering context for WebGL
-		this.gl = this.canvas.getContext('webgl2', contextOptions as WebGLContextAttributes);
+		this.gl = this.canvas.getContext('webgl2', contextOptions);
 
 		// Acquiring context failed
 		if (!this.gl) {

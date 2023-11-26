@@ -77,10 +77,12 @@ in vec3 viewNormal;
 in vec4 shadowPosition;
 
 // TODO: Optionally limit number of buffers
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 fragNormalMetallic;
-layout(location = 2) out vec4 fragPositionRoughness;
-layout(location = 3) out vec4 fragEmissiveOcclusion;
+layout(location = 0) out vec4 fragColorMetallic;
+layout(location = 1) out vec4 fragNormalRoughness;
+layout(location = 2) out vec4 fragPositionOcclusion;
+#ifdef EMISSIVE_OUT
+layout(location = 3) out vec4 fragEmissive;
+#endif
 
 float perceptualRoughnessToRoughness(float perceptualRoughness) {
 	float clampedPerceptualRoughness = clamp(perceptualRoughness, 0.089, 1.0);
@@ -177,10 +179,13 @@ void main(void) {
 	emissive.rgb *= texture(emissive0, emissiveUV()).rgb;
 #endif
 
-	fragColor = outputColor;
-	fragNormalMetallic = vec4(N, metallic);
-	fragPositionRoughness = vec4(worldPosition.xyz, roughness);
-	fragEmissiveOcclusion = vec4(emissive.rgb, occlusion);
+	fragColorMetallic = vec4(outputColor.rgb, metallic);
+	fragNormalRoughness = vec4(N, roughness);
+	fragPositionOcclusion = vec4(worldPosition.xyz, occlusion);
+
+#ifdef EMISSIVE_OUT
+	fragEmissive = vec4(emissive.rgb, 1.0);
+#endif
 
 #if ALPHAMODE == ALPHAMODE_MASK
     if (outputColor.a < alphaCutoff) {
