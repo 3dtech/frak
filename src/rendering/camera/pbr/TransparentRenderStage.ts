@@ -17,13 +17,13 @@ import Color from "../../Color";
 import UniformColor from "../../shaders/UniformColor";
 import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
 interface ShaderCache {
-	[key: number]: Shader;
+	[key: string]: Shader;
 }
 
 class TransparentRenderStage extends RenderStage {
 	parent: MainRenderStage;
 	size = vec2.create();
-	shaderCache = {};
+	shaderCache: ShaderCache = {};
 	clearBlack = new Color(0, 0, 0, 0);
 	clearWhite = new Color(1, 1, 1, 1);
 	revealMaterial: Material;
@@ -45,30 +45,12 @@ class TransparentRenderStage extends RenderStage {
 		);
 	}
 
-	/// Returns first IBL, if there is one, first directional otherwise;
-	getSingleLight(scene): {type: 'directional' | 'ibl', light: ImageBasedLight | DirectionalLight} {
-		var directional = null;
-
-		for (var i=0; i<scene.lights.length; i++) {
-			var light = scene.lights[i];
-			if (!light.enabled) {
-				continue;
-			}
-
-			if (!light.geometry) {
-				continue;
-			}
-
-			if (light instanceof ImageBasedLight) {
-				return {type: 'ibl', light};
-			}
-
-			if (light instanceof DirectionalLight && !directional) {
-				directional = light;
-			}
-		}
-
-		return {type: 'directional', light: directional};
+	/// Get the main light in the scene
+	getSingleLight(scene: Scene): {type: 'directional' | 'ibl', light: ImageBasedLight | DirectionalLight} {
+		return {
+			type: scene.light instanceof ImageBasedLight ? 'ibl' : 'directional',
+			light: scene.light,
+		};
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {

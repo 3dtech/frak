@@ -9,6 +9,9 @@ import Color from 'rendering/Color';
 import PerspectiveCamera from './components/PerspectiveCamera';
 import DirectionalLight from './lights/DirectionalLight';
 import RendererOrganizer from "../rendering/camera/RendererOrganizer";
+import CameraComponent from "./components/CameraComponent";
+import AmbientLight from "./lights/AmbientLight";
+import ImageBasedLight from "./lights/ImageBasedLight";
 
 /** Scene keeps track of components and nodes, cameras etc */
 class Scene extends Serializable {
@@ -16,13 +19,19 @@ class Scene extends Serializable {
 	dynamicSpace = new DynamicSpace();
 	organizer = new RendererOrganizer();
 	rendererDamage = -1;
-	camera: any;
-	cameras: any;
-	cameraComponent: any;
-	lights: any;
+	camera: Camera;
+	cameras: Camera[] = [];
+	cameraComponent: CameraComponent;
+	lights: Light[] = [];
+	ambientLights: AmbientLight[] = [];
+	directionalLights: DirectionalLight[] = [];
+	imageBasedLights: ImageBasedLight[] = [];
+	pointLights: any = [];	// TODO
 	engine: Engine;
-	starting: any;
-	started: any;
+	/** If scene is being started, it is set to true */
+	starting = false;
+	/** If scene has started, it's set to true */
+	started = false;
 	startingQueue: any;
 	components: any;
 	preRenderedComponents: any;
@@ -37,10 +46,6 @@ class Scene extends Serializable {
 	constructor() {
 		super();
 		this.root.scene = this;
-		this.cameras = []; ///< Scene cameras
-		this.lights = [];
-		this.starting = false; ///< If scene is being started, it is set to true
-		this.started = false; ///< If scene has started, it's set to true
 		this.startingQueue = []; ///< Starting queue where the components that are still starting can be pushed
 
 		this.components = []; ///< List of all components
@@ -80,7 +85,7 @@ class Scene extends Serializable {
 
 		this.cameraNode=new Node("Camera");
 		this.cameraComponent=this.cameraNode.addComponent(new PerspectiveCamera());
-		this.cameraComponent.aspect=false; // Forces PerspectiveCamera to autodetect aspect ratio
+		(this.cameraComponent as PerspectiveCamera).aspect=false; // Forces PerspectiveCamera to autodetect aspect ratio
 		this.camera=this.cameraComponent.camera;	///< Main camera used for rendering scene. Beware! This is not camera component meaning that its view matrix gets overwritten by camera component each frame
 		this.root.addNode(this.cameraNode);
 

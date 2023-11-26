@@ -1,19 +1,7 @@
 import Light from 'scene/components/Light';
 import Material from 'rendering/materials/Material';
-import UniformColor from 'rendering/shaders/UniformColor';
-import UniformFloat from 'rendering/shaders/UniformFloat';
-import UniformVec3 from 'rendering/shaders/UniformVec3';
-import UniformMat4 from 'rendering/shaders/UniformMat4';
-import UniformInt from 'rendering/shaders/UniformInt';
-import TargetTextureFloat from 'rendering/camera/TargetTextureFloat';
-import TargetTexture from 'rendering/camera/TargetTexture';
 import Sampler from 'rendering/shaders/Sampler';
-import Mesh from 'scene/geometry/Mesh';
-import Submesh from 'scene/geometry/Submesh';
 import Node from 'scene/Node';
-import MeshComponent from 'scene/components/MeshComponent';
-import MeshRendererComponent from 'scene/components/MeshRendererComponent';
-import Color from 'rendering/Color';
 import ShaderDescriptor from "../descriptors/ShaderDescriptor";
 import CubeTexture from "../../rendering/materials/CubeTexture";
 
@@ -21,18 +9,25 @@ import CubeTexture from "../../rendering/materials/CubeTexture";
  * Image based lighting
  */
 class ImageBasedLight extends Light {
-	geometry: any;
-	material: any;
-
 	constructor(public source: CubeTexture) {
 		super();
-
-		this.geometry = null;
-		this.material = null;
 	}
 
 	type(): any {
 		return "ImageBasedLight";
+	}
+
+	onAddScene(node: Node) {
+		node.scene.imageBasedLights.push(this);
+		super.onAddScene(node);
+	}
+
+	onRemoveScene(node: Node) {
+		const i = node.scene.imageBasedLights.indexOf(this);
+		if (i !== -1) {
+			node.scene.imageBasedLights.splice(i, 1);
+		}
+		super.onRemoveScene(node);
 	}
 
 	onStart(context, engine): any {
@@ -46,40 +41,7 @@ class ImageBasedLight extends Light {
 			[new Sampler('light0', this.source)]
 		);
 
-		var mesh = new Mesh();
-		var submesh = new Submesh();
-		submesh.positions = [
-			-1, -1, 0,
-			-1, 1, 0,
-			1, 1, 0,
-			1, -1, 0
-		];
-		submesh.normals = [
-			0.0, 0.0, 1.0,
-			0.0, 0.0, 1.0,
-			0.0, 0.0, 1.0,
-			0.0, 0.0, 1.0
-		];
-		submesh.texCoords2D = [[
-			0.0, 0.0,
-			0.0, 1.0,
-			1.0, 1.0,
-			1.0, 0.0
-		]];
-		submesh.faces = [0, 1, 2, 0, 2, 3];
-		submesh.recalculateBounds();
-		mesh.addSubmesh(submesh, this.material);
-
-		this.geometry = new Node("ImageBasedLightGeometry");
-		this.geometry.addComponent(new MeshComponent(mesh));
-		this.geometry.addComponent(new MeshRendererComponent()).disable();
-		this.node.addNode(this.geometry);
-
 		engine.assetsManager.load();
-	}
-
-	getGeometryRenderers(): any {
-		return this.geometry.getComponent(MeshRendererComponent).meshRenderers;
 	}
 
 	onContextRestored(context) {}

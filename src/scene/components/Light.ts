@@ -1,5 +1,6 @@
 import Component from 'scene/components/Component';
 import Color from 'rendering/Color';
+import Material from "../../rendering/materials/Material";
 
 /** Base class for all lights */
 class Light extends Component {
@@ -8,6 +9,7 @@ class Light extends Component {
 	shadowCasting: any;
 	shadowMask: any;
 	damaged: any;
+	material: Material;
 
 	constructor() {
 		super();
@@ -34,10 +36,6 @@ class Light extends Component {
 				i--;
 			}
 		}
-	}
-
-	getGeometryRenderers(): any {
-		return [];
 	}
 
 	isPositional(): any {

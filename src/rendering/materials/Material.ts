@@ -58,7 +58,7 @@ class Material extends Serializable {
 		@param uniforms Optional extra uniforms to go with the material
 		@param ... All the rest of the arguments are treated as optional
 		extra samplers or lists of samplers to go with the material */
-	bind(uniforms, ...samplers): any {
+	bind(uniforms?, ...samplers): any {
 		if (!this.shader)
 			return;
 

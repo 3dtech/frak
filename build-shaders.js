@@ -34,7 +34,7 @@ async function main() {
 					continue;
 				let relativePath = path.join(shadersPath, file);
 				let data = await readFile(path.join(shadersPath, file));
-				output[profile][path.posix.join(bundleBasePath, file)] = data.toString();
+				output[profile][path.posix.join(bundleBasePath, file)] = data.toString().replaceAll('\r\n', '\n');
 			}
 		}
 		catch (err) {

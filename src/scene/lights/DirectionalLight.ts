@@ -23,8 +23,6 @@ class DirectionalLight extends Light {
 	direction: any;
 	shadowResolution: any;
 	shadowBias: any;
-	geometry: any;
-	material: any;
 	shadow: any;
 	shadowSampler: any;
 	lightView: any;
@@ -41,9 +39,6 @@ class DirectionalLight extends Light {
 		this.shadowResolution = vec2.fromValues(2048, 2048);
 		this.shadowBias = 0.01; ///< Used to offset lightspace depth to avoid floating point errors in depth comparison
 
-		this.geometry = null;
-		this.material = null;
-
 		this.shadow = null;
 		this.shadowSampler = null;
 		this.lightView = mat4.create();
@@ -52,6 +47,19 @@ class DirectionalLight extends Light {
 
 	type(): any {
 		return "DirectionalLight";
+	}
+
+	onAddScene(node: Node) {
+		node.scene.directionalLights.push(this);
+		super.onAddScene(node);
+	}
+
+	onRemoveScene(node: Node) {
+		const i = node.scene.directionalLights.indexOf(this);
+		if (i !== -1) {
+			node.scene.directionalLights.splice(i, 1);
+		}
+		super.onRemoveScene(node);
 	}
 
 	/** Sets light direction. The given vector is re-normalized.
@@ -89,35 +97,6 @@ class DirectionalLight extends Light {
 			this.material.samplers.push(this.shadowSampler);
 		}
 
-		var mesh = new Mesh();
-		var submesh = new Submesh();
-		submesh.positions = [
-			-1, -1, 0,
-			-1, 1, 0,
-			1, 1, 0,
-			1, -1, 0
-		];
-		submesh.normals = [
-			0.0, 0.0, 1.0,
-			0.0, 0.0, 1.0,
-			0.0, 0.0, 1.0,
-			0.0, 0.0, 1.0
-		];
-		submesh.texCoords2D = [[
-			0.0, 0.0,
-			0.0, 1.0,
-			1.0, 1.0,
-			1.0, 0.0
-		]];
-		submesh.faces = [0, 1, 2, 0, 2, 3];
-		submesh.recalculateBounds();
-		mesh.addSubmesh(submesh, this.material);
-
-		this.geometry = new Node("DirectionalLightGeometry");
-		this.geometry.addComponent(new MeshComponent(mesh));
-		this.geometry.addComponent(new MeshRendererComponent()).disable();
-		this.node.addNode(this.geometry);
-
 		engine.assetsManager.load();
 	}
 
@@ -148,10 +127,6 @@ class DirectionalLight extends Light {
 			mat4.copy(this.material.uniforms.lightView.value, this.lightView);
 			mat4.copy(this.material.uniforms.lightProjection.value, this.lightProj);
 		}
-	}
-
-	getGeometryRenderers(): any {
-		return this.geometry.getComponent(MeshRendererComponent).meshRenderers;
 	}
 
 	onContextRestored(context) {
