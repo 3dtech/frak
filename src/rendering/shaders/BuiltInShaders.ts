@@ -1,4 +1,4 @@
-// Generated at 2023-11-26T18:30:54.369Z
+// Generated at 2023-11-26T18:41:40.420Z
 var BuiltInShaders = {
 	"webgl2": {
 		"shaders/color.frag": "#version 300 es\n\nprecision highp float;\n\n#if NUM_TARGETS > 0\nuniform vec4 color1;\n#if NUM_TARGETS > 1\nuniform vec4 color2;\n#endif\n#endif\n\nin vec2 uv;\n\n#if NUM_TARGETS > 0\nlayout(location = 0) out vec4 out1;\n#if NUM_TARGETS > 1\nlayout(location = 1) out vec4 out2;\n#endif\n#endif\n\nvoid main () {\n#if NUM_TARGETS > 0\n    out1 = color1;\n#if NUM_TARGETS > 1\n    out2 = color2;\n#endif\n#endif\n}\n",
@@ -20,3 +20,4 @@ var BuiltInShaders = {
 	}
 };
 globalThis.BuiltInShaders = BuiltInShaders;
+export default BuiltInShaders;
