@@ -90,14 +90,14 @@ class TransparentRenderStage extends RenderStage {
 		// Accum
 		this.parent.oitAccum.bind(context, false, this.clearBlack);
 		gl.blendFunc(gl.ONE, gl.ONE);
-		this.parent.organizer.transparentRenderers.run(context, this.shaderCache[light.type], this.parent.filteredRenderers, s => {
+		scene.organizer.transparentRenderers.run(context, this.shaderCache[light.type], this.parent.filteredRenderers, s => {
 			s.use(light.light.material.uniforms);
 		});
 
 		// Reveal
 		this.parent.oitReveal.bind(context, false, this.clearWhite);
 		gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
-		this.parent.organizer.transparentRenderers.run(context, this.revealMaterial.shader, this.parent.filteredRenderers, s => {
+		scene.organizer.transparentRenderers.run(context, this.revealMaterial.shader, this.parent.filteredRenderers, s => {
 			s.use(light.light.material.uniforms);
 		});
 

@@ -91,11 +91,11 @@ class RenderingContext {
 		this.engine = engine; ///< Current engine used for rendering
 	}
 
-	selectShader(context: RenderingContext, baseShader: Shader, definitions: DefinitionsHelper): Shader {
+	selectShader(baseShader: Shader, definitions: DefinitionsHelper): Shader {
 		const hash = baseShader.hash ^ definitions.hash;
 
 		if (!this.shaderCache[hash]) {
-			const shader = new Shader(context, baseShader.descriptor);
+			const shader = new Shader(this, baseShader.descriptor);
 			shader.definitions = baseShader.definitions.clone();	// In case there were definitions not in the descriptor
 			shader.addVertexShader(baseShader.vertexShader.code);
 			shader.addFragmentShader(baseShader.fragmentShader.code);

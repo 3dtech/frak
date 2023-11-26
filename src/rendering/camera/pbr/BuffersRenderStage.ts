@@ -54,10 +54,10 @@ class BuffersRenderStage extends RenderStage {
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 
 		// Render opaque geometry to the g-buffer
-		this.parent.organizer.opaqueRenderers.run(context, this.opaqueShader, this.parent.filteredRenderers);
+		scene.organizer.opaqueRenderers.run(context, this.opaqueShader, this.parent.filteredRenderers);
 
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
-		this.parent.organizer.transparentRenderers.run(context, this.blendShader, this.parent.filteredRenderers);
+		scene.organizer.transparentRenderers.run(context, this.blendShader, this.parent.filteredRenderers);
 
 		gl.stencilMask(0xFF);
 		gl.disable(gl.STENCIL_TEST);

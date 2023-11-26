@@ -4,7 +4,8 @@ import RayTestResult from 'scene/geometry/RayTestResult';
 class DynamicSpace {
 	renderers: any;
 	colliders: any;
-	damaged = true;
+	/** A number that uniquely identifies when the space was damaged */
+	damaged = 0;
 
 	constructor() {
 		this.renderers = [];
@@ -15,7 +16,7 @@ class DynamicSpace {
 		@param renderer Instance of {Renderer} */
 	addRenderer(renderer): any {
 		this.renderers.push(renderer);
-		this.damaged = true;
+		this.damaged = (new Date()).getTime();
 	}
 
 	/** Removes a renderer
@@ -24,7 +25,7 @@ class DynamicSpace {
 		for (var i=0; i<this.renderers.length; i++) {
 			if (this.renderers[i]===renderer) {
 				this.renderers.splice(i, 1);
-				this.damaged = true;
+				this.damaged = (new Date()).getTime();
 				return true;
 			}
 		}

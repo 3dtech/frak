@@ -8,11 +8,14 @@ import Engine from 'engine/Engine';
 import Color from 'rendering/Color';
 import PerspectiveCamera from './components/PerspectiveCamera';
 import DirectionalLight from './lights/DirectionalLight';
+import RendererOrganizer from "../rendering/camera/RendererOrganizer";
 
 /** Scene keeps track of components and nodes, cameras etc */
 class Scene extends Serializable {
-	root: Node;
-	dynamicSpace: DynamicSpace;
+	root = new Node();
+	dynamicSpace = new DynamicSpace();
+	organizer = new RendererOrganizer();
+	rendererDamage = -1;
 	camera: any;
 	cameras: any;
 	cameraComponent: any;
@@ -33,9 +36,7 @@ class Scene extends Serializable {
 
 	constructor() {
 		super();
-		this.root = new Node(); ///< Root node of the scene
 		this.root.scene = this;
-		this.dynamicSpace = new DynamicSpace(); ///< Dynamic space where all the mesh renderers go
 		this.cameras = []; ///< Scene cameras
 		this.lights = [];
 		this.starting = false; ///< If scene is being started, it is set to true
@@ -174,6 +175,13 @@ class Scene extends Serializable {
 	render(context): any {
 		if (!this.started)
 			return; // Make sure we don't render before starting the scene
+
+		// Batch renderers if the space has changed
+		if (this.dynamicSpace.damaged !== this.rendererDamage) {
+			this.rendererDamage = this.dynamicSpace.damaged;
+			this.organizer.batch(this.dynamicSpace.renderers);
+		}
+
 		var camera: Camera;
 
 		for (var cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {

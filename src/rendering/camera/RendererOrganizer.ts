@@ -59,7 +59,7 @@ class View {
 					const renderer = filteredRenderers[i];
 					if (renderer) {
 						if (!shader) {
-							shader = context.selectShader(context, baseShader, renderer.material.definitions);
+							shader = context.selectShader(baseShader, renderer.material.definitions);
 							shaderBind(shader);
 						}
 

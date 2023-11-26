@@ -36,7 +36,6 @@ class MainRenderStage extends RenderStage {
 	parent: PBRPipeline;
 	oitAccum: TargetTextureFloat;
 	oitReveal: TargetTexture;
-	organizer = new RendererOrganizer();
 	size = vec2.create();
 	sharedSamplers: Sampler[] = [];
 	oitSamplers: Sampler[] = [];
@@ -84,11 +83,6 @@ class MainRenderStage extends RenderStage {
 	}
 
 	onPreRender(context: any, scene: Scene, camera: any) {
-		if (scene.dynamicSpace.damaged) {
-			scene.dynamicSpace.damaged = false;
-			this.organizer.batch(scene.dynamicSpace.renderers);
-		}
-
 		scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask, this.filteredRenderers);
 	}
 }
