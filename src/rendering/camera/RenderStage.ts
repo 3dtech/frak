@@ -9,16 +9,13 @@ import Scene from "../../scene/Scene";
 	stages to provide output. */
 class RenderStage {
 	parent: any;
-	substages: any;
-	started: any;
-	enabled: any;
+	substages: RenderStage[] = [];
+	started = false;
+	enabled = true;
 
 	/** Constructor */
 	constructor() {
 		this.parent = false; ///< Parent RenderStage
-		this.substages = [];
-		this.started = false;
-		this.enabled = true;
 	}
 
 	/** Adds a substage to this RenderStage.
@@ -31,7 +28,7 @@ class RenderStage {
 
 	/** Removes a substage from this RenderStage.
 		@param stage Instance of {RenderStage} */
-	removeStage(stage): any {
+	removeStage(stage: RenderStage): boolean {
 		for (var i=0; i<this.substages.length; i++) {
 			if (this.substages[i]===stage) {
 				stage.parent=false;
@@ -43,8 +40,8 @@ class RenderStage {
 	}
 
 	/** Removes all sub-stages of type stageType. */
-	removeStagesByType(stageType): any {
-		var removed=[];
+	removeStagesByType(stageType): RenderStage[] {
+		var removed: RenderStage[] = [];
 		for (var i=0; i<this.substages.length; i++) {
 			if (this.substages[i] instanceof stageType) {
 				removed.push(this.substages[i]);
@@ -59,7 +56,7 @@ class RenderStage {
 	}
 
 	/** Removes all sub-stages. */
-	clearStages(): any {
+	clearStages() {
 		for (var i=0; i<this.substages.length; i++) {
 			this.substages[i].parent = false;
 		}
@@ -78,7 +75,7 @@ class RenderStage {
 	// Methods
 	/** Performs initialization tasks on this render stage and its substages that
 		require rendering context or engine (for loading additional assets). */
-	start(context, engine, camera): any {
+	start(context, engine, camera) {
 		this.started = true;
 		this.onStart(context, engine, camera);
 		for (var i=0; i<this.substages.length; i++)
@@ -86,7 +83,7 @@ class RenderStage {
 	}
 
 	/** Renders this stage and substages */
-	render(context: RenderingContext, scene: Scene, camera: Camera): any {
+	render(context: RenderingContext, scene: Scene, camera: Camera) {
 		if (!this.enabled)
 			return;
 
@@ -118,18 +115,18 @@ class RenderStage {
 	// Events
 	/** Called immediately after engine has been started.
 		Loading of render stage specific shaders and other precomputations can be done during this call. */
-	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {}
+	onStart(context: RenderingContext, engine: Engine, camera: Camera) {}
 
 	/** Called before rendering substages of this render-stage.
 		The target of this render-stage is bound. */
-	onPreRender(context: RenderingContext, scene: Scene, camera: Camera): any {}
+	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {}
 
 	/** Called after rendering substages of this render-stage.
 		The target of this render-stage is bound. */
-	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {}
+	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {}
 
 	/** Called when the render stage is enabled. */
-	onEnable(): any {}
+	onEnable() {}
 
 	/** Called when the render stage is disabled. */
 	onDisable() {}

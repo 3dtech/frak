@@ -42,8 +42,8 @@ class BuffersRenderStage extends RenderStage {
 			]));
 	}
 
-	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
-		var gl = context.gl;
+	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
+		const gl = context.gl;
 
 		this.parent.gbuffer.bind(context, false, this.clearColor);
 
@@ -56,6 +56,10 @@ class BuffersRenderStage extends RenderStage {
 		gl.stencilMask(0xFF);
 		gl.stencilFunc(gl.ALWAYS, 1, 0xFF);
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+	}
+
+	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
+		var gl = context.gl;
 
 		// Render opaque geometry to the g-buffer
 		scene.organizer.opaqueRenderers.run(context, this.opaqueShader, this.parent.filteredRenderers);

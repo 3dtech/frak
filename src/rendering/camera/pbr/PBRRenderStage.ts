@@ -23,9 +23,6 @@ class PBRRenderStage extends RenderStage {
 		gl.stencilMask(0x00);
 
 		gl.stencilFunc(gl.EQUAL, 1, 0xFF);
-
-		gl.enable(gl.CULL_FACE);
-		gl.cullFace(gl.FRONT);
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {

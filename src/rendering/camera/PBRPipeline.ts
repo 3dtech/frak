@@ -12,11 +12,12 @@ import Camera from "./Camera";
 import Engine from "../../engine/Engine";
 import Shader from "../shaders/Shader";
 import DefinitionsHelper from "../DefinitionsHelper";
+import DirectionalLight from "../../scene/lights/DirectionalLight";
 
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
 	debugger: any;
-	debugActive = true;
+	debugActive = false;
 	uboBuffer: WebGLBuffer;
 	uboOffsets = {};
 	zNear = new Float32Array();
@@ -76,7 +77,6 @@ class PBRPipeline extends PostProcessRenderStage {
 
 		gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
 
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['modelview'], context.modelview.top());
 		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projection'], context.projection.top());
 		mat4.invert(this.inverseProjection, context.projection.top());
 		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projectionInverse'], this.inverseProjection);
@@ -100,12 +100,12 @@ class PBRPipeline extends PostProcessRenderStage {
 		super.onPreRender(context, scene, camera);
 	}
 
-	onPostRender(context, scene, camera): any {
+	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		super.onPostRender(context, scene, camera);
 
 		if (this.debugActive) {
 			if (!this.debugger) {
-				this.initDebugger(context);
+				this.initDebugger(context, scene);
 			}
 			var gl = context.gl;
 			gl.clearColor(0, 0, 0, 1);
@@ -125,11 +125,27 @@ class PBRPipeline extends PostProcessRenderStage {
 		}
 	}
 
+	replaceViewProjection(context: RenderingContext, projection: any, view: any) {
+		const gl = context.gl;
+		gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projection'], projection);
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['view'], view);
+		gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+	}
+
+	restoreViewProjection(context: RenderingContext, camera: Camera) {
+		const gl = context.gl;
+		gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projection'], context.projection.top());
+		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['view'], camera.viewMatrix);
+		gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+	}
+
 	debug(v) {
 		this.debugActive = !!v;
 	}
 
-	initDebugger(context) {
+	initDebugger(context, scene) {
 		this.debugger = {
 			quads: [],
 			sampler: new Sampler('tex0', null)
@@ -156,6 +172,22 @@ class PBRPipeline extends PostProcessRenderStage {
 		}
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.oitAccum.texture });
 		this.debugger.quads.push({ quad: createQuad(x += size, y, size, size), texture: this.generator.oitReveal.texture });
+
+		// Draw shadowmaps
+		size = 0.5;
+		x = -1;
+		y = 1 - size;
+		for (var i=0; i<scene.directionalLights.length; i++) {
+			if (
+				!scene.directionalLights[i].enabled ||
+				!scene.directionalLights[i].shadowCasting ||
+				!scene.directionalLights[i].shadow
+			) {
+				continue;
+			}
+			this.debugger.quads.push({ quad: createQuad(x, y, size, size),  texture: scene.directionalLights[i].shadow.texture });
+			x+=size;
+		}
 	}
 }
 

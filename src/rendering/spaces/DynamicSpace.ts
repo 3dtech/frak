@@ -16,7 +16,7 @@ class DynamicSpace {
 		@param renderer Instance of {Renderer} */
 	addRenderer(renderer): any {
 		this.renderers.push(renderer);
-		this.damaged = (new Date()).getTime();
+		this.damaged = Date.now();
 	}
 
 	/** Removes a renderer

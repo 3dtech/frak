@@ -11,23 +11,19 @@ import Shader from "../../shaders/Shader";
 import Material from "../../materials/Material";
 import Light from "../../../scene/components/Light";
 
-interface MaterialCache {
-	[key: string]: Material;
+interface ShaderCache {
+	[key: string]: Shader;
 }
 
 /**
  * Deferred shading light accumulation pass
  */
 class PBRLightsRenderStage extends PBRRenderStage {
-	materialCache: MaterialCache = {};
+	shaderCache: ShaderCache = {};
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
 		for (const type of ['ambient', 'directional', 'ibl']) {
-			this.materialCache[type] = new Material(
-				engine.assetsManager.addShader('shaders/uv.vert', `shaders/pbr_${type}.frag`),
-				{},
-				[]
-			);
+			this.shaderCache[type] = engine.assetsManager.addShader('shaders/uv.vert', `shaders/pbr_${type}.frag`);
 		}
 	}
 
@@ -40,17 +36,17 @@ class PBRLightsRenderStage extends PBRRenderStage {
 
 		// Ambient
 		if (scene.ambientLights.length) {
-			firstLight = this.renderLights(this.materialCache.ambient, scene.ambientLights, context, camera, firstLight);
+			firstLight = this.renderLights(this.shaderCache.ambient, scene.ambientLights, context, camera, firstLight);
 		}
 
 		// Directional
 		if (scene.directionalLights.length) {
-			firstLight = this.renderLights(this.materialCache.directional, scene.directionalLights, context, camera, firstLight);
+			firstLight = this.renderLights(this.shaderCache.directional, scene.directionalLights, context, camera, firstLight);
 		}
 
 		// IBL
 		if (scene.imageBasedLights.length) {
-			firstLight = this.renderLights(this.materialCache.imageBased, scene.imageBasedLights, context, camera, firstLight);
+			firstLight = this.renderLights(this.shaderCache.imageBased, scene.imageBasedLights, context, camera, firstLight);
 		}
 
 		// TODO: Point lights
@@ -60,13 +56,18 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		super.onPostRender(context, scene, camera);
 	}
 
-	renderLights(material: Material, lights: Light[], context: RenderingContext, camera: Camera, first: boolean) {
-		material.bind(null, this.parent.sharedSamplers);
+	renderLights(shader: Shader, lights: Light[], context: RenderingContext, camera: Camera, first: boolean) {
+		shader.use();
+		shader.bindSamplers(this.parent.sharedSamplers);
 
 		for (const light of lights) {
-			material.shader.bindUniforms(light.material.uniforms);
-			if (light.material.samplers) {
-				material.shader.bindSamplers(this.parent.sharedSamplers.concat(light.material.samplers));
+			if (!light.enabled) {
+				continue;
+			}
+
+			shader.bindUniforms(light.material.uniforms);
+			if (light.material.samplers && light.material.samplers.length) {
+				shader.bindSamplers(this.parent.sharedSamplers.concat(light.material.samplers));
 			}
 
 			camera.renderStage.screenQuad.quad.render();
@@ -76,8 +77,6 @@ class PBRLightsRenderStage extends PBRRenderStage {
 				first = false;
 			}
 		}
-
-		material.unbind();
 
 		return first;
 	}

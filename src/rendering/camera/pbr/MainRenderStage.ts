@@ -17,6 +17,7 @@ import Renderer from "../../renderers/Renderer";
 import TargetTextureFloat from "../TargetTextureFloat";
 import Engine from "../../../engine/Engine";
 import TargetTexture from "../TargetTexture";
+import ShadowMapsRenderStage from "./ShadowMapsRenderStage";
 
 class BindDstTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -45,6 +46,7 @@ class MainRenderStage extends RenderStage {
 	constructor() {
 		super();
 
+		this.addStage(new ShadowMapsRenderStage());
 		this.addStage(new BuffersRenderStage());
 
 		this.addStage(new BindDstTarget());

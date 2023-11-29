@@ -15,34 +15,35 @@ import MeshComponent from 'scene/components/MeshComponent';
 import MeshRendererComponent from 'scene/components/MeshRendererComponent';
 import Color from 'rendering/Color';
 import ShaderDescriptor from "../descriptors/ShaderDescriptor";
+import Camera from "../../rendering/camera/Camera";
+import BoundingBox from "../geometry/BoundingBox";
 
 /**
  * Directional light (affects entire buffer)
  */
 class DirectionalLight extends Light {
-	direction: any;
 	shadowResolution: any;
 	shadowBias: any;
-	shadow: any;
-	shadowSampler: any;
-	lightView: any;
-	lightProj: any;
+	shadow: TargetTextureFloat;
+	shadowSampler: Sampler;
+	lightView = mat4.create()
+	lightProj = mat4.create();
+	frustum = new BoundingBox();
+	frustumDamaged = -1;
+	position = vec3.create();
+	lookTarget = vec3.create();
+	upVector = vec3.fromValues(0, 1, 0);
 
-	constructor(direction?, color?) {
+	constructor(public direction = vec3.fromValues(1, 1, 1), public color = new Color(1, 1, 1, 1)) {
 		super();
 
 		this.intensity = 1.0;
-		this.color = color || new Color(1.0, 1.0, 1.0, 1.0);
-		this.direction = vec3.fromValues(1.0, 1.0, 1.0);
-		if (direction)
-			this.setLightDirection(direction);
+		this.setLightDirection(direction);
 		this.shadowResolution = vec2.fromValues(2048, 2048);
 		this.shadowBias = 0.01; ///< Used to offset lightspace depth to avoid floating point errors in depth comparison
 
 		this.shadow = null;
 		this.shadowSampler = null;
-		this.lightView = mat4.create();
-		this.lightProj = mat4.create();
 	}
 
 	type(): any {

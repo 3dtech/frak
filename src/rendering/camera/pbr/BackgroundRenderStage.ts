@@ -21,7 +21,7 @@ class BackgroundRenderStage extends PBRRenderStage {
 
 		this.backgroundMaterial = new Material(
 			engine.assetsManager.shadersManager.addDescriptor(new ShaderDescriptor(
-				'shaders/uv.vert', 'shaders/color.frag', ['NUM_TARGETS 1']
+				'shaders/uv.vert', 'shaders/color.frag', []
 			)),
 			{
 				color1: new UniformColor(new Color(0.8, 0.8, 0.8, 1.0))

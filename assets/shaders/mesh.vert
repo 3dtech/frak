@@ -10,7 +10,6 @@ layout(location = 3) in vec4 tangent4d;
 uniform mat4 model;
 
 uniform Camera {
-    mat4 modelview;
     mat4 projection;
     mat4 projectionInverse;
     mat4 view;
@@ -28,16 +27,23 @@ out vec4 worldTangent;
 #endif
 out vec4 viewPosition;
 out vec3 viewNormal;
+#ifdef DEPTH
+out float depth;
+#endif
 
 void main() {
 	uv0 = texcoord2d0;
 	worldPosition = model * vec4(position, 1.0);
 	worldNormal = normalize(mat3(model) * normal);
 	viewPosition = view * worldPosition;
-	viewNormal = mat3(modelview) * normal;
+	viewNormal = mat3(view) * worldNormal;
 #ifdef VERTEX_TANGENTS
 	worldTangent = vec4(normalize(mat3(model) * tangent4d.xyz), tangent4d.w);
 #endif
+	vec4 projectionPosition = projection * viewPosition;
+#ifdef DEPTH
+	depth = projectionPosition.z / projectionPosition.w;
+#endif
 
-	gl_Position = projection * viewPosition;
+	gl_Position = projectionPosition;
 }

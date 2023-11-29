@@ -13,9 +13,8 @@ import ShaderDescriptor from "../descriptors/ShaderDescriptor";
  * Ambient light (affects entire buffer)
  */
 class AmbientLight extends Light {
-	constructor(color) {
+	constructor(public color = new Color(0.2, 0.2, 0.2, 1.0)) {
 		super();
-		this.color = color || new Color(0.2, 0.2, 0.2, 1.0);
 	}
 
 	type(): any {

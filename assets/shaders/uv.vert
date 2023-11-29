@@ -1,7 +1,6 @@
 #version 300 es
 
 uniform Camera {
-    mat4 modelview;
     mat4 projection;
     mat4 projectionInverse;
     mat4 view;

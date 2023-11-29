@@ -2,17 +2,6 @@
 
 precision highp float;
 
-uniform Camera {
-    mat4 modelview;
-    mat4 projection;
-    mat4 projectionInverse;
-    mat4 view;
-    mat4 viewInverse;
-    float zNear;
-    float zFar;
-    vec3 cameraPosition;
-};
-
 uniform vec4 diffuse;
 
 #ifdef DIFFUSE_TEXTURE

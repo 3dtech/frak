@@ -7,7 +7,6 @@ uniform sampler2D normalRoughness;
 uniform sampler2D positionOcclusion;
 
 uniform Camera {
-    mat4 modelview;
     mat4 projection;
     mat4 projectionInverse;
     mat4 view;

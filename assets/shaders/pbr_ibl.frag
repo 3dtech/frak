@@ -9,7 +9,6 @@ uniform sampler2D positionOcclusion;
 uniform samplerCube light0;
 
 uniform Camera {
-    mat4 modelview;
     mat4 projection;
     mat4 projectionInverse;
     mat4 view;

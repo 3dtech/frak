@@ -81,9 +81,6 @@ class Renderer {
 		if (uniforms.hasOwnProperty('model')) mat4.copy(uniforms.model.value, this.matrix);
 		else uniforms.model = new UniformMat4(this.matrix);
 
-		if (uniforms.hasOwnProperty('modelview')) mat4.copy(uniforms.modelview.value, context.modelview.top());
-		else uniforms.modelview = new UniformMat4(context.modelview.top());
-
 		return uniforms;
 	}
 

@@ -21,7 +21,8 @@ import RenderTarget from './RenderTarget';
 class Camera extends Serializable {
 	viewMatrix: any;
 	projectionMatrix: any;
-	viewInverseMatrix: any;
+	viewInverseMatrix = mat4.create();
+	projectionInverseMatrix = mat4.create();
 	renderStage: PBRPipeline;
 	target: RenderTarget;
 	backgroundColor: any;
@@ -46,8 +47,8 @@ class Camera extends Serializable {
 		super();
 		this.viewMatrix = viewMatrix;
 		this.projectionMatrix = projectionMatrix;
-		this.viewInverseMatrix = mat4.create();
 		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+		mat4.invert(this.projectionInverseMatrix, this.projectionMatrix);
 		this.renderStage = new PBRPipeline();
 		this.target = new TargetScreen();
 		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
@@ -137,6 +138,8 @@ class Camera extends Serializable {
 		this.clearBuffers(context);
 
 		context.camera = this;
+
+		mat4.invert(this.projectionInverseMatrix, this.projectionMatrix);
 
 		if (this.stereo()) {
 			// Update inverse view matrix

@@ -4,21 +4,12 @@ import Material from "../../rendering/materials/Material";
 
 /** Base class for all lights */
 class Light extends Component {
-	color: any;
-	intensity: any;
-	shadowCasting: any;
-	shadowMask: any;
-	damaged: any;
+	color = new Color(1.0, 1.0, 1.0, 1.0);
+	intensity = 1.0;
+	shadowCasting = false;
+	shadowMask= 0xFFFFFFFF;
+	damaged = true;
 	material: Material;
-
-	constructor() {
-		super();
-		this.color = new Color(1.0, 1.0, 1.0, 1.0);
-		this.intensity = 1.0;
-		this.shadowCasting = false;
-		this.shadowMask = 0xFFFFFFFF;
-		this.damaged = true;
-	}
 
 	type(): any {
 		return "Light";

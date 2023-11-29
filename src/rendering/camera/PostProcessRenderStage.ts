@@ -69,7 +69,7 @@ class PostProcessRenderStage extends RenderStage {
 		this.generator.start(context, engine, camera);
 	}
 
-	onPreRender(context: RenderingContext, scene: Scene, camera: Camera): any {
+	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		var cameraTarget = camera.target;
 
 		this.src.resetViewport();
@@ -86,7 +86,7 @@ class PostProcessRenderStage extends RenderStage {
 		camera.target = cameraTarget;
 	}
 
-	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
+	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		camera.target.bind(context);
 		this.renderEffect(context, this.material, this.srcSampler);
 		camera.target.unbind(context);
