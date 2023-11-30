@@ -1,14 +1,6 @@
 #version 300 es
 
-uniform Camera {
-    mat4 projection;
-    mat4 projectionInverse;
-    mat4 view;
-    mat4 viewInverse;
-    float zNear;
-    float zFar;
-    vec3 cameraPosition;
-};
+#include "snippets/camera.glsl"
 
 layout(location = 0) in vec3 position;
 layout(location = 2) in vec2 texcoord2d0;

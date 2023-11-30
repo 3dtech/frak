@@ -6,15 +6,7 @@ uniform sampler2D colorMetallic;
 uniform sampler2D normalRoughness;
 uniform sampler2D positionOcclusion;
 
-uniform Camera {
-    mat4 projection;
-    mat4 projectionInverse;
-    mat4 view;
-    mat4 viewInverse;
-    float zNear;
-    float zFar;
-    vec3 cameraPosition;
-};
+#include "snippets/camera.glsl"
 
 uniform vec4 lightColor;
 

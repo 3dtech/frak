@@ -9,15 +9,7 @@ layout(location = 3) in vec4 tangent4d;
 
 uniform mat4 model;
 
-uniform Camera {
-    mat4 projection;
-    mat4 projectionInverse;
-    mat4 view;
-    mat4 viewInverse;
-    float zNear;
-    float zFar;
-    vec3 cameraPosition;
-};
+#include "snippets/camera.glsl"
 
 out vec2 uv0;
 out vec4 worldPosition;

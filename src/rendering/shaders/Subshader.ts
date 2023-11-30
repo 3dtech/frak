@@ -1,3 +1,5 @@
+import RenderingContext from "../RenderingContext";
+
 const VERTEX_SHADER = 0;
 const FRAGMENT_SHADER = 1;
 
@@ -6,7 +8,7 @@ const FRAGMENT_SHADER = 1;
 class Subshader {
 	shader: any;
 	context: any;
-	code: any;
+	code: string;
 	type: any;
 	compiledShader: any;
 	failedCompilation: any;
@@ -30,13 +32,29 @@ class Subshader {
 		return 'Unknown';
 	}
 
-	addDefinitions(context, definitions): any {
-		var lines = this.code.split('\n');
+	/** Preprocesses shader code. Currently only supports #include <filename> */
+	preprocess(context: RenderingContext, definitions?: string[]) {
+		const lines = this.code.split('\n');
 
-		for (var i = 0; i < definitions.length; i++) {
-			var def = definitions[i];
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
 
-			lines.splice(1, 0, '#define ' + def);
+			if (line.startsWith('#include')) {
+				const filename = line.split(' ')[1].replace(/"/g, '');
+				const snippet = context.getShaderSnippet(filename);
+
+				if (!snippet) {
+					throw `Shader snippet ${filename} not found`;
+				}
+
+				lines.splice(i, 1, ...snippet.split('\n'));
+			}
+		}
+
+		if (definitions) {
+			definitions = definitions.map(d => `#define ${d}`);
+
+			lines.splice(1, 0, ...definitions);
 		}
 
 		this.code = lines.join('\n');
@@ -48,9 +66,7 @@ class Subshader {
 
 		if(!this.compiledShader) throw 'WebGL shader has not been created. FragmentShader or VertexShader class instances should be used, not Shader.';
 
-		if (definitions) {
-			this.addDefinitions(context, definitions);
-		}
+		this.preprocess(context, definitions);
 
 		this.context.gl.shaderSource(this.compiledShader, this.code);
 		this.context.gl.compileShader(this.compiledShader);

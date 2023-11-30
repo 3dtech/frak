@@ -2,15 +2,7 @@
 
 precision highp float;
 
-uniform Camera {
-    mat4 projection;
-    mat4 projectionInverse;
-    mat4 view;
-    mat4 viewInverse;
-    float zNear;
-    float zFar;
-    vec3 cameraPosition;
-};
+#include "snippets/camera.glsl"
 
 uniform float alphaCutoff;
 uniform vec4 diffuse;

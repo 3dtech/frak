@@ -60,6 +60,10 @@ class ShadersManager extends Manager {
 		return 'shaders/{0}/{1}'.format(this.shaderBundle, shaderName);
 	}
 
+	getSnippet(name: string): string {
+		return BuiltInShaders['snippets'][`shaders/${name}`];
+	}
+
 	add(vertexSource, fragmentSource, definitions?): Shader {
 		vertexSource = this.sourceCallback(vertexSource);
 		fragmentSource = this.sourceCallback(fragmentSource);

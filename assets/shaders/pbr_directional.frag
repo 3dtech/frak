@@ -6,17 +6,7 @@ uniform sampler2D colorMetallic;
 uniform sampler2D normalRoughness;
 uniform sampler2D positionOcclusion;
 
-uniform sampler2D shadow0;
-
-uniform Camera {
-    mat4 projection;
-    mat4 projectionInverse;
-    mat4 view;
-    mat4 viewInverse;
-    float zNear;
-    float zFar;
-    vec3 cameraPosition;
-};
+#include "snippets/camera.glsl"
 
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
@@ -24,6 +14,10 @@ uniform float lightIntensity;
 uniform mat4 lightView;
 uniform mat4 lightProjection;
 uniform float shadowBias;
+
+#ifdef SHADOWS
+#include "snippets/shadow.glsl"
+#endif
 
 in vec2 uv;
 
@@ -38,27 +32,6 @@ float saturate(float x) {
 
 float pow5(float x) {
 	return x * x * x * x * x;
-}
-
-float linstep(float low, float high, float v) {
-	return clamp((v-low)/(high-low), 0.0, 1.0);
-}
-
-float VSM(vec2 moments, float compare) {
-	float p = smoothstep(compare - shadowBias, compare, moments.x);
-	float variance = max(moments.y - moments.x*moments.x, -0.001);
-	float d = compare - moments.x;
-	float p_max = linstep(0.2, 1.0, variance / (variance + d*d));
-	return clamp(max(p, p_max), 0.0, 1.0);
-}
-
-float shadowmap(vec4 worldPosition) {
-	vec4 shadowPosition = lightProjection * lightView * worldPosition;
-	vec2 shadowUV = shadowPosition.xy / shadowPosition.w;
-	shadowUV = shadowUV * 0.5 + 0.5;
-	vec4 shadowTexel = texture(shadow0, shadowUV) * 2.0 - 1.0;
-
-	return VSM(shadowTexel.xy, shadowPosition.z);
 }
 
 float D_GGX(float roughness, float NdotH) {
@@ -144,7 +117,11 @@ void main(void) {
 
 	vec3 R = reflect(-V, N);
 
+#ifdef SHADOWS
 	float shadow = shadowmap(vec4(position, 1.0));
+#else
+	float shadow = 1.0;
+#endif
 
 	outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
 	outputColor.rgb *= shadow;

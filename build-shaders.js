@@ -12,10 +12,11 @@ const writeFile = util.promisify(fs.writeFile);
 
 const OUTPUT_PATH = './src/rendering/shaders/BuiltInShaders.ts';
 const BUNDLE_RELATIVE_PATH = './assets';
-const EXTENSION_FILTER = ['.vert', '.frag'];
+const EXTENSION_FILTER = ['.vert', '.frag', '.glsl'];
 
 let profiles = {
 	'webgl2': './assets/shaders',
+	'snippets': './assets/shaders/snippets',
 };
 
 async function main() {

@@ -16,6 +16,7 @@ import Sampler from "../../shaders/Sampler";
 import Color from "../../Color";
 import UniformColor from "../../shaders/UniformColor";
 import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
+import DefinitionsHelper from "../../DefinitionsHelper";
 interface ShaderCache {
 	[key: string]: Shader;
 }
@@ -28,8 +29,10 @@ class TransparentRenderStage extends RenderStage {
 	clearWhite = new Color(1, 1, 1, 1);
 	revealMaterial: Material;
 	ppMaterial: Material;
+	emptyDefinitions = new DefinitionsHelper();
+	shadowDefinitions = new DefinitionsHelper(['SHADOWS']);
 
-	onStart(context: any, engine: Engine, camera: any) {
+	onStart(context: RenderingContext, engine: Engine, camera: any) {
 		for (const type of ['directional', 'ibl']) {
 			this.shaderCache[type] = engine.assetsManager.addShader('shaders/mesh.vert', `shaders/direct_${type}.frag`);
 		}
@@ -54,12 +57,14 @@ class TransparentRenderStage extends RenderStage {
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
-		var light = this.getSingleLight(scene);
+		const {light, type} = this.getSingleLight(scene);
 		if (!light) {
 			return;
 		}
 
-		var gl = context.gl;
+		const shader = context.selectShader(this.shaderCache[type], light.shadowCasting ? this.shadowDefinitions : this.emptyDefinitions);
+
+		const gl = context.gl;
 		gl.enable(gl.DEPTH_TEST);
 
 		gl.depthMask(false);
@@ -72,21 +77,21 @@ class TransparentRenderStage extends RenderStage {
 		// Accum
 		this.parent.oitAccum.bind(context, false, this.clearBlack);
 		gl.blendFunc(gl.ONE, gl.ONE);
-		scene.organizer.transparentRenderers.run(context, this.shaderCache[light.type], this.parent.filteredRenderers, s => {
-			s.use(light.light.material.uniforms);
+		scene.organizer.transparentRenderers.run(context, shader, this.parent.filteredRenderers, s => {
+			s.use(light.material.uniforms);
 		}, (m, s) => {
 			s.bindUniforms(m.uniforms);
-			s.bindSamplers(m.samplers.concat(light.light.material.samplers));
+			s.bindSamplers(m.samplers.concat(light.material.samplers));
 		});
 
 		// Reveal
 		this.parent.oitReveal.bind(context, false, this.clearWhite);
 		gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
 		scene.organizer.transparentRenderers.run(context, this.revealMaterial.shader, this.parent.filteredRenderers, s => {
-			s.use(light.light.material.uniforms);
+			s.use(light.material.uniforms);
 		}, (m, s) => {
 			s.bindUniforms(m.uniforms);
-			s.bindSamplers(m.samplers.concat(light.light.material.samplers));
+			s.bindSamplers(m.samplers.concat(light.material.samplers));
 		});
 
 		// Draw to screen

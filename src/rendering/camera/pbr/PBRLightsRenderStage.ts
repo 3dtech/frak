@@ -10,6 +10,7 @@ import Engine from "../../../engine/Engine";
 import Shader from "../../shaders/Shader";
 import Material from "../../materials/Material";
 import Light from "../../../scene/components/Light";
+import DefinitionsHelper from "../../DefinitionsHelper";
 
 interface ShaderCache {
 	[key: string]: Shader;
@@ -20,6 +21,8 @@ interface ShaderCache {
  */
 class PBRLightsRenderStage extends PBRRenderStage {
 	shaderCache: ShaderCache = {};
+	emptyDefinitions = new DefinitionsHelper();
+	shadowDefinitions = new DefinitionsHelper(['SHADOWS']);
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
 		for (const type of ['ambient', 'directional', 'ibl']) {
@@ -56,13 +59,22 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		super.onPostRender(context, scene, camera);
 	}
 
-	renderLights(shader: Shader, lights: Light[], context: RenderingContext, camera: Camera, first: boolean) {
-		shader.use();
-		shader.bindSamplers(this.parent.sharedSamplers);
+	renderLights(baseShader: Shader, lights: Light[], context: RenderingContext, camera: Camera, first: boolean) {
+
+		let shadowsActive = null;
+		let shader: Shader;
 
 		for (const light of lights) {
 			if (!light.enabled) {
 				continue;
+			}
+
+			if (light.shadowCasting !== shadowsActive) {
+				shadowsActive = light.shadowCasting;
+				shader = context.selectShader(baseShader, shadowsActive ? this.shadowDefinitions : this.emptyDefinitions);
+
+				shader.use();
+				shader.bindSamplers(this.parent.sharedSamplers);
 			}
 
 			shader.bindUniforms(light.material.uniforms);

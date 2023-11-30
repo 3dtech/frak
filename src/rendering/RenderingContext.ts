@@ -108,6 +108,10 @@ class RenderingContext {
 		return this.shaderCache[hash];
 	}
 
+	getShaderSnippet(name: string): string {
+		return this.engine.assetsManager.shadersManager.getSnippet(name);
+	}
+
 	error(): any {
 		if (this.isContextLost())
 			throw Error('Context lost');
