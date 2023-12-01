@@ -352,16 +352,14 @@ class Engine {
 	stats(): any {
 		if (!this.scene)
 			return;
-		var organizer = this.scene.camera.renderStage.generator.organizer;
+		var organizer = this.scene.organizer;
 		console.log('=============== Statistics =====================');
-		console.log('  Visible faces (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidFaces, organizer.visibleTransparentFaces));
-		console.log('  Visible renderers (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidRenderers, organizer.visibleTransparentRenderers));
-		console.log('  Visible batches (opaque/transparent): {0}/{1}'.format(organizer.visibleSolidBatches, organizer.visibleTransparentBatches));
+		console.log('  Visible faces (opaque/transparent): {0}/{1}'.format(organizer.opaqueRenderers.count, organizer.transparentRenderers.count));
 		console.log('================================================');
 	}
 
 	renderDebugInfo(): any {
-		var organizer = this.scene.camera.renderStage.generator.organizer;
+		var organizer = this.scene.organizer;
 
 		if(!this.debugCTX) {
 			var canvas = document.createElement("canvas");
@@ -389,9 +387,7 @@ class Engine {
 			ctx.fillStyle = "rgba(240,240,240,0.75)";
 			ctx.fillText('FPS: ' + this.fps.getAverage().toFixed(2), 10, 20);
 			ctx.font = "Normal 12px Arial";
-			ctx.fillText('Faces: ' + organizer.visibleSolidFaces + " / " + organizer.visibleTransparentFaces, 10, 45);
-			ctx.fillText('Renderers: ' + organizer.visibleSolidRenderers + " / " + organizer.visibleTransparentRenderers, 10, 60);
-			ctx.fillText('Batches: ' + organizer.visibleSolidBatches + " / " + organizer.visibleTransparentBatches, 10, 75);
+			ctx.fillText('Renderers (opaque / transparent): ' + organizer.opaqueRenderers.count + " / " + organizer.transparentRenderers.count, 10, 60);
 
 			ctx.fillText('RequestedFPS: ' + this.options.requestedFPS, this.debugWidth / 2, 45);
 

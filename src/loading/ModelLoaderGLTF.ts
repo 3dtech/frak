@@ -435,6 +435,13 @@ class ModelLoaderGLTF {
 				material.transparent = true;
 			}
 
+			if (materials[i].extensions) {
+				if (materials[i].extensions.KHR_materials_unlit) {
+					material.unlit = true;
+					material.definitions.addDefinition('MATERIAL_UNLIT');
+				}
+			}
+
 			this.materials.push(material);
 		}
 	}

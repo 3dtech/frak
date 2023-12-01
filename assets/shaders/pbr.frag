@@ -69,10 +69,12 @@ in vec4 shadowPosition;
 
 // TODO: Optionally limit number of buffers
 layout(location = 0) out vec4 fragColorMetallic;
+#ifndef MATERIAL_UNLIT
 layout(location = 1) out vec4 fragNormalRoughness;
 layout(location = 2) out vec4 fragPositionOcclusion;
 #ifdef EMISSIVE_OUT
 layout(location = 3) out vec4 fragEmissive;
+#endif
 #endif
 
 float perceptualRoughnessToRoughness(float perceptualRoughness) {
@@ -140,6 +142,8 @@ void main(void) {
 	outputColor.a = 1.0;
 #endif
 
+#ifndef MATERIAL_UNLIT
+
 #ifdef METALLICROUGHNESS_TEXTURE
 	vec4 metallicRoughness = texture(metallicRoughness0, metallicRoughnessUV());
 	float metallic = metallic * metallicRoughness.b;
@@ -188,5 +192,9 @@ void main(void) {
     if (outputColor.a < 0.99) {
         discard;
     }
+#endif
+
+#else	// UNLIT
+	fragColorMetallic = outputColor;
 #endif
 }

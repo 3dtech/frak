@@ -160,6 +160,8 @@ class SubmeshRenderer extends Renderer {
 			(material.uniforms['diffuse'] && material.uniforms['diffuse'].value[3] < 1.0) ||
 			(material.uniforms['ambient'] && material.uniforms['ambient'].value[3] < 1.0);
 
+		this.unlit = material.unlit;
+
 		this.failed = false;
 	}
 

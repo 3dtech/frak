@@ -6,6 +6,7 @@ import Shader from "../shaders/Shader";
 
 class View {
 	private batches: number[][][] = [];
+	public count = 0;
 
 	constructor(private filter: (renderer: Renderer) => boolean) {}
 
@@ -19,6 +20,7 @@ class View {
 				for (const i of materialGroup) {
 					if (this.filter(allRenderers[i])) {
 						filteredMaterialGroup.push(i);
+						this.count++;
 					}
 				}
 
@@ -79,8 +81,10 @@ class View {
 class RendererOrganizer {
 	private views: View[] = [];
 
-	public opaqueRenderers = this.addView(new View(renderer => !renderer.transparent && !renderer.customShader && !renderer.unlit));
-	public transparentRenderers = this.addView(new View(renderer => renderer.transparent && !renderer.customShader && !renderer.unlit));
+	public opaqueRenderers = this.addView(new View(r => !r.transparent && !r.customShader && !r.unlit));
+	public transparentRenderers = this.addView(new View(r => r.transparent && !r.customShader));
+	public unlitRenderers = this.addView(new View(r => r.unlit && !r.transparent && !r.customShader));
+	public customRenderers = this.addView(new View(r => r.customShader));
 
 	addView(view: View): View {
 		this.views.push(view);

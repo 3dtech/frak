@@ -18,6 +18,7 @@ import TargetTextureFloat from "../TargetTextureFloat";
 import Engine from "../../../engine/Engine";
 import TargetTexture from "../TargetTexture";
 import ShadowMapsRenderStage from "./ShadowMapsRenderStage";
+import UnlitRenderStage from "./UnlitRenderStage";
 
 class BindDstTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -56,6 +57,7 @@ class MainRenderStage extends RenderStage {
 		this.addStage(new BindDstTarget());
 		this.addStage(new BackgroundRenderStage());
 		this.addStage(new TonemapRenderStage());
+		this.addStage(new UnlitRenderStage());
 		this.addStage(new TransparentRenderStage());
 		this.emissiveStage = this.addStage(new EmissiveRenderStage()).disable();
 		this.addStage(new UnbindDstTarget());

@@ -11,7 +11,7 @@ import Scene from "../../../scene/Scene";
 class PBRRenderStage extends RenderStage {
 	parent: MainRenderStage;
 
-	onPreRender(context: RenderingContext, scene: Scene, camera: Camera): any {
+	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		var gl = context.gl;
 
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.parent.gbuffer.depth);
@@ -25,7 +25,7 @@ class PBRRenderStage extends RenderStage {
 		gl.stencilFunc(gl.EQUAL, 1, 0xFF);
 	}
 
-	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
+	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		var gl = context.gl;
 
 		gl.stencilMask(0xFF);

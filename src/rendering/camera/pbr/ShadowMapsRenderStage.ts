@@ -16,7 +16,7 @@ class ShadowMapsRenderStage extends RenderStage {
 	damaged = -1;
 	sceneAABB = new BoundingBox();
 	filteredRenderers: Renderer[] = [];
-	clearColor = new Color(0.0, 0.0, 0.0, 0.0);
+	clearColor = new Color(1.0, 0.0, 0.0, 0.0);
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
 		const defs = [

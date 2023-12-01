@@ -207,6 +207,8 @@ void main(void) {
 	outputColor *= texture(diffuse0, diffuseUV());
 #endif
 
+#ifndef MATERIAL_UNLIT
+
 #ifdef METALLICROUGHNESS_TEXTURE
 	vec4 metallicRoughness = texture(metallicRoughness0, metallicRoughnessUV());
     float metallic = metallic * metallicRoughness.b;
@@ -251,4 +253,7 @@ void main(void) {
     outputColor.rgb = acesApprox(outputColor.rgb);
 
     fragColor = vec4(outputColor.rgb * outputColor.a, outputColor.a) * oitWeight(gl_FragCoord.z, outputColor);
+#else	// UNLIT
+	fragColor = outputColor;
+#endif
 }

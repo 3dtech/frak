@@ -13,6 +13,7 @@ class Material extends Serializable {
 	descriptor: any;
 	boundSamplers: any;
 	transparent = false;	// TODO: Requirements spread across too many files? (Shader, this, SubmeshRenderer)
+	unlit = false;
 	definitions = new DefinitionsHelper();
 
 	/** Constructor
