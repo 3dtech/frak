@@ -77,8 +77,10 @@ class TransparentRenderStage extends RenderStage {
 		// Accum
 		this.parent.oitAccum.bind(context, false, this.clearBlack);
 		gl.blendFunc(gl.ONE, gl.ONE);
-		scene.organizer.transparentRenderers.run(context, shader, this.parent.filteredRenderers, s => {
+		scene.organizer.transparentRenderers.run(context, null, this.parent.filteredRenderers, r => {
+			const s = context.selectShader(shader, r.material.definitions);
 			s.use(light.material.uniforms);
+			return s;
 		}, (m, s) => {
 			s.bindUniforms(m.uniforms);
 			s.bindSamplers(m.samplers.concat(light.material.samplers));
@@ -87,8 +89,10 @@ class TransparentRenderStage extends RenderStage {
 		// Reveal
 		this.parent.oitReveal.bind(context, false, this.clearWhite);
 		gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
-		scene.organizer.transparentRenderers.run(context, this.revealMaterial.shader, this.parent.filteredRenderers, s => {
+		scene.organizer.transparentRenderers.run(context, null, this.parent.filteredRenderers, r => {
+			const s = context.selectShader(this.revealMaterial.shader, r.material.definitions);
 			s.use(light.material.uniforms);
+			return s;
 		}, (m, s) => {
 			s.bindUniforms(m.uniforms);
 			s.bindSamplers(m.samplers.concat(light.material.samplers));

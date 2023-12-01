@@ -3,6 +3,7 @@ import Material from "../materials/Material";
 import PBRPipeline from "./PBRPipeline";
 import RenderingContext from "../RenderingContext";
 import Shader from "../shaders/Shader";
+import DefinitionsHelper from "../DefinitionsHelper";
 
 class View {
 	private batches: number[][][] = [];
@@ -39,8 +40,10 @@ class View {
 		context: RenderingContext,
 		baseShader: Shader,
 		filteredRenderers: Renderer[],
-		shaderBind = (s: Shader) => {
+		shaderBind = (renderer: Renderer): Shader => {
+			const s = context.selectShader(baseShader, renderer.material.definitions);
 			s.use();
+			return s;
 		},
 		materialBind = (m: Material, s: Shader) => {
 			s.bindUniforms(m.uniforms);
@@ -61,8 +64,7 @@ class View {
 					const renderer = filteredRenderers[i];
 					if (renderer) {
 						if (!shader) {
-							shader = context.selectShader(baseShader, renderer.material.definitions);
-							shaderBind(shader);
+							shader = shaderBind(renderer);
 						}
 
 						if (!material) {
