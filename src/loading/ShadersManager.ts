@@ -39,25 +39,12 @@ class ShadersManager extends Manager {
 
 	setAliases(): any {
 		this.aliases = {
-			'diffuse': this.bundle('diffuse'),
-			'normalmapped': this.bundle('normalmapped'),
-			'transparent': this.bundle('transparent'),
-			'reflective': this.bundle('reflective'),
-			'reflective_masked': this.bundle('reflective_masked'),
 			'lines': this.bundle('lines'),
-			'pbr': this.bundle('pbr'),
-
-			// The following are deprecated:
-			'test': this.bundle('test'),
-			'fallback': this.bundle('fallback'),
-			'depthrgba': this.bundle('depthrgba'),
-			'gaussianblur': this.bundle('gaussianblur'),
-			'deferred_pbr': 'shaders/pbr',
 		};
 	}
 
 	bundle(shaderName): any {
-		return 'shaders/{0}/{1}'.format(this.shaderBundle, shaderName);
+		return `shaders/${shaderName}`;
 	}
 
 	getSnippet(name: string): string {
