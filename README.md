@@ -7,7 +7,7 @@ FRAK engine was developed by 3D Technologies R&D for [3D Wayfinder](http://3dway
 plan visualization and content management platform, mainly used for wayfinding applications.
 
 ## Features
-* Deferred renderer
+* Deferred, physically based renderer
 	- requires *WEBGL_draw_buffers*
 * Order-independent transparency ([paper](http://jcgt.org/published/0002/02/09/))
 * Real-time shadows
@@ -24,15 +24,11 @@ plan visualization and content management platform, mainly used for wayfinding a
 * Supported assets:
 	- Shaders: GLSL
 	- Textures: JPEG, PNG
-	- Models: Custom binary data format, [JSON](docs/JSONModelFormat.md)
+	- Models: glTF
 	- Fonts: Canvas text API
 
-## Examples
-
-http://cg.urusai.net/frak/
-
 ## Architecture
-The scene graph is a tree made up of instances of **Node** (or EmptyNode, if no spacial positioning is desired).
+The scene graph is a tree made up of instances of **Node**.
 Each node can contain any number of **Component** instances. The function of a Component class is not limited.
 For example it can act as an input controller (**Controller**) or as a billboard (**Billboard**) or simply as each
 node's relative transformation in the scene hierarchy (**Transform**).

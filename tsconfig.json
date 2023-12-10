@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"baseUrl": "./src",
+		"lib": ["ESNext", "DOM"],
+		"outDir": "./tscache"
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./lib/*.js"
+	],
+	"exclude": ["./lib/classExtend.js"]
+}

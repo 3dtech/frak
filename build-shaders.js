@@ -10,13 +10,13 @@ const readdir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
-const OUTPUT_PATH = './src/rendering/shaders/BuiltInShaders.js';
+const OUTPUT_PATH = './src/rendering/shaders/BuiltInShaders.ts';
 const BUNDLE_RELATIVE_PATH = './assets';
-const EXTENSION_FILTER = ['.vert', '.frag'];
+const EXTENSION_FILTER = ['.vert', '.frag', '.glsl'];
 
 let profiles = {
-	'default': './assets/shaders/default',
-	'webgl2': './assets/shaders/webgl2',
+	'webgl2': './assets/shaders',
+	'snippets': './assets/shaders/snippets',
 };
 
 async function main() {
@@ -35,7 +35,7 @@ async function main() {
 					continue;
 				let relativePath = path.join(shadersPath, file);
 				let data = await readFile(path.join(shadersPath, file));
-				output[profile][path.posix.join(bundleBasePath, file)] = data.toString();
+				output[profile][path.posix.join(bundleBasePath, file)] = data.toString().replaceAll('\r\n', '\n');
 			}
 		}
 		catch (err) {
@@ -43,7 +43,7 @@ async function main() {
 		}
 	}
 
-	let js = `// Generated at ${(new Date()).toISOString()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};`;
+	let js = `// Generated at ${(new Date()).toISOString()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};\nglobalThis.BuiltInShaders = BuiltInShaders;\nexport default BuiltInShaders;`;
 	await writeFile(OUTPUT_PATH, js);
 	console.log('Output written to %s', OUTPUT_PATH);
 }

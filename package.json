@@ -1,6 +1,6 @@
 {
   "name": "frak",
-  "version": "1.3.8",
+  "version": "2.0.0-alpha",
   "description": "FRAK engine is a JavaScript library/API for creating interactive 3D applications using WebGL. The purpose of the library is to provide a framework for simplifying the creation of complex interactive 3D applications.",
   "main": "node build.js",
   "directories": {
@@ -8,6 +8,8 @@
     "test": "tests"
   },
   "scripts": {
+    "build": "esbuild --bundle src/entry.ts --minify --outfile=builds/frak-latest.min.js",
+    "build-debug": "esbuild --bundle src/entry.ts --outfile=builds/frak-latest.debug.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,7 +28,9 @@
     "url": "https://github.com/3dtech/frak/issues"
   },
   "homepage": "https://github.com/3dtech/frak#readme",
-  "dependencies": {},
+  "dependencies": {
+    "esbuild": "^0.18.17"
+  },
   "devDependencies": {
     "uglify-js": "^3.4.9"
   }
