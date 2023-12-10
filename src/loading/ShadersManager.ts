@@ -39,12 +39,12 @@ class ShadersManager extends Manager {
 
 	setAliases(): any {
 		this.aliases = {
-			'lines': this.bundle('lines'),
+			'lines': 'shaders/lines',
 		};
 	}
 
 	bundle(shaderName): any {
-		return `shaders/${shaderName}`;
+		return `shaders/webgl2/${shaderName}`;
 	}
 
 	getSnippet(name: string): string {

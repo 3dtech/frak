@@ -161,6 +161,7 @@ class SubmeshRenderer extends Renderer {
 			(material.uniforms['ambient'] && material.uniforms['ambient'].value[3] < 1.0);
 
 		this.unlit = material.unlit;
+		this.customShader = material.customShader;
 
 		this.failed = false;
 	}

@@ -251,9 +251,7 @@ void main(void) {
     outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
 	outputColor.rgb *= shadow;
     outputColor.rgb = acesApprox(outputColor.rgb);
+#endif	// UNLIT
 
-    fragColor = vec4(outputColor.rgb * outputColor.a, outputColor.a) * oitWeight(gl_FragCoord.z, outputColor);
-#else	// UNLIT
-	fragColor = outputColor;
-#endif
+	fragColor = vec4(outputColor.rgb * outputColor.a, outputColor.a) * oitWeight(gl_FragCoord.z, outputColor);
 }

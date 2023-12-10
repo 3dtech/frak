@@ -182,19 +182,19 @@ void main(void) {
 	fragEmissive = vec4(emissive.rgb, 1.0);
 #endif
 
-#if ALPHAMODE == ALPHAMODE_MASK
-    if (outputColor.a < alphaCutoff) {
-        discard;
-    }
-    outputColor.a = 1.0;
-#elif ALPHAMODE == ALPHAMODE_BLEND
-    // Only render opaque parts of transparent geometry
-    if (outputColor.a < 0.99) {
-        discard;
-    }
-#endif
-
 #else	// UNLIT
 	fragColorMetallic = outputColor;
+#endif
+
+#if ALPHAMODE == ALPHAMODE_MASK
+	if (outputColor.a < alphaCutoff) {
+		discard;
+	}
+	outputColor.a = 1.0;
+#elif ALPHAMODE == ALPHAMODE_BLEND
+	// Only render opaque parts of transparent geometry
+	if (outputColor.a < 0.99) {
+		discard;
+	}
 #endif
 }

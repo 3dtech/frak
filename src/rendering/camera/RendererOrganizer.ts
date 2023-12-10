@@ -85,7 +85,7 @@ class RendererOrganizer {
 
 	public opaqueRenderers = this.addView(new View(r => !r.transparent && !r.customShader && !r.unlit));
 	public transparentRenderers = this.addView(new View(r => r.transparent && !r.customShader));
-	public unlitRenderers = this.addView(new View(r => r.unlit && !r.transparent && !r.customShader));
+	public unlitRenderers = this.addView(new View(r => r.unlit && !r.customShader));	// Include transparent renderers for the opaque parts
 	public customRenderers = this.addView(new View(r => r.customShader));
 
 	addView(view: View): View {

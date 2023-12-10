@@ -49,5 +49,9 @@ vec3 acesApprox(vec3 v) {
 void main(void) {
     vec4 outputColor = texture(src, uv);
 
+#if TONEMAP == TONEMAP_ACES
     fragColor = vec4(acesApprox(outputColor.rgb), 1.0);
+#elif TONEMAP == TONEMAP_NONE
+	fragColor = outputColor;
+#endif
 }

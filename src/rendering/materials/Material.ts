@@ -14,6 +14,7 @@ class Material extends Serializable {
 	boundSamplers: any;
 	transparent = false;	// TODO: Requirements spread across too many files? (Shader, this, SubmeshRenderer)
 	unlit = false;
+	customShader = false;
 	definitions = new DefinitionsHelper();
 
 	/** Constructor

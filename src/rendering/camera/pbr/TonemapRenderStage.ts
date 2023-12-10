@@ -10,10 +10,19 @@ class TonemapRenderStage extends PBRRenderStage {
 	material: Material;
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
+		const defs = [
+			'TONEMAP_ACES 0',
+			'TONEMAP_NONE 1',
+		];
+
+		if (engine.options.tonemap) {
+			defs.push(`TONEMAP TONEMAP_${engine.options.tonemap.toUpperCase()}`);
+		} else {
+			defs.push('TONEMAP TONEMAP_NONE');
+		}
+
 		this.material = new Material(
-			engine.assetsManager.shadersManager.addDescriptor(
-				new ShaderDescriptor('shaders/uv.vert', 'shaders/tonemap.frag')
-			),
+			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/tonemap.frag', defs),
 			{},
 			[]
 		);

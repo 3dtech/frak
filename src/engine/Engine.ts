@@ -55,6 +55,7 @@ class Engine {
 			'directionalShadowResolution': 2048,
 			'shadowManualUpdate': false,
 			'emissiveEnabled': false,	// TODO: Remove this for an automatic detection
+			'tonemap': 'aces',
 		}, options);
 		this.validateOptions();
 

@@ -5,7 +5,6 @@ class RendererComponent extends Component {
 	receiveShadows: any;
 	lightContribution: any;
 	reflectivity: any;
-	customShader: any;
 
 	constructor() {
 		super();
@@ -13,7 +12,6 @@ class RendererComponent extends Component {
 		this.receiveShadows = true;
 		this.lightContribution = 1.0;
 		this.reflectivity = 0.0;
-		this.customShader = false;
 	}
 
 	type(): any {
@@ -26,7 +24,6 @@ class RendererComponent extends Component {
 		instance.receiveShadows = this.receiveShadows;
 		instance.lightContribution = this.lightContribution;
 		instance.reflectivity = this.reflectivity;
-		instance.customShader = this.customShader;
 		return instance;
 	}
 

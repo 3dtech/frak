@@ -22,11 +22,7 @@ class MeshRendererComponent extends RendererComponent {
 	}
 
 	createRenderer(context, matrix, submesh, material): any {
-		var renderer = new SubmeshRenderer(context, matrix, submesh, material);
-
-		renderer.customShader = this.customShader;
-
-		return renderer;
+		return new SubmeshRenderer(context, matrix, submesh, material);
 	}
 
 	onStart(context, engine): any {
