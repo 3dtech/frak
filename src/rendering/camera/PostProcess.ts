@@ -1,8 +1,5 @@
-import RenderStage from 'rendering/camera/RenderStage';
-import PostProcessRenderStage from 'rendering/camera/PostProcessRenderStage';
-import {context} from "esbuild";
-import engine from "../../engine/Engine";
-import camera from "./Camera";
+import RenderStage from './stages/RenderStage';
+import PostProcessRenderStage from './stages/PostProcessRenderStage';
 
 /**
  * Base class for creating image space post-processing render stages.

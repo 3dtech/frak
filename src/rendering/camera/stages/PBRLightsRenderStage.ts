@@ -1,16 +1,11 @@
-import AmbientLight from 'scene/lights/AmbientLight';
-import DirectionalLight from 'scene/lights/DirectionalLight';
 import RenderingContext from 'rendering/RenderingContext';
 import Camera from '../Camera';
 import PBRRenderStage from "./PBRRenderStage";
-import Scene from "../../../scene/Scene";
-import PBRPipeline from "../PBRPipeline";
-import ImageBasedLight from "../../../scene/lights/ImageBasedLight";
-import Engine from "../../../engine/Engine";
-import Shader from "../../shaders/Shader";
-import Material from "../../materials/Material";
-import Light from "../../../scene/components/Light";
-import DefinitionsHelper from "../../DefinitionsHelper";
+import Scene from "scene/Scene";
+import Engine from "engine/Engine";
+import Shader from "rendering/shaders/Shader";
+import Light from "scene/components/Light";
+import DefinitionsHelper from "rendering/DefinitionsHelper";
 
 interface ShaderCache {
 	[key: string]: Shader;

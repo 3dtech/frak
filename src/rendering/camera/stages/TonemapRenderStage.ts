@@ -1,10 +1,9 @@
-import Material from "../../materials/Material";
-import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
-import RenderingContext from "../../RenderingContext";
-import Engine from "../../../engine/Engine";
+import Material from "rendering/materials/Material";
+import RenderingContext from "rendering/RenderingContext";
+import Engine from "engine/Engine";
 import Camera from "../Camera";
 import PBRRenderStage from "./PBRRenderStage";
-import Scene from "../../../scene/Scene";
+import Scene from "scene/Scene";
 
 class TonemapRenderStage extends PBRRenderStage {
 	material: Material;

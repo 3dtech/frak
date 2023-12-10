@@ -1,14 +1,11 @@
-import Material from 'rendering/materials/Material';
-import RenderStage from '../RenderStage';
+import RenderStage from './RenderStage';
 import Color from 'rendering/Color';
 import MainRenderStage from './MainRenderStage';
 import Engine from 'engine/Engine';
 import RenderingContext from 'rendering/RenderingContext';
-import Shader from "../../shaders/Shader";
-import {View} from "../RendererOrganizer";
-import PBRPipeline from "../PBRPipeline";
+import Shader from "rendering/shaders/Shader";
 import Camera from "../Camera";
-import Scene from "../../../scene/Scene";
+import Scene from "scene/Scene";
 
 class BuffersRenderStage extends RenderStage {
 	parent: MainRenderStage;

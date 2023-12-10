@@ -1,18 +1,10 @@
 import Sampler from 'rendering/shaders/Sampler';
 import PostProcessRenderStage from './PostProcessRenderStage';
-import MainRenderStage from './pbr/MainRenderStage';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
-import AntiAliasPostProcess from "./AntiAliasPostProcess";
-import UniformMat4 from "../shaders/UniformMat4";
-import UniformFloat from "../shaders/UniformFloat";
-import UniformVec3 from "../shaders/UniformVec3";
-import RenderingContext from "../RenderingContext";
-import Scene from "../../scene/Scene";
-import Camera from "./Camera";
-import Engine from "../../engine/Engine";
-import Shader from "../shaders/Shader";
-import DefinitionsHelper from "../DefinitionsHelper";
-import DirectionalLight from "../../scene/lights/DirectionalLight";
+import RenderingContext from "rendering/RenderingContext";
+import Scene from "scene/Scene";
+import Camera from "../Camera";
+import Engine from "engine/Engine";
 
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
@@ -23,10 +15,6 @@ class PBRPipeline extends PostProcessRenderStage {
 	zNear = new Float32Array();
 	zFar = new Float32Array();
 	inverseProjection = mat4.create();
-
-	getGeneratorStage() {
-		return new MainRenderStage();
-	}
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
 		super.onStart(context, engine, camera);

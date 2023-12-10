@@ -5,8 +5,7 @@ import BoundingBox from 'scene/geometry/BoundingBox';
 import BoundingSphere from 'scene/geometry/BoundingSphere';
 import BoundingVolume from 'scene/geometry/BoundingVolume';
 import Color from 'rendering/Color';
-import PBRPipeline from './PBRPipeline';
-import RenderStage from './RenderStage';
+import PBRPipeline from './stages/PBRPipeline';
 import RenderTarget from './RenderTarget';
 
 /** Camera is used to render to render target.

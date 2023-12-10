@@ -11,7 +11,7 @@ import ModelLoaderJSON from "loading/ModelLoaderJSON";
 import MatrixStack from "rendering/MatrixStack";
 import RenderingContext from "rendering/RenderingContext";
 import RenderBuffer from "rendering/buffers/RenderBuffer";
-import RenderStage from "rendering/camera/RenderStage";
+import RenderStage from "rendering/camera/stages/RenderStage";
 import RenderTarget from "rendering/camera/RenderTarget";
 import RendererOrganizer from "rendering/camera/RendererOrganizer";
 import ScreenQuad from "rendering/camera/ScreenQuad";

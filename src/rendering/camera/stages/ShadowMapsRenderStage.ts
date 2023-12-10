@@ -1,13 +1,13 @@
-import RenderStage from "../RenderStage";
+import RenderStage from "./RenderStage";
 import MainRenderStage from "./MainRenderStage";
-import Shader from "../../shaders/Shader";
-import RenderingContext from "../../RenderingContext";
-import Engine from "../../../engine/Engine";
+import Shader from "rendering/shaders/Shader";
+import RenderingContext from "rendering/RenderingContext";
+import Engine from "engine/Engine";
 import Camera from "../Camera";
-import Scene from "../../../scene/Scene";
-import BoundingBox from "../../../scene/geometry/BoundingBox";
-import Renderer from "../../renderers/Renderer";
-import Color from "../../Color";
+import Scene from "scene/Scene";
+import BoundingBox from "scene/geometry/BoundingBox";
+import Renderer from "rendering/renderers/Renderer";
+import Color from "rendering/Color";
 
 class ShadowMapsRenderStage extends RenderStage {
 	parent: MainRenderStage;

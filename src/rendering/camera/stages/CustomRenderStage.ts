@@ -1,12 +1,9 @@
-import RenderingContext from "../../RenderingContext";
-import Engine from "../../../engine/Engine";
-import Scene from "../../../scene/Scene";
+import RenderingContext from "rendering/RenderingContext";
+import Scene from "scene/Scene";
 import Camera from "../Camera";
-import Shader from "../../shaders/Shader";
 import PBRRenderStage from "./PBRRenderStage";
 
 class CustomRenderStage extends PBRRenderStage {
-
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		super.onPreRender(context, scene, camera);
 

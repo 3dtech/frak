@@ -4,10 +4,10 @@ import Color from 'rendering/Color';
 import RenderingContext from 'rendering/RenderingContext';
 import Camera from '../Camera';
 import PBRRenderStage from "./PBRRenderStage";
-import Engine from "../../../engine/Engine";
-import Scene from "../../../scene/Scene";
-import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
-import SkyboxComponent from "../../../scene/components/SkyboxComponent";
+import Engine from "engine/Engine";
+import Scene from "scene/Scene";
+import ShaderDescriptor from "scene/descriptors/ShaderDescriptor";
+import SkyboxComponent from "scene/components/SkyboxComponent";
 
 /**
  * Deferred shading light accumulation pass

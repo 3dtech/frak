@@ -1,10 +1,10 @@
 import Material from 'rendering/materials/Material';
 import RenderingContext from 'rendering/RenderingContext';
 import Camera from '../Camera';
-import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
+import ShaderDescriptor from "scene/descriptors/ShaderDescriptor";
 import PBRRenderStage from "./PBRRenderStage";
-import Engine from "../../../engine/Engine";
-import Scene from "../../../scene/Scene";
+import Engine from "engine/Engine";
+import Scene from "scene/Scene";
 
 /**
  * Deferred shading light accumulation pass

@@ -40,33 +40,12 @@ import 'rendering/camera/Camera';
 import 'rendering/camera/RendererOrganizer';
 import 'rendering/camera/ScreenQuad';
 
-import 'rendering/camera/RenderStage';
-import 'rendering/camera/MaterialRenderStage';
-import 'rendering/camera/ShaderRenderStage';
-import 'rendering/camera/DepthRenderStage';
-import 'rendering/camera/ShadowMapRenderStage';
-import 'rendering/camera/PositionBufferRenderStage';
-import 'rendering/camera/SSAOBufferRenderStage';
-import 'rendering/camera/SkyboxRenderStage';
-import 'rendering/camera/OpaqueGeometryRenderStage';
-import 'rendering/camera/UnlitGeometryRenderStage';
-import 'rendering/camera/TransparentGeometryRenderStage';
-import 'rendering/camera/OITRenderStage';
-import 'rendering/camera/PostProcessRenderStage';
-import 'rendering/camera/ForwardRenderStage';
-import 'rendering/camera/PBRPipeline.js';
-
-import 'rendering/camera/DeferredRenderStage';
-import 'rendering/camera/DeferredShadingRenderStage';
-import 'rendering/camera/DeferredShadowRenderStage';
-import 'rendering/camera/GBufferRenderStage';
-import 'rendering/camera/SoftShadowsRenderStage';
-import 'rendering/camera/LightsRenderStage';
+import 'rendering/camera/stages/RenderStage';
+import 'rendering/camera/stages/PBRPipeline';
 
 import 'rendering/camera/PostProcess';
 import 'rendering/camera/AntiAliasPostProcess';
 import 'rendering/camera/BlurPostProcess';
-import 'rendering/camera/OITPostProcess';
 import 'rendering/camera/SSAOPostProcess';
 
 import 'rendering/camera/RenderTarget';

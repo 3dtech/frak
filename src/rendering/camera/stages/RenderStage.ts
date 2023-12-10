@@ -1,7 +1,7 @@
-import RenderingContext from "../RenderingContext";
-import Engine from "../../engine/Engine";
-import Camera from "./Camera";
-import Scene from "../../scene/Scene";
+import RenderingContext from "rendering/RenderingContext";
+import Engine from "engine/Engine";
+import Camera from "../Camera";
+import Scene from "scene/Scene";
 
 /** Render-stages can be used to model complex rendering pipelines.
 	They are recursive - each render-stage can have be composed of sub render-stages.

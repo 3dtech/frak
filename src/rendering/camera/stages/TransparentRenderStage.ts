@@ -1,22 +1,16 @@
-import AmbientLight from 'scene/lights/AmbientLight';
 import DirectionalLight from 'scene/lights/DirectionalLight';
 import RenderingContext from 'rendering/RenderingContext';
 import Camera from '../Camera';
-import PBRRenderStage from "./PBRRenderStage";
-import Scene from "../../../scene/Scene";
-import PBRPipeline from "../PBRPipeline";
-import ImageBasedLight from "../../../scene/lights/ImageBasedLight";
-import RenderStage from "../RenderStage";
+import Scene from "scene/Scene";
+import ImageBasedLight from "scene/lights/ImageBasedLight";
+import RenderStage from "./RenderStage";
 import MainRenderStage from "./MainRenderStage";
-import Shader from "../../shaders/Shader";
-import Engine from "../../../engine/Engine";
-import Material from "../../materials/Material";
-import TargetTextureMulti from "../TargetTextureMulti";
-import Sampler from "../../shaders/Sampler";
-import Color from "../../Color";
-import UniformColor from "../../shaders/UniformColor";
-import ShaderDescriptor from "../../../scene/descriptors/ShaderDescriptor";
-import DefinitionsHelper from "../../DefinitionsHelper";
+import Shader from "rendering/shaders/Shader";
+import Engine from "engine/Engine";
+import Material from "rendering/materials/Material";
+import Color from "rendering/Color";
+import DefinitionsHelper from "rendering/DefinitionsHelper";
+
 interface ShaderCache {
 	[key: string]: Shader;
 }

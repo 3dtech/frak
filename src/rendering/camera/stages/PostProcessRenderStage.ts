@@ -1,13 +1,12 @@
-import RenderStage from 'rendering/camera/RenderStage';
-import TargetTexture from 'rendering/camera/TargetTexture';
+import RenderStage from './RenderStage';
 import Sampler from 'rendering/shaders/Sampler';
 import Material from 'rendering/materials/Material';
-import MaterialRenderStage from 'rendering/camera/MaterialRenderStage';
-import ScreenQuad from './ScreenQuad';
-import TargetTextureFloat from "./TargetTextureFloat";
-import RenderingContext from "../RenderingContext";
-import Scene from "../../scene/Scene";
-import Camera from "./Camera";
+import ScreenQuad from '../ScreenQuad';
+import TargetTextureFloat from "../TargetTextureFloat";
+import RenderingContext from "rendering/RenderingContext";
+import Scene from "scene/Scene";
+import Camera from "../Camera";
+import MainRenderStage from "./MainRenderStage";
 
 /**
  * Render-stage used to render MaterialRenderStage to a texture,
@@ -40,7 +39,7 @@ class PostProcessRenderStage extends RenderStage {
 	}
 
 	getGeneratorStage(): any {
-		return new MaterialRenderStage();
+		return new MainRenderStage();
 	}
 
 	onStart(context, engine, camera): any {

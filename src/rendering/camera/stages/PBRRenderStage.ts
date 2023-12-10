@@ -1,9 +1,8 @@
-import RenderStage from 'rendering/camera/RenderStage';
-import UniformVec3 from 'rendering/shaders/UniformVec3';
+import RenderStage from './RenderStage';
 import RenderingContext from 'rendering/RenderingContext';
 import MainRenderStage from './MainRenderStage';
 import Camera from '../Camera';
-import Scene from "../../../scene/Scene";
+import Scene from "scene/Scene";
 
 /**
  * Deferred shading light accumulation pass

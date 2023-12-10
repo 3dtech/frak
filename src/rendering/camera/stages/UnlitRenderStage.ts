@@ -1,8 +1,8 @@
-import RenderingContext from "../../RenderingContext";
-import Engine from "../../../engine/Engine";
-import Scene from "../../../scene/Scene";
+import RenderingContext from "rendering/RenderingContext";
+import Engine from "engine/Engine";
+import Scene from "scene/Scene";
 import Camera from "../Camera";
-import Shader from "../../shaders/Shader";
+import Shader from "rendering/shaders/Shader";
 import PBRRenderStage from "./PBRRenderStage";
 
 class UnlitRenderStage extends PBRRenderStage {
