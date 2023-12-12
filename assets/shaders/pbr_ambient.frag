@@ -6,6 +6,10 @@ uniform sampler2D colorMetallic;
 uniform sampler2D normalRoughness;
 uniform sampler2D positionOcclusion;
 
+#ifdef AMBIENT_BUFFER
+uniform sampler2D ambientBuffer;
+#endif
+
 #include "snippets/camera.glsl"
 
 uniform vec4 lightColor;
@@ -39,6 +43,12 @@ void main(void) {
     vec3 position = pR.xyz;
     float occlusion = pR.w;
 
+#ifdef AMBIENT_BUFFER
+	vec4 ambient = texture(ambientBuffer, uv);
+#else
+	vec4 ambient = vec4(0.0);
+#endif
+
     vec3 V = normalize(cameraPosition - position);
     float NdotV = max(dot(N, V), 1e-4);
 
@@ -46,8 +56,9 @@ void main(void) {
 
     vec3 diffuseAmbient = outputColor.rgb;
     vec3 specularAmbient = EnvBRDFApprox(F0, roughness, NdotV);
+	vec3 lightColor = (diffuseAmbient + specularAmbient) * lightColor.rgb;
 
-    outputColor.rgb = (diffuseAmbient + specularAmbient) * lightColor.rgb * occlusion;
+    outputColor.rgb = mix(lightColor, ambient.rgb, ambient.a) * occlusion;
 
     fragColor = outputColor;
 }

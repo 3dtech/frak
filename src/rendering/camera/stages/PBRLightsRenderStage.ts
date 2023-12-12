@@ -20,6 +20,11 @@ class PBRLightsRenderStage extends PBRRenderStage {
 	shadowDefinitions = new DefinitionsHelper(['SHADOWS']);
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
+		if (engine.options.legacyAmbient) {
+			this.emptyDefinitions.addDefinition('AMBIENT_BUFFER');
+			this.shadowDefinitions.addDefinition('AMBIENT_BUFFER');
+		}
+
 		for (const type of ['ambient', 'directional', 'ibl']) {
 			this.shaderCache[type] = engine.assetsManager.addShader('shaders/uv.vert', `shaders/pbr_${type}.frag`);
 		}

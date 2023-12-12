@@ -24,6 +24,10 @@ class BuffersRenderStage extends RenderStage {
 			defs.push('EMISSIVE_OUT');
 		}
 
+		if (engine.options.legacyAmbient) {
+			defs.push('AMBIENT_OUT');
+		}
+
 		this.opaqueShader = engine.assetsManager.addShader(
 			'shaders/mesh.vert',
 			'shaders/pbr.frag',

@@ -56,10 +56,12 @@ class Engine {
 			'shadowManualUpdate': false,
 			'emissiveEnabled': false,	// TODO: Remove this for an automatic detection
 			'tonemap': 'aces',
+			'legacyAmbient': true,
 		}, options);
-		this.validateOptions();
 
 		this.context = new RenderingContext(canvas, this, this.options.contextOptions, this.options.contextErrorCallback);
+
+		this.validateOptions(this.context);
 
 		this.scene = new Scene();
 		this.scene.engine = this;
@@ -326,16 +328,21 @@ class Engine {
 		}
 	}
 
-	validateOptions(): any {
-		// Transparency mode validation
-		switch (this.options.transparencyMode) {
-			case 'sorted':
-			case 'blended':
-			case 'stochastic':
-				break;
-			default:
-				this.options.transparencyMode = 'blended';
-				break;
+	validateOptions(context: RenderingContext) {
+		const gl = context.gl;
+		const maxBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
+		if (maxBuffers < 4) {
+			if (this.options.emissiveEnabled) {
+				console.warn('FRAK: Emissive rendering is not supported by this browser.');
+				this.options.emissiveEnabled = false;
+			}
+			if (this.options.legacyAmbient) {
+				console.warn('FRAK: Legacy ambient rendering is not supported by this browser.');
+				this.options.legacyAmbient = false;
+			}
+		} else if (maxBuffers < 5 && this.options.legacyAmbient && this.options.emissiveEnabled) {
+			console.warn('FRAK: Emissive rendering is not supported by this browser.');
+			this.options.emissiveEnabled = false;
 		}
 	}
 

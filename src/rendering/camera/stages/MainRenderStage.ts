@@ -67,7 +67,14 @@ class MainRenderStage extends RenderStage {
 		const gl = context.gl;
 
 		vec2.copy(this.size, this.parent.size);
-		const numTargets = engine.options.emissiveEnabled ? 4 : 3;
+		let numTargets = 3;
+		if (engine.options.emissiveEnabled) {
+			numTargets++;
+		}
+		if (engine.options.legacyAmbient) {
+			numTargets++;
+		}
+
 		this.gbuffer = new TargetTextureMulti(context, this.size, {numTargets, stencil: true});
 
 		this.sharedSamplers.push(new Sampler('colorMetallic', this.gbuffer.targets[0]));
@@ -77,6 +84,10 @@ class MainRenderStage extends RenderStage {
 		if (engine.options.emissiveEnabled) {
 			this.sharedSamplers.push(new Sampler('emissive', this.gbuffer.targets[3]));
 			this.emissiveStage.enable();
+		}
+
+		if (engine.options.legacyAmbient) {
+			this.sharedSamplers.push(new Sampler('ambientBuffer', this.gbuffer.targets[engine.options.emissiveEnabled ? 4 : 3]));
 		}
 
 		// OIT

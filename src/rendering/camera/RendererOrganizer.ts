@@ -1,9 +1,7 @@
 import Renderer from "../renderers/Renderer";
 import Material from "../materials/Material";
-import PBRPipeline from "./PBRPipeline";
 import RenderingContext from "../RenderingContext";
 import Shader from "../shaders/Shader";
-import DefinitionsHelper from "../DefinitionsHelper";
 
 class View {
 	private batches: number[][][] = [];

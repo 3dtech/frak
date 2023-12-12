@@ -5,6 +5,7 @@ precision highp float;
 #include "snippets/camera.glsl"
 
 uniform float alphaCutoff;
+uniform vec4 ambient;
 uniform vec4 diffuse;
 uniform vec4 emissive;
 
@@ -74,8 +75,13 @@ layout(location = 1) out vec4 fragNormalRoughness;
 layout(location = 2) out vec4 fragPositionOcclusion;
 #ifdef EMISSIVE_OUT
 layout(location = 3) out vec4 fragEmissive;
+#ifdef AMBIENT_OUT
+layout(location = 4) out vec4 fragAmbient;
 #endif
+#elif defined(AMBIENT_OUT)
+layout(location = 3) out vec4 fragAmbient;
 #endif
+#endif	// UNLIT
 
 float perceptualRoughnessToRoughness(float perceptualRoughness) {
 	float clampedPerceptualRoughness = clamp(perceptualRoughness, 0.089, 1.0);
@@ -180,6 +186,10 @@ void main(void) {
 
 #ifdef EMISSIVE_OUT
 	fragEmissive = vec4(emissive.rgb, 1.0);
+#endif
+
+#ifdef AMBIENT_OUT
+	fragAmbient = ambient;
 #endif
 
 #else	// UNLIT
