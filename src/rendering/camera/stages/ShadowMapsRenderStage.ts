@@ -65,8 +65,18 @@ class ShadowMapsRenderStage extends RenderStage {
 					continue;
 				}
 
-				if (light.frustumDamaged !== this.damaged) {
-					light.frustumDamaged = this.damaged;
+				if (light.spaceDamaged !== this.damaged) {
+					light.spaceDamaged = this.damaged;
+
+                    light.filteredRenderers.length = this.filteredRenderers.length;
+                    for (let i = 0; i < this.filteredRenderers.length; ++i) {
+                        const renderer = this.filteredRenderers[i];
+                        if (renderer && renderer.layer & light.shadowMask) {
+                            light.filteredRenderers[i] = renderer;
+                        } else {
+                            light.filteredRenderers[i] = null;
+                        }
+                    }
 
 					vec3.copy(light.position, this.sceneAABB.center);
 					vec3.sub(light.lookTarget, this.sceneAABB.center, light.direction);
@@ -101,17 +111,6 @@ class ShadowMapsRenderStage extends RenderStage {
 				continue;
 			}
 
-			const render = (r: Renderer, s: Shader) => {
-				if (!(r.layer & light.shadowMask)) {
-					return;
-				}
-
-				context.modelview.push();
-				context.modelview.multiply(r.matrix);
-				r.renderGeometry(context, s);
-				context.modelview.pop();
-			};
-
 			light.shadow.bind(context, false, this.clearColor);
 
 			camera.renderStage.replaceViewProjection(context, light.lightProj, light.lightView);
@@ -119,19 +118,13 @@ class ShadowMapsRenderStage extends RenderStage {
 			scene.organizer.opaqueRenderers.run(
 				context,
 				this.opaqueShader,
-				this.filteredRenderers,
-				undefined,
-				undefined,
-				render
+				light.filteredRenderers,
 			);
 
 			scene.organizer.transparentRenderers.run(
 				context,
 				this.blendShader,
-				this.filteredRenderers,
-				undefined,
-				undefined,
-				render
+				light.filteredRenderers,
 			);
 		}
 

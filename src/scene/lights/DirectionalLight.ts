@@ -17,6 +17,7 @@ import Color from 'rendering/Color';
 import ShaderDescriptor from "../descriptors/ShaderDescriptor";
 import Camera from "../../rendering/camera/Camera";
 import BoundingBox from "../geometry/BoundingBox";
+import Renderer from "../../rendering/renderers/Renderer";
 
 /**
  * Directional light (affects entire buffer)
@@ -29,10 +30,11 @@ class DirectionalLight extends Light {
 	lightView = mat4.create()
 	lightProj = mat4.create();
 	frustum = new BoundingBox();
-	frustumDamaged = -1;
+	spaceDamaged = -1;
 	position = vec3.create();
 	lookTarget = vec3.create();
 	upVector = vec3.fromValues(0, 1, 0);
+	filteredRenderers: Renderer[] = [];
 
 	constructor(public direction = vec3.fromValues(1, 1, 1), public color = new Color(1, 1, 1, 1)) {
 		super();

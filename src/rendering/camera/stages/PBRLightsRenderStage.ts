@@ -30,26 +30,33 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		}
 	}
 
+	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
+		super.onPreRender(context, scene, camera);
+
+		const gl = context.gl;
+		gl.clearColor(0, 0, 0, 0);
+		gl.clear(gl.COLOR_BUFFER_BIT);
+	}
+
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
 		const gl = context.gl;
 		gl.blendEquation(gl.FUNC_ADD);
 		gl.blendFunc(gl.ONE, gl.ONE);
-
-		let firstLight = true;
+		gl.enable(gl.BLEND);
 
 		// Ambient
 		if (scene.ambientLights.length) {
-			firstLight = this.renderLights(this.shaderCache.ambient, scene.ambientLights, context, camera, firstLight);
+			this.renderLights(this.shaderCache.ambient, scene.ambientLights, context, camera);
 		}
 
 		// Directional
 		if (scene.directionalLights.length) {
-			firstLight = this.renderLights(this.shaderCache.directional, scene.directionalLights, context, camera, firstLight);
+			this.renderLights(this.shaderCache.directional, scene.directionalLights, context, camera);
 		}
 
 		// IBL
 		if (scene.imageBasedLights.length) {
-			firstLight = this.renderLights(this.shaderCache.imageBased, scene.imageBasedLights, context, camera, firstLight);
+			this.renderLights(this.shaderCache.imageBased, scene.imageBasedLights, context, camera);
 		}
 
 		// TODO: Point lights
@@ -59,7 +66,7 @@ class PBRLightsRenderStage extends PBRRenderStage {
 		super.onPostRender(context, scene, camera);
 	}
 
-	renderLights(baseShader: Shader, lights: Light[], context: RenderingContext, camera: Camera, first: boolean) {
+	renderLights(baseShader: Shader, lights: Light[], context: RenderingContext, camera: Camera) {
 
 		let shadowsActive = null;
 		let shader: Shader;
@@ -83,14 +90,7 @@ class PBRLightsRenderStage extends PBRRenderStage {
 			}
 
 			camera.renderStage.screenQuad.quad.render();
-
-			if (first) {
-				context.gl.enable(context.gl.BLEND);
-				first = false;
-			}
 		}
-
-		return first;
 	}
 }
 

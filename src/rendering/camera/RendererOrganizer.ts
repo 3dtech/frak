@@ -38,7 +38,7 @@ class View {
 		context: RenderingContext,
 		baseShader: Shader,
 		filteredRenderers: Renderer[],
-		shaderBind = (renderer: Renderer): Shader => {
+		shaderSelectAndBind = (renderer: Renderer): Shader => {
 			const s = context.selectShader(baseShader, renderer.material.definitions);
 			s.use();
 			return s;
@@ -48,10 +48,7 @@ class View {
 			s.bindSamplers(m.samplers);
 		},
 		render = (r: Renderer, s: Shader) => {
-			context.modelview.push();
-			context.modelview.multiply(r.matrix);
 			r.renderGeometry(context, s);
-			context.modelview.pop();
 		}
 	) {
 		for (const shaderGroup of this.batches) {
@@ -62,7 +59,7 @@ class View {
 					const renderer = filteredRenderers[i];
 					if (renderer) {
 						if (!shader) {
-							shader = shaderBind(renderer);
+							shader = shaderSelectAndBind(renderer);
 						}
 
 						if (!material) {
