@@ -460,8 +460,9 @@ var ModelLoaderGLTF = FrakClass.extend({
 
 	loadScene: function(node, parsedData) {
 		var i;
+		var sceneId = parseInt(parsedData.scene);
 
-		if (!parsedData.scenes || isNaN(parseInt(parsedData.scene))) {
+		if (!parsedData.scenes || isNaN(sceneId)) {
 			// Just add all meshes
 			for (i = 0, l = this.meshes.length; i < l; i++) {
 				var meshNode = new Node();
@@ -474,7 +475,7 @@ var ModelLoaderGLTF = FrakClass.extend({
 				meshNode.addComponent(new MeshCollider());
 			}
 		} else {
-			var scene = parsedData.scenes[parsedData.scene];
+			var scene = parsedData.scenes[sceneId];
 			for (i = 0, l = (scene.nodes && scene.nodes.length) || 0; i < l; i++) {
 				node.addNode(this.loadNode(parsedData.nodes, scene.nodes[i]));
 			}

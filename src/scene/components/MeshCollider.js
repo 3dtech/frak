@@ -57,7 +57,6 @@ var MeshCollider=Collider.extend({
 						if (!result)
 							return true;
 						hit=true;
-						break;
 					}
 				}
 				if (result) result.addCallback=false;
