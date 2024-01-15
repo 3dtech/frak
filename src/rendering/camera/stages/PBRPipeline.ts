@@ -61,6 +61,17 @@ class PBRPipeline extends PostProcessRenderStage {
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
+		var cameraTarget = camera.target;
+
+		if (cameraTarget.size[0] != this.src.size[0] || cameraTarget.size[1] != this.src.size[1]) {
+			this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+			this.src.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+			this.dst.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+
+			this.src.resetViewport();
+			this.dst.resetViewport();
+		}
+
 		const gl = context.gl;
 
 		gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);

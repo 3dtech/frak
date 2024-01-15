@@ -105,6 +105,18 @@ class MainRenderStage extends RenderStage {
 
 	onPreRender(context: any, scene: Scene, camera: any) {
 		scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask, this.filteredRenderers);
+		if (this.size[0] !== this.parent.size[0] || this.size[1] !== this.parent.size[1]) {
+			vec2.copy(this.size, this.parent.size);
+
+			this.gbuffer.setSize(this.size[0], this.size[1]);
+			this.gbuffer.resetViewport();
+
+			this.oitAccum.setSize(this.size[0], this.size[1]);
+			this.oitAccum.resetViewport();
+
+			this.oitReveal.setSize(this.size[0], this.size[1]);
+			this.oitReveal.resetViewport();
+		}
 	}
 }
 

@@ -111,14 +111,7 @@ FRAK.exitFullscreen = function() {
 };
 
 FRAK.isFullscreen = function() {
-	return ((document as any).isFullScreen ||
-		(document as any).isFullscreen ||
-		(document as any).webkitIsFullscreen ||
-		(document as any).webkitIsFullScreen ||
-		(document as any).mozIsFullscreen ||
-		(document as any).mozIsFullScreen ||
-		(document as any).msIsFullscreen ||
-		(document as any).msIsFullScreen);
+	return document.fullscreenElement !== null;
 };
 
 FRAK.isWebGLSupported = function() {

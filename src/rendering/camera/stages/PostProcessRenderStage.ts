@@ -71,15 +71,6 @@ class PostProcessRenderStage extends RenderStage {
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		var cameraTarget = camera.target;
 
-		this.src.resetViewport();
-		this.dst.resetViewport();
-
-		if (cameraTarget.size[0] != this.src.size[0] || cameraTarget.size[1] != this.src.size[1]) {
-			this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-			this.src.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-			this.dst.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-		}
-
 		camera.target = this.src;
 		this.generator.render(context, scene, camera);
 		camera.target = cameraTarget;
