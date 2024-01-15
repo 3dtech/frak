@@ -1,78 +1,81 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<title>Skybox test</title>
-		<meta charset="utf-8" />
-		<meta name="description" content="3DWayfinder WebGL" />
-		<link rel="stylesheet" href="style.css" >
-	</head>
-	<body>
-		<div class='info' style="background-color: rgba(255, 255, 255, 0.5);">
-			<div>Updates: <span id='updates'></span></div>
-			<div>Average FPS: <span id='average-fps'></span></div>
-			<br />
-			<div>Position: <span id='position'></span></div>
-			<div>Rotation: <span id='rotation'></span></div>
-			<div>Velocity: <span id='velocity'></span></div>
-			<div>Angular velocity: <span id='angular-velocity'></span></div>
-		</div>
 
-		<!-- Canvas -->
-		<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="1200" height="800"></canvas>
+<head>
+	<title>Skybox test</title>
+	<meta charset="utf-8" />
+	<meta name="description" content="3DWayfinder WebGL" />
+	<link rel="stylesheet" href="style.css">
+</head>
 
-		<!-- Libraries -->
-		<script src="../lib/jquery-1.11.1.min.js"></script>
-		<script src="../builds/frak-latest.min.js"></script>
+<body>
+	<div class='info' style="background-color: rgba(255, 255, 255, 0.5);">
+		<div>Updates: <span id='updates'></span></div>
+		<div>Average FPS: <span id='average-fps'></span></div>
+		<br />
+		<div>Position: <span id='position'></span></div>
+		<div>Rotation: <span id='rotation'></span></div>
+		<div>Velocity: <span id='velocity'></span></div>
+		<div>Angular velocity: <span id='angular-velocity'></span></div>
+	</div>
 
-		<script type="text/javascript">
-			var engine;
+	<!-- Canvas -->
+	<canvas id="canvas" style="z-index: 1; border: none; position: absolute;" width="1200" height="800"></canvas>
 
-			window.onload = function() {
-				// $('#canvas').bind('contextmenu', function(e) { return false; });
-				engine = new Engine('canvas', {
-					'assetsPath': '../assets/'
+	<!-- Libraries -->
+	<script src="../builds/frak-latest.debug.js"></script>
+
+	<script type="text/javascript">
+		var engine;
+
+		window.onload = function() {
+			// $('#canvas').bind('contextmenu', function(e) { return false; });
+			engine = new Engine('canvas', {
+				'assetsPath': '../assets/'
+			});
+			engine.assetsManager.modelsManager.path = './'; // Load test models locally
+			engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+			var scene = engine.scene;
+			var node = engine.assetsManager.addModel("data/BoxRGB.json");
+			var orbitController = scene.cameraNode.addComponent(new OrbitController());
+			var lena = new TextureDescriptor("data/lena.jpg");
+			var barb = new TextureDescriptor("data/barbara.png");
+			var skyboxImages = [lena, lena, lena, lena, lena, lena];
+			//var skyboxImages = ["data/lena.jpg", "data/barbara.png", "data/barbara.png", "data/lena.jpg", "data/lena.jpg", "data/barbara.png"];
+			var skyboxComponent = scene.cameraNode.addComponent(new SkyboxComponent());
+			scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
+			//engine.assetsManager.texturesManager.addCube(skyboxImages);
+			skyboxComponent.setup(engine.assetsManager, engine, skyboxImages);
+			orbitController.target.value = node.transform;
+			orbitController.rotation[0] = 1.5;
+
+			var updates = 0;
+			 var TestComponent=Component.extend({
+					type: function() { return "TestComponent"; },
+					onUpdate: function(pass) {
+						document.getElementById('position').innerHTML = JSON.stringify(mat4.translation(vec3.create(), scene.cameraNode.transform.relative));
+						document.getElementById('rotation').innerHTML = JSON.stringify(mat4.rotation(mat4.create(), scene.cameraNode.transform.relative));
+						document.getElementById('velocity').innerHTML = JSON.stringify(orbitController.velocity);
+						document.getElementById('angular-velocity').innerHTML = JSON.stringify(orbitController.angularVelocity);
+
+						document.getElementById('updates').innerHTML = updates;
+						document.getElementById('average-fps').innerHTML = engine.fps.getAverage();
+						updates++;
+					}
 				});
-				engine.assetsManager.modelsManager.path = './'; // Load test models locally
-				engine.assetsManager.texturesManager.path = './'; // Load test textures locally
 
-				var scene=engine.scene;
-				var node=engine.assetsManager.addModel("data/test.data");
-				var orbitController=scene.cameraNode.addComponent(new OrbitController());
-				var lena = new TextureDescriptor("data/lena.jpg");
-				var barb = new TextureDescriptor("data/barbara.png");
-				//var skyboxImages = [lena, barb, barb,	lena, lena, barb];
-				var skyboxImages = ["data/lena.jpg", "data/barbara.png", "data/barbara.png", "data/lena.jpg", "data/lena.jpg", "data/barbara.png"];			
-				var skyboxComponent=scene.cameraNode.addComponent(new SkyboxComponent());
-				//engine.assetsManager.texturesManager.addCube(skyboxImages);
-				skyboxComponent.setup(engine.assetsManager, engine, skyboxImages);
-				orbitController.target.value=node.transform;
-				orbitController.rotation[0]=1.5;
+			var component=scene.root.addComponent(new TestComponent());
+			scene.cameraComponent.setAspectRatio(1.0);
 
-				var updates=0;
-				var TestComponent=Component.extend({
-						type: function() { return "TestComponent"; },
-						onUpdate: function(pass) {
-							$('#position').html(JSON.stringify(mat4.translation(vec3.create(), scene.cameraNode.transform.relative)));
-							$('#rotation').html(JSON.stringify(mat4.rotation(mat4.create(), scene.cameraNode.transform.relative)));
-							$('#velocity').html(JSON.stringify(orbitController.velocity));
-							$('#angular-velocity').html(JSON.stringify(orbitController.angularVelocity));
+			engine.assetsManager.load(function() {
+				 scene.root.addNode(node);
+				scene.cameraComponent.fitNodeToView(node);
 
-							$('#updates').html(updates);
-							$('#average-fps').html(engine.fps.getAverage());
-							updates++;
-						}
-					});
+				engine.run();
+			});
+		};
+	</script>
+</body>
 
-				var component=scene.root.addComponent(new TestComponent());
-				scene.cameraComponent.setAspectRatio(1.0);
-
-				engine.assetsManager.load(function() {
-						scene.root.addNode(node);
-						scene.cameraComponent.fitNodeToView(node);
-
-						engine.run();
-					});
-			};
-		</script>
-	</body>
 </html>
