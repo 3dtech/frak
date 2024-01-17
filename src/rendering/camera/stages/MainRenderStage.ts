@@ -42,6 +42,7 @@ class MainRenderStage extends RenderStage {
 	oitSamplers: Sampler[] = [];
 	filteredRenderers: Renderer[] = [];
 	emissiveStage: EmissiveRenderStage;
+	backgroundRenderStage: BackgroundRenderStage;
 
 	constructor() {
 		super();
@@ -54,7 +55,7 @@ class MainRenderStage extends RenderStage {
 		this.addStage(new UnbindDstTarget());
 
 		this.addStage(new BindDstTarget());
-		this.addStage(new BackgroundRenderStage());
+		this.backgroundRenderStage = this.addStage(new BackgroundRenderStage());
 		this.addStage(new TonemapRenderStage());
 		this.addStage(new UnlitRenderStage());
 		this.addStage(new CustomRenderStage());
@@ -87,7 +88,7 @@ class MainRenderStage extends RenderStage {
 		}
 
 		if (engine.options.legacyAmbient) {
-			this.sharedSamplers.push(new Sampler('ambientBuffer', this.gbuffer.targets[engine.options.emissiveEnabled ? 4 : 3]));
+			this.sharedSamplers.push(new Sampler('ambientBuffer', this.gbuffer.targets[numTargets - 1]));
 		}
 
 		// OIT
@@ -117,6 +118,10 @@ class MainRenderStage extends RenderStage {
 			this.oitReveal.setSize(this.size[0], this.size[1]);
 			this.oitReveal.resetViewport();
 		}
+	}
+
+	setImmersive(immersive: boolean) {
+		this.backgroundRenderStage.isImmersive = immersive;
 	}
 }
 

@@ -60,13 +60,13 @@ in vec2 uv;
 out vec4 fragColor;
 
 vec4 fxaa(sampler2D tex, vec2 texCoord) {
-    vec4 color;
+    vec4 color = texture(tex, texCoord);
     vec2 inverseVP = vec2(1.0 / ViewportSize.x, 1.0 / ViewportSize.y);
     vec3 rgbNW = texture(tex, texCoord + vec2(-1.0, -1.0) * inverseVP).xyz;
     vec3 rgbNE = texture(tex, texCoord + vec2(1.0, -1.0) * inverseVP).xyz;
     vec3 rgbSW = texture(tex, texCoord + vec2(-1.0, 1.0) * inverseVP).xyz;
     vec3 rgbSE = texture(tex, texCoord + vec2(1.0, 1.0) * inverseVP).xyz;
-    vec3 rgbM = texture(tex, texCoord).xyz;
+    vec3 rgbM = color.xyz;
     vec3 luma = vec3(0.299, 0.587, 0.114);
 
     float lumaNW = dot(rgbNW, luma);
@@ -95,9 +95,9 @@ vec4 fxaa(sampler2D tex, vec2 texCoord) {
 
     float lumaB = dot(rgbB, luma);
     if ((lumaB < lumaMin) || (lumaB > lumaMax))
-    color = vec4(rgbA, 1.0);
+    color.rgb = rgbA;
     else
-    color = vec4(rgbB, 1.0);
+    color.rgb = rgbB;
     return color;
 }
 

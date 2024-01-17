@@ -379,6 +379,28 @@ class Engine {
 		}
 	}
 
+	isImmersiveSupported() {
+		return true;	// TODO
+	}
+
+	startImmersive() {
+		this.isImmersive = true;
+		this.scene.camera.renderStage.generator.setImmersive(true);
+	}
+
+	exitImmersive() {
+		this.isImmersive = false;
+		this.scene.camera.renderStage.generator.setImmersive(false);
+	}
+
+	toggleImmersive() {
+		if (this.isImmersive) {
+			this.exitImmersive();
+		} else {
+			this.startImmersive();
+		}
+	}
+
 	/** Helper function for displaying renderer statistics. */
 	stats(): any {
 		if (!this.scene)
