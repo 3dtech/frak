@@ -1,11 +1,11 @@
-import RenderStage from 'rendering/camera/RenderStage';
+import RenderStage from 'rendering/camera/stages/RenderStage';
 import TargetTextureFloat from 'rendering/camera/TargetTextureFloat';
 import Material from 'rendering/materials/Material';
 import UniformVec2 from 'rendering/shaders/UniformVec2';
 import UniformFloat from 'rendering/shaders/UniformFloat';
 import Sampler from 'rendering/shaders/Sampler';
-import MaterialRenderStage from 'rendering/camera/MaterialRenderStage';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
+import MainRenderStage from "./stages/MainRenderStage";
 
 class SSAOBufferRenderStage extends RenderStage {
 	size: any;
@@ -69,7 +69,7 @@ class SSAOBufferRenderStage extends RenderStage {
 	}
 
 	onPostRender(context, scene, camera) {
-		if (!this.parent || !(this.parent instanceof MaterialRenderStage))
+		if (!this.parent || !(this.parent instanceof MainRenderStage))
 			return;
 
 		if (!this.target || !this.material)

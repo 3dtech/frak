@@ -1,13 +1,9 @@
 import Component from 'scene/components/Component';
 import Camera from 'rendering/camera/Camera';
-import ForwardRenderStage from 'rendering/camera/ForwardRenderStage';
 import BoundingBox from 'scene/geometry/BoundingBox';
 import MeshComponent from 'scene/components/MeshComponent';
 import TargetScreen from 'rendering/camera/TargetScreen';
 import Ray from 'scene/geometry/Ray';
-import OITPostProcess from 'rendering/camera/OITPostProcess';
-import SSAOPostProcess from 'rendering/camera/SSAOPostProcess';
-import DeferredRenderStage from 'rendering/camera/DeferredRenderStage';
 import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
 
 /** Camera component */
