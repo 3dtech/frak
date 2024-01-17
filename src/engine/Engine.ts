@@ -7,6 +7,7 @@ import Input from 'engine/Input';
 import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
 import PerspectiveCamera from "../scene/components/PerspectiveCamera";
+import WebXRPolyfill from 'webxr-polyfill';
 
 interface Options {
 	anisotropicFiltering?: number | false;
@@ -55,6 +56,7 @@ class Engine {
 	_savedCanvasStyles: any;
 	_currentAnimationFrame: any;
 	isImmersive = false;
+	session: XRSession;
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
@@ -81,6 +83,8 @@ class Engine {
 			ssao: false,
 			tonemap: 'aces',
 		} as Options, options);
+
+		let polyfill = new WebXRPolyfill();
 
 		this.context = new RenderingContext(canvas, this, this.options.contextOptions, this.options.contextErrorCallback);
 
@@ -236,7 +240,16 @@ class Engine {
 	/** Starts the engine. The engine will try to draw frames at the "requestedFPS" specified
 		in the options that were passed to the constructor. The default value is 30fps.
 		If requestAnimationFrame function is not available then setTimeout is used. */
-	run(): any {
+
+	public async run() {
+		this.session = await navigator.xr?.requestSession('inline');
+		await this.session.updateRenderState({
+			baseLayer: new XRWebGLLayer(this.session, this.context.gl),
+		});
+		this._run();
+	}
+
+	private _run(): any {
 		if (this.running !== false)
 			return;
 
@@ -248,8 +261,8 @@ class Engine {
 		var delta;
 		var scope = this;
 
-		function draw() {
-			now = FRAK.timestamp();
+		function draw(t: DOMHighResTimeStamp, frame: XRFrame) {
+			now = t;
 			delta = now - then;
 			if (delta > interval) {
 				then = now - (delta % interval);
@@ -257,14 +270,14 @@ class Engine {
 			}
 
 			if (scope.running) {
-				scope._currentAnimationFrame = FRAK.requestAnimationFrame(draw);
+				scope._currentAnimationFrame = frame.session.requestAnimationFrame(draw);
 			}
 		}
 
 		if (!this.scene.started)
 			this.scene.start(this.context);
 
-		this._currentAnimationFrame = FRAK.requestAnimationFrame(draw);
+		this._currentAnimationFrame = this.session.requestAnimationFrame(draw);
 	}
 
 	/**
@@ -286,8 +299,8 @@ class Engine {
 	/** Pauses the engine, call run to start it again. */
 	pause(): any {
 		this.running = false;
-		if (this._currentAnimationFrame)
-			FRAK.cancelAnimationFrame(this._currentAnimationFrame);
+		if (this._currentAnimationFrame && this.session)
+			this.session.cancelAnimationFrame(this._currentAnimationFrame);
 	}
 
 	/** Toggles engine pause */
@@ -380,7 +393,11 @@ class Engine {
 	}
 
 	isImmersiveSupported() {
-		return true;	// TODO
+		if (!navigator.xr) {
+			return Promise.resolve(false);
+		} else {
+			return navigator.xr.isSessionSupported('immersive-ar');
+		}
 	}
 
 	startImmersive() {
