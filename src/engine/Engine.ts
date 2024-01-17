@@ -4,15 +4,37 @@ import Texture from 'rendering/materials/Texture';
 import Sampler from 'rendering/shaders/Sampler';
 import RenderingContext from 'rendering/RenderingContext';
 import Input from 'engine/Input';
-import FRAK, { FrakCallback } from 'Helpers';
+import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
 import PerspectiveCamera from "../scene/components/PerspectiveCamera";
+
+interface Options {
+	anisotropicFiltering?: number | false;
+	antialias?: boolean;
+	assetsPath?: string;
+	builtinShaders?: boolean;
+	directionalShadowResolution?: number;
+	captureScreenshot?: boolean;
+	contextErrorCallback?: any;
+	contextOptions?: WebGLContextAttributes;
+	debug?: boolean;
+	defaultRequestedFPS?: number;
+	emissiveEnabled?: boolean;
+	legacyAmbient?: boolean;
+	requestedFPS?: number;
+	runInBackground?: boolean;
+	shadowManualUpdate?: boolean;
+	showDebug?: boolean;
+	softShadows?: boolean;
+	ssao?: boolean;
+	tonemap?: string;
+}
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
  */
 class Engine {
-	options: any;
+	options: Options;
 	context: RenderingContext;
 	scene: Scene;
 	fps: FPS;
@@ -32,32 +54,33 @@ class Engine {
 	_externallyPaused: any;
 	_savedCanvasStyles: any;
 	_currentAnimationFrame: any;
+	isImmersive = false;
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
 		@param options Engine options [optional] */
-	constructor(canvas, options) {
-		if (!options) options = {};
-		this.options = FRAK.extend({
-			'assetsPath': '',
-			'defaultRequestedFPS': 60.0,
-			'requestedFPS': 60.0,
-			'anisotropicFiltering': 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
-			'debug': false,
-			'antialias': false,
-			'ssao': false,
-			'softShadows': false,
-			'runInBackground': false,
-			'contextOptions': null,
-			'contextErrorCallback': null,
-			'captureScreenshot': false,
-			'builtinShaders': true,
-			'directionalShadowResolution': 2048,
-			'shadowManualUpdate': false,
-			'emissiveEnabled': false,	// TODO: Remove this for an automatic detection
-			'tonemap': 'aces',
-			'legacyAmbient': true,
-		}, options);
+	constructor(canvas, options: Options = {}) {
+		this.options = merge({
+			anisotropicFiltering: 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
+			antialias: false,
+			assetsPath: '',
+			builtinShaders: true,
+			captureScreenshot: false,
+			contextErrorCallback: null,
+			contextOptions: null,
+			debug: false,
+			defaultRequestedFPS: 60.0,
+			directionalShadowResolution: 2048,
+			emissiveEnabled: false,	// TODO: Remove this for an automatic detection
+			legacyAmbient: true,
+			requestedFPS: 60.0,
+			runInBackground: false,
+			shadowManualUpdate: false,
+			showDebug: false,
+			softShadows: false,
+			ssao: false,
+			tonemap: 'aces',
+		} as Options, options);
 
 		this.context = new RenderingContext(canvas, this, this.options.contextOptions, this.options.contextErrorCallback);
 

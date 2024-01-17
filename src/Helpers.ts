@@ -12,14 +12,6 @@ FRAK.performance = typeof window !== 'undefined' ? (window.performance ? window.
 FRAK.performanceNOW = function() {
 	return window.performance.now.apply(window.performance);
 };
-FRAK.extend = function(...args) {
-	for (var i=1; i < args.length; ++i) {
-		Object.entries(args[i]).forEach(([k, v]) => {
-			args[0][k] = v;
-		});
-	}
-	return args[0];
-};
 
 FRAK.isFunction = function(f) {
 	return typeof(f) === 'function';
@@ -153,6 +145,15 @@ function stringHash(str, seed = 0) {
 	return hash;
 }
 
+function merge<A extends {}>(a: A, b: Partial<A>): A {
+	for (const key of Object.keys(a)) {
+		if (b.hasOwnProperty(key)) {
+			a[key] = b[key];
+		}
+	}
+	return a;
+}
+
 globalThis.FrakCallback = FrakCallback;
 globalThis.FRAK = FRAK;
-export {FRAK as default, FrakCallback, stringHash};
+export {FRAK as default, FrakCallback, merge, stringHash};

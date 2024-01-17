@@ -1,7 +1,7 @@
 import Color from 'rendering/Color';
 import RenderTarget from 'rendering/camera/RenderTarget';
 import Texture from 'rendering/materials/Texture';
-import FRAK from 'Helpers';
+import FRAK, { merge } from 'Helpers';
 import RenderingContext from 'rendering/RenderingContext';
 
 /** Render target with multiple draw buffers */
@@ -26,7 +26,7 @@ class TargetTextureMulti extends RenderTarget {
 
 		super(size);
 
-		this.options = FRAK.extend({
+		this.options = merge({
 			dataType: 'float', // possible values: float, unsigned
 			filtering: 'linear', // possible values: linear, nearest
 			depth: false,
