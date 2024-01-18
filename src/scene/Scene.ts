@@ -12,6 +12,7 @@ import RendererOrganizer from "../rendering/camera/RendererOrganizer";
 import CameraComponent from "./components/CameraComponent";
 import AmbientLight from "./lights/AmbientLight";
 import ImageBasedLight from "./lights/ImageBasedLight";
+import RenderingContext from "../rendering/RenderingContext";
 
 /** Scene keeps track of components and nodes, cameras etc */
 class Scene extends Serializable {
@@ -177,7 +178,7 @@ class Scene extends Serializable {
 	}
 
 	/** Called to render all scene cameras. */
-	render(context): any {
+	render(context: RenderingContext, frame: XRFrame, pose: XRViewerPose): any {
 		if (!this.started)
 			return; // Make sure we don't render before starting the scene
 
@@ -187,11 +188,14 @@ class Scene extends Serializable {
 			this.organizer.batch(this.dynamicSpace.renderers);
 		}
 
-		var camera: Camera;
+		const layer = frame.session.renderState.baseLayer;
 
-		for (var cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {
-			camera = this.cameras[cameraIndex];
-			camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+		for (const view of pose.views) {
+			var camera: Camera;
+			for (var cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {
+				camera = this.cameras[cameraIndex];
+				camera.render(context, this, this.processPreRenderList, this.processPostRenderList, layer, view);
+			}
 		}
 	}
 

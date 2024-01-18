@@ -57,6 +57,7 @@ class Engine {
 	_currentAnimationFrame: any;
 	isImmersive = false;
 	session: XRSession;
+	private refSpace: XRReferenceSpace | XRBoundedReferenceSpace;
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
@@ -246,6 +247,7 @@ class Engine {
 		await this.session.updateRenderState({
 			baseLayer: new XRWebGLLayer(this.session, this.context.gl),
 		});
+		this.refSpace = await this.session.requestReferenceSpace('viewer');
 		this._run();
 	}
 
@@ -256,7 +258,7 @@ class Engine {
 		this.running = true;
 
 		var now;
-		var then = FRAK.timestamp();
+		var then = performance.now();
 		var interval = 1000 / this.options.requestedFPS;
 		var delta;
 		var scope = this;
@@ -266,18 +268,79 @@ class Engine {
 			delta = now - then;
 			if (delta > interval) {
 				then = now - (delta % interval);
-				scope.frame();
+				scope.update();
 			}
 
 			if (scope.running) {
 				scope._currentAnimationFrame = frame.session.requestAnimationFrame(draw);
 			}
+
+			const pose = frame.getViewerPose(scope.refSpace);
+			scope.draw(frame, pose);
 		}
 
 		if (!this.scene.started)
 			this.scene.start(this.context);
 
 		this._currentAnimationFrame = this.session.requestAnimationFrame(draw);
+	}
+
+	isImmersiveSupported() {
+		if (!navigator.xr) {
+			return Promise.resolve(false);
+		} else {
+			return navigator.xr.isSessionSupported('immersive-ar');
+		}
+	}
+
+	async startImmersive() {
+		this.isImmersive = true;
+		this.scene.camera.renderStage.generator.setImmersive(true);
+		const session = await navigator.xr?.requestSession('immersive-ar');
+		await session.updateRenderState({
+			baseLayer: new XRWebGLLayer(session, this.context.gl),
+		});
+
+		const start = performance.now();
+		var now;
+		var then = performance.now();
+		var interval = 1000 / this.options.requestedFPS;
+		var delta;
+		const update = (t: DOMHighResTimeStamp, frame: XRFrame) => {
+			console.log(t - start);
+			if (t - start < 5000) {
+				now = t;
+				delta = now - then;
+				if (delta > interval) {
+					then = now - (delta % interval);
+					this.update();
+				}
+
+				if (this.running) {
+					this._currentAnimationFrame = frame.session.requestAnimationFrame(update);
+				}
+
+				const pose = frame.getViewerPose(this.refSpace);
+				this.draw(frame, pose);
+			} else {
+				frame.session.end();
+			}
+		}
+
+		session.requestAnimationFrame(update);
+	}
+
+	exitImmersive() {
+		this.isImmersive = false;
+		this.scene.camera.renderStage.generator.setImmersive(false);
+	}
+
+	toggleImmersive() {
+		if (this.isImmersive) {
+			this.exitImmersive();
+		} else {
+			this.startImmersive();
+		}
 	}
 
 	/**
@@ -349,11 +412,10 @@ class Engine {
 	}
 
 	/** Runs engine to render a single frame and do an update */
-	frame(): any {
+	update(): any {
 		this.context.engine = this;
 		this.input.update();
 		this.scene.update(this);
-		this.scene.render(this.context);
 		this.fps.measure();
 		if(this.options.captureScreenshot) {
 			this._captureScreenshot();
@@ -362,6 +424,14 @@ class Engine {
 		if(this.options.showDebug) {
 			this.renderDebugInfo();
 		}
+	}
+
+	draw(frame: XRFrame, pose: XRViewerPose) {
+		if (!pose) {
+			return;
+		}
+
+		this.scene.render(this.context, frame, pose);
 	}
 
 	validateOptions(context: RenderingContext) {
@@ -389,32 +459,6 @@ class Engine {
 			// var height = Math.max(1, gl.canvas.clientHeight);
 			(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
 			this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-		}
-	}
-
-	isImmersiveSupported() {
-		if (!navigator.xr) {
-			return Promise.resolve(false);
-		} else {
-			return navigator.xr.isSessionSupported('immersive-ar');
-		}
-	}
-
-	startImmersive() {
-		this.isImmersive = true;
-		this.scene.camera.renderStage.generator.setImmersive(true);
-	}
-
-	exitImmersive() {
-		this.isImmersive = false;
-		this.scene.camera.renderStage.generator.setImmersive(false);
-	}
-
-	toggleImmersive() {
-		if (this.isImmersive) {
-			this.exitImmersive();
-		} else {
-			this.startImmersive();
 		}
 	}
 

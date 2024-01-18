@@ -132,77 +132,21 @@ class Camera extends Serializable {
 	}
 
 	/** Main entrypoint for rendering the scene with this Camera */
-	render(context, scene, preRenderCallback, postRenderCallback): any {
-		this.target.resetViewport();
+	render(context, scene, preRenderCallback, postRenderCallback, layer: XRWebGLLayer, view: XRView) {
+		const viewport = layer.getViewport(view);
+		this.target.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
 		this.clearBuffers(context);
 
 		context.camera = this;
 
 		mat4.invert(this.projectionInverseMatrix, this.projectionMatrix);
 
-		if (this.stereo()) {
-			// Update inverse view matrix
-			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
+		// Update inverse view matrix
+		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
 
-			vec2.copy(this._viewportPosition, this.target.viewport.position);
-			vec2.copy(this._viewportSize, this.target.viewport.size);
-
-			// Set viewport size to half the screen width
-			var half = this._viewportSize[0] / 2.0;
-			this.target.viewport.size[0] = half;
-
-			var halfEyeDistance = this.stereoEyeDistance() / 2.0;
-			this.getStrafeVector(this._strafe);
-
-			// Store original view matrix
-			mat4.copy(this._originalViewMatrix, this.viewMatrix);
-
-			// Set view matrix to left eye position
-			vec3.scale(this._translation, this._strafe, -halfEyeDistance);
-			mat4.fromRotationTranslation(this._eyeSeparation, quat.create(), this._translation);
-			mat4.mul(this.viewMatrix, this.viewMatrix, this._eyeSeparation);
-
-			// Update inverse view matrix
-			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
-			// Render left eye
-			this.target.viewport.position[0] = 0;
-			this.startRender(context);
-			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
-			this.endRender(context);
-
-			// Restore original view matrix
-			mat4.copy(this.viewMatrix, this._originalViewMatrix);
-
-			// Set view matrix to right eye position
-			vec3.scale(this._translation, this._strafe, halfEyeDistance);
-			mat4.fromRotationTranslation(this._eyeSeparation, quat.create(), this._translation);
-			mat4.mul(this.viewMatrix, this.viewMatrix, this._eyeSeparation);
-
-			// Update inverse view matrix
-			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
-			// Render right eye
-			this.target.viewport.position[0] = half;
-			this.startRender(context);
-			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
-			this.endRender(context);
-
-			// Restore original viewport
-			vec2.copy(this.target.viewport.position, this._viewportPosition);
-			vec2.copy(this.target.viewport.size, this._viewportSize);
-
-			// Restore original view matrix
-			mat4.copy(this.viewMatrix, this._originalViewMatrix);
-		}
-		else {
-			// Update inverse view matrix
-			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
-			this.startRender(context);
-			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
-			this.endRender(context);
-		}
+		this.startRender(context);
+		this.renderScene(context, scene, preRenderCallback, postRenderCallback);
+		this.endRender(context);
 
 		context.camera = false;
 	}
