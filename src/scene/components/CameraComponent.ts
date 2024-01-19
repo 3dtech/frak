@@ -1,13 +1,8 @@
 import Component from 'scene/components/Component';
 import Camera from 'rendering/camera/Camera';
-import ForwardRenderStage from 'rendering/camera/ForwardRenderStage';
 import BoundingBox from 'scene/geometry/BoundingBox';
 import MeshComponent from 'scene/components/MeshComponent';
-import TargetScreen from 'rendering/camera/TargetScreen';
 import Ray from 'scene/geometry/Ray';
-import OITPostProcess from 'rendering/camera/OITPostProcess';
-import SSAOPostProcess from 'rendering/camera/SSAOPostProcess';
-import DeferredRenderStage from 'rendering/camera/DeferredRenderStage';
 import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
 
 /** Camera component */
@@ -116,9 +111,7 @@ class CameraComponent extends Component {
 		@return Instance of {vec2} in normalized viewport coordinates */
 	screenPointToViewportPoint(point): any {
 		var p = vec2.create();
-		var pos = vec2.create();
-		if (this.camera.target instanceof TargetScreen)
-			pos=this.camera.target.getPosition();
+		var pos = this.camera.target.getPosition();
 		var size = this.camera.target.getSize();
 		if (Math.abs(size[0])<EPSILON || Math.abs(size[1])<EPSILON)
 			return p;
@@ -193,7 +186,7 @@ class CameraComponent extends Component {
 	}
 
 	initRenderStage(context, engine): any {
-		if (this.camera.target instanceof TargetScreen) {
+		if (engine.scene.camera === this.camera) {
 			var canvas = context.canvas;
 			this.camera.target.setSize(canvas.width, canvas.height);
 		}

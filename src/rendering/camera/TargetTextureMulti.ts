@@ -16,7 +16,6 @@ class TargetTextureMulti extends RenderTarget {
 	maxDrawBuffers: any;
 	targets: any;
 	depth: any;
-	frameBuffer: any;
 	rebuild: any;
 
 	constructor(context, size, options) {
@@ -229,8 +228,6 @@ class TargetTextureMulti extends RenderTarget {
 				doNotClear = true;
 		}
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-
 		super.bind(context);
 
 		if (!doNotClear) {
@@ -246,11 +243,6 @@ class TargetTextureMulti extends RenderTarget {
 				flags = clearFlags;
 			gl.clear(flags);
 		}
-	}
-
-	unbind(context) {
-		super.unbind(context);
-		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
 	}
 }
 

@@ -49,7 +49,6 @@ import 'rendering/camera/BlurPostProcess';
 import 'rendering/camera/SSAOPostProcess';
 
 import 'rendering/camera/RenderTarget';
-import 'rendering/camera/TargetScreen';
 import 'rendering/camera/TargetTexture';
 import 'rendering/camera/TargetTextureFloat';
 import 'rendering/camera/TargetTextureMulti';

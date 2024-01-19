@@ -1,19 +1,13 @@
 /** Render-target class */
 class RenderTarget {
 	viewport: any;
-	size: any;
+	frameBuffer: WebGLFramebuffer = null;
 
-	constructor(size?) {
+	constructor(public size = vec2.create(), public position = vec2.create()) {
 		this.viewport = {
-			position: vec2.create(),
-			size: vec2.create()
+			position: vec2.copy(vec2.create(), position),
+			size: vec2.copy(vec2.create(), size),
 		};
-
-		this.size = vec2.create();
-		if (size) {
-			vec2.copy(this.size, size);
-			vec2.copy(this.viewport.size, size);
-		}
 	}
 
 	type(): any {
@@ -22,6 +16,7 @@ class RenderTarget {
 
 	/** Binds this rendertarget. All subsequent draw calls go to this render-target */
 	bind(context, ...args): any {
+		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this.frameBuffer);
 		context.gl.viewport(this.viewport.position[0], this.viewport.position[1], this.viewport.size[0], this.viewport.size[1]);
 		context.gl.scissor(this.viewport.position[0], this.viewport.position[1], this.viewport.size[0], this.viewport.size[1]);
 		context.gl.enable(context.gl.SCISSOR_TEST);
@@ -30,6 +25,16 @@ class RenderTarget {
 	/** Unbinds this rendertarget. */
 	unbind(context): any {
 		context.gl.disable(context.gl.SCISSOR_TEST);
+		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
+	}
+
+	setPosition(x, y): any {
+		this.position[0] = x;
+		this.position[1] = y;
+	}
+
+	getPosition(): any {
+		return this.position;
 	}
 
 	/** Sets RenderTarget size */
@@ -41,6 +46,11 @@ class RenderTarget {
 	/** Returns RenderTarget size */
 	getSize(): any {
 		return this.size;
+	}
+
+	set(x, y, width, height) {
+		this.setPosition(x, y);
+		this.setSize(width, height);
 	}
 
 	/** Sets RenderTarget viewport position and size */
@@ -55,9 +65,8 @@ class RenderTarget {
 		vec2.copy(this.viewport.size, other.viewport.size);
 	}
 
-	/** Sets viewport to cover the entire RenderTarget */
 	resetViewport() {
-		this.setViewport(0, 0, this.size[0], this.size[1])
+		this.setViewport(this.position[0], this.position[1], this.size[0], this.size[1]);
 	}
 }
 

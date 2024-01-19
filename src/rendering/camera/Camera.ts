@@ -49,7 +49,7 @@ class Camera extends Serializable {
 		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
 		mat4.invert(this.projectionInverseMatrix, this.projectionMatrix);
 		this.renderStage = new PBRPipeline();
-		this.target = new TargetScreen();
+		this.target = new RenderTarget();
 		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
 		this.clearMask = false;
 		this.order = 0; ///< Cameras are rendered in succession from lowest to highest order
@@ -134,7 +134,9 @@ class Camera extends Serializable {
 	/** Main entrypoint for rendering the scene with this Camera */
 	render(context, scene, preRenderCallback, postRenderCallback, layer: XRWebGLLayer, view: XRView) {
 		const viewport = layer.getViewport(view);
-		this.target.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+		this.target.frameBuffer = layer.framebuffer;
+		this.target.set(viewport.x, viewport.y, viewport.width, viewport.height);
+		this.target.resetViewport();
 		this.clearBuffers(context);
 
 		context.camera = this;
