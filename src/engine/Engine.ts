@@ -147,7 +147,9 @@ class Engine {
 	}
 
 	onVisibilityChange(): any {
-		if (!this.options.runInBackground) {
+		// TODO: Fix this
+
+		/*if (!this.options.runInBackground) {
 			if (document.hidden) {
 				if (this.running === false) {
 					this._externallyPaused = true;
@@ -162,7 +164,7 @@ class Engine {
 				}
 				this.run();
 			}
-		}
+		}*/
 	}
 
 	onFullscreenChange(): any {
@@ -243,20 +245,29 @@ class Engine {
 		If requestAnimationFrame function is not available then setTimeout is used. */
 
 	public async run() {
-		this.session = await navigator.xr?.requestSession('inline');
-		await this.session.updateRenderState({
-			baseLayer: new XRWebGLLayer(this.session, this.context.gl),
+		const session = await navigator.xr?.requestSession('inline');
+		await session.updateRenderState({
+			baseLayer: new XRWebGLLayer(session, this.context.gl),
 		});
-		this.refSpace = await this.session.requestReferenceSpace('viewer');
-		this._run();
+		const refSpace = await session.requestReferenceSpace('viewer');
+		this.running = true;
+		this._run(session, refSpace);
 	}
 
-	private _run(): any {
-		if (this.running !== false)
-			return;
+	async startImmersive() {
+		this.isImmersive = true;
+		this.scene.camera.renderStage.generator.setImmersive(true);
+		const session = await navigator.xr?.requestSession('immersive-ar');
+		await session.updateRenderState({
+			baseLayer: new XRWebGLLayer(session, this.context.gl),
+		});
+		const refSpace = await session.requestReferenceSpace('local');
+		session.addEventListener('end', this.onExitImmersive.bind(this));
 
-		this.running = true;
+		this._run(session, refSpace);
+	}
 
+	private _run(session: XRSession, refSpace: XRReferenceSpace | XRBoundedReferenceSpace): any {
 		var now;
 		var then = performance.now();
 		var interval = 1000 / this.options.requestedFPS;
@@ -271,75 +282,42 @@ class Engine {
 				scope.update();
 			}
 
-			if (scope.running) {
-				scope._currentAnimationFrame = frame.session.requestAnimationFrame(draw);
-			}
+			scope._currentAnimationFrame = frame.session.requestAnimationFrame(draw);
 
-			const pose = frame.getViewerPose(scope.refSpace);
+			const pose = frame.getViewerPose(refSpace);
 			scope.draw(frame, pose);
 		}
 
 		if (!this.scene.started)
 			this.scene.start(this.context);
 
-		this._currentAnimationFrame = this.session.requestAnimationFrame(draw);
+		this._currentAnimationFrame = session.requestAnimationFrame(draw);
 	}
 
-	isImmersiveSupported() {
+	async isImmersiveSupported() {
 		if (!navigator.xr) {
-			return Promise.resolve(false);
+			return false;
 		} else {
 			return navigator.xr.isSessionSupported('immersive-ar');
 		}
 	}
 
-	async startImmersive() {
-		this.isImmersive = true;
-		this.scene.camera.renderStage.generator.setImmersive(true);
-		const session = await navigator.xr?.requestSession('immersive-ar');
-		await session.updateRenderState({
-			baseLayer: new XRWebGLLayer(session, this.context.gl),
-		});
-
-		const start = performance.now();
-		var now;
-		var then = performance.now();
-		var interval = 1000 / this.options.requestedFPS;
-		var delta;
-		const update = (t: DOMHighResTimeStamp, frame: XRFrame) => {
-			console.log(t - start);
-			if (t - start < 5000) {
-				now = t;
-				delta = now - then;
-				if (delta > interval) {
-					then = now - (delta % interval);
-					this.update();
-				}
-
-				if (this.running) {
-					this._currentAnimationFrame = frame.session.requestAnimationFrame(update);
-				}
-
-				const pose = frame.getViewerPose(this.refSpace);
-				this.draw(frame, pose);
-			} else {
-				frame.session.end();
-			}
+	async exitImmersive() {
+		if (this.session) {
+			await this.session.end();
 		}
-
-		session.requestAnimationFrame(update);
 	}
 
-	exitImmersive() {
+	private onExitImmersive() {
 		this.isImmersive = false;
 		this.scene.camera.renderStage.generator.setImmersive(false);
 	}
 
-	toggleImmersive() {
+	async toggleImmersive() {
 		if (this.isImmersive) {
-			this.exitImmersive();
+			await this.exitImmersive();
 		} else {
-			this.startImmersive();
+			await this.startImmersive();
 		}
 	}
 
