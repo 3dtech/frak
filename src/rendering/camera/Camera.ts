@@ -1,5 +1,4 @@
 import Serializable from 'scene/Serializable';
-import TargetScreen from 'rendering/camera/TargetScreen';
 import Plane from 'scene/geometry/Plane';
 import BoundingBox from 'scene/geometry/BoundingBox';
 import BoundingSphere from 'scene/geometry/BoundingSphere';
@@ -134,6 +133,11 @@ class Camera extends Serializable {
 	/** Main entrypoint for rendering the scene with this Camera */
 	render(context, scene, preRenderCallback, postRenderCallback, layer: XRWebGLLayer, view: XRView) {
 		const viewport = layer.getViewport(view);
+		if (viewport.width === 0 || viewport.height === 0) {
+			return;
+		}
+
+		this.projectionMatrix = view.projectionMatrix;
 		this.target.frameBuffer = layer.framebuffer;
 		this.target.set(viewport.x, viewport.y, viewport.width, viewport.height);
 		this.target.resetViewport();

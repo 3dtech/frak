@@ -33,7 +33,7 @@ class ModelsManager extends Manager {
 		return progress+(this.texturesManager.getProgress()+this.shadersManager.getProgress())/2.0/this.getTotalItems();
 	}
 
-	add(source, format): any {
+	add(source, format?): any {
 		source = this.sourceCallback(source);
 		return this.addDescriptor(new ModelDescriptor(source, format));
 	}

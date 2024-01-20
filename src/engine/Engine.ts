@@ -198,17 +198,15 @@ class Engine {
 			setTimeout(function() {
 				// Set aspect ratio
 				var bounds = canvas.getBoundingClientRect();
-				(scope.scene.cameraComponent as PerspectiveCamera).setAspectRatio(bounds.width / bounds.height);
-				if (scope.useUpscaling)
-					return;
-
-				// If not using upscaling then resize the RenderTarget
-				var gl = scope.context.gl;
-				var width = (gl.canvas as HTMLCanvasElement).clientWidth;
-				var height = Math.max(1, (gl.canvas as HTMLCanvasElement).clientHeight);
-				canvas.setAttribute('width', width);
-				canvas.setAttribute('height', height);
-				scope.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+				if (!scope.useUpscaling) {
+					// If not using upscaling then resize the RenderTarget
+					var gl = scope.context.gl;
+					var width = (gl.canvas as HTMLCanvasElement).clientWidth;
+					var height = Math.max(1, (gl.canvas as HTMLCanvasElement).clientHeight);
+					canvas.setAttribute('width', width);
+					canvas.setAttribute('height', height);
+				}
+				scope.resize();
 			},
 			2000 / this.options.requestedFPS);
 		}
@@ -223,16 +221,15 @@ class Engine {
 				canvas.style.bottom = this._savedCanvasStyles.bottom;
 				canvas.style.width = this._savedCanvasStyles.width;
 				canvas.style.height = this._savedCanvasStyles.height;
-				if (this._savedCanvasStyles.aspectRatio)
-					(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(this._savedCanvasStyles.aspectRatio);
 
 				// If not using upscaling then resize the RenderTarget
 				if (!this.useUpscaling) {
 					canvas.setAttribute('width', this._savedCanvasStyles.canvasWidth);
 					canvas.setAttribute('height', this._savedCanvasStyles.canvasHeight);
 					var gl = this.context.gl;
-					this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 				}
+
+				this.resize();
 
 				delete this._savedCanvasStyles;
 			}
@@ -247,6 +244,8 @@ class Engine {
 		const session = await navigator.xr?.requestSession('inline');
 		await session.updateRenderState({
 			baseLayer: new XRWebGLLayer(session, this.context.gl),
+			depthNear: 0.3,	// TODO: Sync with PerspectiveCamera?
+			inlineVerticalFieldOfView: 45 * Math.PI / 180,
 		});
 		const refSpace = await session.requestReferenceSpace('viewer');
 		this.running = true;
@@ -425,13 +424,9 @@ class Engine {
 	}
 
 	resize(): any {
-		if (this.context instanceof RenderingContext) {
-			var gl = this.context.gl;
-			// var width = gl.canvas.clientWidth;
-			// var height = Math.max(1, gl.canvas.clientHeight);
-			(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
-			this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-		}
+		const gl = this.context.gl;
+		(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
+		this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 	}
 
 	/** Helper function for displaying renderer statistics. */
