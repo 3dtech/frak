@@ -2,7 +2,7 @@ import Serializable from 'scene/Serializable';
 
 /** Descriptor is a class that is used to describe a resource and all its sub-resources. */
 class Descriptor extends Serializable {
-	source: any;
+	source: String;
 	parentDescriptor: any;
 
 	constructor() {

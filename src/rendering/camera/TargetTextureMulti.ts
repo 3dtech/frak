@@ -47,7 +47,7 @@ class TargetTextureMulti extends RenderTarget {
 		this.maxDrawBuffers = context.gl.getParameter(context.gl.MAX_DRAW_BUFFERS);
 
 		if (this.options.numTargets > this.maxDrawBuffers) {
-			throw('TargetTextureMulti: Too many targets requested. System only supports {0} draw buffers.'.format(this.maxDrawBuffers));
+			throw(`TargetTextureMulti: Too many targets requested. System only supports ${this.maxDrawBuffers} draw buffers.`);
 		}
 
 		this.targets = [];

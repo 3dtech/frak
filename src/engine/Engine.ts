@@ -57,7 +57,6 @@ class Engine {
 	_currentAnimationFrame: any;
 	isImmersive = false;
 	session: XRSession;
-	private refSpace: XRReferenceSpace | XRBoundedReferenceSpace;
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
@@ -267,26 +266,21 @@ class Engine {
 		this._run(session, refSpace);
 	}
 
-	private _run(session: XRSession, refSpace: XRReferenceSpace | XRBoundedReferenceSpace): any {
-		var now;
-		var then = performance.now();
-		var interval = 1000 / this.options.requestedFPS;
-		var delta;
-		var scope = this;
-
-		function draw(t: DOMHighResTimeStamp, frame: XRFrame) {
-			now = t;
-			delta = now - then;
+	private _run(session: XRSession, refSpace: XRReferenceSpace | XRBoundedReferenceSpace) {
+		let then = performance.now();
+		const draw = (t: DOMHighResTimeStamp, frame: XRFrame) => {
+			let delta = t - then;
+			let interval = 1000 / this.options.requestedFPS;
 			if (delta > interval) {
-				then = now - (delta % interval);
-				scope.update();
+				then = t - (delta % interval);
+				this.update();
 			}
 
-			scope._currentAnimationFrame = frame.session.requestAnimationFrame(draw);
+			this._currentAnimationFrame = frame.session.requestAnimationFrame(draw);
 
 			const pose = frame.getViewerPose(refSpace);
-			scope.draw(frame, pose);
-		}
+			this.draw(frame, pose);
+		};
 
 		if (!this.scene.started)
 			this.scene.start(this.context);
@@ -446,7 +440,7 @@ class Engine {
 			return;
 		var organizer = this.scene.organizer;
 		console.log('=============== Statistics =====================');
-		console.log('  Visible faces (opaque/transparent): {0}/{1}'.format(organizer.opaqueRenderers.count, organizer.transparentRenderers.count));
+		console.log(`  Visible renderers (opaque/transparent): ${organizer.opaqueRenderers.count}/${organizer.transparentRenderers.count}`);
 		console.log('================================================');
 	}
 

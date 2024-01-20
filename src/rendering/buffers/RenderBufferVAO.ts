@@ -26,7 +26,7 @@ class RenderBufferVAO extends RenderBuffer {
 		@param itemSize Size of an item (number elements from items array, eg 3 to pass vec3 attribute) */
 	add(name, items, itemSize): any {
 		if (items.length / itemSize <= this.maxFaceIndex)
-			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
+			throw `RenderBuffer: Buffer '${name}' too small.`;
 
 		var gl = this.context.gl;
 

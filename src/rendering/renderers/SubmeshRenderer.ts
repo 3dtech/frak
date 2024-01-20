@@ -57,7 +57,7 @@ class SubmeshRenderer extends Renderer {
 		if (submesh.texCoords1D) {
 			for (var i = 0; i < submesh.texCoords1D.length; ++i) {
 				if (submesh.texCoords1D[i].length != pointCount) {
-					console.warn("Wrong number of 1D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords1D[i].length, pointCount));
+					console.warn(`Wrong number of 1D texture coordinates (${submesh.texCoords1D[i].length}). Must be the same as positions (${pointCount}).`);
 					continue;
 				}
 				this.buffer.add("texcoord1d" + i, submesh.texCoords1D[i], 1);
@@ -68,7 +68,7 @@ class SubmeshRenderer extends Renderer {
 		if (submesh.texCoords2D) {
 			for (var i = 0; i < submesh.texCoords2D.length; ++i) {
 				if (submesh.texCoords2D[i].length / 2 != pointCount) {
-					console.warn("Wrong number of 2D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords2D[i].length / 2, pointCount));
+					console.warn(`Wrong number of 2D texture coordinates (${submesh.texCoords2D[i].length / 2}). Must be the same as positions (${pointCount}).`);
 					continue;
 				}
 				this.buffer.add("texcoord2d" + i, submesh.texCoords2D[i], 2);
@@ -79,7 +79,7 @@ class SubmeshRenderer extends Renderer {
 		if (submesh.texCoords3D) {
 			for (var i = 0; i < submesh.texCoords3D.length; ++i) {
 				if (submesh.texCoords3D[i].length / 3 != pointCount) {
-					console.warn("Wrong number of 3D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords3D[i].length / 3, pointCount));
+					console.warn(`Wrong number of 3D texture coordinates (${submesh.texCoords3D[i].length / 3}). Must be the same as positions (${pointCount}).`);
 					continue;
 				}
 				this.buffer.add("texcoord3d" + i, submesh.texCoords3D[i], 3);
@@ -90,7 +90,7 @@ class SubmeshRenderer extends Renderer {
 		if (submesh.texCoords4D) {
 			for (var i = 0; i < submesh.texCoords4D.length; ++i) {
 				if (submesh.texCoords4D[i].length / 4 != pointCount) {
-					console.warn("Wrong number of 4D texture coordinates ({0}). Must be the same as positions ({1}).".format(submesh.texCoords4D[i].length / 4, pointCount));
+					console.warn(`Wrong number of 4D texture coordinates (${submesh.texCoords4D[i].length / 4}). Must be the same as positions (${pointCount}).`);
 					continue;
 				}
 				this.buffer.add("texcoord4d" + i, submesh.texCoords4D[i], 4);
@@ -115,7 +115,7 @@ class SubmeshRenderer extends Renderer {
 		}
 		if (submesh.tangents4D) {
 			if (submesh.tangents4D.length / 4 != pointCount) {
-				console.warn("Wrong number of tangents ({0}). Must be the same as positions ({1}).".format(submesh.tangents4D.length / 4, pointCount));
+				console.warn(`Wrong number of tangents (${submesh.tangents4D.length / 4}). Must be the same as positions (${pointCount}).`);
 			}
 			else {
 				this.buffer.add("tangent4d", submesh.tangents4D, 4);

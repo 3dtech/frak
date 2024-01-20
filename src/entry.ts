@@ -1,7 +1,6 @@
 import '../lib/gl-matrix.js';
 import '../lib/gl-matrix-3dtech-ext.js';
 import '../lib/jdataview.js';
-import '../lib/polyfills.js';
 import '../lib/Logistics.js';
 import '../lib/hammer.min.js';
 

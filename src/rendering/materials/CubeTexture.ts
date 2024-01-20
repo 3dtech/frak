@@ -125,8 +125,7 @@ class CubeTexture extends BaseTexture {
 		this.loaded = true;
 		if ((this.size[0] & (this.size[0] - 1)) != 0 ||
 			(this.size[1] & (this.size[1] - 1)) != 0) {
-			console.warn('Created a not power of 2 texture: {0} ({1}x{2})'
-				.format(this.name, this.size[0], this.size[1]));
+			console.warn(`Created a not power of 2 texture: ${this.name} (${this.size[0]}x${this.size[1]})`);
 		}
 	}
 
