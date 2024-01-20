@@ -141,7 +141,6 @@ class Camera extends Serializable {
 		this.target.frameBuffer = layer.framebuffer;
 		this.target.set(viewport.x, viewport.y, viewport.width, viewport.height);
 		this.target.resetViewport();
-		this.clearBuffers(context);
 
 		context.camera = this;
 
