@@ -28,7 +28,6 @@ class Scene extends Serializable {
 	directionalLights: DirectionalLight[] = [];
 	imageBasedLights: ImageBasedLight[] = [];
 	pointLights: any = [];	// TODO
-	engine: Engine;
 	/** If scene is being started, it is set to true */
 	starting = false;
 	/** If scene has started, it's set to true */
@@ -44,7 +43,7 @@ class Scene extends Serializable {
 	lightNode: any;
 	light: any;
 
-	constructor() {
+	constructor(public engine: Engine) {
 		super();
 		this.root.scene = this;
 		this.startingQueue = []; ///< Starting queue where the components that are still starting can be pushed
@@ -86,7 +85,6 @@ class Scene extends Serializable {
 
 		this.cameraNode=new Node("Camera");
 		this.cameraComponent=this.cameraNode.addComponent(new PerspectiveCamera());
-		(this.cameraComponent as PerspectiveCamera).aspect=false; // Forces PerspectiveCamera to autodetect aspect ratio
 		this.camera=this.cameraComponent.camera;	///< Main camera used for rendering scene. Beware! This is not camera component meaning that its view matrix gets overwritten by camera component each frame
 		this.root.addNode(this.cameraNode);
 

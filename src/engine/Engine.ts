@@ -55,8 +55,8 @@ class Engine {
 	_externallyPaused: any;
 	_savedCanvasStyles: any;
 	_currentAnimationFrame: any;
-	isImmersive = false;
-	session: XRSession;
+	inlineSession: XRSession;
+	immersiveSession?: XRSession;
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
@@ -90,8 +90,7 @@ class Engine {
 
 		this.validateOptions(this.context);
 
-		this.scene = new Scene();
-		this.scene.engine = this;
+		this.scene = new Scene(this);
 		this.fps = new FPS();
 		this.running = false;
 		this.screenshot = false;
@@ -241,28 +240,38 @@ class Engine {
 		If requestAnimationFrame function is not available then setTimeout is used. */
 
 	public async run() {
-		const session = await navigator.xr?.requestSession('inline');
-		await session.updateRenderState({
-			baseLayer: new XRWebGLLayer(session, this.context.gl),
-			depthNear: 0.3,	// TODO: Sync with PerspectiveCamera?
-			inlineVerticalFieldOfView: 45 * Math.PI / 180,
+		this.inlineSession = await navigator.xr?.requestSession('inline');
+		this.scene.cameraComponent.session = this.inlineSession;
+
+		let {
+			far: depthFar,
+			near: depthNear,
+			fov: inlineVerticalFieldOfView,
+		} = this.scene.cameraComponent as PerspectiveCamera;
+		inlineVerticalFieldOfView *= Math.PI / 180;
+
+		await this.inlineSession.updateRenderState({
+			baseLayer: new XRWebGLLayer(this.inlineSession, this.context.gl),
+			depthFar,
+			depthNear,
+			inlineVerticalFieldOfView,
 		});
-		const refSpace = await session.requestReferenceSpace('viewer');
+
+		const refSpace = await this.inlineSession.requestReferenceSpace('viewer');
 		this.running = true;
-		this._run(session, refSpace);
+		this._run(this.inlineSession, refSpace);
 	}
 
 	async startImmersive() {
-		this.isImmersive = true;
 		this.scene.camera.renderStage.generator.setImmersive(true);
-		const session = await navigator.xr?.requestSession('immersive-ar');
-		await session.updateRenderState({
-			baseLayer: new XRWebGLLayer(session, this.context.gl),
+		this.immersiveSession = await navigator.xr?.requestSession('immersive-ar');
+		await this.immersiveSession.updateRenderState({
+			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
 		});
-		const refSpace = await session.requestReferenceSpace('local');
-		session.addEventListener('end', this.onExitImmersive.bind(this));
+		const refSpace = await this.immersiveSession.requestReferenceSpace('local');
+		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
 
-		this._run(session, refSpace);
+		this._run(this.immersiveSession, refSpace);
 	}
 
 	private _run(session: XRSession, refSpace: XRReferenceSpace | XRBoundedReferenceSpace) {
@@ -296,22 +305,12 @@ class Engine {
 	}
 
 	async exitImmersive() {
-		if (this.session) {
-			await this.session.end();
-		}
+		await this.immersiveSession?.end();
 	}
 
 	private onExitImmersive() {
-		this.isImmersive = false;
+		this.immersiveSession = null;
 		this.scene.camera.renderStage.generator.setImmersive(false);
-	}
-
-	async toggleImmersive() {
-		if (this.isImmersive) {
-			await this.exitImmersive();
-		} else {
-			await this.startImmersive();
-		}
 	}
 
 	/**
@@ -333,8 +332,8 @@ class Engine {
 	/** Pauses the engine, call run to start it again. */
 	pause(): any {
 		this.running = false;
-		if (this._currentAnimationFrame && this.session)
-			this.session.cancelAnimationFrame(this._currentAnimationFrame);
+		if (this._currentAnimationFrame && this.inlineSession)
+			this.inlineSession.cancelAnimationFrame(this._currentAnimationFrame);
 	}
 
 	/** Toggles engine pause */

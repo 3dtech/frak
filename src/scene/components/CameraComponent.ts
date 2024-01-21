@@ -8,6 +8,7 @@ import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
 /** Camera component */
 class CameraComponent extends Component {
 	camera: any;
+	session?: XRSession;
 
 	constructor(viewMatrix, projectionMatrix) {
 		if(!viewMatrix || !projectionMatrix) {
