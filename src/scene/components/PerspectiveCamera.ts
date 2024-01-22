@@ -4,7 +4,6 @@ import CameraComponent from 'scene/components/CameraComponent';
 class PerspectiveCamera extends CameraComponent {
 	constructor(
 		public fov = 45,
-		public aspect = 4/3,
 		public near = 0.3,
 		public far = 1000,
 	) {
@@ -35,13 +34,6 @@ class PerspectiveCamera extends CameraComponent {
 		return "PerspectiveCamera";
 	}
 
-	onStart(context, engine): any {
-		if(!this.aspect) {
-			this.setAspectRatio(context.canvas.width/context.canvas.height);
-		}
-		super.onStart(context, engine);
-	}
-
 	/** Sets the camera's near and far clipping planes. */
 	setClipPlanes(near, far): any {
 		this.near = near;
@@ -51,25 +43,9 @@ class PerspectiveCamera extends CameraComponent {
 		this.calculatePerspective();
 	}
 
-	/** Sets the camera aspect ration and updates the perspective projection matrix.
-		@param aspect The new aspect radio (width/height). */
-	setAspectRatio(aspect): any {
-		this.aspect=aspect;
-		this.calculatePerspective();
-	}
-
 	/** Sets the camera vertical field of view (in degrees) */
 	setVerticalFieldOfView(fov): any {
 		this.fov=fov;
-		this.calculatePerspective();
-	}
-
-	/** Sets the camera horizontal field of view (in degrees) */
-	setHorizontalFieldOfView(fov): any {
-		fov = fov * (Math.PI*2.0)/360.0;
-		var hpx = Math.tan(fov/2.0);
-		var vpx = hpx / this.aspect;
-		this.fov = Math.atan(vpx) * 2.0 * 180.0/Math.PI;
 		this.calculatePerspective();
 	}
 
@@ -77,15 +53,6 @@ class PerspectiveCamera extends CameraComponent {
 		@return The current vertical field of view in degrees {float} */
 	getVerticalFieldOfView(): any {
 		return this.camera.getFieldOfView()*180.0/Math.PI;
-	}
-
-	/** Returns the current horizontal field of view in degrees.
-		@return The current vertical field of view in degrees {float} */
-	getHorizontalFieldOfView(): any {
-		var vpx = Math.tan(this.camera.getFieldOfView() * 0.5);
-		var hpx = this.aspect * vpx;
-		var fovx = Math.atan(hpx) * 2.0;
-		return fovx * 180.0/Math.PI;
 	}
 
 	/** Calculates projection matrix based on fov, aspect ratio and near/far clipping planes */

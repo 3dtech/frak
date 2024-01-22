@@ -4,6 +4,7 @@ import BoundingBox from 'scene/geometry/BoundingBox';
 import MeshComponent from 'scene/components/MeshComponent';
 import Ray from 'scene/geometry/Ray';
 import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
+import RenderingContext from "../../rendering/RenderingContext";
 
 /** Camera component */
 class CameraComponent extends Component {
@@ -30,8 +31,12 @@ class CameraComponent extends Component {
 		if node is added to the scene
 		@param node Parent {Node} */
 	onAddScene(node): any {
-		node.scene.cameras.push(this.camera);
-		node.scene.cameras.sort(function(a,b) { return a.order-b.order; });
+		if (node.scene.cameraComponent === this) {
+			return;	// We get rendered anyway
+		}
+
+		node.scene.cameras.push(this);
+		node.scene.cameras.sort(function(a,b) { return a.camera.order-b.camera.order; });
 		this.useCameraViewMatrix();
 	}
 
@@ -39,9 +44,13 @@ class CameraComponent extends Component {
 		if parent node is removed to the scene
 		@param node Parent {Node} */
 	onRemoveScene(node): any {
+		if (node.scene.cameraComponent === this) {
+			return;
+		}
+
 		var cameras = node.scene.cameras;
 		for (var i=0; i<cameras.length; i++) {
-			if (cameras[i]==this.camera) {
+			if (cameras[i]==this) {
 				cameras.splice(i, 1);
 				i--;
 			}
@@ -212,6 +221,24 @@ class CameraComponent extends Component {
 		}
 
 		this.camera.renderStage.start(context, engine, this.camera);
+	}
+
+	updateFromXR(context: RenderingContext, frame: XRFrame, view: XRView) {
+		const layer = frame.session.renderState.baseLayer;
+		const viewport = layer.getViewport(view);
+		if (viewport.width === 0 || viewport.height === 0) {
+			return false;	// Needed when rendering only one eye of a stereo view to not spam console with errors
+		}
+
+		this.camera.projectionMatrix = view.projectionMatrix;
+		this.camera.target.frameBuffer = layer.framebuffer;
+		this.camera.target.set(viewport.x, viewport.y, viewport.width, viewport.height);
+		this.camera.target.resetViewport();
+
+		mat4.invert(this.camera.projectionInverseMatrix, this.camera.projectionMatrix);
+		mat4.invert(this.camera.viewInverseMatrix, this.camera.viewMatrix);
+
+		return true;
 	}
 
 	onContextRestored(context) {

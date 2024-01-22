@@ -21,7 +21,7 @@ class Scene extends Serializable {
 	organizer = new RendererOrganizer();
 	rendererDamage = -1;
 	camera: Camera;
-	cameras: Camera[] = [];
+	cameras: CameraComponent[] = [];
 	cameraComponent: CameraComponent;
 	lights: Light[] = [];
 	ambientLights: AmbientLight[] = [];
@@ -186,13 +186,17 @@ class Scene extends Serializable {
 			this.organizer.batch(this.dynamicSpace.renderers);
 		}
 
-		const layer = frame.session.renderState.baseLayer;
+		// Render other cameras
+		let camera: CameraComponent;
+		for (let cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {
+			camera = this.cameras[cameraIndex];
+			camera.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+		}
 
+		// Render view camera
 		for (const view of pose.views) {
-			var camera: Camera;
-			for (var cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {
-				camera = this.cameras[cameraIndex];
-				camera.render(context, this, this.processPreRenderList, this.processPostRenderList, layer, view);
+			if (this.cameraComponent.updateFromXR(context, frame, view)) {
+				this.cameraComponent.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
 			}
 		}
 	}

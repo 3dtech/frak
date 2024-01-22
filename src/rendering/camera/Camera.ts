@@ -131,23 +131,8 @@ class Camera extends Serializable {
 	}
 
 	/** Main entrypoint for rendering the scene with this Camera */
-	render(context, scene, preRenderCallback, postRenderCallback, layer: XRWebGLLayer, view: XRView) {
-		const viewport = layer.getViewport(view);
-		if (viewport.width === 0 || viewport.height === 0) {
-			return;
-		}
-
-		this.projectionMatrix = view.projectionMatrix;
-		this.target.frameBuffer = layer.framebuffer;
-		this.target.set(viewport.x, viewport.y, viewport.width, viewport.height);
-		this.target.resetViewport();
-
+	render(context, scene, preRenderCallback, postRenderCallback) {
 		context.camera = this;
-
-		mat4.invert(this.projectionInverseMatrix, this.projectionMatrix);
-
-		// Update inverse view matrix
-		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
 
 		this.startRender(context);
 		this.renderScene(context, scene, preRenderCallback, postRenderCallback);

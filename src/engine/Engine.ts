@@ -180,7 +180,6 @@ class Engine {
 				height: canvas.style.height,
 				canvasWidth: canvas.getAttribute('width'),
 				canvasHeight: canvas.getAttribute('height'),
-				aspectRatio: (this.scene.cameraComponent as PerspectiveCamera).aspect
 			};
 
 			// Stretch canvas to fill the entire screen
@@ -205,7 +204,6 @@ class Engine {
 					canvas.setAttribute('width', width);
 					canvas.setAttribute('height', height);
 				}
-				scope.resize();
 			},
 			2000 / this.options.requestedFPS);
 		}
@@ -227,8 +225,6 @@ class Engine {
 					canvas.setAttribute('height', this._savedCanvasStyles.canvasHeight);
 					var gl = this.context.gl;
 				}
-
-				this.resize();
 
 				delete this._savedCanvasStyles;
 			}
@@ -343,7 +339,7 @@ class Engine {
 	}
 
 	/** Requests engine to go to fullscreen */
-	requestFullscreen(useUpscaling): any {
+	requestFullscreen(useUpscaling?) {
 		if (!FRAK.fullscreenEnabled) {
 			console.warn('FRAK: Fullscreen API is disabled in this browser.');
 			return;
@@ -422,10 +418,8 @@ class Engine {
 		}
 	}
 
-	resize(): any {
-		const gl = this.context.gl;
-		(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
-		this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+	resize() {
+		// Legacy
 	}
 
 	/** Helper function for displaying renderer statistics. */
