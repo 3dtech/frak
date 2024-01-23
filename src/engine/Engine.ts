@@ -282,8 +282,7 @@ class Engine {
 
 			this._currentAnimationFrame = frame.session.requestAnimationFrame(draw);
 
-			const pose = frame.getViewerPose(refSpace);
-			this.draw(frame, pose);
+			this.scene.render(this.context, frame, refSpace);
 		};
 
 		if (!this.scene.started)
@@ -390,14 +389,6 @@ class Engine {
 		if(this.options.showDebug) {
 			this.renderDebugInfo();
 		}
-	}
-
-	draw(frame: XRFrame, pose: XRViewerPose) {
-		if (!pose) {
-			return;
-		}
-
-		this.scene.render(this.context, frame, pose);
 	}
 
 	validateOptions(context: RenderingContext) {

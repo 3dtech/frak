@@ -8,7 +8,7 @@ import RenderingContext from "../../rendering/RenderingContext";
 
 /** Camera component */
 class CameraComponent extends Component {
-	camera: any;
+	camera: Camera;
 	session?: XRSession;
 
 	constructor(viewMatrix, projectionMatrix) {
