@@ -1,5 +1,6 @@
 import CameraComponent from 'scene/components/CameraComponent';
 import RenderingContext from "../../rendering/RenderingContext";
+import Camera from "../../rendering/camera/Camera";
 
 /** Camera component providing perspective projection */
 class PerspectiveCamera extends CameraComponent {
@@ -19,13 +20,10 @@ class PerspectiveCamera extends CameraComponent {
 		// n - Look direction vector
 		// e - Eye position vector
 
-		super(mat4.create(), mat4.create());
-
 		var lookAt=mat4.create();
 		mat4.lookAt(lookAt, [0.0, 0.0, -100.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 
-		this.camera.viewMatrix = lookAt;
-		mat4.invert(this.camera.viewInverseMatrix, lookAt);
+		super(new Camera(lookAt, mat4.create()));
 
 		this.camera.near = this.near;
 		this.camera.far = this.far;

@@ -8,15 +8,10 @@ import RenderingContext from "../../rendering/RenderingContext";
 
 /** Camera component */
 class CameraComponent extends Component {
-	camera: Camera;
 	session?: XRSession;
 
-	constructor(viewMatrix, projectionMatrix) {
-		if(!viewMatrix || !projectionMatrix) {
-			throw "CameraComponent can be initialized only with given viewMatrix and projectionMatrix. Normally one should create OrthoCamera or PerspectiveCamera instead";
-		}
+	constructor(public camera: Camera) {
 		super();
-		this.camera = new Camera(viewMatrix, projectionMatrix);
 	}
 
 	excluded(): any {

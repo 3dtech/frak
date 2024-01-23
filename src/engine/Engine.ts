@@ -261,6 +261,8 @@ class Engine {
 	async startImmersive() {
 		this.scene.camera.renderStage.generator.setImmersive(true);
 		this.immersiveSession = await navigator.xr?.requestSession('immersive-ar');
+		this.scene.immersiveCamera.session = this.immersiveSession;
+
 		await this.immersiveSession.updateRenderState({
 			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
 		});
@@ -304,6 +306,7 @@ class Engine {
 	}
 
 	private onExitImmersive() {
+		this.scene.immersiveCamera.session = null;
 		this.immersiveSession = null;
 		this.scene.camera.renderStage.generator.setImmersive(false);
 	}

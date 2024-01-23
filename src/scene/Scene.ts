@@ -25,7 +25,7 @@ class Scene extends Serializable {
 	camera: Camera;
 	cameras: CameraComponent[] = [];
 	cameraComponent: CameraComponent;
-	immersiveCamera: CameraComponent;
+	immersiveCamera: ImmersiveCamera;
 	lights: Light[] = [];
 	ambientLights: AmbientLight[] = [];
 	directionalLights: DirectionalLight[] = [];
@@ -89,8 +89,7 @@ class Scene extends Serializable {
 		this.cameraNode=new Node("Camera");
 		this.cameraComponent=this.cameraNode.addComponent(new PerspectiveCamera());
 		this.camera=this.cameraComponent.camera;	///< Main camera used for rendering scene. Beware! This is not camera component meaning that its view matrix gets overwritten by camera component each frame
-		this.immersiveCamera = this.cameraNode.addComponent(new ImmersiveCamera(mat4.create(), mat4.create()));
-		this.immersiveCamera.camera = this.camera;
+		this.immersiveCamera = this.cameraNode.addComponent(new ImmersiveCamera(this.camera));
 		this.root.addNode(this.cameraNode);
 
 		this.lightNode=new Node("Light");
