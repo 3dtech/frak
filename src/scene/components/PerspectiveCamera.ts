@@ -1,4 +1,5 @@
 import CameraComponent from 'scene/components/CameraComponent';
+import RenderingContext from "../../rendering/RenderingContext";
 
 /** Camera component providing perspective projection */
 class PerspectiveCamera extends CameraComponent {
@@ -62,6 +63,14 @@ class PerspectiveCamera extends CameraComponent {
 			depthNear: this.near,
 			inlineVerticalFieldOfView: this.fov / 180 * Math.PI,
 		});
+	}
+
+	updateFromXR(context: RenderingContext, frame: XRFrame, view: XRView): boolean {
+		if (context.engine.immersiveSession) {
+			return false;
+		}
+
+		return super.updateFromXR(context, frame, view);
 	}
 }
 

@@ -13,6 +13,7 @@ import CameraComponent from "./components/CameraComponent";
 import AmbientLight from "./lights/AmbientLight";
 import ImageBasedLight from "./lights/ImageBasedLight";
 import RenderingContext from "../rendering/RenderingContext";
+import ImmersiveCamera from "./components/ImmersiveCamera";
 
 /** Scene keeps track of components and nodes, cameras etc */
 class Scene extends Serializable {
@@ -23,6 +24,7 @@ class Scene extends Serializable {
 	camera: Camera;
 	cameras: CameraComponent[] = [];
 	cameraComponent: CameraComponent;
+	immersiveCamera: CameraComponent;
 	lights: Light[] = [];
 	ambientLights: AmbientLight[] = [];
 	directionalLights: DirectionalLight[] = [];
@@ -86,6 +88,8 @@ class Scene extends Serializable {
 		this.cameraNode=new Node("Camera");
 		this.cameraComponent=this.cameraNode.addComponent(new PerspectiveCamera());
 		this.camera=this.cameraComponent.camera;	///< Main camera used for rendering scene. Beware! This is not camera component meaning that its view matrix gets overwritten by camera component each frame
+		this.immersiveCamera = this.cameraNode.addComponent(new ImmersiveCamera(mat4.create(), mat4.create()));
+		this.immersiveCamera.camera = this.camera;
 		this.root.addNode(this.cameraNode);
 
 		this.lightNode=new Node("Light");
@@ -197,6 +201,8 @@ class Scene extends Serializable {
 		for (const view of pose.views) {
 			if (this.cameraComponent.updateFromXR(context, frame, view)) {
 				this.cameraComponent.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+			} else if (this.immersiveCamera.updateFromXR(context, frame, view)) {
+				this.immersiveCamera.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
 			}
 		}
 	}
