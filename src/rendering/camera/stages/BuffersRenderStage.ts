@@ -6,12 +6,22 @@ import RenderingContext from 'rendering/RenderingContext';
 import Shader from "rendering/shaders/Shader";
 import Camera from "../Camera";
 import Scene from "scene/Scene";
+import Material from "../../materials/Material";
+import UniformColor from "../../shaders/UniformColor";
 
 class BuffersRenderStage extends RenderStage {
 	parent: MainRenderStage;
 	opaqueShader: Shader;
 	blendShader: Shader;
 	clearColor = new Color(0, 0, 0, 0);
+	private materialBind = (m: Material, s: Shader) => {
+		s.bindUniforms(m.uniforms);
+		s.bindSamplers(m.samplers);
+	};
+	private activeAmbient = false;
+	private noAmbientUniforms = {
+		ambient: new UniformColor(new Color(0, 0, 0, 0))
+	};
 
 	onStart(context: any, engine: Engine, camera: any) {
 		const defs = [
@@ -26,6 +36,20 @@ class BuffersRenderStage extends RenderStage {
 
 		if (engine.options.legacyAmbient) {
 			defs.push('AMBIENT_OUT');
+
+			// We overwrite the material bind function to handle legacy ambient for objects that don't have the ambient
+			// uniform set. This is so a previous object's ambient value doesn't bleed into the next object.
+			this.materialBind = (m: Material, s: Shader) => {
+				if (this.activeAmbient) {
+					this.activeAmbient = Object.hasOwn(m.uniforms, 'ambient');
+					if (!this.activeAmbient) {
+						s.bindUniforms(this.noAmbientUniforms);
+					}
+				}
+
+				s.bindUniforms(m.uniforms);
+				s.bindSamplers(m.samplers);
+			};
 		}
 
 		this.opaqueShader = engine.assetsManager.addShader(
@@ -63,10 +87,22 @@ class BuffersRenderStage extends RenderStage {
 		var gl = context.gl;
 
 		// Render opaque geometry to the g-buffer
-		scene.organizer.opaqueRenderers.run(context, this.opaqueShader, this.parent.filteredRenderers);
+		scene.organizer.opaqueRenderers.run(
+			context,
+			this.opaqueShader,
+			this.parent.filteredRenderers,
+			undefined,
+			this.materialBind
+		);
 
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
-		scene.organizer.transparentRenderers.run(context, this.blendShader, this.parent.filteredRenderers);
+		scene.organizer.transparentRenderers.run(
+			context,
+			this.blendShader,
+			this.parent.filteredRenderers,
+			undefined,
+			this.materialBind
+		);
 
 		gl.stencilMask(0xFF);
 		gl.disable(gl.STENCIL_TEST);
