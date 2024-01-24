@@ -58,7 +58,7 @@ void main(void) {
     vec3 specularAmbient = EnvBRDFApprox(F0, roughness, NdotV);
 	vec3 lightColor = (diffuseAmbient + specularAmbient) * lightColor.rgb;
 
-    outputColor.rgb = mix(lightColor, ambient.rgb, ambient.a) * occlusion;
+    outputColor.rgb = mix(lightColor, ambient.rgb * diffuseAmbient, ambient.a) * occlusion;
 
     fragColor = outputColor;
 }
