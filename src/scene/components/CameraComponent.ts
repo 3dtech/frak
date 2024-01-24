@@ -26,13 +26,14 @@ class CameraComponent extends Component {
 		if node is added to the scene
 		@param node Parent {Node} */
 	onAddScene(node): any {
+		this.useCameraViewMatrix();
+
 		if (node.scene.cameraComponent === this) {
 			return;	// We get rendered anyway
 		}
 
 		node.scene.cameras.push(this);
 		node.scene.cameras.sort(function(a,b) { return a.camera.order-b.camera.order; });
-		this.useCameraViewMatrix();
 	}
 
 	/** Called when component is removed from a node that is in the scene or
