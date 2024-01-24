@@ -4,6 +4,8 @@ import Camera from "../../rendering/camera/Camera";
 
 /** Camera component providing perspective projection */
 class PerspectiveCamera extends CameraComponent {
+	aspect = 4 / 3;
+
 	constructor(
 		public fov = 45,
 		public near = 0.3,
@@ -54,6 +56,15 @@ class PerspectiveCamera extends CameraComponent {
 		return this.camera.getFieldOfView()*180.0/Math.PI;
 	}
 
+	/** Returns the current horizontal field of view in degrees.
+		@return The current vertical field of view in degrees {float} */
+	getHorizontalFieldOfView(): any {
+		var vpx = Math.tan(this.camera.getFieldOfView() * 0.5);
+		var hpx = this.aspect * vpx;
+		var fovx = Math.atan(hpx) * 2.0;
+		return fovx * 180.0/Math.PI;
+	}
+
 	/** Calculates projection matrix based on fov, aspect ratio and near/far clipping planes */
 	async calculatePerspective() {
 		await this.session?.updateRenderState({
@@ -67,6 +78,10 @@ class PerspectiveCamera extends CameraComponent {
 		if (context.engine.immersiveSession) {
 			return false;
 		}
+
+		// Store aspect
+		const vp = frame.session.renderState.baseLayer.getViewport(view);
+		this.aspect = vp.width / Math.max(vp.height, 1);
 
 		return super.updateFromXR(context, frame, view);
 	}
