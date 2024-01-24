@@ -14,22 +14,26 @@ class DynamicSpace {
 
 	/** Add new renderer
 		@param renderer Instance of {Renderer} */
-	addRenderer(renderer): any {
+	addRenderer(renderer) {
 		this.renderers.push(renderer);
-		this.damaged = Date.now();
+		this.damage();
 	}
 
 	/** Removes a renderer
 		@param renderer Instance of {Renderer} */
-	removeRenderer(renderer): any {
+	removeRenderer(renderer) {
 		for (var i=0; i<this.renderers.length; i++) {
 			if (this.renderers[i]===renderer) {
 				this.renderers.splice(i, 1);
-				this.damaged = (new Date()).getTime();
+				this.damage();
 				return true;
 			}
 		}
 		return false;
+	}
+
+	damage() {
+		this.damaged = Date.now();
 	}
 
 	/** Add new collider
