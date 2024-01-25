@@ -1,47 +1,64 @@
-/**
- * Builds FRAK minified version.
- * node build.js [debug]
- */
+let wasmPlugin = {
+	name: 'wasm',
+	setup(build) {
+		let path = require('path')
+		let fs = require('fs')
 
-const fs = require('fs');
-const exec = require('child_process').exec;
-const path = require('path');
+		// Resolve ".wasm" files to a path with a namespace
+		build.onResolve({ filter: /\.wasm$/ }, args => {
+			// If this is the import inside the stub module, import the
+			// binary itself. Put the path in the "wasm-binary" namespace
+			// to tell our binary load callback to load the binary file.
+			if (args.namespace === 'wasm-stub') {
+				return {
+					path: args.path,
+					namespace: 'wasm-binary',
+				}
+			}
 
-const UGLIFYJS = path.join('node_modules', '.bin', 'uglifyjs');
+			// Otherwise, generate the JavaScript stub module for this
+			// ".wasm" file. Put it in the "wasm-stub" namespace to tell
+			// our stub load callback to fill it with JavaScript.
+			//
+			// Resolve relative paths to absolute paths here since this
+			// resolve callback is given "resolveDir", the directory to
+			// resolve imports against.
+			if (args.resolveDir === '') {
+				return // Ignore unresolvable paths
+			}
+			return {
+				path: path.isAbsolute(args.path) ? args.path : path.join(args.resolveDir, args.path),
+				namespace: 'wasm-stub',
+			}
+		})
 
-const frakVersion = require('./src/Version.js').version;
-const files = require('./dependencies.json');
-let type = 'min';
+		// Virtual modules in the "wasm-stub" namespace are filled with
+		// the JavaScript code for compiling the WebAssembly binary. The
+		// binary itself is imported from a second virtual module.
+		build.onLoad({ filter: /.*/, namespace: 'wasm-stub' }, async (args) => ({
+			contents: `import wasm from ${JSON.stringify(args.path)}
+        export default (imports) =>
+          WebAssembly.instantiate(wasm, imports).then(
+            result => result.instance.exports)`,
+		}))
 
-if (process.argv.length >= 3 && process.argv[2] == 'debug') {
-	type = 'debug';
+		// Virtual modules in the "wasm-binary" namespace contain the
+		// actual bytes of the WebAssembly file. This uses esbuild's
+		// built-in "binary" loader instead of manually embedding the
+		// binary data inside JavaScript code ourselves.
+		build.onLoad({ filter: /.*/, namespace: 'wasm-binary' }, async (args) => ({
+			contents: await fs.promises.readFile(args.path),
+			loader: 'binary',
+		}))
+	},
 }
 
-const outputFilename = `frak-${frakVersion}.${type}.js`// 'frak-' + frakVersion.version + '.' + type + '.js';
-const outputFile = path.join('builds', outputFilename);
+const debug = process.argv.includes('--debug');
 
-function success(error, stdout, stderr){
-	console.error(stderr);
-	if (error) {
-		console.log(error, stderr);
-	}
-	else {
-		console.log(`Copying ${outputFile} to ${path.join('builds', `frak-latest.${type}.js}`)}`);
-		fs.createReadStream(outputFile).pipe(fs.createWriteStream(path.join('builds', `frak-latest.${type}.js`)));
-	}
-}
-
-let command = UGLIFYJS + ' -m -c -o ' + outputFile + ' --timings -- ';
-if (process.argv.length>=3) {
-	if (process.argv[2] == 'debug') {
-		command = UGLIFYJS + ' -b -o ' + outputFile + ' --timings -- ';
-		console.log('WARNING: Building DEBUG build of FRAK library.');
-	}
-	else if (process.argv[2] == 'mapped') {
-		command += '--source-map frak.map --source-map-url "http://localhost:8001/frak.map" ';
-		console.log('WARNING: Building SOURCE MAPPED build of FRAK library.');
-	}
-}
-
-//console.log(command+files.join(' '));
-exec(command + files.join(' '), {'maxBuffer': 1024*1024}, success);
+require('esbuild').build({
+	entryPoints: ['src/entry.ts'],
+	bundle: true,
+	minify: !debug,
+	outfile: `builds/frak-latest.${debug ? 'debug' : 'min'}.js`,
+	plugins: [wasmPlugin],
+}).catch(() => process.exit(1))

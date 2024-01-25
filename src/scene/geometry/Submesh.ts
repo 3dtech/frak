@@ -163,6 +163,48 @@ class Submesh {
 		this._calculateTangents4D();
 	}
 
+	unweld() {
+		var newPositions = [];
+		var newNormals = [];
+		var newTexCoords2D = [];
+		var newTangents4D = [];
+		var newFaces = [];
+
+		for (var i=0; i<this.faces.length; i++) {
+			var key = this.faces[i];
+
+			newPositions.push(this.positions[key*3]);
+			newPositions.push(this.positions[(key*3)+1]);
+			newPositions.push(this.positions[(key*3)+2]);
+
+			if (this.normals) {
+				newNormals.push(this.normals[key*3]);
+				newNormals.push(this.normals[(key*3)+1]);
+				newNormals.push(this.normals[(key*3)+2]);
+			}
+
+			if (this.texCoords2D) {
+				newTexCoords2D.push(this.texCoords2D[0][key*2]);
+				newTexCoords2D.push(this.texCoords2D[0][(key*2)+1]);
+			}
+
+			if (this.tangents4D) {
+				newTangents4D.push(this.tangents4D[key*4]);
+				newTangents4D.push(this.tangents4D[(key*4)+1]);
+				newTangents4D.push(this.tangents4D[(key*4)+2]);
+				newTangents4D.push(this.tangents4D[(key*4)+3]);
+			}
+
+			newFaces.push(i);
+		}
+
+		this.positions = newPositions;
+		this.normals = newNormals;
+		this.texCoords2D[0] = newTexCoords2D;
+		this.tangents4D = newTangents4D;
+		this.faces = newFaces;
+	}
+
 	/** Calculates barycentric coordinates. This may not be entirely correct if the mesh has shared vertices. */
 	calculateBarycentric(): any {
 		this.barycentric = new Float32Array(this.positions.length);

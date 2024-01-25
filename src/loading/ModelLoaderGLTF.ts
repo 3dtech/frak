@@ -13,6 +13,7 @@ import MeshCollider from 'scene/components/MeshCollider';
 import Color from 'rendering/Color';
 import FRAK from 'Helpers';
 import DirectionalLight from "../scene/lights/DirectionalLight";
+import init, { generateTangents } from '../../lib/mikktspace';
 
 /** Loads models to scene hierarchy from JSON data */
 class ModelLoaderGLTF {
@@ -61,7 +62,8 @@ class ModelLoaderGLTF {
 	}
 
 	/** Loads parsed data to scene hierarchy at given node */
-	load(node, data, cb): any {
+	async load(node, data, cb) {
+		await init();
 		var parsedData;
 
 		if (!this.binary) {
@@ -501,9 +503,12 @@ class ModelLoaderGLTF {
 			);
 
 			material.definitions.addDefinition('VERTEX_TANGENTS');
-		} else if (submesh.texCoords2D.length) {
-			submesh.calculateTangents();
-			material.definitions.addDefinition('VERTEX_TANGENTS');
+		} else if (submesh.texCoords2D.length && submesh.normals.length) {
+			try {
+				submesh.unweld();
+				submesh.tangents4D = generateTangents(submesh.positions, submesh.normals, submesh.texCoords2D[0]);
+				material.definitions.addDefinition('VERTEX_TANGENTS');
+			} catch (e) {}
 		}
 
 		submesh.recalculateBounds();
