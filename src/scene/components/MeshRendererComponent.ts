@@ -90,14 +90,20 @@ class MeshRendererComponent extends RendererComponent {
 		}
 	}
 
-	onEnable(): any {
-		for (var i = 0; i < this.meshRenderers.length; ++i)
+	onEnable() {
+		for (var i = 0; i < this.meshRenderers.length; ++i) {
 			this.meshRenderers[i].visible = true;
+		}
+
+		super.onEnable();
 	}
 
-	onDisable(): any {
-		for (var i = 0; i < this.meshRenderers.length; ++i)
+	onDisable() {
+		for (var i = 0; i < this.meshRenderers.length; ++i) {
 			this.meshRenderers[i].visible = false;
+		}
+
+		super.onDisable();
 	}
 
 	/** Returns the bounding box of all the Renderers in attached to this component
