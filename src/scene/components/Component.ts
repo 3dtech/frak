@@ -20,7 +20,7 @@ class Component extends Serializable {
 
 	// Getters
 	getScene(): any {
-		return this.node.scene;
+		return this.node?.scene;
 	}
 
 	// Methods
