@@ -10,6 +10,7 @@ import Engine from "engine/Engine";
 import Material from "rendering/materials/Material";
 import Color from "rendering/Color";
 import DefinitionsHelper from "rendering/DefinitionsHelper";
+import {View} from "../RendererOrganizer";
 
 interface ShaderCache {
 	[key: string]: Shader;
@@ -60,6 +61,7 @@ class TransparentRenderStage extends RenderStage {
 
 		const gl = context.gl;
 		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LESS);
 
 		gl.depthMask(false);
 
@@ -68,29 +70,36 @@ class TransparentRenderStage extends RenderStage {
 
 		gl.enable(gl.BLEND);
 
+		const materialBind = (m: Material, s: Shader) => {
+			s.bindUniforms(m.uniforms);
+			s.bindSamplers(m.samplers.concat(light.material.samplers));
+		};
+
+		const run = (renderers: View, shader: Shader) => {
+			renderers.run(
+				context,
+				null,
+				this.parent.filteredRenderers,
+				r => {
+					const s = context.selectShader(shader, r.material.definitions);
+					s.use(light.material.uniforms);
+					return s;
+				},
+				materialBind
+			);
+		};
+
 		// Accum
 		this.parent.oitAccum.bind(context, false, this.clearBlack);
 		gl.blendFunc(gl.ONE, gl.ONE);
-		scene.organizer.transparentRenderers.run(context, null, this.parent.filteredRenderers, r => {
-			const s = context.selectShader(shader, r.material.definitions);
-			s.use(light.material.uniforms);
-			return s;
-		}, (m, s) => {
-			s.bindUniforms(m.uniforms);
-			s.bindSamplers(m.samplers.concat(light.material.samplers));
-		});
+		run(scene.organizer.transparentRenderers, shader);
+		run(scene.organizer.unlitRenderers, shader);
 
 		// Reveal
 		this.parent.oitReveal.bind(context, false, this.clearWhite);
 		gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
-		scene.organizer.transparentRenderers.run(context, null, this.parent.filteredRenderers, r => {
-			const s = context.selectShader(this.revealMaterial.shader, r.material.definitions);
-			s.use(light.material.uniforms);
-			return s;
-		}, (m, s) => {
-			s.bindUniforms(m.uniforms);
-			s.bindSamplers(m.samplers.concat(light.material.samplers));
-		});
+		run(scene.organizer.transparentRenderers, this.revealMaterial.shader);
+		run(scene.organizer.unlitRenderers, this.revealMaterial.shader);
 
 		// Draw to screen
 		gl.disable(gl.DEPTH_TEST);
