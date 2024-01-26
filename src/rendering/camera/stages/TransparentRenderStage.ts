@@ -26,6 +26,7 @@ class TransparentRenderStage extends RenderStage {
 	ppMaterial: Material;
 	emptyDefinitions = new DefinitionsHelper();
 	shadowDefinitions = new DefinitionsHelper(['SHADOWS']);
+	unlitDefinitions = new DefinitionsHelper(['MATERIAL_UNLIT']);
 
 	onStart(context: RenderingContext, engine: Engine, camera: any) {
 		for (const type of ['directional', 'ibl']) {
@@ -58,6 +59,7 @@ class TransparentRenderStage extends RenderStage {
 		}
 
 		const shader = context.selectShader(this.shaderCache[type], light.shadowCasting ? this.shadowDefinitions : this.emptyDefinitions);
+		const unlitShader = context.selectShader(this.shaderCache[type], this.unlitDefinitions);
 
 		const gl = context.gl;
 		gl.enable(gl.DEPTH_TEST);
@@ -93,7 +95,7 @@ class TransparentRenderStage extends RenderStage {
 		this.parent.oitAccum.bind(context, false, this.clearBlack);
 		gl.blendFunc(gl.ONE, gl.ONE);
 		run(scene.organizer.transparentRenderers, shader);
-		run(scene.organizer.unlitRenderers, shader);
+		run(scene.organizer.unlitRenderers, unlitShader);
 
 		// Reveal
 		this.parent.oitReveal.bind(context, false, this.clearWhite);
