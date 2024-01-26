@@ -32,6 +32,7 @@ class TextComponent extends MeshComponent {
 	textHeight: any;
 	font: any;
 	text: any;
+	unlit = true;
 
 	/** Constructor
 		@param text Default text to display */
@@ -167,7 +168,9 @@ class TextComponent extends MeshComponent {
 			},
 			[ this.sampler ]
 		);
-		this.material.shader.requirements.transparent = true;
+		this.material.transparent = true;
+		this.material.definitions.addDefinition('ALPHAMODE', 'ALPHAMODE_BLEND');
+		this.material.unlit = this.unlit;
 		this.material.name = 'TextComponentMaterial';
 		this.texture = new Texture(context);
 		this.texture.mipmapped = true;

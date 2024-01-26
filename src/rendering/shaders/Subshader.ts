@@ -37,7 +37,7 @@ class Subshader {
 		const lines = this.code.split('\n');
 
 		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
+			const line = lines[i].trim();
 
 			if (line.startsWith('#include')) {
 				const filename = line.split(' ')[1].replace(/"/g, '');
