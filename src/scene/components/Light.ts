@@ -10,6 +10,7 @@ class Light extends Component {
 	shadowMask= 0xFFFFFFFF;
 	damaged = true;
 	material: Material;
+	updateThisFrame = false;
 
 	type(): any {
 		return "Light";
@@ -37,6 +38,7 @@ class Light extends Component {
 
 	damage(): any {
 		this.damaged = true;
+		this.updateThisFrame = true;
 	}
 
 	undamage() {
