@@ -40,12 +40,12 @@ class BuffersRenderStage extends RenderStage {
 			// We overwrite the material bind function to handle legacy ambient for objects that don't have the ambient
 			// uniform set. This is so a previous object's ambient value doesn't bleed into the next object.
 			this.materialBind = (m: Material, s: Shader) => {
-				if (this.activeAmbient) {
-					this.activeAmbient = Object.hasOwn(m.uniforms, 'ambient');
-					if (!this.activeAmbient) {
-						s.bindUniforms(this.noAmbientUniforms);
-					}
+				const activeAmbient = Object.hasOwn(m.uniforms, 'ambient');
+				if (this.activeAmbient && !activeAmbient) {
+					s.bindUniforms(this.noAmbientUniforms);
 				}
+
+				this.activeAmbient = activeAmbient;
 
 				s.bindUniforms(m.uniforms);
 				s.bindSamplers(m.samplers);
@@ -81,6 +81,8 @@ class BuffersRenderStage extends RenderStage {
 		gl.stencilMask(0xFF);
 		gl.stencilFunc(gl.ALWAYS, 1, 0xFF);
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+
+		this.activeAmbient = true;	// So we bind (lack of) ambient for the first renderer
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {

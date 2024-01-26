@@ -17,6 +17,7 @@ class ShadowMapsRenderStage extends RenderStage {
 	sceneAABB = new BoundingBox();
 	filteredRenderers: Renderer[] = [];
 	clearColor = new Color(1.0, 0.0, 0.0, 0.0);
+	shadowManualUpdate = false;
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
 		const defs = [
@@ -39,6 +40,8 @@ class ShadowMapsRenderStage extends RenderStage {
 			defs.concat([
 				'ALPHAMODE ALPHAMODE_BLEND'
 			]));
+
+		this.shadowManualUpdate = engine.options.shadowManualUpdate;
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
@@ -67,6 +70,7 @@ class ShadowMapsRenderStage extends RenderStage {
 
 				if (light.spaceDamaged !== this.damaged) {
 					light.spaceDamaged = this.damaged;
+					light.updateThisFrame = true;
 
                     light.filteredRenderers.length = this.filteredRenderers.length;
                     for (let i = 0; i < this.filteredRenderers.length; ++i) {
@@ -109,6 +113,14 @@ class ShadowMapsRenderStage extends RenderStage {
 		for (const light of scene.directionalLights) {
 			if (!light.shadowCasting || !light.enabled) {
 				continue;
+			}
+
+			if (this.shadowManualUpdate) {
+				if (!light.updateThisFrame) {
+					continue;
+				} else {
+					light.updateThisFrame = false;
+				}
 			}
 
 			light.shadow.bind(context, false, this.clearColor);

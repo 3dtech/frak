@@ -11,7 +11,7 @@ class UnlitRenderStage extends PBRRenderStage {
 	onStart(context: RenderingContext, engine: Engine, camera: any) {
 		this.shader = engine.assetsManager.addShader(
 			'shaders/mesh.vert',
-			'shaders/pbr.frag',
+			'shaders/unlit.frag',
 			[
 				'ALPHAMODE_OPAQUE 0',
 				'ALPHAMODE_MASK 1',

@@ -61,4 +61,9 @@ require('esbuild').build({
 	minify: !debug,
 	outfile: `builds/frak-latest.${debug ? 'debug' : 'min'}.js`,
 	plugins: [wasmPlugin],
+	loader: {
+		'.glsl': 'text',
+		'.frag': 'text',
+		'.vert': 'text',
+	}
 }).catch(() => process.exit(1))

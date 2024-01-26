@@ -68,18 +68,7 @@ in vec4 viewPosition;
 in vec3 viewNormal;
 in vec4 shadowPosition;
 
-// TODO: Optionally limit number of buffers
 layout(location = 0) out vec4 fragColorMetallic;
-layout(location = 1) out vec4 fragNormalRoughness;
-layout(location = 2) out vec4 fragPositionOcclusion;
-#ifdef EMISSIVE_OUT
-layout(location = 3) out vec4 fragEmissive;
-#ifdef AMBIENT_OUT
-layout(location = 4) out vec4 fragAmbient;
-#endif
-#elif defined(AMBIENT_OUT)
-layout(location = 3) out vec4 fragAmbient;
-#endif
 
 float perceptualRoughnessToRoughness(float perceptualRoughness) {
 	float clampedPerceptualRoughness = clamp(perceptualRoughness, 0.089, 1.0);
@@ -146,47 +135,7 @@ void main(void) {
 	outputColor.a = 1.0;
 #endif
 
-#ifdef METALLICROUGHNESS_TEXTURE
-	vec4 metallicRoughness = texture(metallicRoughness0, metallicRoughnessUV());
-	float metallic = metallic * metallicRoughness.b;
-	float perceptualRoughness = perceptualRoughness * metallicRoughness.g;
-#endif
-
-	float roughness = perceptualRoughnessToRoughness(perceptualRoughness);
-
-	vec3 N = normalize(worldNormal);
-#ifdef VERTEX_TANGENTS
-#ifdef NORMAL_TEXTURE
-	vec3 T = normalize(worldTangent.xyz);
-	vec3 B = cross(N, T) * worldTangent.w;
-
-	mat3 TBN = mat3(T, -B, N);
-	N = TBN * normalize(texture(normal0, normalUV()).xyz * 2.0 - 1.0);
-#endif
-#endif
-
-#ifdef OCCLUSION_TEXTURE
-	float occlusion = texture(occlusion0, occlusionUV()).r;
-#else
-	float occlusion = 1.0;
-#endif
-
-#ifdef EMISSIVE_TEXTURE
-	vec4 emissive = emissive;
-	emissive.rgb *= texture(emissive0, emissiveUV()).rgb;
-#endif
-
-	fragColorMetallic = vec4(outputColor.rgb, metallic);
-	fragNormalRoughness = vec4(N, roughness);
-	fragPositionOcclusion = vec4(worldPosition.xyz, occlusion);
-
-#ifdef EMISSIVE_OUT
-	fragEmissive = vec4(emissive.rgb, 1.0);
-#endif
-
-#ifdef AMBIENT_OUT
-	fragAmbient = ambient;
-#endif
+	fragColorMetallic = outputColor;
 
 #if ALPHAMODE == ALPHAMODE_MASK
 	if (outputColor.a < alphaCutoff) {
