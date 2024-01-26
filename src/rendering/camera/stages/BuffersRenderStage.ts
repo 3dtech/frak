@@ -8,6 +8,7 @@ import Camera from "../Camera";
 import Scene from "scene/Scene";
 import Material from "../../materials/Material";
 import UniformColor from "../../shaders/UniformColor";
+import Renderer from "../../renderers/Renderer";
 
 class BuffersRenderStage extends RenderStage {
 	parent: MainRenderStage;
@@ -88,13 +89,27 @@ class BuffersRenderStage extends RenderStage {
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
 		var gl = context.gl;
 
+		// Use stencil masking to hide parts that aren't supposed to be visible, but still need to be rendered to the
+		// depth buffer for immersive rendering
+		let currentlyVisible = true;
+		const render = (r: Renderer, s: Shader) => {
+			const toBeVisible = !!(camera.stencilMask & r.stencilLayer);
+			if (toBeVisible !== currentlyVisible) {
+				gl.stencilFunc(gl.ALWAYS, toBeVisible ? 1 : 0, 0xFF);
+				currentlyVisible = toBeVisible;
+			}
+
+			r.renderGeometry(context, s);
+		};
+
 		// Render opaque geometry to the g-buffer
 		scene.organizer.opaqueRenderers.run(
 			context,
 			this.opaqueShader,
 			this.parent.filteredRenderers,
 			undefined,
-			this.materialBind
+			this.materialBind,
+			render
 		);
 
 		// Render parts of transparent geometry to the g-buffer where alpha = 1
@@ -103,7 +118,8 @@ class BuffersRenderStage extends RenderStage {
 			this.blendShader,
 			this.parent.filteredRenderers,
 			undefined,
-			this.materialBind
+			this.materialBind,
+			render
 		);
 
 		gl.stencilMask(0xFF);

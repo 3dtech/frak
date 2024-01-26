@@ -162,6 +162,7 @@ class SubmeshRenderer extends Renderer {
 
 		this.unlit = material.unlit;
 		this.customShader = material.customShader;
+		this.stencilLayer = material.stencilLayer;
 
 		this.failed = false;
 	}

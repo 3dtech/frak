@@ -57,6 +57,7 @@ class Engine {
 	_currentAnimationFrame: any;
 	inlineSession: XRSession;
 	immersiveSession?: XRSession;
+	private immersiveExitCB?: () => void;
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
@@ -258,18 +259,24 @@ class Engine {
 		this._run(this.inlineSession, refSpace);
 	}
 
-	async startImmersive() {
-		this.scene.camera.renderStage.generator.setImmersive(true);
-		this.immersiveSession = await navigator.xr?.requestSession('immersive-ar');
-		this.scene.immersiveCamera.session = this.immersiveSession;
+	async startImmersive(cb?: () => void) {
+		try {
+			this.scene.camera.renderStage.generator.setImmersive(true);
+			this.immersiveSession = await navigator.xr?.requestSession('immersive-ar');
+			this.scene.immersiveCamera.session = this.immersiveSession;
 
-		await this.immersiveSession.updateRenderState({
-			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
-		});
-		const refSpace = await this.immersiveSession.requestReferenceSpace('local');
-		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
+			await this.immersiveSession.updateRenderState({
+				baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
+			});
+			const refSpace = await this.immersiveSession.requestReferenceSpace('local');
+			this.immersiveExitCB = cb;
+			this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
 
-		this._run(this.immersiveSession, refSpace);
+			this._run(this.immersiveSession, refSpace);
+		} catch(e) {
+			console.error(`Failed to start immersive session: ${e}`);
+			cb?.();
+		}
 	}
 
 	private _run(session: XRSession, refSpace: XRReferenceSpace | XRBoundedReferenceSpace) {
@@ -309,6 +316,8 @@ class Engine {
 		this.scene.immersiveCamera.session = null;
 		this.immersiveSession = null;
 		this.scene.camera.renderStage.generator.setImmersive(false);
+		this.immersiveExitCB?.();
+		this.immersiveExitCB = null;
 	}
 
 	/**

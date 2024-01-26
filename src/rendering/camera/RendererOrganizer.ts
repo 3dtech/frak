@@ -101,7 +101,7 @@ class RendererOrganizer {
 		const shaderIndices = new Map<number, number>();	// Definitions hash -> materials
 		const materialIndices = new Map<number, number>();	// Material id -> index
 
-		const list: number[][][] = [];	// Indices grouped by material, then shader
+		const list: number[][][] = [];	// list[Shader][Material][Renderer index]
 
 		for (let i = 0; i < allRenderers.length; i++) {
 			const material = allRenderers[i].material;

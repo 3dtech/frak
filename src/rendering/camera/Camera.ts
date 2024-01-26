@@ -26,7 +26,7 @@ class Camera extends Serializable {
 	backgroundColor: any;
 	clearMask: any;
 	order: any;
-	layerMask: any;
+	layerMask = 0xFFFFFFFF;
 	frustum: any;
 	stereo: any;
 	stereoEyeDistance: any;
@@ -39,6 +39,7 @@ class Camera extends Serializable {
 	_cacheQuat: any;
 	_strafe: any;
 	_translation: any;
+	stencilMask = 0xFFFFFFFF;	// Not GL stencilMask, but used for hiding objects for immersive mode
 
 	/** Constructor */
 	constructor(viewMatrix, projectionMatrix) {
@@ -52,7 +53,6 @@ class Camera extends Serializable {
 		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
 		this.clearMask = false;
 		this.order = 0; ///< Cameras are rendered in succession from lowest to highest order
-		this.layerMask = 0xFFFFFFFF; ///< Set bits for which layers are rendered with this camera
 		this.frustum = false; // TODO: implement frustum
 
 		var stereo = false;

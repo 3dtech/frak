@@ -15,6 +15,7 @@ class Material extends Serializable {
 	transparent = false;	// TODO: Requirements spread across too many files? (Shader, this, SubmeshRenderer)
 	unlit = false;
 	customShader = false;
+	stencilLayer = 1;
 	definitions = new DefinitionsHelper();
 
 	/** Constructor
