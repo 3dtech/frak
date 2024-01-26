@@ -59,6 +59,14 @@ class Engine {
 	immersiveSession?: XRSession;
 	private immersiveExitCB?: () => void;
 
+	static async isImmersiveSupported() {
+		if (!navigator.xr) {
+			return false;
+		} else {
+			return navigator.xr.isSessionSupported('immersive-ar');
+		}
+	}
+
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
 		@param options Engine options [optional] */
@@ -317,14 +325,6 @@ class Engine {
 			this.scene.start(this.context);
 
 		this._currentAnimationFrame = session.requestAnimationFrame(draw);
-	}
-
-	async isImmersiveSupported() {
-		if (!navigator.xr) {
-			return false;
-		} else {
-			return navigator.xr.isSessionSupported('immersive-ar');
-		}
 	}
 
 	async exitImmersive() {

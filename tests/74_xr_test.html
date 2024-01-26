@@ -70,7 +70,7 @@
 				'antialias': true,
 			});
 
-			engine.isImmersiveSupported().then(function (supported) {
+			Engine.isImmersiveSupported().then(function (supported) {
 				document.getElementById('xr-button').disabled = !supported;
 			});
 
