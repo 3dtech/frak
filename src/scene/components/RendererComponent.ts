@@ -21,11 +21,11 @@ class RendererComponent extends Component {
 	}
 
 	onEnable() {
-		this.getScene().dynamicSpace.damage();
+		this.getScene()?.dynamicSpace.damage();
 	}
 
 	onDisable() {
-		this.getScene().dynamicSpace.damage();
+		this.getScene()?.dynamicSpace.damage();
 	}
 
 	instantiate(): any {
@@ -40,14 +40,14 @@ class RendererComponent extends Component {
 	setCastShadows(castShadows: boolean) {
 		this.castShadows = castShadows;
 		this.previousCastShadows = castShadows;
-		this.getScene().dynamicSpace.damage();
+		this.getScene()?.dynamicSpace.damage();
 	}
 
 	onUpdate() {
 		// Backwards compatibility
 		if (this.castShadows !== this.previousCastShadows) {
 			this.previousCastShadows = this.castShadows;
-			this.getScene().dynamicSpace.damage();
+			this.getScene()?.dynamicSpace.damage();
 		}
 	}
 
