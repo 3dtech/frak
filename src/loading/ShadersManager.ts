@@ -2,7 +2,7 @@ import Manager from 'loading/Manager';
 import TextManager from 'loading/TextManager';
 import ShaderDescriptor from 'scene/descriptors/ShaderDescriptor';
 import Shader from 'rendering/shaders/Shader';
-import BuiltInShaders from "../rendering/shaders/BuiltInShaders";
+import BuiltInShaders from 'rendering/shaders/BuiltInShaders';
 
 /**
  * Used by AssetsManager to load shaders.

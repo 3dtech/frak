@@ -34,8 +34,10 @@ async function main() {
 				if (EXTENSION_FILTER.indexOf(path.extname(file)) == -1)
 					continue;
 				let relativePath = path.join(shadersPath, file);
-				let data = await readFile(path.join(shadersPath, file));
-				output[profile][path.posix.join(bundleBasePath, file)] = data.toString().replaceAll('\r\n', '\n');
+				output[profile][path.posix.join(bundleBasePath, file)] = {
+					name: file.replace(/\./, "_"),
+					relativePath,
+				};
 			}
 		}
 		catch (err) {
@@ -43,7 +45,25 @@ async function main() {
 		}
 	}
 
-	let js = `// Generated at ${(new Date()).toISOString()}\nvar BuiltInShaders = ${JSON.stringify(output, null, '\t')};\nglobalThis.BuiltInShaders = BuiltInShaders;\nexport default BuiltInShaders;`;
+	let js = `// @ts-nocheck: Imports are fine with esbuild and TS doesn't let us turn off a single error type\n`;
+	for (let profile in output) {
+		for (const [path, shader] of Object.entries(output[profile])) {
+			js += `import ${shader.name} from '../../../assets/${path}';\n`;
+		}
+	}
+
+	js += `\nconst BuiltInShaders = {\n`;
+
+	for (let profile in output) {
+		js += `	'${profile}': {\n`;
+		for (const [path, shader] of Object.entries(output[profile])) {
+			js += `		'${path}': ${shader.name},\n`;
+		}
+		js += `	},\n`;
+	}
+
+	js += `};\n\nglobalThis.BuiltInShaders = BuiltInShaders;\nexport default BuiltInShaders;\n`;
+
 	await writeFile(OUTPUT_PATH, js);
 	console.log('Output written to %s', OUTPUT_PATH);
 }
