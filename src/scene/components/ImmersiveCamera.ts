@@ -2,6 +2,8 @@ import CameraComponent from "./CameraComponent";
 import RenderingContext from "../../rendering/RenderingContext";
 
 class ImmersiveCamera extends CameraComponent {
+	yOffset = 0.0;
+
 	onAddScene(node) {}
 	onRemoveScene(node) {}
 	onStart(context, engine) {}

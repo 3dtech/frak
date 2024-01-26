@@ -262,20 +262,39 @@ class Engine {
 	async startImmersive(cb?: () => void) {
 		try {
 			this.scene.camera.renderStage.generator.setImmersive(true);
-			this.immersiveSession = await navigator.xr?.requestSession('immersive-ar');
+			this.immersiveSession = await navigator.xr?.requestSession(
+				'immersive-ar',
+				{
+					optionalFeatures: ['local-floor'],
+					requiredFeatures: ['local'],
+				},
+			);
+			this.immersiveExitCB = cb;
+			this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
+
 			this.scene.immersiveCamera.session = this.immersiveSession;
 
 			await this.immersiveSession.updateRenderState({
 				baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
 			});
-			const refSpace = await this.immersiveSession.requestReferenceSpace('local');
-			this.immersiveExitCB = cb;
-			this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
+
+			let refSpace;
+			try {
+				refSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
+			} catch(e) {
+				refSpace = await this.immersiveSession.requestReferenceSpace('local');
+				this.scene.immersiveCamera.yOffset = 1.6;	// We don't have the right height, so let's guess an average
+			}
+
 
 			this._run(this.immersiveSession, refSpace);
 		} catch(e) {
 			console.error(`Failed to start immersive session: ${e}`);
-			cb?.();
+			if (this.immersiveSession) {
+				await this.immersiveSession.end();
+			} else {
+				cb?.();
+			}
 		}
 	}
 

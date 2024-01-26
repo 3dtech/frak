@@ -210,7 +210,7 @@ class Scene extends Serializable {
 		if (controllerTarget) {
 			space = space.getOffsetReferenceSpace(new XRRigidTransform({
 				x: -controllerTarget[0],
-				y: -controllerTarget[1],
+				y: -controllerTarget[1] - this.immersiveCamera.yOffset,
 				z: -controllerTarget[2],
 				w: 1}));
 		}
