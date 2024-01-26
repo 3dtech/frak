@@ -16,6 +16,7 @@ import pp_oit_frag from '../../../assets/shaders/pp_oit.frag';
 import quad_frag from '../../../assets/shaders/quad.frag';
 import skybox_frag from '../../../assets/shaders/skybox.frag';
 import tonemap_frag from '../../../assets/shaders/tonemap.frag';
+import unlit_frag from '../../../assets/shaders/unlit.frag';
 import uv_vert from '../../../assets/shaders/uv.vert';
 import vsm_frag from '../../../assets/shaders/vsm.frag';
 import camera_glsl from '../../../assets/shaders/snippets/camera.glsl';
@@ -40,6 +41,7 @@ const BuiltInShaders = {
 		'shaders/quad.frag': quad_frag,
 		'shaders/skybox.frag': skybox_frag,
 		'shaders/tonemap.frag': tonemap_frag,
+		'shaders/unlit.frag': unlit_frag,
 		'shaders/uv.vert': uv_vert,
 		'shaders/vsm.frag': vsm_frag,
 	},
