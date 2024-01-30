@@ -106,7 +106,7 @@ class TransparentRenderStage extends RenderStage {
 		// Draw to screen
 		gl.disable(gl.DEPTH_TEST);
 		camera.renderStage.dst.bind(context, true);
-		gl.blendFuncSeparate(gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+		gl.blendFuncSeparate(gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.DST_ALPHA);
 		camera.renderStage.screenQuad.render(context, this.ppMaterial, []);
 
 		gl.disable(gl.BLEND);
