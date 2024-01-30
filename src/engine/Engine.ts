@@ -245,6 +245,11 @@ class Engine {
 		If requestAnimationFrame function is not available then setTimeout is used. */
 
 	public async run() {
+		if (this.running) {
+			return;
+		}
+
+		this.running = true;
 		this.inlineSession = await navigator.xr?.requestSession('inline');
 		this.scene.cameraComponent.session = this.inlineSession;
 
@@ -263,7 +268,6 @@ class Engine {
 		});
 
 		const refSpace = await this.inlineSession.requestReferenceSpace('viewer');
-		this.running = true;
 		this._run(this.inlineSession, refSpace);
 	}
 
