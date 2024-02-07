@@ -177,12 +177,12 @@ class Node extends Serializable {
 	}
 
 	/** Returns the first component of the given type */
-	getComponent(componentType): any {
+	getComponent<A extends Component>(componentType: new(...args: any[]) => A): A {
 		for (var c=0; c<this.components.length; c++) {
 			if (this.components[c] instanceof componentType)
-				return this.components[c];
+				return this.components[c] as A;
 		}
-		return false;
+		return null;
 	}
 
 	/** Returns all components of the given type */

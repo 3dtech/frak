@@ -8,13 +8,13 @@ import Engine from 'engine/Engine';
 import Color from 'rendering/Color';
 import PerspectiveCamera from './components/PerspectiveCamera';
 import DirectionalLight from './lights/DirectionalLight';
-import RendererOrganizer from "../rendering/camera/RendererOrganizer";
-import CameraComponent from "./components/CameraComponent";
-import AmbientLight from "./lights/AmbientLight";
-import ImageBasedLight from "./lights/ImageBasedLight";
-import RenderingContext from "../rendering/RenderingContext";
-import ImmersiveCamera from "./components/ImmersiveCamera";
-import Controller from "./components/Controller";
+import RendererOrganizer from '../rendering/camera/RendererOrganizer';
+import CameraComponent from './components/CameraComponent';
+import AmbientLight from './lights/AmbientLight';
+import ImageBasedLight from './lights/ImageBasedLight';
+import RenderingContext from '../rendering/RenderingContext';
+import ImmersiveCamera from './components/ImmersiveCamera';
+import OrbitController from './components/OrbitController';
 
 /** Scene keeps track of components and nodes, cameras etc */
 class Scene extends Serializable {
@@ -197,28 +197,31 @@ class Scene extends Serializable {
 			camera.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
 		}
 
-		// Render view camera
-		let pose = frame.getViewerPose(space);
-		for (const view of pose.views) {
-			if (this.cameraComponent.updateFromXR(context, frame, view)) {
-				this.cameraComponent.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+		if (!this.engine.immersiveSession) {
+			// Render view camera
+			const pose = frame.getViewerPose(space);
+			for (const view of pose.views) {
+				if (this.cameraComponent.updateFromXR(context, frame, view)) {
+					this.cameraComponent.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+				}
 			}
-		}
+		} else {
+			// Render immersive camera
+			const controllerTarget = this.cameraNode.getComponent(OrbitController)?.targetPosition;
+			if (controllerTarget) {
+				space = space.getOffsetReferenceSpace(new XRRigidTransform({
+					x: -controllerTarget[0],
+					y: -controllerTarget[1] - this.immersiveCamera.yOffset,
+					z: -controllerTarget[2],
+					w: 1
+				}));
+			}
 
-		// Render immersive camera
-		const controllerTarget = this.cameraNode.getComponent(Controller)?.targetPosition;
-		if (controllerTarget) {
-			space = space.getOffsetReferenceSpace(new XRRigidTransform({
-				x: -controllerTarget[0],
-				y: -controllerTarget[1] - this.immersiveCamera.yOffset,
-				z: -controllerTarget[2],
-				w: 1}));
-		}
-
-		pose = frame.getViewerPose(space);
-		for (const view of pose.views) {
-			if (this.immersiveCamera.updateFromXR(context, frame, view)) {
-				this.immersiveCamera.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+			const pose = frame.getViewerPose(space);
+			for (const view of pose.views) {
+				if (this.immersiveCamera.updateFromXR(context, frame, view)) {
+					this.immersiveCamera.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+				}
 			}
 		}
 	}
