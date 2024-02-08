@@ -3,6 +3,7 @@
 		"allowJs": true,
 		"baseUrl": "./src",
 		"lib": ["ESNext", "DOM"],
+		"noEmit": true,
 		"outDir": "./tscache"
 	},
 	"include": [

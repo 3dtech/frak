@@ -42,68 +42,123 @@ class ModelsManager extends Manager {
 		return new Node();
 	}
 
+	/** Starts loading all currently added resources recursively.
+		This method will return immediately. Callback will be called once
+		there are no more queued or loading items waiting.
+		@param callback Callback called once all resources have been loaded
+		@param progressCallback Callback called when progress of this manager has changed */
+	async load(callback?, progressCallback?) {
+		if(progressCallback) {
+			this.progressCallbacks.push(progressCallback);
+		}
+
+		if(callback) {
+			this.callbacks.push(callback);
+			if (this.callbacks.length > 1) {
+				if(this.queue.length == 0) {
+					this.callDoneCallbacks();
+				}
+			}
+		}
+
+		this.loading.push(...this.queue);
+		const queue = (this.queue as any[]).map(
+			next => async () => {
+				try {
+					const [d, r] = await this.loadResource(next[0], next[2]);
+					this.cache[d.serialize(['id'])] = r;	// Cache resource
+					this.cacheSize++;							// Remember that we have more items cached now (for getProgress)
+					this.removeLoadedResource(d);
+					this.onLoaded(d);
+				} catch (e) {
+					console.warn("Failed to load resource with descriptor: ", e.serialize(['id']));
+					this.removeLoadedResource(e);
+					this.onLoaded(e);
+					if (e.getFullPath) console.warn('Full path: ', e.getFullPath());
+				} finally {
+					// Call progress callbacks
+					for(var i = 0; i < this.progressCallbacks.length; i++) {
+						this.progressCallbacks[i](this.getProgress());
+					}
+
+					// Everything has been loaded
+					if(this.loading.length==0) {
+						// Call all registered callbacks
+						this.callDoneCallbacks();
+					}
+				}
+			}
+		);
+
+		this.queue = [];
+
+		await Promise.allSettled(queue.map(fn => fn()));
+	}
+
 	/** Must load given resource from location described by descriptor
 		@param descriptor Instance of resource descriptor
 		@param resource Resource that will be loaded (created with createResource)
 		@param loadedCallback Callback function(descriptor, resource) that must be called by loadResource when loading has finished successfully
 		@param failedCallback Callback function(descriptor) that must be called by loadResource when loading has failed */
-	loadResource(modelDescriptor, resource, loadedCallback, failedCallback): any {
-		var descriptor = this.descriptorCallback(modelDescriptor);
-		var scope = this;
-		var format = modelDescriptor.getFormat();
-		function loadGLTF(data) {
-			var modelLoader = new ModelLoaderGLTF(descriptor, scope.shadersManager, scope.texturesManager, format);
-			modelLoader.load(resource, data, function() {
-				loadedCallback(descriptor, resource);
+	async loadResource(modelDescriptor, resource) {
+		return new Promise<[ModelDescriptor, Node]>((resolve, reject) => {
+			var descriptor = this.descriptorCallback(modelDescriptor);
+			var scope = this;
+			var format = modelDescriptor.getFormat();
+			function loadGLTF(data) {
+				var modelLoader = new ModelLoaderGLTF(descriptor, scope.shadersManager, scope.texturesManager, format);
+				modelLoader.load(resource, data, function() {
+					resolve([descriptor, resource]);
 
-				scope.shadersManager.load(function() { });
-				scope.texturesManager.load(function() { });
-			});
-		}
+					scope.shadersManager.load(function() { });
+					scope.texturesManager.load(function() { });
+				});
+			}
 
-		if (format == 'json') {
-			Logistics.getJSON(descriptor.getFullPath(), function (data) {
-				var modelLoader = new ModelLoaderJSON(descriptor, scope.shadersManager, scope.texturesManager);
-				modelLoader.load(resource, data);
-				loadedCallback(descriptor, resource);
+			if (format == 'json') {
+				Logistics.getJSON(descriptor.getFullPath(), function (data) {
+					var modelLoader = new ModelLoaderJSON(descriptor, scope.shadersManager, scope.texturesManager);
+					modelLoader.load(resource, data);
+					resolve([descriptor, resource]);
 
-				scope.shadersManager.load(function() {});
-				scope.texturesManager.load(function() {});
-			});
-		}
-		else if (format == 'gltf') {
-			Logistics.getJSON(descriptor.getFullPath(), loadGLTF);
-		}
-		else if (format == 'glb') {
-			Logistics.getBinary(descriptor.getFullPath(), loadGLTF);
-		}
-		else {
-			Logistics.getBinary(descriptor.getFullPath(),
-				function(binaryData) {
-					if(!binaryData || binaryData.byteLength == 0) {
-						failedCallback(descriptor);
-						return;
+					scope.shadersManager.load(function() {});
+					scope.texturesManager.load(function() {});
+				});
+			}
+			else if (format == 'gltf') {
+				Logistics.getJSON(descriptor.getFullPath(), loadGLTF);
+			}
+			else if (format == 'glb') {
+				Logistics.getBinary(descriptor.getFullPath(), loadGLTF);
+			}
+			else {
+				Logistics.getBinary(descriptor.getFullPath(),
+					function(binaryData) {
+						if(!binaryData || binaryData.byteLength == 0) {
+							reject(descriptor);
+							return;
+						}
+						var parser = scope.createParser(
+							binaryData,
+							function(parsedData, userdata) {
+								var modelLoader = new ModelLoader(descriptor, scope.shadersManager, scope.texturesManager);
+								modelLoader.load(resource, parsedData);
+
+								resolve([descriptor, resource]);
+
+								scope.shadersManager.load(function() {});
+								scope.texturesManager.load(function() {});
+							},
+							function(errors, userdata) {
+								reject(descriptor);
+							},
+							function(progress, userdata) {}
+						);
+						parser.parse();
 					}
-					var parser = scope.createParser(
-						binaryData,
-						function(parsedData, userdata) {
-							var modelLoader = new ModelLoader(descriptor, scope.shadersManager, scope.texturesManager);
-							modelLoader.load(resource, parsedData);
-
-							loadedCallback(descriptor, resource);
-
-							scope.shadersManager.load(function() {});
-							scope.texturesManager.load(function() {});
-						},
-						function(errors, userdata) {
-							failedCallback(descriptor);
-						},
-						function(progress, userdata) {}
-					);
-					parser.parse();
-				}
-			);
-		}
+				);
+			}
+		});
 	}
 
 	/** This function can be overridden to provide alternative parser instances */
