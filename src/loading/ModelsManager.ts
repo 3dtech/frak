@@ -95,25 +95,26 @@ class ModelsManager extends Manager {
 		await Promise.allSettled(queue.map(fn => fn()));
 	}
 
+	async loadGLTF(descriptor, resource) {
+		const response = await fetch(descriptor.getFullPath());
+		const modelLoader = new ModelLoaderGLTF(descriptor, this.shadersManager, this.texturesManager, descriptor.getFormat());
+		const data = descriptor.getFormat() === 'json' ? await response.json() : await response.arrayBuffer();
+		await modelLoader.load(resource, data, () => {
+			this.shadersManager.load(() => {});
+			this.texturesManager.load(() => {});
+		});
+	}
+
 	/** Must load given resource from location described by descriptor
 		@param descriptor Instance of resource descriptor
 		@param resource Resource that will be loaded (created with createResource)
 		@param loadedCallback Callback function(descriptor, resource) that must be called by loadResource when loading has finished successfully
 		@param failedCallback Callback function(descriptor) that must be called by loadResource when loading has failed */
-	async loadResource(modelDescriptor, resource) {
+	loadResource(modelDescriptor, resource) {
 		return new Promise<[ModelDescriptor, Node]>((resolve, reject) => {
 			var descriptor = this.descriptorCallback(modelDescriptor);
 			var scope = this;
 			var format = modelDescriptor.getFormat();
-			function loadGLTF(data) {
-				var modelLoader = new ModelLoaderGLTF(descriptor, scope.shadersManager, scope.texturesManager, format);
-				modelLoader.load(resource, data, function() {
-					resolve([descriptor, resource]);
-
-					scope.shadersManager.load(function() { });
-					scope.texturesManager.load(function() { });
-				});
-			}
 
 			if (format == 'json') {
 				Logistics.getJSON(descriptor.getFullPath(), function (data) {
@@ -125,11 +126,8 @@ class ModelsManager extends Manager {
 					scope.texturesManager.load(function() {});
 				});
 			}
-			else if (format == 'gltf') {
-				Logistics.getJSON(descriptor.getFullPath(), loadGLTF);
-			}
-			else if (format == 'glb') {
-				Logistics.getBinary(descriptor.getFullPath(), loadGLTF);
+			else if (format == 'gltf' || format == 'glb') {
+				this.loadGLTF(descriptor, resource).then(() => resolve([descriptor, resource]));
 			}
 			else {
 				Logistics.getBinary(descriptor.getFullPath(),
