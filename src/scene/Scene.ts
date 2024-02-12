@@ -179,10 +179,10 @@ class Scene extends Serializable {
 		this.started = false;
 	}
 
-	/** Called to render all scene cameras. */
-	render(context: RenderingContext, frame: XRFrame, space: XRReferenceSpace | XRBoundedReferenceSpace) {
+	/** Do pre-render processing and render scene cameras that aren't the main camera. */
+	private preRender(context: RenderingContext) {
 		if (!this.started)
-			return; // Make sure we don't render before starting the scene
+			return false;
 
 		// Batch renderers if the space has changed
 		if (this.dynamicSpace.damaged !== this.rendererDamage) {
@@ -197,31 +197,41 @@ class Scene extends Serializable {
 			camera.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
 		}
 
-		if (!this.engine.immersiveSession) {
-			// Render view camera
-			const pose = frame.getViewerPose(space);
-			for (const view of pose.views) {
-				if (this.cameraComponent.updateFromXR(context, frame, view)) {
-					this.cameraComponent.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
-				}
-			}
-		} else {
-			// Render immersive camera
-			const controllerTarget = this.cameraNode.getComponent(OrbitController)?.targetPosition;
-			if (controllerTarget) {
-				space = space.getOffsetReferenceSpace(new XRRigidTransform({
-					x: -controllerTarget[0],
-					y: -controllerTarget[1] - this.immersiveCamera.yOffset,
-					z: -controllerTarget[2],
-					w: 1
-				}));
-			}
+		return true;
+	}
 
-			const pose = frame.getViewerPose(space);
-			for (const view of pose.views) {
-				if (this.immersiveCamera.updateFromXR(context, frame, view)) {
-					this.immersiveCamera.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
-				}
+	/** Called to render the scene. */
+	render(context: RenderingContext) {
+		if (!this.preRender(context)) {
+			return; // Make sure we don't render before starting the scene
+		}
+
+		// Render view camera
+		this.cameraComponent.updateCamera(context);
+		this.cameraComponent.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+	}
+
+	/** Called to render the immersive scene. */
+	renderImmersive(context: RenderingContext, frame: XRFrame, space: XRReferenceSpace | XRBoundedReferenceSpace) {
+		if (!this.preRender(context)) {
+			return; // Make sure we don't render before starting the scene
+		}
+
+		// Render immersive camera
+		const controllerTarget = this.cameraNode.getComponent(OrbitController)?.targetPosition;
+		if (controllerTarget) {
+			space = space.getOffsetReferenceSpace(new XRRigidTransform({
+				x: -controllerTarget[0],
+				y: -controllerTarget[1] - this.immersiveCamera.yOffset,
+				z: -controllerTarget[2],
+				w: 1
+			}));
+		}
+
+		const pose = frame.getViewerPose(space);
+		for (const view of pose.views) {
+			if (this.immersiveCamera.updateFromXR(context, frame, view)) {
+				this.immersiveCamera.camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
 			}
 		}
 	}

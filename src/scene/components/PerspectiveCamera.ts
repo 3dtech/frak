@@ -66,24 +66,20 @@ class PerspectiveCamera extends CameraComponent {
 	}
 
 	/** Calculates projection matrix based on fov, aspect ratio and near/far clipping planes */
-	async calculatePerspective() {
-		await this.session?.updateRenderState({
-			depthFar: this.far,
-			depthNear: this.near,
-			inlineVerticalFieldOfView: this.fov / 180 * Math.PI,
-		});
+	calculatePerspective() {
+		mat4.perspective(this.camera.projectionMatrix, this.fov / 180 * Math.PI, this.aspect, this.near, this.far);
+		mat4.invert(this.camera.projectionInverseMatrix, this.camera.projectionMatrix);
 	}
 
-	updateFromXR(context: RenderingContext, frame: XRFrame, view: XRView): boolean {
-		if (context.engine.immersiveSession) {
-			return false;
-		}
+	updateCamera(context: RenderingContext) {
+		this.aspect = context.canvas.width / context.canvas.height;
 
-		// Store aspect
-		const vp = frame.session.renderState.baseLayer.getViewport(view);
-		this.aspect = vp.width / Math.max(vp.height, 1);
+		this.calculatePerspective();
+		this.camera.target.frameBuffer = null;
+		this.camera.target.set(0, 0, context.canvas.width, context.canvas.height);
+		this.camera.target.resetViewport();
 
-		return super.updateFromXR(context, frame, view);
+		mat4.invert(this.camera.viewInverseMatrix, this.camera.viewMatrix);
 	}
 }
 

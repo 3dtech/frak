@@ -54,17 +54,14 @@ class Engine {
 	useUpscaling: any;
 	_externallyPaused: any;
 	_savedCanvasStyles: any;
-	_currentAnimationFrame: any;
-	inlineSession: XRSession;
 	immersiveSession?: XRSession;
+
 	private immersiveExitCB?: () => void;
+	private queuedImmersiveFrame: number;
+	private queuedInlineFrame?: number;
 
 	static async isImmersiveSupported() {
-		if (!navigator.xr) {
-			return false;
-		} else {
-			return navigator.xr.isSessionSupported('immersive-ar');
-		}
+		return navigator.xr?.isSessionSupported('immersive-ar');
 	}
 
 	/** Constructor
@@ -93,7 +90,7 @@ class Engine {
 			tonemap: 'aces',
 		} as Options, options);
 
-		let polyfill = new WebXRPolyfill();
+		let _polyfill = new WebXRPolyfill();
 
 		this.context = new RenderingContext(canvas, this, this.options.contextOptions, this.options.contextErrorCallback);
 
@@ -244,36 +241,46 @@ class Engine {
 		in the options that were passed to the constructor. The default value is 30fps.
 		If requestAnimationFrame function is not available then setTimeout is used. */
 
-	public async run() {
+	public run() {
 		if (this.running) {
 			return;
 		}
 
 		this.running = true;
-		this.inlineSession = await navigator.xr?.requestSession('inline');
-		this.scene.cameraComponent.session = this.inlineSession;
 
-		let {
-			far: depthFar,
-			near: depthNear,
-			fov: inlineVerticalFieldOfView,
-		} = this.scene.cameraComponent as PerspectiveCamera;
-		inlineVerticalFieldOfView *= Math.PI / 180;
+		this.runInline();
+	}
 
-		await this.inlineSession.updateRenderState({
-			baseLayer: new XRWebGLLayer(this.inlineSession, this.context.gl),
-			depthFar,
-			depthNear,
-			inlineVerticalFieldOfView,
-		});
+	private runInline() {
+		let then = performance.now();
+		const draw = (t: DOMHighResTimeStamp) => {
+			let delta = t - then;
+			let interval = 1000 / this.options.requestedFPS;
+			if (delta > interval) {
+				then = t - (delta % interval);
+				this.update();
+			}
 
-		const refSpace = await this.inlineSession.requestReferenceSpace('viewer');
-		this._run(this.inlineSession, refSpace);
+			this.queuedInlineFrame = window.requestAnimationFrame(draw);
+
+			this.scene.render(this.context);
+		};
+
+		if (!this.scene.started)
+			this.scene.start(this.context);
+
+		this.queuedInlineFrame = window.requestAnimationFrame(draw);
+	}
+
+	private pauseInline() {
+		if (this.queuedInlineFrame) {
+			window.cancelAnimationFrame(this.queuedInlineFrame);
+			this.queuedInlineFrame = null;
+		}
 	}
 
 	async startImmersive(cb?: () => void) {
 		try {
-			this.scene.camera.renderStage.generator.setImmersive(true);
 			this.immersiveSession = await navigator.xr?.requestSession(
 				'immersive-ar',
 				{
@@ -281,36 +288,32 @@ class Engine {
 					requiredFeatures: ['local'],
 				},
 			);
-			this.immersiveExitCB = cb;
-			this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
-
-			this.scene.immersiveCamera.session = this.immersiveSession;
-
-			await this.immersiveSession.updateRenderState({
-				baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
-			});
-
-			let refSpace;
-			try {
-				refSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
-			} catch(e) {
-				refSpace = await this.immersiveSession.requestReferenceSpace('local');
-				this.scene.immersiveCamera.yOffset = 1.6;	// We don't have the right height, so let's guess an average
-			}
-
-
-			this._run(this.immersiveSession, refSpace);
-		} catch(e) {
+		} catch (e) {
 			console.error(`Failed to start immersive session: ${e}`);
-			if (this.immersiveSession) {
-				await this.immersiveSession.end();
-			} else {
-				cb?.();
-			}
 		}
+
+		this.immersiveExitCB = cb;
+		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
+
+		this.scene.camera.renderStage.generator.setImmersive(true);
+
+		await this.immersiveSession.updateRenderState({
+			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
+		});
+
+		let refSpace: XRReferenceSpace;
+		if (this.immersiveSession.enabledFeatures.includes('local-floor')) {
+			refSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
+		} else {
+			refSpace = await this.immersiveSession.requestReferenceSpace('local');
+			this.scene.immersiveCamera.yOffset = 1.6;	// We don't have the right height, so let's guess an average
+		}
+
+		this.pauseInline();
+		this.runImmersive(this.immersiveSession, refSpace);
 	}
 
-	private _run(session: XRSession, refSpace: XRReferenceSpace | XRBoundedReferenceSpace) {
+	private runImmersive(session: XRSession, refSpace: XRReferenceSpace | XRBoundedReferenceSpace) {
 		let then = performance.now();
 		const draw = (t: DOMHighResTimeStamp, frame: XRFrame) => {
 			let delta = t - then;
@@ -320,15 +323,15 @@ class Engine {
 				this.update();
 			}
 
-			this._currentAnimationFrame = frame.session.requestAnimationFrame(draw);
+			this.queuedImmersiveFrame = frame.session.requestAnimationFrame(draw);
 
-			this.scene.render(this.context, frame, refSpace);
+			this.scene.renderImmersive(this.context, frame, refSpace);
 		};
 
 		if (!this.scene.started)
 			this.scene.start(this.context);
 
-		this._currentAnimationFrame = session.requestAnimationFrame(draw);
+		this.queuedImmersiveFrame = session.requestAnimationFrame(draw);
 	}
 
 	async exitImmersive() {
@@ -336,11 +339,14 @@ class Engine {
 	}
 
 	private onExitImmersive() {
-		this.scene.immersiveCamera.session = null;
 		this.immersiveSession = null;
 		this.scene.camera.renderStage.generator.setImmersive(false);
 		this.immersiveExitCB?.();
 		this.immersiveExitCB = null;
+
+		if (this.running) {
+			this.runInline();
+		}
 	}
 
 	/**
@@ -362,8 +368,8 @@ class Engine {
 	/** Pauses the engine, call run to start it again. */
 	pause(): any {
 		this.running = false;
-		if (this._currentAnimationFrame && this.inlineSession)
-			this.inlineSession.cancelAnimationFrame(this._currentAnimationFrame);
+		this.immersiveSession?.end();
+		this.pauseInline();
 	}
 
 	/** Toggles engine pause */
@@ -395,11 +401,8 @@ class Engine {
 		Idle rendering. Try'is to draw in low (1) fps
 		@fps {float} idle at given fps, default is 1
 	*/
-	startIdle(fps): any {
-		if (!fps) fps = 1.0;
+	startIdle(fps = 1.0): any {
 		this.options.requestedFPS = fps;
-		this.pause();
-		this.run();
 	}
 
 	/**
@@ -407,8 +410,6 @@ class Engine {
 	*/
 	stopIdle(): any {
 		this.options.requestedFPS = this.options.defaultRequestedFPS;
-		this.pause();
-		this.run();
 	}
 
 	/** Runs engine to render a single frame and do an update */
