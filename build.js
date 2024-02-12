@@ -1,17 +1,19 @@
 let wasmPlugin = {
 	name: 'wasm',
 	setup(build) {
-		let path = require('path')
-		let fs = require('fs')
+		let path = require('path');
+		let fs = require('fs');
 
 		// Resolve ".wasm" files to a path with a namespace
 		build.onResolve({ filter: /\.wasm$/ }, args => {
+			let relativePath = path.relative(__dirname, path.isAbsolute(args.path) ? args.path : path.join(args.resolveDir, args.path));
+
 			// If this is the import inside the stub module, import the
 			// binary itself. Put the path in the "wasm-binary" namespace
 			// to tell our binary load callback to load the binary file.
 			if (args.namespace === 'wasm-stub') {
 				return {
-					path: args.path,
+					path: relativePath,
 					namespace: 'wasm-binary',
 				}
 			}
@@ -27,10 +29,10 @@ let wasmPlugin = {
 				return // Ignore unresolvable paths
 			}
 			return {
-				path: path.isAbsolute(args.path) ? args.path : path.join(args.resolveDir, args.path),
+				path: relativePath,
 				namespace: 'wasm-stub',
 			}
-		})
+		});
 
 		// Virtual modules in the "wasm-stub" namespace are filled with
 		// the JavaScript code for compiling the WebAssembly binary. The
@@ -40,7 +42,7 @@ let wasmPlugin = {
         export default (imports) =>
           WebAssembly.instantiate(wasm, imports).then(
             result => result.instance.exports)`,
-		}))
+		}));
 
 		// Virtual modules in the "wasm-binary" namespace contain the
 		// actual bytes of the WebAssembly file. This uses esbuild's
@@ -49,7 +51,7 @@ let wasmPlugin = {
 		build.onLoad({ filter: /.*/, namespace: 'wasm-binary' }, async (args) => ({
 			contents: await fs.promises.readFile(args.path),
 			loader: 'binary',
-		}))
+		}));
 	},
 }
 
