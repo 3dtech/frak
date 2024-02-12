@@ -56,6 +56,7 @@ class Engine {
 	immersiveSession?: XRSession;
 	public immersiveRefSpace?: XRReferenceSpace;
 
+	private externallyPaused = false;
 	private immersiveExitCB?: () => void;
 	private queuedImmersiveFrame: number;
 	private queuedInlineFrame?: number;
@@ -151,24 +152,22 @@ class Engine {
 	}
 
 	onVisibilityChange(): any {
-		// TODO: Fix this
-
-		/*if (!this.options.runInBackground) {
+		if (!this.options.runInBackground) {
 			if (document.hidden) {
 				if (this.running === false) {
-					this._externallyPaused = true;
+					this.externallyPaused = true;
 					return;
 				}
 				this.pause();
 			}
 			else {
-				if (this._externallyPaused) {
-					delete this._externallyPaused;
+				if (this.externallyPaused) {
+					this.externallyPaused = false;
 					return;
 				}
 				this.run();
 			}
-		}*/
+		}
 	}
 
 	onFullscreenChange(): any {
