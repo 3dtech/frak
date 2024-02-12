@@ -1,6 +1,7 @@
 import CameraComponent from 'scene/components/CameraComponent';
 import RenderingContext from "../../rendering/RenderingContext";
-import Camera from "../../rendering/camera/Camera";
+import Camera, { RenderCallback } from "../../rendering/camera/Camera";
+import Scene from '../Scene';
 
 /** Camera component providing perspective projection */
 class PerspectiveCamera extends CameraComponent {
@@ -74,12 +75,17 @@ class PerspectiveCamera extends CameraComponent {
 	updateCamera(context: RenderingContext) {
 		this.aspect = context.canvas.width / context.canvas.height;
 
-		this.calculatePerspective();
 		this.camera.target.frameBuffer = null;
 		this.camera.target.set(0, 0, context.canvas.width, context.canvas.height);
 		this.camera.target.resetViewport();
 
+		this.calculatePerspective();
 		mat4.invert(this.camera.viewInverseMatrix, this.camera.viewMatrix);
+	}
+
+	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
+		this.updateCamera(context);
+		super.render(context, scene, preRenderCallback, postRenderCallback);
 	}
 }
 

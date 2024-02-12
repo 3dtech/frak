@@ -1,10 +1,11 @@
 import Component from 'scene/components/Component';
-import Camera from 'rendering/camera/Camera';
+import Camera, { RenderCallback } from 'rendering/camera/Camera';
 import BoundingBox from 'scene/geometry/BoundingBox';
 import MeshComponent from 'scene/components/MeshComponent';
 import Ray from 'scene/geometry/Ray';
 import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
 import RenderingContext from "../../rendering/RenderingContext";
+import Scene from '../Scene';
 
 /** Camera component */
 class CameraComponent extends Component {
@@ -217,7 +218,9 @@ class CameraComponent extends Component {
 		this.camera.renderStage.start(context, engine, this.camera);
 	}
 
-	updateCamera(context: RenderingContext) {}
+	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
+		this.camera.render(context, scene, preRenderCallback, postRenderCallback);
+	}
 
 	onContextRestored(context) {
 		this.initRenderStage(context, context.engine);

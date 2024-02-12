@@ -1,5 +1,8 @@
 import CameraComponent from "./CameraComponent";
 import RenderingContext from "../../rendering/RenderingContext";
+import Scene from '../Scene';
+import OrbitController from './OrbitController';
+import { RenderCallback } from '../../rendering/camera/Camera';
 
 class ImmersiveCamera extends CameraComponent {
 	yOffset = 0.0;
@@ -30,6 +33,26 @@ class ImmersiveCamera extends CameraComponent {
 		mat4.invert(this.camera.viewInverseMatrix, this.camera.viewMatrix);
 
 		return true;
+	}
+
+	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
+		let space = scene.engine.immersiveRefSpace;
+		const controllerTarget = this.node.getComponent(OrbitController)?.targetPosition;
+		if (controllerTarget) {
+			space = space.getOffsetReferenceSpace(new XRRigidTransform({
+				x: -controllerTarget[0],
+				y: -controllerTarget[1] - this.yOffset,
+				z: -controllerTarget[2],
+				w: 1
+			}));
+		}
+
+		const pose = scene.xrFrame.getViewerPose(space);
+		for (const view of pose.views) {
+			if (this.updateFromXR(context, scene.xrFrame, view)) {
+				super.render(context, scene, preRenderCallback, postRenderCallback);
+			}
+		}
 	}
 }
 

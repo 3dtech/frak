@@ -6,7 +6,6 @@ import RenderingContext from 'rendering/RenderingContext';
 import Input from 'engine/Input';
 import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
-import PerspectiveCamera from "../scene/components/PerspectiveCamera";
 import WebXRPolyfill from 'webxr-polyfill';
 
 interface Options {
@@ -55,6 +54,7 @@ class Engine {
 	_externallyPaused: any;
 	_savedCanvasStyles: any;
 	immersiveSession?: XRSession;
+	public immersiveRefSpace?: XRReferenceSpace;
 
 	private immersiveExitCB?: () => void;
 	private queuedImmersiveFrame: number;
@@ -254,16 +254,11 @@ class Engine {
 	private runInline() {
 		let then = performance.now();
 		const draw = (t: DOMHighResTimeStamp) => {
-			let delta = t - then;
-			let interval = 1000 / this.options.requestedFPS;
-			if (delta > interval) {
-				then = t - (delta % interval);
-				this.update();
-			}
+			then = this.update(then, t);
 
 			this.queuedInlineFrame = window.requestAnimationFrame(draw);
 
-			this.scene.render(this.context);
+			this.scene.render(this.context, this.scene.cameraComponent);
 		};
 
 		if (!this.scene.started)
@@ -301,31 +296,25 @@ class Engine {
 			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
 		});
 
-		let refSpace: XRReferenceSpace;
 		if (this.immersiveSession.enabledFeatures.includes('local-floor')) {
-			refSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
+			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
 		} else {
-			refSpace = await this.immersiveSession.requestReferenceSpace('local');
+			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local');
 			this.scene.immersiveCamera.yOffset = 1.6;	// We don't have the right height, so let's guess an average
 		}
 
 		this.pauseInline();
-		this.runImmersive(this.immersiveSession, refSpace);
+		this.runImmersive(this.immersiveSession);
 	}
 
-	private runImmersive(session: XRSession, refSpace: XRReferenceSpace | XRBoundedReferenceSpace) {
+	private runImmersive(session: XRSession) {
 		let then = performance.now();
 		const draw = (t: DOMHighResTimeStamp, frame: XRFrame) => {
-			let delta = t - then;
-			let interval = 1000 / this.options.requestedFPS;
-			if (delta > interval) {
-				then = t - (delta % interval);
-				this.update();
-			}
+			then = this.update(then, t);
 
 			this.queuedImmersiveFrame = frame.session.requestAnimationFrame(draw);
 
-			this.scene.renderImmersive(this.context, frame, refSpace);
+			this.scene.render(this.context, this.scene.immersiveCamera, frame);
 		};
 
 		if (!this.scene.started)
@@ -413,18 +402,26 @@ class Engine {
 	}
 
 	/** Runs engine to render a single frame and do an update */
-	update(): any {
-		this.context.engine = this;
-		this.input.update();
-		this.scene.update(this);
-		this.fps.measure();
-		if(this.options.captureScreenshot) {
-			this._captureScreenshot();
+	update(then: DOMHighResTimeStamp, now: DOMHighResTimeStamp): DOMHighResTimeStamp {
+		let delta = now - then;
+		let interval = 1000 / this.options.requestedFPS;
+		if (delta > interval) {
+			then = now - (delta % interval);
+
+			this.context.engine = this;
+			this.input.update();
+			this.scene.update(this);
+			this.fps.measure();
+			if (this.options.captureScreenshot) {
+				this._captureScreenshot();
+			}
+
+			if (this.options.showDebug) {
+				this.renderDebugInfo();
+			}
 		}
 
-		if(this.options.showDebug) {
-			this.renderDebugInfo();
-		}
+		return then;
 	}
 
 	validateOptions(context: RenderingContext) {

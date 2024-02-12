@@ -6,6 +6,10 @@ import BoundingVolume from 'scene/geometry/BoundingVolume';
 import Color from 'rendering/Color';
 import PBRPipeline from './stages/PBRPipeline';
 import RenderTarget from './RenderTarget';
+import RenderingContext from '../RenderingContext';
+import Scene from '../../scene/Scene';
+
+type RenderCallback = (context: RenderingContext, camera: Camera) => void;
 
 /** Camera is used to render to render target.
 	@param viewMatrix Camera view matrix {mat4}
@@ -103,7 +107,7 @@ class Camera extends Serializable {
 	}
 
 	/** Starts rendering with camera setting up projection and view matrices */
-	startRender(context): any {
+	startRender(context: RenderingContext): any {
 		// Use projection matrix
 		context.projection.push();
 		context.projection.multiply(this.projectionMatrix);
@@ -114,7 +118,7 @@ class Camera extends Serializable {
 	}
 
 	/** Renders the contents of this camera using assigned render-stage */
-	renderScene(context, scene, preRenderCallback, postRenderCallback): any {
+	renderScene(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback): any {
 		if (preRenderCallback)
 			preRenderCallback(context, this);
 
@@ -125,13 +129,13 @@ class Camera extends Serializable {
 	}
 
 	/** Ends rendering with camera popping projection and view matrices */
-	endRender(context): any {
+	endRender(context: RenderingContext): any {
 		context.modelview.pop();
 		context.projection.pop();
 	}
 
 	/** Main entrypoint for rendering the scene with this Camera */
-	render(context, scene, preRenderCallback, postRenderCallback) {
+	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
 		context.camera = this;
 
 		this.startRender(context);
@@ -246,4 +250,4 @@ class Camera extends Serializable {
 }
 
 globalThis.Camera = Camera;
-export default Camera;
+export { Camera as default, RenderCallback };
