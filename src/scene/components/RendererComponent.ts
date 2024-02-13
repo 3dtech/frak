@@ -1,4 +1,5 @@
 import Component from 'scene/components/Component';
+import Engine from "../../engine/Engine";
 
 class RendererComponent extends Component {
 	castShadows: boolean;
@@ -43,7 +44,7 @@ class RendererComponent extends Component {
 		this.getScene()?.dynamicSpace.damage();
 	}
 
-	onUpdate() {
+	onUpdate(engine: Engine) {
 		// Backwards compatibility
 		if (this.castShadows !== this.previousCastShadows) {
 			this.previousCastShadows = this.castShadows;

@@ -17,7 +17,7 @@ class LinesRenderBufferInstanced extends RenderBuffer {
 		@param itemSize Size of an item (number elements from items array, eg 3 to pass vec3 attribute) */
 	add(name, items, itemSize, divisor?): any {
 		if (items.length / itemSize <= this.maxFaceIndex && this.facesBuffer.numItems > 0 && divisor === 0)
-			throw "RenderBuffer: Buffer '{0}' too small ({1} vertices, {2} max index).".format(name, items.length / itemSize, this.maxFaceIndex);
+			throw `RenderBuffer: Buffer '${name}' too small (${items.length / itemSize} vertices, ${this.maxFaceIndex} max index).`;
 
 		var gl = this.context.gl;
 
@@ -42,12 +42,12 @@ class LinesRenderBufferInstanced extends RenderBuffer {
 
 	update(name, items): any {
 		if (!(name in this.buffers))
-			throw "RenderBuffer: Unknown buffer: '{0}'".format(name);
+			throw `RenderBuffer: Unknown buffer: '${name}'`;
 
 		var buf = this.buffers[name];
 
 		if (items.length / buf.itemSize <= this.maxFaceIndex && this.facesBuffer.numItems > 0 && this.divisors[name] === 0)
-			throw "RenderBuffer: Buffer '{0}' too small.".format(name);
+			throw `RenderBuffer: Buffer '${name}' too small.`;
 
 		// Convert items to typed array if needed
 		if (!(items instanceof Float32Array))

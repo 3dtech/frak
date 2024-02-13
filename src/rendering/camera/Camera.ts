@@ -1,5 +1,4 @@
 import Serializable from 'scene/Serializable';
-import TargetScreen from 'rendering/camera/TargetScreen';
 import Plane from 'scene/geometry/Plane';
 import BoundingBox from 'scene/geometry/BoundingBox';
 import BoundingSphere from 'scene/geometry/BoundingSphere';
@@ -7,6 +6,10 @@ import BoundingVolume from 'scene/geometry/BoundingVolume';
 import Color from 'rendering/Color';
 import PBRPipeline from './stages/PBRPipeline';
 import RenderTarget from './RenderTarget';
+import RenderingContext from '../RenderingContext';
+import Scene from '../../scene/Scene';
+
+type RenderCallback = (context: RenderingContext, camera: Camera) => void;
 
 /** Camera is used to render to render target.
 	@param viewMatrix Camera view matrix {mat4}
@@ -27,7 +30,7 @@ class Camera extends Serializable {
 	backgroundColor: any;
 	clearMask: any;
 	order: any;
-	layerMask: any;
+	layerMask = 0xFFFFFFFF;
 	frustum: any;
 	stereo: any;
 	stereoEyeDistance: any;
@@ -40,6 +43,7 @@ class Camera extends Serializable {
 	_cacheQuat: any;
 	_strafe: any;
 	_translation: any;
+	stencilMask = 0xFFFFFFFF;	// Not GL stencilMask, but used for hiding objects for immersive mode
 
 	/** Constructor */
 	constructor(viewMatrix, projectionMatrix) {
@@ -49,11 +53,10 @@ class Camera extends Serializable {
 		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
 		mat4.invert(this.projectionInverseMatrix, this.projectionMatrix);
 		this.renderStage = new PBRPipeline();
-		this.target = new TargetScreen();
+		this.target = new RenderTarget();
 		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
 		this.clearMask = false;
 		this.order = 0; ///< Cameras are rendered in succession from lowest to highest order
-		this.layerMask = 0xFFFFFFFF; ///< Set bits for which layers are rendered with this camera
 		this.frustum = false; // TODO: implement frustum
 
 		var stereo = false;
@@ -104,7 +107,7 @@ class Camera extends Serializable {
 	}
 
 	/** Starts rendering with camera setting up projection and view matrices */
-	startRender(context): any {
+	startRender(context: RenderingContext): any {
 		// Use projection matrix
 		context.projection.push();
 		context.projection.multiply(this.projectionMatrix);
@@ -115,7 +118,7 @@ class Camera extends Serializable {
 	}
 
 	/** Renders the contents of this camera using assigned render-stage */
-	renderScene(context, scene, preRenderCallback, postRenderCallback): any {
+	renderScene(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback): any {
 		if (preRenderCallback)
 			preRenderCallback(context, this);
 
@@ -126,83 +129,18 @@ class Camera extends Serializable {
 	}
 
 	/** Ends rendering with camera popping projection and view matrices */
-	endRender(context): any {
+	endRender(context: RenderingContext): any {
 		context.modelview.pop();
 		context.projection.pop();
 	}
 
 	/** Main entrypoint for rendering the scene with this Camera */
-	render(context, scene, preRenderCallback, postRenderCallback): any {
-		this.target.resetViewport();
-		this.clearBuffers(context);
-
+	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
 		context.camera = this;
 
-		mat4.invert(this.projectionInverseMatrix, this.projectionMatrix);
-
-		if (this.stereo()) {
-			// Update inverse view matrix
-			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
-			vec2.copy(this._viewportPosition, this.target.viewport.position);
-			vec2.copy(this._viewportSize, this.target.viewport.size);
-
-			// Set viewport size to half the screen width
-			var half = this._viewportSize[0] / 2.0;
-			this.target.viewport.size[0] = half;
-
-			var halfEyeDistance = this.stereoEyeDistance() / 2.0;
-			this.getStrafeVector(this._strafe);
-
-			// Store original view matrix
-			mat4.copy(this._originalViewMatrix, this.viewMatrix);
-
-			// Set view matrix to left eye position
-			vec3.scale(this._translation, this._strafe, -halfEyeDistance);
-			mat4.fromRotationTranslation(this._eyeSeparation, quat.create(), this._translation);
-			mat4.mul(this.viewMatrix, this.viewMatrix, this._eyeSeparation);
-
-			// Update inverse view matrix
-			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
-			// Render left eye
-			this.target.viewport.position[0] = 0;
-			this.startRender(context);
-			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
-			this.endRender(context);
-
-			// Restore original view matrix
-			mat4.copy(this.viewMatrix, this._originalViewMatrix);
-
-			// Set view matrix to right eye position
-			vec3.scale(this._translation, this._strafe, halfEyeDistance);
-			mat4.fromRotationTranslation(this._eyeSeparation, quat.create(), this._translation);
-			mat4.mul(this.viewMatrix, this.viewMatrix, this._eyeSeparation);
-
-			// Update inverse view matrix
-			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
-			// Render right eye
-			this.target.viewport.position[0] = half;
-			this.startRender(context);
-			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
-			this.endRender(context);
-
-			// Restore original viewport
-			vec2.copy(this.target.viewport.position, this._viewportPosition);
-			vec2.copy(this.target.viewport.size, this._viewportSize);
-
-			// Restore original view matrix
-			mat4.copy(this.viewMatrix, this._originalViewMatrix);
-		}
-		else {
-			// Update inverse view matrix
-			mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-
-			this.startRender(context);
-			this.renderScene(context, scene, preRenderCallback, postRenderCallback);
-			this.endRender(context);
-		}
+		this.startRender(context);
+		this.renderScene(context, scene, preRenderCallback, postRenderCallback);
+		this.endRender(context);
 
 		context.camera = false;
 	}
@@ -312,4 +250,4 @@ class Camera extends Serializable {
 }
 
 globalThis.Camera = Camera;
-export default Camera;
+export { Camera as default, RenderCallback };

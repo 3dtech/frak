@@ -8,7 +8,7 @@ import Sampler from 'rendering/shaders/Sampler';
 import Mesh from 'scene/geometry/Mesh';
 import Submesh from 'scene/geometry/Submesh';
 import MeshComponent from 'scene/components/MeshComponent';
-import FRAK from 'Helpers';
+import FRAK, { merge } from 'Helpers';
 
 /** GPU terrain renderer */
 
@@ -25,7 +25,7 @@ class GPUTerrain extends MeshRendererComponent {
 	constructor(heightImage, colorImage, options) {
 		super();
 
-		this.options = FRAK.extend({
+		this.options = merge({
 			size: 1024,
 			verticalScale: 64,
 			numCones: 8,

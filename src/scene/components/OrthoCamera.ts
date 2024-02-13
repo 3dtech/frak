@@ -1,3 +1,4 @@
+import Camera from 'rendering/camera/Camera';
 import CameraComponent from 'scene/components/CameraComponent';
 
 /** Camera providing orthographic projection */
@@ -10,7 +11,7 @@ class OrthoCamera extends CameraComponent {
 		if(!near) near=-100;
 		if(!far) far=100;
 		var projection=mat4.ortho(mat4.create(), left, right, bottom, top, near, far)
-		super(mat4.identity(mat4.create()), projection);
+		super(new Camera(mat4.identity(mat4.create()), projection));
 	}
 
 	type() {

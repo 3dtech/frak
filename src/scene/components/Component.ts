@@ -1,5 +1,6 @@
 import Node from 'scene/Node';
 import Serializable from 'scene/Serializable';
+import Engine from '../../engine/Engine';
 
 class Component extends Serializable {
 	updatePasses: number;
@@ -118,7 +119,7 @@ class Component extends Serializable {
 	/** Called when Engine requires update
 		@param engine Instance of Engine
 		@param pass Update pass */
-	onUpdate(engine, pass) { }
+	onUpdate(engine: Engine, pass) { }
 }
 
 globalThis.Component = Component;

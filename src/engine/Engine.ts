@@ -4,15 +4,37 @@ import Texture from 'rendering/materials/Texture';
 import Sampler from 'rendering/shaders/Sampler';
 import RenderingContext from 'rendering/RenderingContext';
 import Input from 'engine/Input';
-import FRAK, { FrakCallback } from 'Helpers';
+import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
-import PerspectiveCamera from "../scene/components/PerspectiveCamera";
+import WebXRPolyfill from 'webxr-polyfill';
+
+interface Options {
+	anisotropicFiltering?: number | false;
+	antialias?: boolean;
+	assetsPath?: string;
+	builtinShaders?: boolean;
+	directionalShadowResolution?: number;
+	captureScreenshot?: boolean;
+	contextErrorCallback?: any;
+	contextOptions?: WebGLContextAttributes;
+	debug?: boolean;
+	defaultRequestedFPS?: number;
+	emissiveEnabled?: boolean;
+	legacyAmbient?: boolean;
+	requestedFPS?: number;
+	runInBackground?: boolean;
+	shadowManualUpdate?: boolean;
+	showDebug?: boolean;
+	softShadows?: boolean;
+	ssao?: boolean;
+	tonemap?: string;
+}
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
  */
 class Engine {
-	options: any;
+	options: Options;
 	context: RenderingContext;
 	scene: Scene;
 	fps: FPS;
@@ -31,40 +53,51 @@ class Engine {
 	useUpscaling: any;
 	_externallyPaused: any;
 	_savedCanvasStyles: any;
-	_currentAnimationFrame: any;
+	immersiveSession?: XRSession;
+	public immersiveRefSpace?: XRReferenceSpace;
+
+	private externallyPaused = false;
+	private immersiveExitCB?: () => void;
+	private queuedImmersiveFrame: number;
+	private queuedInlineFrame?: number;
+
+	static async isImmersiveSupported() {
+		return navigator.xr?.isSessionSupported('immersive-ar');
+	}
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
 		@param options Engine options [optional] */
-	constructor(canvas, options) {
-		if (!options) options = {};
-		this.options = FRAK.extend({
-			'assetsPath': '',
-			'defaultRequestedFPS': 60.0,
-			'requestedFPS': 60.0,
-			'anisotropicFiltering': 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
-			'debug': false,
-			'antialias': false,
-			'ssao': false,
-			'softShadows': false,
-			'runInBackground': false,
-			'contextOptions': null,
-			'contextErrorCallback': null,
-			'captureScreenshot': false,
-			'builtinShaders': true,
-			'directionalShadowResolution': 2048,
-			'shadowManualUpdate': false,
-			'emissiveEnabled': false,	// TODO: Remove this for an automatic detection
-			'tonemap': 'aces',
-			'legacyAmbient': true,
-		}, options);
+	constructor(canvas, options: Options = {}) {
+		this.options = merge({
+			anisotropicFiltering: 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
+			antialias: false,
+			assetsPath: '',
+			builtinShaders: true,
+			captureScreenshot: false,
+			contextErrorCallback: null,
+			contextOptions: null,
+			debug: false,
+			defaultRequestedFPS: 60.0,
+			directionalShadowResolution: 2048,
+			emissiveEnabled: false,	// TODO: Remove this for an automatic detection
+			legacyAmbient: true,
+			requestedFPS: 60.0,
+			runInBackground: false,
+			shadowManualUpdate: false,
+			showDebug: false,
+			softShadows: false,
+			ssao: false,
+			tonemap: 'aces',
+		} as Options, options);
+
+		let _polyfill = new WebXRPolyfill();
 
 		this.context = new RenderingContext(canvas, this, this.options.contextOptions, this.options.contextErrorCallback);
 
 		this.validateOptions(this.context);
 
-		this.scene = new Scene();
-		this.scene.engine = this;
+		this.scene = new Scene(this);
 		this.fps = new FPS();
 		this.running = false;
 		this.screenshot = false;
@@ -122,14 +155,14 @@ class Engine {
 		if (!this.options.runInBackground) {
 			if (document.hidden) {
 				if (this.running === false) {
-					this._externallyPaused = true;
+					this.externallyPaused = true;
 					return;
 				}
 				this.pause();
 			}
 			else {
-				if (this._externallyPaused) {
-					delete this._externallyPaused;
+				if (this.externallyPaused) {
+					this.externallyPaused = false;
 					return;
 				}
 				this.run();
@@ -152,7 +185,6 @@ class Engine {
 				height: canvas.style.height,
 				canvasWidth: canvas.getAttribute('width'),
 				canvasHeight: canvas.getAttribute('height'),
-				aspectRatio: (this.scene.cameraComponent as PerspectiveCamera).aspect
 			};
 
 			// Stretch canvas to fill the entire screen
@@ -169,17 +201,14 @@ class Engine {
 			setTimeout(function() {
 				// Set aspect ratio
 				var bounds = canvas.getBoundingClientRect();
-				(scope.scene.cameraComponent as PerspectiveCamera).setAspectRatio(bounds.width / bounds.height);
-				if (scope.useUpscaling)
-					return;
-
-				// If not using upscaling then resize the RenderTarget
-				var gl = scope.context.gl;
-				var width = (gl.canvas as HTMLCanvasElement).clientWidth;
-				var height = Math.max(1, (gl.canvas as HTMLCanvasElement).clientHeight);
-				canvas.setAttribute('width', width);
-				canvas.setAttribute('height', height);
-				scope.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
+				if (!scope.useUpscaling) {
+					// If not using upscaling then resize the RenderTarget
+					var gl = scope.context.gl;
+					var width = (gl.canvas as HTMLCanvasElement).clientWidth;
+					var height = Math.max(1, (gl.canvas as HTMLCanvasElement).clientHeight);
+					canvas.setAttribute('width', width);
+					canvas.setAttribute('height', height);
+				}
 			},
 			2000 / this.options.requestedFPS);
 		}
@@ -194,15 +223,12 @@ class Engine {
 				canvas.style.bottom = this._savedCanvasStyles.bottom;
 				canvas.style.width = this._savedCanvasStyles.width;
 				canvas.style.height = this._savedCanvasStyles.height;
-				if (this._savedCanvasStyles.aspectRatio)
-					(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(this._savedCanvasStyles.aspectRatio);
 
 				// If not using upscaling then resize the RenderTarget
 				if (!this.useUpscaling) {
 					canvas.setAttribute('width', this._savedCanvasStyles.canvasWidth);
 					canvas.setAttribute('height', this._savedCanvasStyles.canvasHeight);
 					var gl = this.context.gl;
-					this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
 				}
 
 				delete this._savedCanvasStyles;
@@ -213,35 +239,102 @@ class Engine {
 	/** Starts the engine. The engine will try to draw frames at the "requestedFPS" specified
 		in the options that were passed to the constructor. The default value is 30fps.
 		If requestAnimationFrame function is not available then setTimeout is used. */
-	run(): any {
-		if (this.running !== false)
+
+	public run() {
+		if (this.running) {
 			return;
+		}
 
 		this.running = true;
 
-		var now;
-		var then = FRAK.timestamp();
-		var interval = 1000 / this.options.requestedFPS;
-		var delta;
-		var scope = this;
+		this.runInline();
+	}
 
-		function draw() {
-			now = FRAK.timestamp();
-			delta = now - then;
-			if (delta > interval) {
-				then = now - (delta % interval);
-				scope.frame();
-			}
+	private runInline() {
+		let then = performance.now();
+		const draw = (t: DOMHighResTimeStamp) => {
+			then = this.update(then, t);
 
-			if (scope.running) {
-				scope._currentAnimationFrame = FRAK.requestAnimationFrame(draw);
-			}
-		}
+			this.queuedInlineFrame = window.requestAnimationFrame(draw);
+
+			this.scene.render(this.context, this.scene.cameraComponent);
+		};
 
 		if (!this.scene.started)
 			this.scene.start(this.context);
 
-		this._currentAnimationFrame = FRAK.requestAnimationFrame(draw);
+		this.queuedInlineFrame = window.requestAnimationFrame(draw);
+	}
+
+	private pauseInline() {
+		if (this.queuedInlineFrame) {
+			window.cancelAnimationFrame(this.queuedInlineFrame);
+			this.queuedInlineFrame = null;
+		}
+	}
+
+	async startImmersive(cb?: () => void) {
+		try {
+			this.immersiveSession = await navigator.xr?.requestSession(
+				'immersive-ar',
+				{
+					optionalFeatures: ['local-floor'],
+					requiredFeatures: ['local'],
+				},
+			);
+		} catch (e) {
+			console.error(`Failed to start immersive session: ${e}`);
+		}
+
+		this.immersiveExitCB = cb;
+		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
+
+		this.scene.camera.renderStage.generator.setImmersive(true);
+
+		await this.immersiveSession.updateRenderState({
+			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
+		});
+
+		if (this.immersiveSession.enabledFeatures.includes('local-floor')) {
+			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
+		} else {
+			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local');
+			this.scene.immersiveCamera.yOffset = 1.6;	// We don't have the right height, so let's guess an average
+		}
+
+		this.pauseInline();
+		this.runImmersive(this.immersiveSession);
+	}
+
+	private runImmersive(session: XRSession) {
+		let then = performance.now();
+		const draw = (t: DOMHighResTimeStamp, frame: XRFrame) => {
+			then = this.update(then, t);
+
+			this.queuedImmersiveFrame = frame.session.requestAnimationFrame(draw);
+
+			this.scene.render(this.context, this.scene.immersiveCamera, frame);
+		};
+
+		if (!this.scene.started)
+			this.scene.start(this.context);
+
+		this.queuedImmersiveFrame = session.requestAnimationFrame(draw);
+	}
+
+	async exitImmersive() {
+		await this.immersiveSession?.end();
+	}
+
+	private onExitImmersive() {
+		this.immersiveSession = null;
+		this.scene.camera.renderStage.generator.setImmersive(false);
+		this.immersiveExitCB?.();
+		this.immersiveExitCB = null;
+
+		if (this.running) {
+			this.runInline();
+		}
 	}
 
 	/**
@@ -263,8 +356,8 @@ class Engine {
 	/** Pauses the engine, call run to start it again. */
 	pause(): any {
 		this.running = false;
-		if (this._currentAnimationFrame)
-			FRAK.cancelAnimationFrame(this._currentAnimationFrame);
+		this.immersiveSession?.end();
+		this.pauseInline();
 	}
 
 	/** Toggles engine pause */
@@ -274,7 +367,7 @@ class Engine {
 	}
 
 	/** Requests engine to go to fullscreen */
-	requestFullscreen(useUpscaling): any {
+	requestFullscreen(useUpscaling?) {
 		if (!FRAK.fullscreenEnabled) {
 			console.warn('FRAK: Fullscreen API is disabled in this browser.');
 			return;
@@ -296,11 +389,8 @@ class Engine {
 		Idle rendering. Try'is to draw in low (1) fps
 		@fps {float} idle at given fps, default is 1
 	*/
-	startIdle(fps): any {
-		if (!fps) fps = 1.0;
+	startIdle(fps = 1.0): any {
 		this.options.requestedFPS = fps;
-		this.pause();
-		this.run();
 	}
 
 	/**
@@ -308,24 +398,29 @@ class Engine {
 	*/
 	stopIdle(): any {
 		this.options.requestedFPS = this.options.defaultRequestedFPS;
-		this.pause();
-		this.run();
 	}
 
 	/** Runs engine to render a single frame and do an update */
-	frame(): any {
-		this.context.engine = this;
-		this.input.update();
-		this.scene.update(this);
-		this.scene.render(this.context);
-		this.fps.measure();
-		if(this.options.captureScreenshot) {
-			this._captureScreenshot();
+	update(then: DOMHighResTimeStamp, now: DOMHighResTimeStamp): DOMHighResTimeStamp {
+		let delta = now - then;
+		let interval = 1000 / this.options.requestedFPS;
+		if (delta > interval) {
+			then = now - (delta % interval);
+
+			this.context.engine = this;
+			this.input.update();
+			this.scene.update(this);
+			this.fps.measure();
+			if (this.options.captureScreenshot) {
+				this._captureScreenshot();
+			}
+
+			if (this.options.showDebug) {
+				this.renderDebugInfo();
+			}
 		}
 
-		if(this.options.showDebug) {
-			this.renderDebugInfo();
-		}
+		return then;
 	}
 
 	validateOptions(context: RenderingContext) {
@@ -346,14 +441,8 @@ class Engine {
 		}
 	}
 
-	resize(): any {
-		if (this.context instanceof RenderingContext) {
-			var gl = this.context.gl;
-			// var width = gl.canvas.clientWidth;
-			// var height = Math.max(1, gl.canvas.clientHeight);
-			(this.scene.cameraComponent as PerspectiveCamera).setAspectRatio(gl.drawingBufferWidth/gl.drawingBufferHeight);
-			this.scene.camera.target.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
-		}
+	resize() {
+		// Legacy
 	}
 
 	/** Helper function for displaying renderer statistics. */
@@ -362,7 +451,7 @@ class Engine {
 			return;
 		var organizer = this.scene.organizer;
 		console.log('=============== Statistics =====================');
-		console.log('  Visible faces (opaque/transparent): {0}/{1}'.format(organizer.opaqueRenderers.count, organizer.transparentRenderers.count));
+		console.log(`  Visible renderers (opaque/transparent): ${organizer.opaqueRenderers.count}/${organizer.transparentRenderers.count}`);
 		console.log('================================================');
 	}
 

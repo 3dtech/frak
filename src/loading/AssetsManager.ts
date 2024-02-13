@@ -28,7 +28,7 @@ class AssetsManager {
 	loadedCallbacks: any;
 	shadersManager: ShadersManager;
 	texturesManager: any;
-	modelsManager: any;
+	modelsManager: ModelsManager;
 	textManager: any;
 	materialsManager: any;
 	materialSourcesManager: any;
@@ -82,7 +82,7 @@ class AssetsManager {
 	 * @param source Path to model (url)
 	 * @param format Model format ('auto', 'binary' or 'json') [optional]
 	 */
-	addModel(source, format): any {
+	addModel(source, format?): any {
 		return this.modelsManager.add(source, format);
 	}
 

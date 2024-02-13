@@ -3,15 +3,18 @@ import Node from 'scene/Node';
 import DynamicSpace from 'rendering/spaces/DynamicSpace';
 import MeshComponent from 'scene/components/MeshComponent';
 import Light from 'scene/components/Light';
-import Camera from 'rendering/camera/Camera';
+import Camera, { RenderCallback } from 'rendering/camera/Camera';
 import Engine from 'engine/Engine';
 import Color from 'rendering/Color';
 import PerspectiveCamera from './components/PerspectiveCamera';
 import DirectionalLight from './lights/DirectionalLight';
-import RendererOrganizer from "../rendering/camera/RendererOrganizer";
-import CameraComponent from "./components/CameraComponent";
-import AmbientLight from "./lights/AmbientLight";
-import ImageBasedLight from "./lights/ImageBasedLight";
+import RendererOrganizer from '../rendering/camera/RendererOrganizer';
+import CameraComponent from './components/CameraComponent';
+import AmbientLight from './lights/AmbientLight';
+import ImageBasedLight from './lights/ImageBasedLight';
+import RenderingContext from '../rendering/RenderingContext';
+import ImmersiveCamera from './components/ImmersiveCamera';
+import OrbitController from './components/OrbitController';
 
 /** Scene keeps track of components and nodes, cameras etc */
 class Scene extends Serializable {
@@ -20,14 +23,14 @@ class Scene extends Serializable {
 	organizer = new RendererOrganizer();
 	rendererDamage = -1;
 	camera: Camera;
-	cameras: Camera[] = [];
+	cameras: CameraComponent[] = [];
 	cameraComponent: CameraComponent;
+	immersiveCamera: ImmersiveCamera;
 	lights: Light[] = [];
 	ambientLights: AmbientLight[] = [];
 	directionalLights: DirectionalLight[] = [];
 	imageBasedLights: ImageBasedLight[] = [];
 	pointLights: any = [];	// TODO
-	engine: Engine;
 	/** If scene is being started, it is set to true */
 	starting = false;
 	/** If scene has started, it's set to true */
@@ -37,13 +40,14 @@ class Scene extends Serializable {
 	preRenderedComponents: any;
 	postRenderedComponents: any;
 	updatedComponents: any;
-	processPreRenderList: any;
-	processPostRenderList: any;
-	cameraNode: any;
+	processPreRenderList: RenderCallback;
+	processPostRenderList: RenderCallback;
+	cameraNode: Node;
 	lightNode: any;
 	light: any;
+	xrFrame?: XRFrame;
 
-	constructor() {
+	constructor(public engine: Engine) {
 		super();
 		this.root.scene = this;
 		this.startingQueue = []; ///< Starting queue where the components that are still starting can be pushed
@@ -85,8 +89,8 @@ class Scene extends Serializable {
 
 		this.cameraNode=new Node("Camera");
 		this.cameraComponent=this.cameraNode.addComponent(new PerspectiveCamera());
-		(this.cameraComponent as PerspectiveCamera).aspect=false; // Forces PerspectiveCamera to autodetect aspect ratio
 		this.camera=this.cameraComponent.camera;	///< Main camera used for rendering scene. Beware! This is not camera component meaning that its view matrix gets overwritten by camera component each frame
+		this.immersiveCamera = this.cameraNode.addComponent(new ImmersiveCamera(this.camera));
 		this.root.addNode(this.cameraNode);
 
 		this.lightNode=new Node("Light");
@@ -176,10 +180,11 @@ class Scene extends Serializable {
 		this.started = false;
 	}
 
-	/** Called to render all scene cameras. */
-	render(context): any {
-		if (!this.started)
-			return; // Make sure we don't render before starting the scene
+	/** Called to render the scene. */
+	render(context: RenderingContext, camera: CameraComponent, frame?: XRFrame) {
+		if (!this.started) {
+			return;
+		}
 
 		// Batch renderers if the space has changed
 		if (this.dynamicSpace.damaged !== this.rendererDamage) {
@@ -187,12 +192,15 @@ class Scene extends Serializable {
 			this.organizer.batch(this.dynamicSpace.renderers);
 		}
 
-		var camera: Camera;
-
-		for (var cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {
-			camera = this.cameras[cameraIndex];
-			camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
+		// Render other cameras
+		let c: CameraComponent;
+		for (let cameraIndex = 0; cameraIndex < this.cameras.length; ++cameraIndex) {
+			c = this.cameras[cameraIndex];
+			c.render(context, this, this.processPreRenderList, this.processPostRenderList);
 		}
+
+		this.xrFrame = frame;
+		camera.render(context, this, this.processPreRenderList, this.processPostRenderList);
 	}
 
 	/** Called when updating */

@@ -109,7 +109,7 @@ class CollisionOctreeNode {
 			}
 		}
 
-		return '{0}{1}/'.format(id, subnodeIndex);
+		return `${id}${subnodeIndex}/`;
 	}
 
 	setSize(center, size): any {

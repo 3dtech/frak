@@ -18,10 +18,6 @@ declare global {
 	var AABBPlaneCache: Plane;
 	var fallbackCubeTexture: any;
 	var fallbackTexture: any;
-
-	interface String {
-		format(...args): string;
-	}
 }
 
 export {}

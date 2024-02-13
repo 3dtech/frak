@@ -1,7 +1,7 @@
 import Color from 'rendering/Color';
 import RenderTarget from 'rendering/camera/RenderTarget';
 import Texture from 'rendering/materials/Texture';
-import FRAK from 'Helpers';
+import FRAK, { merge } from 'Helpers';
 import RenderingContext from 'rendering/RenderingContext';
 
 /** Render target with multiple draw buffers */
@@ -16,7 +16,6 @@ class TargetTextureMulti extends RenderTarget {
 	maxDrawBuffers: any;
 	targets: any;
 	depth: any;
-	frameBuffer: any;
 	rebuild: any;
 
 	constructor(context, size, options) {
@@ -26,7 +25,7 @@ class TargetTextureMulti extends RenderTarget {
 
 		super(size);
 
-		this.options = FRAK.extend({
+		this.options = merge({
 			dataType: 'float', // possible values: float, unsigned
 			filtering: 'linear', // possible values: linear, nearest
 			depth: false,
@@ -48,7 +47,7 @@ class TargetTextureMulti extends RenderTarget {
 		this.maxDrawBuffers = context.gl.getParameter(context.gl.MAX_DRAW_BUFFERS);
 
 		if (this.options.numTargets > this.maxDrawBuffers) {
-			throw('TargetTextureMulti: Too many targets requested. System only supports {0} draw buffers.'.format(this.maxDrawBuffers));
+			throw(`TargetTextureMulti: Too many targets requested. System only supports ${this.maxDrawBuffers} draw buffers.`);
 		}
 
 		this.targets = [];
@@ -229,8 +228,6 @@ class TargetTextureMulti extends RenderTarget {
 				doNotClear = true;
 		}
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-
 		super.bind(context);
 
 		if (!doNotClear) {
@@ -246,11 +243,6 @@ class TargetTextureMulti extends RenderTarget {
 				flags = clearFlags;
 			gl.clear(flags);
 		}
-	}
-
-	unbind(context) {
-		super.unbind(context);
-		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
 	}
 }
 

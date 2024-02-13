@@ -1,18 +1,17 @@
 import CameraComponent from 'scene/components/CameraComponent';
+import RenderingContext from "../../rendering/RenderingContext";
+import Camera, { RenderCallback } from "../../rendering/camera/Camera";
+import Scene from '../Scene';
 
 /** Camera component providing perspective projection */
 class PerspectiveCamera extends CameraComponent {
-	fov: any;
-	aspect: any;
-	near: any;
-	far: any;
+	aspect = 4 / 3;
 
-	constructor(fov?, aspect?, near?, far?) {
-		if(!fov) fov=45.0;
-		if(!near) near=0.3;
-		if(!far) far=1000.0;
-		if(!aspect) aspect=4/3;
-
+	constructor(
+		public fov = 45,
+		public near = 0.3,
+		public far = 1000,
+	) {
 		// View matrix is stored in column-major order as follows:
 		// | vx ux -nx -ex |
 		// | vy uy -ny -ey |
@@ -24,19 +23,10 @@ class PerspectiveCamera extends CameraComponent {
 		// n - Look direction vector
 		// e - Eye position vector
 
-		super(mat4.create(), mat4.create());
-
-		this.fov=fov;
-		this.aspect=aspect;
-		this.near=near;
-		this.far=far;
-
 		var lookAt=mat4.create();
 		mat4.lookAt(lookAt, [0.0, 0.0, -100.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 
-		this.camera.viewMatrix = lookAt;
-		mat4.invert(this.camera.viewInverseMatrix, lookAt);
-		this.camera.projectionMatrix = this.calculatePerspective();
+		super(new Camera(lookAt, mat4.create()));
 
 		this.camera.near = this.near;
 		this.camera.far = this.far;
@@ -46,42 +36,19 @@ class PerspectiveCamera extends CameraComponent {
 		return "PerspectiveCamera";
 	}
 
-	onStart(context, engine): any {
-		if(!this.aspect) {
-			this.setAspectRatio(context.canvas.width/context.canvas.height);
-		}
-		super.onStart(context, engine);
-	}
-
 	/** Sets the camera's near and far clipping planes. */
 	setClipPlanes(near, far): any {
 		this.near = near;
 		this.far = far;
 		this.camera.near = this.near;
 		this.camera.far = this.far;
-		this.camera.projectionMatrix = this.calculatePerspective();
-	}
-
-	/** Sets the camera aspect ration and updates the perspective projection matrix.
-		@param aspect The new aspect radio (width/height). */
-	setAspectRatio(aspect): any {
-		this.aspect=aspect;
-		this.camera.projectionMatrix=this.calculatePerspective();
+		this.calculatePerspective();
 	}
 
 	/** Sets the camera vertical field of view (in degrees) */
 	setVerticalFieldOfView(fov): any {
 		this.fov=fov;
-		this.camera.projectionMatrix=this.calculatePerspective();
-	}
-
-	/** Sets the camera horizontal field of view (in degrees) */
-	setHorizontalFieldOfView(fov): any {
-		fov = fov * (Math.PI*2.0)/360.0;
-		var hpx = Math.tan(fov/2.0);
-		var vpx = hpx / this.aspect;
-		this.fov = Math.atan(vpx) * 2.0 * 180.0/Math.PI;
-		this.camera.projectionMatrix=this.calculatePerspective();
+		this.calculatePerspective();
 	}
 
 	/** Returns the current vertical field of view in degrees.
@@ -101,11 +68,24 @@ class PerspectiveCamera extends CameraComponent {
 
 	/** Calculates projection matrix based on fov, aspect ratio and near/far clipping planes */
 	calculatePerspective() {
-		var perspective=mat4.create();
-		var aspect=this.aspect;
-		if(!aspect) aspect=1.0;
-		mat4.perspective(perspective, this.fov*(Math.PI*2.0)/360.0, aspect, this.near, this.far);
-		return perspective;
+		mat4.perspective(this.camera.projectionMatrix, this.fov / 180 * Math.PI, this.aspect, this.near, this.far);
+		mat4.invert(this.camera.projectionInverseMatrix, this.camera.projectionMatrix);
+	}
+
+	updateCamera(context: RenderingContext) {
+		this.aspect = context.canvas.width / context.canvas.height;
+
+		this.camera.target.frameBuffer = null;
+		this.camera.target.set(0, 0, context.canvas.width, context.canvas.height);
+		this.camera.target.resetViewport();
+
+		this.calculatePerspective();
+		mat4.invert(this.camera.viewInverseMatrix, this.camera.viewMatrix);
+	}
+
+	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
+		this.updateCamera(context);
+		super.render(context, scene, preRenderCallback, postRenderCallback);
 	}
 }
 

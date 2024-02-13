@@ -1,14 +1,7 @@
-import BoundingBox from 'scene/geometry/BoundingBox.js'
-import BoundingSphere from 'scene/geometry/BoundingSphere.js'
-import RenderingContext from 'rendering/RenderingContext.js'
-import Shader from 'rendering/shaders/Shader.js'
-import UniformMat4 from 'rendering/shaders/UniformMat4.js'
-import UniformInt from 'rendering/shaders/UniformInt.js'
-import UniformFloat from 'rendering/shaders/UniformFloat.js'
-import Camera from 'rendering/camera/Camera.js'
-import UniformVec3 from 'rendering/shaders/UniformVec3.js'
-import Light from 'scene/components/Light.js'
-import Material from "../materials/Material";
+import BoundingBox from 'scene/geometry/BoundingBox.js';
+import BoundingSphere from 'scene/geometry/BoundingSphere.js';
+import UniformMat4 from 'rendering/shaders/UniformMat4.js';
+import Material from '../materials/Material';
 
 /** Renderer baseclass. Essentially Renderer classes are for containing ready-made buffers
   that are used straight for rendering. To render many at once add them to DynamicSpace. */
@@ -29,6 +22,7 @@ class Renderer {
 	globalBoundingSphere: any;
 	unlit: boolean;
 	material: Material;
+	stencilLayer = 1;	// For masking when rendering to depth buffer for immersive
 
 	/** Constructor
 		@param matrix Matrix applied to anything rendered

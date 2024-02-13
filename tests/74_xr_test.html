@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<title>WebXR</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+	<div>
+		<button id="xr-button" onclick="engine.startImmersive();">Start AR</button>
+		<button onclick="toggleDebug();">Debug</button>
+		<button onclick="pauseEngine(this);">PAUSE</button>
+		<button onclick="engine.requestFullscreen()">Fullscreen</button>
+	</div>
+
+	<script src="../builds/frak-latest.debug.js"></script>
+
+	<script type="text/javascript">
+		function setupCamera(scene) {
+			scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
+			scene.cameraComponent.setClipPlanes(1.0, 200.0);
+			var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+			orbitController.distance = 50.0;
+			orbitController.minimumDistance = 1.0;
+			orbitController.maximumDistance = 100.0;
+			orbitController.distanceSteps = 64;
+			orbitController.maximumPitch = Math.PI / 2.2;
+			orbitController.rotation[0] = -0.5;
+			orbitController.rotation[1] = 1.0;
+			orbitController.target.value = scene.root.transform;
+
+			// Skybox
+			scene.cameraNode.addComponent(new SkyboxComponent(
+				scene.engine.assetsManager.texturesManager.addCube([
+					'data/skybox/yokohama/negz.jpg',
+					'data/skybox/yokohama/posz.jpg',
+					'data/skybox/yokohama/posx.jpg',
+					'data/skybox/yokohama/negx.jpg',
+					'data/skybox/yokohama/negy.jpg',
+					'data/skybox/yokohama/posy.jpg',
+				])
+			));
+		}
+
+		function setupLights(scene) {
+			var lights = scene.root.addNode(new Node('lights'));
+			var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
+			var lightDirectional = scene.light;
+			lightDirectional.setLightDirection([1, 1, 1]);
+			lightDirectional.shadowCasting = true;
+			//lightDirectional.intensity = 0.0;
+
+			var skybox = scene.cameraNode.getComponent(SkyboxComponent);
+			//lights.addComponent(new ImageBasedLight(skybox.cubeTexture));
+		}
+
+		function setupScene(scene) {
+			scene.root.addNode(scene.engine.assetsManager.addModel('data/gltf/space/space.gltf')).transform.scale([0.1, 0.1, 0.1]);
+		}
+
+		var engine;
+		window.onload = function() {
+			engine = new Engine('canvas', {
+				'requestedFPS': 60,
+				'assetsPath': '../assets/',
+				'transparencyMode': 'blended',
+				'antialias': true,
+			});
+
+			Engine.isImmersiveSupported().then(function (supported) {
+				document.getElementById('xr-button').disabled = !supported;
+			});
+
+			engine.assetsManager.modelsManager.path = './';
+			engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+			setupCamera(engine.scene);
+			setupLights(engine.scene);
+			setupScene(engine.scene);
+
+			engine.assetsManager.load(function() {
+				engine.run();
+			});
+		};
+
+		function toggleDebug() {
+			var renderStage = engine.scene.camera.renderStage;
+			renderStage.debug(!renderStage.debugActive);
+		}
+
+		function pauseEngine(element) {
+			engine.togglePause();
+			if (engine.running)
+				element.textContent = 'PAUSE';
+			else
+				element.textContent = 'UNPAUSE';
+		}
+
+	</script>
+</body>
+
+</html>

@@ -32,7 +32,8 @@ class TextComponent extends MeshComponent {
 	textHeight: any;
 	font: any;
 	text: any;
-	unlit = true;
+	unlit = false;
+	stencilLayer = 1;
 
 	/** Constructor
 		@param text Default text to display */
@@ -171,6 +172,7 @@ class TextComponent extends MeshComponent {
 		this.material.transparent = true;
 		this.material.definitions.addDefinition('ALPHAMODE', 'ALPHAMODE_BLEND');
 		this.material.unlit = this.unlit;
+		this.material.stencilLayer = this.stencilLayer;
 		this.material.name = 'TextComponentMaterial';
 		this.texture = new Texture(context);
 		this.texture.mipmapped = true;

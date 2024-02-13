@@ -6,6 +6,7 @@ import LineRenderer from 'rendering/renderers/LineRenderer';
 import BoundingBox from 'scene/geometry/BoundingBox';
 import Color from 'rendering/Color';
 import LinesRenderBufferInstanced from 'rendering/buffers/LinesRenderBufferInstanced';
+import Engine from 'engine/Engine';
 
 /**
  * Can be used to render lines in 3D space.
@@ -82,7 +83,7 @@ class LineRendererComponent extends RendererComponent {
 		this.renderer = null;
 	}
 
-	onUpdate(engine): any {
+	onUpdate(engine: Engine): any {
 		if (this.damaged) {
 			this.rebuild(engine.context);
 		}

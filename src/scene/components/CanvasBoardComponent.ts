@@ -17,7 +17,8 @@ class CanvasBoardComponent extends MeshComponent {
 	canvasContext: any;
 	canvas: any;
 	sampler: any;
-	unlit = true;
+	unlit = false;
+	stencilLayer = 1;
 
 	/** Constructor
 		@param text Default text to display */
@@ -97,6 +98,7 @@ class CanvasBoardComponent extends MeshComponent {
 		this.material.transparent = true;
 		this.material.definitions.addDefinition('ALPHAMODE', 'ALPHAMODE_BLEND');
 		this.material.unlit = this.unlit;
+		this.material.stencilLayer = this.stencilLayer;
 		this.material.name = 'CanvasBoardMaterial';
 		this.texture = new Texture(context);
 		this.texture.mipmapped = true;

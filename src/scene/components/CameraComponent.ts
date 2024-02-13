@@ -1,21 +1,16 @@
 import Component from 'scene/components/Component';
-import Camera from 'rendering/camera/Camera';
+import Camera, { RenderCallback } from 'rendering/camera/Camera';
 import BoundingBox from 'scene/geometry/BoundingBox';
 import MeshComponent from 'scene/components/MeshComponent';
-import TargetScreen from 'rendering/camera/TargetScreen';
 import Ray from 'scene/geometry/Ray';
 import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
+import RenderingContext from "../../rendering/RenderingContext";
+import Scene from '../Scene';
 
 /** Camera component */
 class CameraComponent extends Component {
-	camera: any;
-
-	constructor(viewMatrix, projectionMatrix) {
-		if(!viewMatrix || !projectionMatrix) {
-			throw "CameraComponent can be initialized only with given viewMatrix and projectionMatrix. Normally one should create OrthoCamera or PerspectiveCamera instead";
-		}
+	constructor(public camera: Camera) {
 		super();
-		this.camera = new Camera(viewMatrix, projectionMatrix);
 	}
 
 	excluded(): any {
@@ -30,18 +25,27 @@ class CameraComponent extends Component {
 		if node is added to the scene
 		@param node Parent {Node} */
 	onAddScene(node): any {
-		node.scene.cameras.push(this.camera);
-		node.scene.cameras.sort(function(a,b) { return a.order-b.order; });
 		this.useCameraViewMatrix();
+
+		if (node.scene.cameraComponent === this) {
+			return;	// We get rendered anyway
+		}
+
+		node.scene.cameras.push(this);
+		node.scene.cameras.sort(function(a,b) { return a.camera.order-b.camera.order; });
 	}
 
 	/** Called when component is removed from a node that is in the scene or
 		if parent node is removed to the scene
 		@param node Parent {Node} */
 	onRemoveScene(node): any {
+		if (node.scene.cameraComponent === this) {
+			return;
+		}
+
 		var cameras = node.scene.cameras;
 		for (var i=0; i<cameras.length; i++) {
-			if (cameras[i]==this.camera) {
+			if (cameras[i]==this) {
 				cameras.splice(i, 1);
 				i--;
 			}
@@ -112,9 +116,7 @@ class CameraComponent extends Component {
 		@return Instance of {vec2} in normalized viewport coordinates */
 	screenPointToViewportPoint(point): any {
 		var p = vec2.create();
-		var pos = vec2.create();
-		if (this.camera.target instanceof TargetScreen)
-			pos=this.camera.target.getPosition();
+		var pos = this.camera.target.getPosition();
 		var size = this.camera.target.getSize();
 		if (Math.abs(size[0])<EPSILON || Math.abs(size[1])<EPSILON)
 			return p;
@@ -189,7 +191,7 @@ class CameraComponent extends Component {
 	}
 
 	initRenderStage(context, engine): any {
-		if (this.camera.target instanceof TargetScreen) {
+		if (engine.scene.camera === this.camera) {
 			var canvas = context.canvas;
 			this.camera.target.setSize(canvas.width, canvas.height);
 		}
@@ -214,6 +216,10 @@ class CameraComponent extends Component {
 		}
 
 		this.camera.renderStage.start(context, engine, this.camera);
+	}
+
+	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
+		this.camera.render(context, scene, preRenderCallback, postRenderCallback);
 	}
 
 	onContextRestored(context) {

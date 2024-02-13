@@ -9,12 +9,11 @@ import Scene from "scene/Scene";
 import ShaderDescriptor from "scene/descriptors/ShaderDescriptor";
 import SkyboxComponent from "scene/components/SkyboxComponent";
 
-/**
- * Deferred shading light accumulation pass
- */
 class BackgroundRenderStage extends PBRRenderStage {
 	backgroundMaterial: Material;
+	immersiveColor = new Color(0.0, 0.0, 0.0, 0.0);
 	skyboxMaterial: Material;
+	isImmersive = false;
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
 		super.onStart(context, engine, camera);
@@ -43,11 +42,17 @@ class BackgroundRenderStage extends PBRRenderStage {
 
 		gl.stencilFunc(gl.NOTEQUAL, 1, 0xFF);
 
-		camera.backgroundColor.toVector(this.backgroundMaterial.uniforms.color1.value);
-		camera.renderStage.renderEffect(context, this.backgroundMaterial, []);
-		var skyboxComponent = scene.cameraNode.getComponent(SkyboxComponent);
-		if (skyboxComponent) {
-			camera.renderStage.renderEffect(context, this.skyboxMaterial, skyboxComponent.sampler);
+		if (!this.isImmersive) {
+			var skyboxComponent = scene.cameraNode.getComponent(SkyboxComponent);
+			if (skyboxComponent) {
+				camera.renderStage.renderEffect(context, this.skyboxMaterial, skyboxComponent.sampler);
+			} else {
+				camera.backgroundColor.toVector(this.backgroundMaterial.uniforms.color1.value);
+				camera.renderStage.renderEffect(context, this.backgroundMaterial, []);
+			}
+		} else {
+			this.immersiveColor.toVector(this.backgroundMaterial.uniforms.color1.value);
+			camera.renderStage.renderEffect(context, this.backgroundMaterial, []);
 		}
 
 		super.onPostRender(context, scene, camera);
