@@ -9,7 +9,7 @@ type CubeTextureParameters = [CubeTextureDescriptor, CubeTexture];
 type LoadResourceParameters = TextureParameters | CubeTextureParameters;
 
 /** External texture instance. */
-class TexturesManager extends Manager {
+class TexturesManager extends Manager<TextureDescriptor | CubeTextureDescriptor, Texture | CubeTexture> {
 	context: any;
 
 	/**
@@ -61,15 +61,14 @@ class TexturesManager extends Manager {
 	async loadResource(...[textureDescriptor, textureResource]: LoadResourceParameters) {
 		const descriptor = this.descriptorCallback(textureDescriptor);
 
-		const loadImage = async (source: string) => {
-			return new Promise<HTMLImageElement>((resolve, reject) => {
+		const loadImage = (source: string) =>
+			new Promise<HTMLImageElement>((resolve, reject) => {
 				const image = new Image();
 				image.crossOrigin = 'anonymous';
 				image.onload = () => resolve(image);
 				image.onerror = reject;
 				image.src = source;
 			});
-		};
 
 		try {
 			if (!(textureDescriptor instanceof CubeTextureDescriptor)) {

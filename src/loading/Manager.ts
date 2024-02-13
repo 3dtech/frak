@@ -2,7 +2,7 @@ import Descriptor from '../scene/descriptors/Descriptor';
 
 /** Generic manager class extended by all other manager classes
 	except for AssetsManager that groups together instances of other managers. */
-class Manager {
+class Manager<T extends Descriptor, R> {
 	path: string;
 	queue: any;
 	loading: any;
@@ -187,16 +187,14 @@ class Manager {
 
 	// Protected methods
 	/** Must be overridden by child class to create resources of appropriate type */
-	createResource(descriptor): any {
+	createResource(descriptor: T): R {
 		throw "createResource not implemented by this instance of Manager";
 	}
 
 	/** Must load given resource from location described by descriptor
 		@param descriptor Instance of resource descriptor
-		@param resource Resource that will be loaded (created with createResource)
-		@param loadedCallback Callback function(descriptor, resource) that must be called by loadResource when loading has finished successfully
-		@param failedCallback Callback function(descriptor) that must be called by loadResource when loading has failed */
-	async loadResource(descriptor, resource): Promise<[Descriptor, any]> {
+		@param resource Resource that will be loaded (created with createResource) */
+	async loadResource(descriptor: T, resource: R): Promise<[T, R]> {
 		throw "loadResource not implemented by this instance of Manager";
 	}
 }

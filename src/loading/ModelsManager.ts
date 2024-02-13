@@ -7,7 +7,7 @@ import ModelLoaderGLTF from 'loading/ModelLoaderGLTF';
 import ModelLoaderJSON from 'loading/ModelLoaderJSON';
 
 /** Models manager is used to load entire models together with shaders and textures. */
-class ModelsManager extends Manager {
+class ModelsManager extends Manager<ModelDescriptor, Node> {
 	shadersManager: any;
 	texturesManager: any;
 
@@ -36,7 +36,7 @@ class ModelsManager extends Manager {
 		return this.addDescriptor(new ModelDescriptor(source, format));
 	}
 
-	createResource(): any {
+	createResource() {
 		return new Node();
 	}
 

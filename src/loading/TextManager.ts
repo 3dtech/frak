@@ -16,9 +16,7 @@ type TextResource = {
 	});
 	</pre>
 	*/
-class TextManager extends Manager {
-
-
+class TextManager extends Manager<TextDescriptor, TextResource> {
 	/**
 	 * Constructor
 	 * @param assetsPath Default search path for any assets requested
