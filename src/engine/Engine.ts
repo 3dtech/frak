@@ -489,14 +489,9 @@ class Engine {
 			ctx.fillText('RequestedFPS: ' + this.options.requestedFPS, this.debugWidth / 2, 45);
 
 			var gl = this.context.gl;
-			var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-			if (debugInfo) {
-				var vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-				var renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+			var renderer = gl.getParameter(gl.RENDERER);
 
-				ctx.fillText(vendor, 10, 90);
-				ctx.fillText(renderer, 10, 105);
-			}
+			ctx.fillText(renderer, 10, 105);
 			this.debugFPS.push(this.fps.getAverage().toFixed(2));
 			if (this.debugFPS.length > 60) {
 				this.debugFPS.shift();
