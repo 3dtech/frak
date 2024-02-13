@@ -62,7 +62,7 @@ class ModelLoaderGLTF {
 	}
 
 	/** Loads parsed data to scene hierarchy at given node */
-	async load(node, data, cb) {
+	async load(node, data) {
 		await init();
 		var parsedData;
 
@@ -90,19 +90,16 @@ class ModelLoaderGLTF {
 			return;
 		}
 
-		var scope = this;
+		await this.loadBuffers(parsedData.buffers);
 
-		this.loadBuffers(parsedData.buffers, function() {
-			scope.loadBufferViews(parsedData.bufferViews || []);
-			scope.loadAccessors(parsedData.accessors || []);
-			scope.loadImages(parsedData.images || []);
-			scope.loadSamplers(parsedData.samplers || []);
-			scope.loadTextures(parsedData.textures || []);
-			scope.loadMaterials(parsedData.materials || []);
-			scope.loadMeshes(parsedData.meshes);
-			scope.loadScene(node, parsedData);
-			cb();
-		});
+		this.loadBufferViews(parsedData.bufferViews || []);
+		this.loadAccessors(parsedData.accessors || []);
+		this.loadImages(parsedData.images || []);
+		this.loadSamplers(parsedData.samplers || []);
+		this.loadTextures(parsedData.textures || []);
+		this.loadMaterials(parsedData.materials || []);
+		this.loadMeshes(parsedData.meshes);
+		this.loadScene(node, parsedData);
 	}
 
 	parseJSON(view): any {
@@ -134,11 +131,9 @@ class ModelLoaderGLTF {
 		}
 	}
 
-	loadBuffers(buffers, cb): any {
-		var count = 0;
+	async loadBuffers(buffers) {
+		const loadingBuffers = [];
 		for (var i = 0, l = buffers.length; i < l; i++) {
-			count++;
-
 			var byteLength = buffers[i].byteLength;
 			var buffer = {
 				data: undefined,
@@ -149,7 +144,6 @@ class ModelLoaderGLTF {
 
 			if (!buffers[i].uri) {
 				buffer.data = this.binaryBuffer;
-				count--;
 
 				continue;
 			}
@@ -162,24 +156,16 @@ class ModelLoaderGLTF {
 				uri = source.join('/');
 			}
 
-			Logistics.getBinary(uri, function(binaryData) {
-				count--;
-
-				if (!binaryData || binaryData.byteLength !== byteLength) {
-					return;
+			loadingBuffers.push((async (buffer) => {
+				const response = await fetch(uri);
+				const data = await response.arrayBuffer();
+				if (data.byteLength == byteLength) {
+					buffer.data = data;
 				}
-
-				buffer.data = binaryData;
-
-				if (count === 0) {
-					cb();
-				}
-			});
+			})(buffer));
 		}
 
-		if (count === 0) {
-			cb();
-		}
+		await Promise.allSettled(loadingBuffers);
 	}
 
 	loadBufferViews(bufferViews): any {

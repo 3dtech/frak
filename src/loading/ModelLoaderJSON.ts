@@ -25,7 +25,7 @@ class ModelLoaderJSON {
 	submeshes: any;
 	textureUniformMap: any;
 
-	constructor(descriptor, shadersManager, texturesManager) {
+	constructor(descriptor, shadersManager, texturesManager, format = 'json') {
 		this.descriptor = descriptor;
 		this.shadersManager = shadersManager;
 		this.texturesManager = texturesManager;
@@ -53,7 +53,7 @@ class ModelLoaderJSON {
 	}
 
 	/** Loads parsed data to scene hierarchy at given node */
-	load(node, parsedData): any {
+	async load(node, parsedData) {
 		if (FRAK.isEmptyObject(parsedData))
 			return;
 		node.name = parsedData.scene.name;

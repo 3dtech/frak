@@ -28,6 +28,12 @@ class ModelDescriptor extends Descriptor {
 		}
 		return this.format;
 	}
+
+	isJSON() {
+		const format = this.getFormat();
+
+		return format === 'json' || format === 'gltf';
+	}
 }
 
 globalThis.ModelDescriptor = ModelDescriptor;
