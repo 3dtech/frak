@@ -2,8 +2,6 @@ import ShadersManager from 'loading/ShadersManager';
 import TexturesManager from 'loading/TexturesManager';
 import ModelsManager from 'loading/ModelsManager';
 import TextManager from 'loading/TextManager';
-import MaterialsManager from 'loading/MaterialsManager';
-import MaterialSourcesManager from 'loading/MaterialSourcesManager';
 import Shader from "../rendering/shaders/Shader";
 
 /** General assets manager.
@@ -30,8 +28,6 @@ class AssetsManager {
 	texturesManager: any;
 	modelsManager: ModelsManager;
 	textManager: any;
-	materialsManager: any;
-	materialSourcesManager: any;
 
 	/**
 	 * Constructor
@@ -67,8 +63,6 @@ class AssetsManager {
 		addManager(this.texturesManager=new TexturesManager(renderingContext, this.assetsPath));
 		addManager(this.modelsManager=new ModelsManager(renderingContext, this.assetsPath, this.shadersManager, this.texturesManager));
 		addManager(this.textManager=new TextManager(this.assetsPath));
-		addManager(this.materialsManager=new MaterialsManager(renderingContext, this.assetsPath, this.shadersManager, this.texturesManager));
-		addManager(this.materialSourcesManager=new MaterialSourcesManager(renderingContext, this.assetsPath, this.materialsManager, this.textManager));
 	}
 
 	/** Adds a new texture to textures loading queue
@@ -104,12 +98,6 @@ class AssetsManager {
 		@param source Path to text */
 	addText(source): any {
 		return this.textManager.add(source);
-	}
-
-	/** Adds material source to material sources loading queue.
-		@param source Path to material source */
-	addMaterial(source): any {
-		return this.materialSourcesManager.add(source);
 	}
 
 	/** Returns true if the asstesmanager has anything in its loading queue. */

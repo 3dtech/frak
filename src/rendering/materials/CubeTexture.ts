@@ -95,7 +95,7 @@ class CubeTexture extends BaseTexture {
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 	}
 
-	setFace(context, face, inputImage, noResize): any {
+	setFace(context, face, inputImage, noResize = false): any {
 		if (this.glTexture === false)
 			this.create(context);
 
@@ -106,7 +106,7 @@ class CubeTexture extends BaseTexture {
 		if (face in this.images) {
 			delete this.images[face].image;
 		}
-		this.images[face] = { image: image, noResize: !!noResize };
+		this.images[face] = { image, noResize };
 
 		face = this.getGLCubeFace(context, face);
 		if (!face)

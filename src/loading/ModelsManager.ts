@@ -46,68 +46,28 @@ class ModelsManager extends Manager {
 		@param callback Callback called once all resources have been loaded
 		@param progressCallback Callback called when progress of this manager has changed */
 	async load(callback?, progressCallback?) {
-		if(progressCallback) {
-			this.progressCallbacks.push(progressCallback);
-		}
+		await super.load(callback, progressCallback);
 
-		if(callback) {
-			this.callbacks.push(callback);
-			if (this.callbacks.length > 1) {
-				if(this.queue.length == 0) {
-					this.callDoneCallbacks();
-				}
-			}
-		}
-
-		this.loading.push(...this.queue);
-		const queue = (this.queue as any[]).map(
-			next => async () => {
-				try {
-					const [d, r] = await this.loadResource(next[0], next[2]);
-					this.cache[d.serialize(['id'])] = r;	// Cache resource
-					this.cacheSize++;							// Remember that we have more items cached now (for getProgress)
-					this.removeLoadedResource(d);
-					this.onLoaded(d);
-				} catch (e) {
-					console.warn("Failed to load resource with descriptor: ", e.serialize(['id']));
-					this.removeLoadedResource(e);
-					this.onLoaded(e);
-					if (e.getFullPath) console.warn('Full path: ', e.getFullPath());
-				} finally {
-					// Call progress callbacks
-					for(var i = 0; i < this.progressCallbacks.length; i++) {
-						this.progressCallbacks[i](this.getProgress());
-					}
-
-					// Everything has been loaded
-					if(this.loading.length==0) {
-						// Call all registered callbacks
-						this.callDoneCallbacks();
-					}
-				}
-			}
-		);
-
-		this.queue = [];
-
-		await Promise.allSettled(queue.map(fn => fn()));
-
-		this.shadersManager.load(() => {});
-		this.texturesManager.load(() => {});
+		this.shadersManager.load();
+		this.texturesManager.load();
 	}
 
 	async loadResource(modelDescriptor: ModelDescriptor, resource: Node) {
 		const descriptor = this.descriptorCallback(modelDescriptor);
-		const format = modelDescriptor.getFormat();
-		const loader = format === 'json' ?
-			new ModelLoaderJSON(descriptor, this.shadersManager, this.texturesManager) :
-			new ModelLoaderGLTF(descriptor, this.shadersManager, this.texturesManager, format);
+		try {
+			const format = modelDescriptor.getFormat();
+			const loader = format === 'json' ?
+				new ModelLoaderJSON(descriptor, this.shadersManager, this.texturesManager) :
+				new ModelLoaderGLTF(descriptor, this.shadersManager, this.texturesManager, format);
 
-		const response = await fetch(descriptor.getFullPath());
-		const data = descriptor.isJSON() ? await response.json() : await response.arrayBuffer();
-		await loader.load(resource, data);
+			const response = await fetch(descriptor.getFullPath());
+			const data = descriptor.isJSON() ? await response.json() : await response.arrayBuffer();
+			await loader.load(resource, data);
 
-		return [descriptor, resource] as [ModelDescriptor, Node];
+			return [descriptor, resource] as [ModelDescriptor, Node];
+		} catch (e) {
+			throw descriptor;
+		}
 	}
 }
 

@@ -4,6 +4,10 @@ import CubeTexture from 'rendering/materials/CubeTexture';
 import CubeTextureDescriptor from 'scene/descriptors/CubeTextureDescriptor';
 import Texture from 'rendering/materials/Texture';
 
+type TextureParameters = [TextureDescriptor, Texture];
+type CubeTextureParameters = [CubeTextureDescriptor, CubeTexture];
+type LoadResourceParameters = TextureParameters | CubeTextureParameters;
+
 /** External texture instance. */
 class TexturesManager extends Manager {
 	context: any;
@@ -54,42 +58,49 @@ class TexturesManager extends Manager {
 		}
 	}
 
-	loadResource(textureDescriptor, textureResource, loadedCallback, failedCallback) {
-		var descriptor = this.descriptorCallback(textureDescriptor);
-		var scope = this;
+	async loadResource(...[textureDescriptor, textureResource]: LoadResourceParameters) {
+		const descriptor = this.descriptorCallback(textureDescriptor);
 
-		if (textureDescriptor instanceof CubeTextureDescriptor) {
-			var faces = [
-				CubeTexture.FRONT,
-				CubeTexture.BACK,
-				CubeTexture.LEFT,
-				CubeTexture.RIGHT,
-				CubeTexture.BOTTOM,
-				CubeTexture.TOP
-			];
-			(function next() {
-				if (faces.length == 0) {
-					loadedCallback(descriptor, textureResource);
-					return;
-				}
-				var face = faces.shift();
-				Logistics.getImage(descriptor.getFaceFullPath(face), function(image) {
-					textureResource.setFace(scope.context, face, image);
-					next();
-				}).
-				error(function() {
-					failedCallback(descriptor);
-				});
-			})();
-		}
-		else {
-			Logistics.getImage(descriptor.getFullPath(), function(image) {
-				textureResource.setImage(scope.context, image);
-				loadedCallback(descriptor, textureResource);
-			}).
-			error(function() {
-				failedCallback(descriptor);
+		const loadImage = async (source: string) => {
+			return new Promise<HTMLImageElement>((resolve, reject) => {
+				const image = new Image();
+				image.crossOrigin = 'anonymous';
+				image.onload = () => resolve(image);
+				image.onerror = reject;
+				image.src = source;
 			});
+		};
+
+		try {
+			if (!(textureDescriptor instanceof CubeTextureDescriptor)) {
+				const image = await loadImage(descriptor.getFullPath());
+				(textureResource as Texture).setImage(this.context, image);
+
+				return [descriptor, textureResource] as TextureParameters;
+			} else {
+				const faces = [
+					CubeTexture.FRONT,
+					CubeTexture.BACK,
+					CubeTexture.LEFT,
+					CubeTexture.RIGHT,
+					CubeTexture.BOTTOM,
+					CubeTexture.TOP
+				];
+
+				const loading = [];
+				for (const face of faces) {
+					loading.push((async () => {
+						const image = await loadImage((descriptor as CubeTextureDescriptor).sources[face]);
+						(textureResource as CubeTexture).setFace(this.context, face, image);
+					})());
+				}
+
+				await Promise.all(loading);
+
+				return [descriptor, textureResource] as CubeTextureParameters;
+			}
+		} catch (e) {
+			throw descriptor;
 		}
 	}
 }

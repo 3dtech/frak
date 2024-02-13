@@ -1,6 +1,5 @@
 import '../lib/gl-matrix.js';
 import '../lib/gl-matrix-3dtech-ext.js';
-import '../lib/Logistics.js';
 import '../lib/hammer.min.js';
 
 import 'Helpers';
@@ -73,8 +72,6 @@ import 'loading/Manager';
 import 'loading/TextManager';
 import 'loading/ShadersManager';
 import 'loading/TexturesManager';
-import 'loading/MaterialsManager';
-import 'loading/MaterialSourcesManager';
 import 'loading/ModelsManager';
 import 'loading/AssetsManager';
 

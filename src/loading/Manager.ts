@@ -119,11 +119,10 @@ class Manager {
 		there are no more queued or loading items waiting.
 		@param callback Callback called once all resources have been loaded
 		@param progressCallback Callback called when progress of this manager has changed */
-	load(callback?, progressCallback?): any {
+	async load(callback?, progressCallback?) {
 		if(progressCallback) {
 			this.progressCallbacks.push(progressCallback);
 		}
-
 
 		if(callback) {
 			this.callbacks.push(callback);
@@ -131,51 +130,44 @@ class Manager {
 				if(this.queue.length == 0) {
 					this.callDoneCallbacks();
 				}
-				return;	// Already loading
 			}
 		}
 
-		this.keepLoading();
+		this.loading.push(...this.queue);
+		const queue = (this.queue as any[]).map(
+			next => async () => {
+				try {
+					const [d, r] = await this.loadResource(next[0], next[2]);
+					this.cache[d.serialize(['id'])] = r;	// Cache resource
+					this.cacheSize++;							// Remember that we have more items cached now (for getProgress)
+					this.removeLoadedResource(d);
+					this.onLoaded(d);
+				} catch (e) {
+					console.warn("Failed to load resource with descriptor: ", e.serialize(['id']));
+					this.removeLoadedResource(e);
+					this.onLoaded(e);
+					if (e.getFullPath) console.warn('Full path: ', e.getFullPath());
+				} finally {
+					// Call progress callbacks
+					for(var i = 0; i < this.progressCallbacks.length; i++) {
+						this.progressCallbacks[i](this.getProgress());
+					}
+
+					// Everything has been loaded
+					if(this.loading.length==0) {
+						// Call all registered callbacks
+						this.callDoneCallbacks();
+					}
+				}
+			}
+		);
+
+		this.queue = [];
+
+		await Promise.allSettled(queue.map(fn => fn()));
 	}
 
 	// Private methods
-	/** Keeps loading from queue */
-	keepLoading(): any {
-		// Call progress callbacks
-		for(var i = 0; i < this.progressCallbacks.length; i++) {
-			this.progressCallbacks[i](this.getProgress());
-		}
-
-		// Everything has been loaded
-		if(this.queue.length==0) {
-			// Call all registered callbacks
-			this.callDoneCallbacks();
-			return;
-		}
-
-		var me=this;
-		var next=this.queue.shift();
-		this.loading.push(next);
-
-		this.loadResource(
-			next[0],
-			next[2],
-			function(d, r) {
-				me.cache[d.serialize(['id'])] = r;	// Cache resource
-				me.cacheSize++;							// Remember that we have more items cached now (for getProgress)
-				me.removeLoadedResource(d);
-				me.onLoaded(d);
-				me.keepLoading();
-			},
-			function(d) {
-				console.warn("Failed to load resource with descriptor: ", d.serialize(['id']));
-				me.removeLoadedResource(d);
-				me.onLoaded(d);
-				if (d.getFullPath) console.warn('Full path: ', d.getFullPath());
-				me.keepLoading(); // Continue loading despite errors
-			});
-	}
-
 	removeLoadedResource(descriptor): any {
 		for (var i in this.loading) {
 			if (this.loading[i][0]===descriptor) {
@@ -204,7 +196,7 @@ class Manager {
 		@param resource Resource that will be loaded (created with createResource)
 		@param loadedCallback Callback function(descriptor, resource) that must be called by loadResource when loading has finished successfully
 		@param failedCallback Callback function(descriptor) that must be called by loadResource when loading has failed */
-	loadResource(descriptor, resource, loadedCallback, failedCallback) {
+	async loadResource(descriptor, resource): Promise<[Descriptor, any]> {
 		throw "loadResource not implemented by this instance of Manager";
 	}
 }

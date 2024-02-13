@@ -67,36 +67,39 @@ class ShadersManager extends Manager {
 	}
 
 	// Protected methods
-	createResource(shaderDescriptor): any {
+	createResource(shaderDescriptor: ShaderDescriptor) {
 		return new Shader(this.context, shaderDescriptor);
 	}
 
-	loadResource(shaderDescriptor, shaderResource, loadedCallback, failedCallback) {
-		var descriptor = this.descriptorCallback(shaderDescriptor);
+	async loadResource(shaderDescriptor: ShaderDescriptor, shaderResource: Shader) {
+		const descriptor = this.descriptorCallback(shaderDescriptor);
 
-		// this shader is builtin so load it from memory
 		if (this.builtin[descriptor.vertexSource] && this.builtin[descriptor.fragmentSource]) {
+			// this shader is builtin so load it from memory
 			console.log('Built in shader loaded:', descriptor.vertexSource, descriptor.fragmentSource);
+
 			shaderResource.addVertexShader(this.builtin[descriptor.vertexSource]);
 			shaderResource.addFragmentShader(this.builtin[descriptor.fragmentSource]);
-			loadedCallback(descriptor, shaderResource);
-		}
-		else {
-			var vertexShader = this.textManager.add(this.path + descriptor.getVertexShaderPath());
-			var fragmentShader = this.textManager.add(this.path + descriptor.getFragmentShaderPath());
-			this.textManager.load(function() {
-				if(!vertexShader.data) {
-					failedCallback(descriptor);
-					return;
-				}
-				if(!fragmentShader.data) {
-					failedCallback(descriptor);
-					return;
-				}
-				shaderResource.addVertexShader(vertexShader.data);
-				shaderResource.addFragmentShader(fragmentShader.data);
-				loadedCallback(descriptor, shaderResource);
-			});
+
+			return [descriptor, shaderResource] as [ShaderDescriptor, Shader];
+		} else {
+			const vertexShader = this.textManager.add(this.path + descriptor.getVertexShaderPath());
+			const fragmentShader = this.textManager.add(this.path + descriptor.getFragmentShaderPath());
+
+			try {
+				await this.textManager.load();
+			} catch (e) {
+				throw descriptor;
+			}
+
+			if (!vertexShader.data || !fragmentShader.data) {
+				throw descriptor;
+			}
+
+			shaderResource.addVertexShader(vertexShader.data);
+			shaderResource.addFragmentShader(fragmentShader.data);
+
+			return [descriptor, shaderResource] as [ShaderDescriptor, Shader];
 		}
 	}
 }
