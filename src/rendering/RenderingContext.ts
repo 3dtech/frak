@@ -30,7 +30,7 @@ class RenderingContext {
 			canvas = document.getElementById(canvas);
 		}
 
-		if (typeof window !== 'undefined' && window.jQuery && canvas instanceof jQuery) {
+		if (typeof window !== 'undefined' && (window as any).jQuery && canvas instanceof (window as any).jQuery) {
 			canvas = canvas[0];
 		}
 

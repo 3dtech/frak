@@ -5,8 +5,6 @@ import ModelDescriptor from 'scene/descriptors/ModelDescriptor';
 import Node from 'scene/Node';
 import ModelLoaderGLTF from 'loading/ModelLoaderGLTF';
 import ModelLoaderJSON from 'loading/ModelLoaderJSON';
-import ModelLoader from 'loading/ModelLoader';
-import ThreadedDataParser from 'loading/ThreadedDataParser';
 
 /** Models manager is used to load entire models together with shaders and textures. */
 class ModelsManager extends Manager {
@@ -129,39 +127,7 @@ class ModelsManager extends Manager {
 			else if (format == 'gltf' || format == 'glb') {
 				this.loadGLTF(descriptor, resource).then(() => resolve([descriptor, resource]));
 			}
-			else {
-				Logistics.getBinary(descriptor.getFullPath(),
-					function(binaryData) {
-						if(!binaryData || binaryData.byteLength == 0) {
-							reject(descriptor);
-							return;
-						}
-						var parser = scope.createParser(
-							binaryData,
-							function(parsedData, userdata) {
-								var modelLoader = new ModelLoader(descriptor, scope.shadersManager, scope.texturesManager);
-								modelLoader.load(resource, parsedData);
-
-								resolve([descriptor, resource]);
-
-								scope.shadersManager.load(function() {});
-								scope.texturesManager.load(function() {});
-							},
-							function(errors, userdata) {
-								reject(descriptor);
-							},
-							function(progress, userdata) {}
-						);
-						parser.parse();
-					}
-				);
-			}
 		});
-	}
-
-	/** This function can be overridden to provide alternative parser instances */
-	createParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata?) {
-		return new ThreadedDataParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata);
 	}
 }
 
