@@ -1,5 +1,6 @@
 import '../lib/gl-matrix.js';
 import '../lib/gl-matrix-3dtech-ext.js';
+import '../lib/jdataview.js';
 import '../lib/hammer.min.js';
 
 import 'Helpers';
@@ -66,6 +67,12 @@ import 'rendering/renderers/Renderer';
 import 'rendering/renderers/LineRenderer';
 import 'rendering/renderers/SubmeshRenderer';
 
+import 'loading/DataParserTypes';
+import 'loading/DataParserNode';
+import 'loading/DataParserResult';
+import 'loading/DataParser';
+import 'loading/ThreadedDataParser';
+import 'loading/ModelLoader';
 import 'loading/ModelLoaderJSON';
 import 'loading/ModelLoaderGLTF';
 import 'loading/Manager';

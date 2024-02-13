@@ -9,6 +9,7 @@ declare global {
 	var mat4: any;
 
 	var HammerWF: any;
+	var jDataView: any;
 	var WebGLDebugUtils: any;
 
 	var BoundingVolumeVectorCache: any[];

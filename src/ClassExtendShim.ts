@@ -2,7 +2,10 @@ import Engine from "engine/Engine";
 import FPS from "engine/FPS";
 import Input from "engine/Input";
 import AssetsManager from "loading/AssetsManager";
+import DataParser from "loading/DataParser";
+import DataParserResult from "loading/DataParserResult";
 import Manager from "loading/Manager";
+import ModelLoader from "loading/ModelLoader";
 import ModelLoaderGLTF from "loading/ModelLoaderGLTF";
 import ModelLoaderJSON from "loading/ModelLoaderJSON";
 import MatrixStack from "rendering/MatrixStack";
@@ -53,9 +56,12 @@ import Submesh from "scene/geometry/Submesh";
 	FPS,
 	Input,
 	Engine,
+	ModelLoader,
 	ModelLoaderGLTF,
 	ModelLoaderJSON,
 	Manager,
+	DataParser,
+	DataParserResult,
 	AssetsManager,
 ].forEach(function(extendable) {
 	var initializing = false;

@@ -5,7 +5,10 @@ import ModelDescriptor from 'scene/descriptors/ModelDescriptor';
 import Node from 'scene/Node';
 import ModelLoaderGLTF from 'loading/ModelLoaderGLTF';
 import ModelLoaderJSON from 'loading/ModelLoaderJSON';
+import ModelLoader from 'loading/ModelLoader';
+import ThreadedDataParser from 'loading/ThreadedDataParser';
 
+type Loader = ModelLoader | ModelLoaderGLTF | ModelLoaderJSON;
 /** Models manager is used to load entire models together with shaders and textures. */
 class ModelsManager extends Manager<ModelDescriptor, Node> {
 	shadersManager: any;
@@ -56,18 +59,42 @@ class ModelsManager extends Manager<ModelDescriptor, Node> {
 		const descriptor = this.descriptorCallback(modelDescriptor);
 		try {
 			const format = modelDescriptor.getFormat();
-			const loader = format === 'json' ?
-				new ModelLoaderJSON(descriptor, this.shadersManager, this.texturesManager) :
-				new ModelLoaderGLTF(descriptor, this.shadersManager, this.texturesManager, format);
 
 			const response = await fetch(descriptor.getFullPath());
-			const data = descriptor.isJSON() ? await response.json() : await response.arrayBuffer();
+			let data = descriptor.isJSON() ? await response.json() : await response.arrayBuffer();
+
+			let loader: Loader;
+			if (format !== 'binary') {
+				loader = format === 'json' ?
+					new ModelLoaderJSON(descriptor, this.shadersManager, this.texturesManager, format) :
+					new ModelLoaderGLTF(descriptor, this.shadersManager, this.texturesManager, format);
+			} else {
+				data = await new Promise((resolve, reject) => {
+					const parser = this.createParser(
+						data,
+						resolve,
+						() => reject(descriptor),
+						null,
+						resource
+					);
+
+					parser.parse();
+				});
+
+				loader = new ModelLoader(descriptor, this.shadersManager, this.texturesManager);
+			}
+
 			await loader.load(resource, data);
 
 			return [descriptor, resource] as [ModelDescriptor, Node];
 		} catch (e) {
 			throw descriptor;
 		}
+	}
+
+	/** This function can be overridden to provide alternative parser instances */
+	createParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata?) {
+		return new ThreadedDataParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata);
 	}
 }
 
