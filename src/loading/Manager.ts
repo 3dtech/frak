@@ -1,17 +1,23 @@
+import Descriptor from '../scene/descriptors/Descriptor';
+
 /** Generic manager class extended by all other manager classes
 	except for AssetsManager that groups together instances of other managers. */
 class Manager {
-	path: any;
+	path: string;
 	queue: any;
 	loading: any;
 	cache: any;
 	cacheSize: any;
 	callbacks: any;
 	progressCallbacks: any;
-	sourceCallback: any;
-	descriptorCallback: any;
-	onAddToQueue: any;
-	onLoaded: any;
+	/** Set source callback to overwrite any source before it is used to create a descriptor. */
+	sourceCallback = (source: string) => this.path + source;
+	/** Set descriptor callback to overwrite any descriptor parameters before it is requested. */
+	descriptorCallback = <T extends Descriptor>(descriptor: T) => descriptor;
+	/** Called when new descriptor is added that is not yet cached or already loading */
+	onAddToQueue = <T extends Descriptor>(descriptor: T) => {};
+	/** Called when descriptor has been loaded */
+	onLoaded = <T extends Descriptor>(descriptor: T) => {};
 
 	/**
 	 * Constructor
@@ -33,19 +39,6 @@ class Manager {
 		this.cacheSize=0;			// Items in cache
 		this.callbacks=[];			// List of callbacks added by load method
 		this.progressCallbacks=[];	// List of progress callbacks added by load method
-
-		/* Set source callback to overwrite any source before it is used to create a descriptor. */
-		this.sourceCallback = function(source) {
-			return scope.path + source;
-		};
-
-		/* Set descriptor callback to overwrite any descriptor parameters before it is requested. */
-		this.descriptorCallback = function(descriptor) {
-			return descriptor;
-		};
-
-		this.onAddToQueue = function(descriptor) {}; // Called when new descriptor is added that is not yet cached or already loading
-		this.onLoaded = function(descriptor) {}; // Called when descriptor has been loaded
 	}
 
 	/** @return Count of all resources managed by this manager. This includes
