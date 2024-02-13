@@ -1,12 +1,19 @@
+import { promises as fs } from 'node:fs';
+import { dirname, isAbsolute, join, relative } from 'node:path';
+import { argv, exit } from 'node:process';
+import { fileURLToPath } from "node:url";
+
+import { build } from 'esbuild';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 let wasmPlugin = {
 	name: 'wasm',
 	setup(build) {
-		let path = require('path');
-		let fs = require('fs');
-
 		// Resolve ".wasm" files to a path with a namespace
 		build.onResolve({ filter: /\.wasm$/ }, args => {
-			let relativePath = path.relative(__dirname, path.isAbsolute(args.path) ? args.path : path.join(args.resolveDir, args.path));
+			let relativePath = relative(__dirname, isAbsolute(args.path) ? args.path : join(args.resolveDir, args.path));
 
 			// If this is the import inside the stub module, import the
 			// binary itself. Put the path in the "wasm-binary" namespace
@@ -49,15 +56,15 @@ let wasmPlugin = {
 		// built-in "binary" loader instead of manually embedding the
 		// binary data inside JavaScript code ourselves.
 		build.onLoad({ filter: /.*/, namespace: 'wasm-binary' }, async (args) => ({
-			contents: await fs.promises.readFile(args.path),
+			contents: await fs.readFile(args.path),
 			loader: 'binary',
 		}));
 	},
 }
 
-const debug = process.argv.includes('--debug');
+const debug = argv.includes('--debug');
 
-require('esbuild').build({
+build({
 	entryPoints: ['src/entry.ts'],
 	bundle: true,
 	minify: !debug,
@@ -68,4 +75,4 @@ require('esbuild').build({
 		'.frag': 'text',
 		'.vert': 'text',
 	}
-}).catch(() => process.exit(1))
+}).catch(() => exit(1))

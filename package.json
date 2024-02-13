@@ -8,8 +8,8 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "node build.js",
-    "build-debug": "node build.js --debug",
+    "build": "node build.mjs",
+    "build-debug": "node build.mjs --debug",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
