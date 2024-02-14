@@ -139,6 +139,15 @@ class SubmeshRenderer extends Renderer {
 			}
 		}
 
+		if (submesh.colors) {
+			if (submesh.colors.length / 4 != pointCount) {
+				console.warn(`Wrong number of vertex colors (${submesh.colors.length / 4}). Must be the same as positions (${pointCount}).`);
+			}
+			else {
+				this.buffer.add("color", submesh.colors, 4);
+			}
+		}
+
 		var material = this.material;
 
 		// In case some key shader parameters are missing assign some defaults

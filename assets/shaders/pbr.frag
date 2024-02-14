@@ -64,6 +64,10 @@ in vec3 worldNormal;
 in vec4 worldTangent;
 #endif
 
+#ifdef VERTEX_COLORS
+in vec4 vertexColor;
+#endif
+
 in vec4 viewPosition;
 in vec3 viewNormal;
 in vec4 shadowPosition;
@@ -138,6 +142,9 @@ vec2 emissiveUV() {
 
 void main(void) {
 	vec4 outputColor = diffuse;
+#ifdef VERTEX_COLORS
+	outputColor *= vertexColor;
+#endif
 #ifdef DIFFUSE_TEXTURE
 	outputColor *= texture(diffuse0, diffuseUV());
 #endif

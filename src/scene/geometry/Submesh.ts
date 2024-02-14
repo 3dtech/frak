@@ -19,6 +19,7 @@ class Submesh {
 	normals: any;
 	bitangents: any;
 	barycentric: any;
+	colors = null;
 	boundingBox: any;
 	boundingSphere: any;
 	edges: any;
@@ -168,6 +169,7 @@ class Submesh {
 		var newNormals = [];
 		var newTexCoords2D = [];
 		var newTangents4D = [];
+		var newColors = [];
 		var newFaces = [];
 
 		for (var i=0; i<this.faces.length; i++) {
@@ -195,6 +197,13 @@ class Submesh {
 				newTangents4D.push(this.tangents4D[(key*4)+3]);
 			}
 
+			if (this.colors) {
+				newColors.push(this.colors[key*4]);
+				newColors.push(this.colors[(key*4)+1]);
+				newColors.push(this.colors[(key*4)+2]);
+				newColors.push(this.colors[(key*4)+3]);
+			}
+
 			newFaces.push(i);
 		}
 
@@ -202,6 +211,7 @@ class Submesh {
 		this.normals = newNormals;
 		this.texCoords2D[0] = newTexCoords2D;
 		this.tangents4D = newTangents4D;
+		this.colors = newColors;
 		this.faces = newFaces;
 	}
 

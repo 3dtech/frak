@@ -518,6 +518,24 @@ class ModelLoaderGLTF {
 			submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
 		}
 
+		if (!isNaN(parseInt(primitive.attributes.COLOR_0))) {
+			const colors = this.accessors[primitive.attributes.COLOR_0];
+			const pointCount = submesh.positions.length / 3;
+
+			if (colors.length / pointCount === 4) {
+				submesh.colors = colors;
+
+				material.definitions.addDefinition('VERTEX_COLORS');
+			} else if (colors.length / pointCount === 3) {
+				submesh.colors = [];
+				for (let i = 0; i < colors.length; i += 3) {
+					submesh.colors.push(colors[i], colors[i + 1], colors[i + 2], 1.0);
+				}
+
+				material.definitions.addDefinition('VERTEX_COLORS');
+			}
+		}
+
 		if (!isNaN(parseInt(primitive.attributes.TANGENT))) {
 			submesh.tangents4D = this.accessors[primitive.attributes.TANGENT];
 			submesh.tangents = submesh.tangents4D.filter(
