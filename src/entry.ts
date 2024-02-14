@@ -125,7 +125,6 @@ import 'scene/components/LargeMeshCollider';
 import 'scene/components/resources/Resource';
 import 'scene/components/resources/TextureResource';
 import 'scene/components/resources/ModelResource';
-import 'scene/components/resources/MaterialResource';
 
 import 'scene/components/Light';
 import 'scene/lights/OmniLight';
@@ -139,9 +138,6 @@ import 'scene/descriptors/Descriptor';
 import 'scene/descriptors/TextDescriptor';
 import 'scene/descriptors/ModelDescriptor';
 import 'scene/descriptors/ShaderDescriptor';
-import 'scene/descriptors/MaterialDescriptor';
-import 'scene/descriptors/MaterialSource';
-import 'scene/descriptors/MaterialSourceDescriptor';
 import 'scene/descriptors/TextureDescriptor';
 import 'scene/descriptors/CubeTextureDescriptor';
 
