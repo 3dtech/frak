@@ -1,5 +1,6 @@
 import BaseTexture, { TextureOptions } from 'rendering/materials/BaseTexture';
 import RenderingContext from '../RenderingContext';
+import { merge } from '../../Helpers';
 
 /**
  * CubeTexture for using samplerCube type samplers in shaders
@@ -21,11 +22,17 @@ class CubeTexture extends BaseTexture {
 
 		this.glTexture = null;
 		this.name = false;		///< Texture name assigned by manager
-		this.mipmapped = false;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
-		this.clampToEdge = true;
 		this.anisotropic = true;
 		this.anisotropyFilter = 4; // 4x filtering by default
 		this.images = {};
+		this.options = merge(this.options, {
+			flipY: true,
+			magFilter: 'linear',
+			minFilter: 'linear',
+			noConvertColorSpace: false,
+			wrapS: 'clamp',
+			wrapT: 'clamp',
+		});
 
 		if (context)
 			this.create(context);

@@ -208,10 +208,23 @@ class Submesh {
 		}
 
 		this.positions = newPositions;
-		this.normals = newNormals;
-		this.texCoords2D[0] = newTexCoords2D;
-		this.tangents4D = newTangents4D;
-		this.colors = newColors;
+
+		if (this.normals) {
+			this.normals = newNormals;
+		}
+
+		if (this.texCoords2D) {
+			this.texCoords2D[0] = newTexCoords2D;
+		}
+
+		if (this.tangents4D) {
+			this.tangents4D = newTangents4D;
+		}
+
+		if (this.colors) {
+			this.colors = newColors;
+		}
+
 		this.faces = newFaces;
 	}
 

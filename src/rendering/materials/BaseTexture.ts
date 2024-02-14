@@ -68,6 +68,8 @@ class BaseTexture extends Serializable {
 
 	protected applyOptions(context: RenderingContext, target: WebGL2RenderingContext['TEXTURE_2D'] | WebGL2RenderingContext['TEXTURE_CUBE_MAP']) {
 		const gl = context.gl;
+
+		// Loading options
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.options.flipY);
 
 		if (this.options.noConvertColorSpace) {
@@ -76,59 +78,49 @@ class BaseTexture extends Serializable {
 			gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.BROWSER_DEFAULT_WEBGL);
 		}
 
+		// Wrap settings
 		let wrapS: GLWrap = gl.REPEAT;
 		let wrapT: GLWrap = gl.REPEAT;
 
-		if (this.clampToEdge) {
+		if (this.options.wrapS === 'clamp') {
 			wrapS = gl.CLAMP_TO_EDGE;
-			wrapT = gl.CLAMP_TO_EDGE;
-		} else {
-			if (this.options.wrapS === 'clamp') {
-				wrapS = gl.CLAMP_TO_EDGE;
-			} else if (this.options.wrapS === 'mirror') {
-				wrapS = gl.MIRRORED_REPEAT;
-			}
+		} else if (this.options.wrapS === 'mirror') {
+			wrapS = gl.MIRRORED_REPEAT;
+		}
 
-			if (this.options.wrapT === 'clamp') {
-				wrapT = gl.CLAMP_TO_EDGE;
-			} else if (this.options.wrapT === 'mirror') {
-				wrapT = gl.MIRRORED_REPEAT;
-			}
+		if (this.options.wrapT === 'clamp') {
+			wrapT = gl.CLAMP_TO_EDGE;
+		} else if (this.options.wrapT === 'mirror') {
+			wrapT = gl.MIRRORED_REPEAT;
 		}
 
 		gl.texParameteri(target, gl.TEXTURE_WRAP_S, wrapS);
 		gl.texParameteri(target, gl.TEXTURE_WRAP_T, wrapT);
 
-		// Apply mipmapping and filtering settings
-		if (this.mipmapped) {
-			// Legacy
-			gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-		} else {
-			let magFilter: GLMagFilter = gl.NEAREST;
-			if (this.options.magFilter === 'linear') {
-				magFilter = gl.LINEAR;
-			}
-
-			gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magFilter);
-
-			this.mipmapped = !(this.options.minFilter === 'nearest' || this.options.minFilter === 'linear');
-
-			let minFilter: GLMinFilter = gl.NEAREST;
-			if (this.options.minFilter === 'linear') {
-				minFilter = gl.LINEAR;
-			} else if (this.options.minFilter === 'nearestMipmapNearest') {
-				minFilter = gl.NEAREST_MIPMAP_NEAREST;
-			} else if (this.options.minFilter === 'nearestMipmapLinear') {
-				minFilter = gl.NEAREST_MIPMAP_LINEAR;
-			} else if (this.options.minFilter === 'linearMipmapNearest') {
-				minFilter = gl.LINEAR_MIPMAP_NEAREST;
-			} else if (this.options.minFilter === 'linearMipmapLinear') {
-				minFilter = gl.LINEAR_MIPMAP_LINEAR;
-			}
-
-			gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minFilter);
+		// Filtering and mipmaps
+		let magFilter: GLMagFilter = gl.NEAREST;
+		if (this.options.magFilter === 'linear') {
+			magFilter = gl.LINEAR;
 		}
+
+		gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magFilter);
+
+		this.mipmapped = !(this.options.minFilter === 'nearest' || this.options.minFilter === 'linear');
+
+		let minFilter: GLMinFilter = gl.NEAREST;
+		if (this.options.minFilter === 'linear') {
+			minFilter = gl.LINEAR;
+		} else if (this.options.minFilter === 'nearestMipmapNearest') {
+			minFilter = gl.NEAREST_MIPMAP_NEAREST;
+		} else if (this.options.minFilter === 'nearestMipmapLinear') {
+			minFilter = gl.NEAREST_MIPMAP_LINEAR;
+		} else if (this.options.minFilter === 'linearMipmapNearest') {
+			minFilter = gl.LINEAR_MIPMAP_NEAREST;
+		} else if (this.options.minFilter === 'linearMipmapLinear') {
+			minFilter = gl.LINEAR_MIPMAP_LINEAR;
+		}
+
+		gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minFilter);
 	}
 
 	setOptions(options: TextureOptions) {

@@ -19,6 +19,15 @@ import TexturesManager from './TexturesManager';
 import ShadersManager from './ShadersManager';
 import ModelDescriptor from '../scene/descriptors/ModelDescriptor';
 
+function defaultSampler(): TextureOptions {
+	return {
+		flipY: false,
+		noConvertColorSpace: true,
+		wrapS: 'repeat',
+		wrapT: 'repeat',
+	};
+}
+
 /** Loads models to scene hierarchy from JSON data */
 class ModelLoaderGLTF {
 	descriptor: ModelDescriptor;
@@ -270,12 +279,7 @@ class ModelLoaderGLTF {
 
 	loadSamplers(samplers) {
 		for (let i = 0, l = samplers.length; i < l; i++) {
-			const sampler: TextureOptions = {
-				flipY: false,
-				noConvertColorSpace: true,
-				wrapS: 'repeat',
-				wrapT: 'repeat',
-			};
+			const sampler = defaultSampler();
 
 			if (!isNaN(parseInt(samplers[i].wrapS))) {
 				if (samplers[i].wrapS === 33071) {
@@ -337,11 +341,12 @@ class ModelLoaderGLTF {
 
 			const texture = this.texturesManager.addDescriptor(descriptor);
 
+			let sampler = defaultSampler();
 			if (!isNaN(parseInt(textures[i].sampler))) {
-				const sampler = this.samplers[textures[i].sampler];
-
-				texture.setOptions(sampler);
+				sampler = this.samplers[textures[i].sampler];
 			}
+
+			texture.setOptions(sampler);
 
 			this.textures.push(texture);
 		}

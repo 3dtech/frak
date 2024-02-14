@@ -20,11 +20,17 @@ class Texture extends BaseTexture {
 
 		this.glTexture = null; ///< GL texture ID
 		this.name = false;		///< Texture name assigned by manager
-		this.mipmapped = true;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
-		this.clampToEdge = false;
 		this.anisotropic = true;
 		this.anisotropyFilter = 4; // 4x filtering by default
 		this.image = null;
+		this.options = merge(this.options, {
+			flipY: true,
+			magFilter: 'nearest',
+			minFilter: 'nearestMipmapNearest',
+			noConvertColorSpace: false,
+			wrapS: 'repeat',
+			wrapT: 'repeat',
+		});
 
 		if (context)
 			this.create(context);
