@@ -1,4 +1,22 @@
 import Serializable from 'scene/Serializable';
+import RenderingContext from '../RenderingContext';
+import { merge } from 'Helpers';
+
+type MagFilter = 'linear' | 'nearest';
+type GLMagFilter = WebGL2RenderingContext['NEAREST'] | WebGL2RenderingContext['LINEAR'];
+type MinFilter = 'linear' | 'nearest' | 'nearestMipmapNearest' | 'nearestMipmapLinear' | 'linearMipmapNearest' | 'linearMipmapLinear';
+type GLMinFilter = WebGL2RenderingContext['NEAREST'] | WebGL2RenderingContext['LINEAR'] | WebGL2RenderingContext['NEAREST_MIPMAP_NEAREST'] | WebGL2RenderingContext['NEAREST_MIPMAP_LINEAR'] | WebGL2RenderingContext['LINEAR_MIPMAP_NEAREST'] | WebGL2RenderingContext['LINEAR_MIPMAP_LINEAR'];
+type Wrap = 'clamp' | 'repeat' | 'mirror';
+type GLWrap = WebGL2RenderingContext['CLAMP_TO_EDGE'] | WebGL2RenderingContext['REPEAT'] | WebGL2RenderingContext['MIRRORED_REPEAT'];
+
+interface TextureOptions {
+	flipY?: boolean;
+	magFilter?: MagFilter;
+	minFilter?: MinFilter;
+	noConvertColorSpace?: boolean;
+	wrapS?: Wrap;
+	wrapT?: Wrap;
+}
 
 /**
  * Generic Texture interface
@@ -9,6 +27,18 @@ class BaseTexture extends Serializable {
 	anisotropic: any;
 	anisotropyFilter: any;
 	extTextureFilterAnisotropic: any;
+	/** Legacy, use options.wrap[S|T] = 'clamp' instead */
+	clampToEdge = false;
+	/** Legacy, use options.minFilter instead */
+	mipmapped = false;
+	options: TextureOptions = {
+		flipY: true,
+		magFilter: 'nearest',
+		minFilter: 'nearest',
+		noConvertColorSpace: false,
+		wrapS: 'repeat',
+		wrapT: 'repeat',
+	};
 
 	constructor() {
 		super();
@@ -35,6 +65,75 @@ class BaseTexture extends Serializable {
 	 * @param context RenderingContext
 	 */
 	unbind(context): any {}
+
+	protected applyOptions(context: RenderingContext, target: WebGL2RenderingContext['TEXTURE_2D'] | WebGL2RenderingContext['TEXTURE_CUBE_MAP']) {
+		const gl = context.gl;
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.options.flipY);
+
+		if (this.options.noConvertColorSpace) {
+			gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+		} else {
+			gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.BROWSER_DEFAULT_WEBGL);
+		}
+
+		let wrapS: GLWrap = gl.REPEAT;
+		let wrapT: GLWrap = gl.REPEAT;
+
+		if (this.clampToEdge) {
+			wrapS = gl.CLAMP_TO_EDGE;
+			wrapT = gl.CLAMP_TO_EDGE;
+		} else {
+			if (this.options.wrapS === 'clamp') {
+				wrapS = gl.CLAMP_TO_EDGE;
+			} else if (this.options.wrapS === 'mirror') {
+				wrapS = gl.MIRRORED_REPEAT;
+			}
+
+			if (this.options.wrapT === 'clamp') {
+				wrapT = gl.CLAMP_TO_EDGE;
+			} else if (this.options.wrapT === 'mirror') {
+				wrapT = gl.MIRRORED_REPEAT;
+			}
+		}
+
+		gl.texParameteri(target, gl.TEXTURE_WRAP_S, wrapS);
+		gl.texParameteri(target, gl.TEXTURE_WRAP_T, wrapT);
+
+		// Apply mipmapping and filtering settings
+		if (this.mipmapped) {
+			// Legacy
+			gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+		} else {
+			let magFilter: GLMagFilter = gl.NEAREST;
+			if (this.options.magFilter === 'linear') {
+				magFilter = gl.LINEAR;
+			}
+
+			gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magFilter);
+
+			this.mipmapped = !(this.options.minFilter === 'nearest' || this.options.minFilter === 'linear');
+
+			let minFilter: GLMinFilter = gl.NEAREST;
+			if (this.options.minFilter === 'linear') {
+				minFilter = gl.LINEAR;
+			} else if (this.options.minFilter === 'nearestMipmapNearest') {
+				minFilter = gl.NEAREST_MIPMAP_NEAREST;
+			} else if (this.options.minFilter === 'nearestMipmapLinear') {
+				minFilter = gl.NEAREST_MIPMAP_LINEAR;
+			} else if (this.options.minFilter === 'linearMipmapNearest') {
+				minFilter = gl.LINEAR_MIPMAP_NEAREST;
+			} else if (this.options.minFilter === 'linearMipmapLinear') {
+				minFilter = gl.LINEAR_MIPMAP_LINEAR;
+			}
+
+			gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minFilter);
+		}
+	}
+
+	setOptions(options: TextureOptions) {
+		merge(this.options, options);
+	}
 
 	/**
 	 * Downsamples the image to a nearest power of two size
@@ -88,4 +187,4 @@ class BaseTexture extends Serializable {
 
 globalThis.BaseTexture = BaseTexture;
 
-export default BaseTexture;
+export { BaseTexture as default, TextureOptions };

@@ -3,14 +3,29 @@ import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
 import CubeTexture from 'rendering/materials/CubeTexture';
 import CubeTextureDescriptor from 'scene/descriptors/CubeTextureDescriptor';
 import Texture from 'rendering/materials/Texture';
+import { stringHash } from '../Helpers';
 
+type Descriptors = TextureDescriptor | CubeTextureDescriptor;
+type Resources = Texture | CubeTexture;
 type TextureParameters = [TextureDescriptor, Texture];
 type CubeTextureParameters = [CubeTextureDescriptor, CubeTexture];
 type LoadResourceParameters = TextureParameters | CubeTextureParameters;
 
+type ResourceType<T extends  Descriptors> =
+	T extends TextureDescriptor ? Texture :
+	(T extends CubeTextureDescriptor ? CubeTexture : never);
+
+interface ImageCache {
+	[source: string]: {
+		image? : HTMLImageElement;
+		promise: Promise<HTMLImageElement>;
+	}
+}
+
 /** External texture instance. */
-class TexturesManager extends Manager<TextureDescriptor | CubeTextureDescriptor, Texture | CubeTexture> {
+class TexturesManager extends Manager<Descriptors, Resources> {
 	context: any;
+	imageCache: ImageCache = {};
 
 	/**
 	 * Constructor
@@ -45,30 +60,51 @@ class TexturesManager extends Manager<TextureDescriptor | CubeTextureDescriptor,
 		return this.addDescriptor(cube);
 	}
 
-	createResource(textureDescriptor): any {
-		var texture: CubeTexture | Texture;
-		if (textureDescriptor instanceof CubeTextureDescriptor) {
+	createResource<T extends Descriptors>(descriptor: T): ResourceType<T> {
+		let texture: CubeTexture | Texture;
+		if (descriptor instanceof CubeTextureDescriptor) {
 			texture = new CubeTexture(this.context);
-			texture.name = 'Cubemap'; // TODO: name from filenames
-			return texture;
+			texture.name = descriptor.sources[0];
+			return texture as ResourceType<T>;
 		} else {
 			texture = new Texture(this.context);
-			texture.name = textureDescriptor.source;
-			return texture;
+			texture.name = descriptor.source;
+			return texture as ResourceType<T>;
 		}
+	}
+
+	addDescriptor<T extends Descriptors>(descriptor: T): ResourceType<T> {
+		return super.addDescriptor(descriptor) as ResourceType<T>;
 	}
 
 	async loadResource(...[textureDescriptor, textureResource]: LoadResourceParameters) {
 		const descriptor = this.descriptorCallback(textureDescriptor);
 
-		const loadImage = (source: string) =>
-			new Promise<HTMLImageElement>((resolve, reject) => {
+		const loadImage = async (source: string) => {
+			const hash = stringHash(source);
+			if (this.imageCache[hash]) {
+				if (this.imageCache[hash].image) {
+					return this.imageCache[hash].image;
+				}
+
+				return await this.imageCache[hash].promise;
+			}
+
+			const promise = new Promise<HTMLImageElement>((resolve, reject) => {
 				const image = new Image();
 				image.crossOrigin = 'anonymous';
-				image.onload = () => resolve(image);
+				image.onload = () => {
+					this.imageCache[hash].image = image;
+					resolve(image);
+				};
 				image.onerror = reject;
 				image.src = source;
 			});
+
+			this.imageCache[hash] = { promise };
+
+			return await promise;
+		};
 
 		try {
 			if (!(textureDescriptor instanceof CubeTextureDescriptor)) {

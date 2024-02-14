@@ -14,12 +14,16 @@ import Color from 'rendering/Color';
 import FRAK from 'Helpers';
 import DirectionalLight from "../scene/lights/DirectionalLight";
 import init, { generateTangents } from '../../lib/mikktspace';
+import { TextureOptions } from '../rendering/materials/BaseTexture';
+import TexturesManager from './TexturesManager';
+import ShadersManager from './ShadersManager';
+import ModelDescriptor from '../scene/descriptors/ModelDescriptor';
 
 /** Loads models to scene hierarchy from JSON data */
 class ModelLoaderGLTF {
-	descriptor: any;
-	shadersManager: any;
-	texturesManager: any;
+	descriptor: ModelDescriptor;
+	shadersManager: ShadersManager;
+	texturesManager: TexturesManager;
 	nodesByID: any;
 	submeshesByID: any;
 	submeshes: any;
@@ -143,7 +147,9 @@ class ModelLoaderGLTF {
 			this.buffers.push(buffer);
 
 			if (!buffers[i].uri) {
-				buffer.data = this.binaryBuffer;
+				if (i === 0) {	 // Spec says only the first buffer can be embedded
+					buffer.data = this.binaryBuffer;
+				}
 
 				continue;
 			}
@@ -262,18 +268,66 @@ class ModelLoaderGLTF {
 		}
 	}
 
-	loadSamplers(samplers): any {
-		this.samplers = samplers.slice();
+	loadSamplers(samplers) {
+		for (let i = 0, l = samplers.length; i < l; i++) {
+			const sampler: TextureOptions = {
+				flipY: false,
+				noConvertColorSpace: true,
+				wrapS: 'repeat',
+				wrapT: 'repeat',
+			};
+
+			if (!isNaN(parseInt(samplers[i].wrapS))) {
+				if (samplers[i].wrapS === 33071) {
+					sampler.wrapS = 'clamp';
+				} else if (samplers[i].wrapS === 33648) {
+					sampler.wrapS = 'mirror';
+				}
+			}
+
+			if (!isNaN(parseInt(samplers[i].wrapT))) {
+				if (samplers[i].wrapT === 33071) {
+					sampler.wrapT = 'clamp';
+				} else if (samplers[i].wrapT === 33648) {
+					sampler.wrapT = 'mirror';
+				}
+			}
+
+			if (!isNaN(parseInt(samplers[i].magFilter))) {
+				if (samplers[i].magFilter === 9729) {
+					sampler.magFilter = 'linear';
+				} else if (samplers[i].magFilter === 9728) {
+					sampler.magFilter = 'nearest';
+				}
+			}
+
+			if (!isNaN(parseInt(samplers[i].minFilter))) {
+				if (samplers[i].minFilter === 9729) {
+					sampler.minFilter = 'linear';
+				} else if (samplers[i].minFilter === 9728) {
+					sampler.minFilter = 'nearest';
+				} else if (samplers[i].minFilter === 9984) {
+					sampler.minFilter = 'nearestMipmapNearest';
+				} else if (samplers[i].minFilter === 9985) {
+					sampler.minFilter = 'linearMipmapNearest';
+				} else if (samplers[i].minFilter === 9986) {
+					sampler.minFilter = 'nearestMipmapLinear';
+				} else if (samplers[i].minFilter === 9987) {
+					sampler.minFilter = 'linearMipmapLinear';
+				}
+			}
+
+			this.samplers.push(sampler);
+		}
 	}
 
 	loadTextures(textures): any {
 		for (var i = 0, l = textures.length; i < l; i++) {
-			var texture = textures[i];
-			if (isNaN(parseInt(texture.source))) {
+			if (isNaN(parseInt(textures[i].source))) {
 				continue;
 			}
 
-			var descriptorImage = this.images[texture.source];
+			var descriptorImage = this.images[textures[i].source];
 			var descriptor = new TextureDescriptor(descriptorImage.uri);
 
 			descriptor.locked = descriptorImage.locked;
@@ -281,31 +335,15 @@ class ModelLoaderGLTF {
 			// Hack to enable multiple textures with different settings but same image
 			(descriptor as any).glTFID = i;
 
-			var image = this.texturesManager.addDescriptor(descriptor);
+			const texture = this.texturesManager.addDescriptor(descriptor);
 
-			image.flipY = false;	// Make sure this happens before texturesManager.load is called
+			if (!isNaN(parseInt(textures[i].sampler))) {
+				const sampler = this.samplers[textures[i].sampler];
 
-			if (!isNaN(parseInt(texture.sampler))) {
-				var sampler = this.samplers[texture.sampler];
-
-				if (!isNaN(parseInt(sampler.wrapS))) {
-					if (sampler.wrapS === 33071) {
-						image.wrapS = 'clamp';
-					} else if (sampler.wrapS === 33648) {
-						image.wrapS = 'mirror';
-					}
-				}
-
-				if (!isNaN(parseInt(sampler.wrapT))) {
-					if (sampler.wrapT === 33071) {
-						image.wrapT = 'clamp';
-					} else if (sampler.wrapT === 33648) {
-						image.wrapT = 'mirror';
-					}
-				}
+				texture.setOptions(sampler);
 			}
 
-			this.textures.push(image);
+			this.textures.push(texture);
 		}
 	}
 

@@ -151,6 +151,7 @@ function merge<A extends {}>(a: A, b: Partial<A>): A {
 			a[key] = b[key];
 		}
 	}
+
 	return a;
 }
 

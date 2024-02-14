@@ -1,4 +1,5 @@
-import BaseTexture from 'rendering/materials/BaseTexture';
+import BaseTexture, { TextureOptions } from 'rendering/materials/BaseTexture';
+import RenderingContext from '../RenderingContext';
 
 /**
  * CubeTexture for using samplerCube type samplers in shaders
@@ -13,11 +14,9 @@ class CubeTexture extends BaseTexture {
 
 	glTexture: any;
 	name: any;
-	mipmapped: any;
-	clampToEdge: any;
 	images: any;
 
-	constructor(context?) {
+	constructor(private context?: RenderingContext) {
 		super();
 
 		this.glTexture = null;
@@ -72,25 +71,7 @@ class CubeTexture extends BaseTexture {
 		var gl = context.gl;
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.glTexture);
 
-		// Apply clamp to edge settings
-		if (this.clampToEdge) {
-			gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		}
-
-		// Apply mipmapping and filtering settings
-		if (this.mipmapped) {
-			gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-			gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
-			if (this.anisotropic) {
-				gl.texParameteri(gl.TEXTURE_CUBE_MAP, this.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.anisotropyFilter);
-			}
-		}
-		else {
-			gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-		}
+		this.applyOptions(context, gl.TEXTURE_CUBE_MAP);
 
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 	}
@@ -118,7 +99,6 @@ class CubeTexture extends BaseTexture {
 
 		var gl = context.gl;
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.glTexture);
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 		gl.texImage2D(face, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 
@@ -126,6 +106,23 @@ class CubeTexture extends BaseTexture {
 		if ((this.size[0] & (this.size[0] - 1)) != 0 ||
 			(this.size[1] & (this.size[1] - 1)) != 0) {
 			console.warn(`Created a not power of 2 texture: ${this.name} (${this.size[0]}x${this.size[1]})`);
+		}
+	}
+
+	setOptions(options: TextureOptions) {
+		super.setOptions(options);
+
+		if (this.loaded && this.context) {
+			const gl = this.context.gl;
+			gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.glTexture);
+			this.applyOptions(this.context, gl.TEXTURE_CUBE_MAP);
+
+			for (var face in this.images) {
+				var item = this.images[face];
+				this.setFace(this.context, parseInt(face), item.image, item.noResize);
+			}
+
+			gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 		}
 	}
 

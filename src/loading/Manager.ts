@@ -10,14 +10,15 @@ class Manager<T extends Descriptor, R> {
 	cacheSize: any;
 	callbacks: any;
 	progressCallbacks: any;
+	loadingCount = 0;
 	/** Set source callback to overwrite any source before it is used to create a descriptor. */
 	sourceCallback = (source: string) => this.path + source;
 	/** Set descriptor callback to overwrite any descriptor parameters before it is requested. */
-	descriptorCallback = <T extends Descriptor>(descriptor: T) => descriptor;
+	descriptorCallback = (descriptor: T) => descriptor;
 	/** Called when new descriptor is added that is not yet cached or already loading */
-	onAddToQueue = <T extends Descriptor>(descriptor: T) => {};
+	onAddToQueue = (descriptor: T) => {};
 	/** Called when descriptor has been loaded */
-	onLoaded = <T extends Descriptor>(descriptor: T) => {};
+	onLoaded = (descriptor: T) => {};
 
 	/**
 	 * Constructor
@@ -44,12 +45,12 @@ class Manager<T extends Descriptor, R> {
 	/** @return Count of all resources managed by this manager. This includes
 		queued resources, loading resources and cached resources. */
 	getTotalItems(): any {
-		return this.queue.length+this.loading.length+this.cacheSize;
+		return this.queue.length+this.loadingCount+this.cacheSize;
 	}
 
 	/** @return Count of queued or loading resources */
 	getWaitingItems(): any {
-		return this.queue.length+this.loading.length;
+		return this.queue.length+this.loadingCount;
 	}
 
 	/** Gets loading progress. This can be overridden by child-managers
@@ -64,7 +65,7 @@ class Manager<T extends Descriptor, R> {
 	/** Adds descriptor to loading queue
 		@param descriptor Descriptor type
 		@return Resource described by the descriptor that will eventually be loaded */
-	addDescriptor(descriptor): any {
+	addDescriptor(descriptor: T): R {
 		// Search for resource in cache
 		var resource = this.cache[descriptor.serialize(['id'])];
 		if(resource) {
@@ -133,6 +134,7 @@ class Manager<T extends Descriptor, R> {
 			}
 		}
 
+		this.loadingCount += this.queue.length;
 		this.loading.push(...this.queue);
 		const queue = (this.queue as any[]).map(
 			next => async () => {
@@ -148,15 +150,11 @@ class Manager<T extends Descriptor, R> {
 					this.onLoaded(e);
 					if (e.getFullPath) console.warn('Full path: ', e.getFullPath());
 				} finally {
+					this.loadingCount--;
+
 					// Call progress callbacks
 					for(var i = 0; i < this.progressCallbacks.length; i++) {
 						this.progressCallbacks[i](this.getProgress());
-					}
-
-					// Everything has been loaded
-					if(this.loading.length==0) {
-						// Call all registered callbacks
-						this.callDoneCallbacks();
 					}
 				}
 			}
@@ -165,6 +163,10 @@ class Manager<T extends Descriptor, R> {
 		this.queue = [];
 
 		await Promise.allSettled(queue.map(fn => fn()));
+
+		if (this.loadingCount === 0) {
+			this.callDoneCallbacks();
+		}
 	}
 
 	// Private methods

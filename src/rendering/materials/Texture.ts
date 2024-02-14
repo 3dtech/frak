@@ -1,5 +1,7 @@
-import BaseTexture from 'rendering/materials/BaseTexture';
+import BaseTexture, { TextureOptions } from 'rendering/materials/BaseTexture';
 import TargetTexture from 'rendering/camera/TargetTexture';
+import { merge } from 'Helpers';
+import RenderingContext from '../RenderingContext';
 
 /**
  * 2D texture instance.
@@ -7,31 +9,22 @@ import TargetTexture from 'rendering/camera/TargetTexture';
 class Texture extends BaseTexture {
 	glTexture: any;
 	name: any;
-	mipmapped: any;
-	flipY: any;
-	clampToEdge: any;
 	image: any;
-	wrapS: any;
-	wrapT: any;
 
 	/**
 	 * Constructor
 	 * @param context RenderingContext (optional)
 	 */
-	constructor(context?) {
+	constructor(private context?: RenderingContext) {
 		super();
 
 		this.glTexture = null; ///< GL texture ID
 		this.name = false;		///< Texture name assigned by manager
 		this.mipmapped = true;	///< Set to true for subsequent calls to update, setImage or pasteImage to generate mipmaps
-		this.flipY = true;
 		this.clampToEdge = false;
 		this.anisotropic = true;
 		this.anisotropyFilter = 4; // 4x filtering by default
 		this.image = null;
-
-		this.wrapS = false;
-		this.wrapT = false;
 
 		if (context)
 			this.create(context);
@@ -111,7 +104,7 @@ class Texture extends BaseTexture {
 	/** Updates texture by uploading new image
 		@param context RenderingContext instance
 		@param inputImage Image or canvas element */
-	setImage(context, inputImage, noResize?): any {
+	setImage(context: RenderingContext, inputImage, noResize?): any {
 		if (!this.glTexture)
 			this.create(context);
 
@@ -125,51 +118,16 @@ class Texture extends BaseTexture {
 
 		var gl = context.gl;
 		gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.flipY);
+
+		this.applyOptions(context, gl.TEXTURE_2D);
+
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-		// Apply wrap settings
-		if (this.wrapS) {
-			var wrap = gl.REPEAT;
-			if (this.wrapS === 'clamp') {
-				wrap = gl.CLAMP_TO_EDGE;
-			} else if (this.wrapS === 'mirror') {
-				wrap = gl.MIRRORED_REPEAT;
-			}
-
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
-		}
-
-		if (this.wrapT) {
-			var wrap = gl.REPEAT;
-			if (this.wrapT === 'clamp') {
-				wrap = gl.CLAMP_TO_EDGE;
-			} else if (this.wrapT === 'mirror') {
-				wrap = gl.MIRRORED_REPEAT;
-			}
-
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
-		}
-
-
-		// Legacy clamp to edge settings
-		if (this.clampToEdge) {
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		}
-
-		// Apply mipmapping and filtering settings
 		if (this.mipmapped) {
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
 			gl.generateMipmap(gl.TEXTURE_2D);
 			if (this.anisotropic) {
 				gl.texParameteri(gl.TEXTURE_2D, this.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.anisotropyFilter);
 			}
-		}
-		else {
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		}
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
@@ -179,6 +137,14 @@ class Texture extends BaseTexture {
 		if ((this.size[0] & (this.size[0] - 1)) != 0 ||
 			(this.size[1] & (this.size[1] - 1)) != 0) {
 			console.warn(`Created a not power of 2 texture: ${this.name} (${this.size[0]}x${this.size[1]})`);
+		}
+	}
+
+	setOptions(options: TextureOptions) {
+		super.setOptions(options);
+
+		if (this.loaded && this.context) {
+			this.setImage(this.context, this.image);
 		}
 	}
 
