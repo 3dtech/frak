@@ -13,8 +13,8 @@ class RenderBufferVAO extends RenderBuffer {
 		@param context Rendering context
 		@param faces Faces buffer with size that divides with 3 [f0i, f0j, f0k, f1i, f1j, f1k, ...]
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */
-	constructor(context, faces, type?) {
-		super(context, faces, type);
+	constructor(context, faces, type?, indexType = context.gl.UNSIGNED_SHORT) {
+		super(context, faces, type, indexType);
 		this.createFacesBuffer(faces);	// Even though RenderBuffer does this, class initialization order deletes the VAO
 		this.damaged = true;
 	}

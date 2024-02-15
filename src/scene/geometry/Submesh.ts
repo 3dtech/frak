@@ -1,6 +1,8 @@
 import BoundingBox from 'scene/geometry/BoundingBox';
 import BoundingSphere from 'scene/geometry/BoundingSphere';
 
+type IndexType = WebGL2RenderingContext['UNSIGNED_SHORT'] | WebGL2RenderingContext['UNSIGNED_INT'];
+
 /** Submesh object. Holds loaded faces, positions, tangents and bitangents.
 	@param materialIndex Index of material that this submesh will refer to when attached to a mesh
 	@param faces All available faces
@@ -23,6 +25,7 @@ class Submesh {
 	boundingBox: any;
 	boundingSphere: any;
 	edges: any;
+	indexType: IndexType = WebGL2RenderingContext.UNSIGNED_SHORT;
 
 	/** Constructor */
 	constructor() {
@@ -165,13 +168,15 @@ class Submesh {
 	}
 
 	unweld() {
+		this.updateIndexType();
+
 		const newPositions = new Float32Array(this.faces.length * 3);
 		const newNormals = this.normals ? new Float32Array(this.faces.length * 3) : null;
 		const newTexCoords2D = this.texCoords2D.length ? new Float32Array(this.faces.length * 2) : null;
 		const newTangents4D = this.tangents4D ? new Float32Array(this.faces.length * 4) : null;
 		const newColors = this.colors ? new Float32Array(this.faces.length * 4) : null;
 
-		const newFaces = new Uint16Array(this.faces.length);
+		const newFaces = this.indexType === WebGL2RenderingContext.UNSIGNED_SHORT ? new Uint16Array(this.faces.length) : new Uint32Array(this.faces.length);
 
 		const l = this.faces.length;
 		for (let i = 0; i < l; i++) {
@@ -228,6 +233,10 @@ class Submesh {
 		}
 
 		this.faces = newFaces;
+	}
+
+	updateIndexType() {
+		this.indexType = this.faces.length < 65536 ? WebGL2RenderingContext.UNSIGNED_SHORT : WebGL2RenderingContext.UNSIGNED_INT;
 	}
 
 	/** Calculates barycentric coordinates. This may not be entirely correct if the mesh has shared vertices. */

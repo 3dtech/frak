@@ -39,7 +39,7 @@ class SubmeshRenderer extends Renderer {
 		if (!this.submesh)
 			throw Error("SubmeshRenderer.allocBuffer: No submesh set");
 
-		this.buffer = new TrianglesRenderBufferVAO(context, this.submesh.faces);
+		this.buffer = new TrianglesRenderBufferVAO(context, this.submesh.faces, undefined, this.submesh.indexType);
 	}
 
 	build(context): any {

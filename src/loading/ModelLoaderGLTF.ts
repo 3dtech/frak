@@ -550,7 +550,7 @@ class ModelLoaderGLTF {
 			);
 
 			material.definitions.addDefinition('VERTEX_TANGENTS');
-		} else if (submesh.texCoords2D.length && submesh.normals.length && submesh.faces.length < 65536) {
+		} else if (submesh.texCoords2D.length && submesh.normals.length) {
 			try {
 				submesh.unweld();
 				submesh.tangents4D = generateTangents(submesh.positions, submesh.normals, submesh.texCoords2D[0]);
@@ -558,6 +558,7 @@ class ModelLoaderGLTF {
 			} catch (e) {}
 		}
 
+		submesh.updateIndexType();
 		submesh.recalculateBounds();
 
 		return submesh;

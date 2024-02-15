@@ -1,6 +1,8 @@
 import RenderingContext from 'rendering/RenderingContext';
 import ExplicitAttributeLocations from "../shaders/AttributeLocations";
 
+type IndexType = WebGL2RenderingContext['UNSIGNED_SHORT'] | WebGL2RenderingContext['UNSIGNED_INT'];
+
 /**
  * Render buffer (VBO) base class.
  */
@@ -16,7 +18,7 @@ class RenderBuffer {
 		@param context Rendering context
 		@param faces Faces buffer with size that divides with 3 [f0i, f0j, f0k, f1i, f1j, f1k, ...]
 		@param type Either context.gl.STATIC_DRAW, context.gl.STREAM_DRAW or context.gl.DYNAMIC_DRAW [optional, default: context.gl.STATIC_DRAW] */
-	constructor(context, faces, type?) {
+	constructor(context, faces, type?, public indexType: IndexType = context.gl.UNSIGNED_SHORT) {
 		if(!type) type=context.gl.STATIC_DRAW;
 		this.type=type;
 		this.context=context;
@@ -165,7 +167,8 @@ class RenderBuffer {
 		var gl=this.context.gl;
 		this.facesBuffer=gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.facesBuffer);
-		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(faces), this.type);
+		const arrayType = this.indexType === gl.UNSIGNED_INT ? Uint32Array : Uint16Array;
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new arrayType(faces), this.type);
 		this.facesBuffer.itemSize=1;
 		this.facesBuffer.numItems=faces.length;
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
