@@ -520,7 +520,7 @@ class ModelLoaderGLTF {
 		}
 
 		if (!isNaN(parseInt(primitive.attributes.TEXCOORD_0))) {
-			submesh.texCoords2D.push(this.accessors[primitive.attributes.TEXCOORD_0]);
+			submesh.texCoords2D = [this.accessors[primitive.attributes.TEXCOORD_0]];
 		}
 
 		if (!isNaN(parseInt(primitive.attributes.COLOR_0))) {
@@ -550,7 +550,7 @@ class ModelLoaderGLTF {
 			);
 
 			material.definitions.addDefinition('VERTEX_TANGENTS');
-		} else if (submesh.texCoords2D.length && submesh.normals.length) {
+		} else if (submesh.texCoords2D.length && submesh.normals.length && submesh.faces.length < 65536) {
 			try {
 				submesh.unweld();
 				submesh.tangents4D = generateTangents(submesh.positions, submesh.normals, submesh.texCoords2D[0]);

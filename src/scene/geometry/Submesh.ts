@@ -165,46 +165,48 @@ class Submesh {
 	}
 
 	unweld() {
-		var newPositions = [];
-		var newNormals = [];
-		var newTexCoords2D = [];
-		var newTangents4D = [];
-		var newColors = [];
-		var newFaces = [];
+		const newPositions = new Float32Array(this.faces.length * 3);
+		const newNormals = this.normals ? new Float32Array(this.faces.length * 3) : null;
+		const newTexCoords2D = this.texCoords2D.length ? new Float32Array(this.faces.length * 2) : null;
+		const newTangents4D = this.tangents4D ? new Float32Array(this.faces.length * 4) : null;
+		const newColors = this.colors ? new Float32Array(this.faces.length * 4) : null;
 
-		for (var i=0; i<this.faces.length; i++) {
-			var key = this.faces[i];
+		const newFaces = new Uint16Array(this.faces.length);
 
-			newPositions.push(this.positions[key*3]);
-			newPositions.push(this.positions[(key*3)+1]);
-			newPositions.push(this.positions[(key*3)+2]);
+		const l = this.faces.length;
+		for (let i = 0; i < l; i++) {
+			const key = this.faces[i];
 
-			if (this.normals) {
-				newNormals.push(this.normals[key*3]);
-				newNormals.push(this.normals[(key*3)+1]);
-				newNormals.push(this.normals[(key*3)+2]);
+			newPositions[i * 3] = this.positions[key * 3];
+			newPositions[i * 3 + 1] = this.positions[key * 3 + 1];
+			newPositions[i * 3 + 2] = this.positions[key * 3 + 2];
+
+			if (newNormals) {
+				newNormals[i * 3] = this.normals[key * 3];
+				newNormals[i * 3 + 1] = this.normals[key * 3 + 1];
+				newNormals[i * 3 + 2] = this.normals[key * 3 + 2];
 			}
 
-			if (this.texCoords2D) {
-				newTexCoords2D.push(this.texCoords2D[0][key*2]);
-				newTexCoords2D.push(this.texCoords2D[0][(key*2)+1]);
+			if (newTexCoords2D) {
+				newTexCoords2D[i * 2] = this.texCoords2D[0][key * 2];
+				newTexCoords2D[i * 2 + 1] = this.texCoords2D[0][key * 2 + 1];
 			}
 
-			if (this.tangents4D) {
-				newTangents4D.push(this.tangents4D[key*4]);
-				newTangents4D.push(this.tangents4D[(key*4)+1]);
-				newTangents4D.push(this.tangents4D[(key*4)+2]);
-				newTangents4D.push(this.tangents4D[(key*4)+3]);
+			if (newTangents4D) {
+				newTangents4D[i * 4] = this.tangents4D[key * 4];
+				newTangents4D[i * 4 + 1] = this.tangents4D[key * 4 + 1];
+				newTangents4D[i * 4 + 2] = this.tangents4D[key * 4 + 2];
+				newTangents4D[i * 4 + 3] = this.tangents4D[key * 4 + 3];
 			}
 
-			if (this.colors) {
-				newColors.push(this.colors[key*4]);
-				newColors.push(this.colors[(key*4)+1]);
-				newColors.push(this.colors[(key*4)+2]);
-				newColors.push(this.colors[(key*4)+3]);
+			if (newColors) {
+				newColors[i * 4] = this.colors[key * 4];
+				newColors[i * 4 + 1] = this.colors[key * 4 + 1];
+				newColors[i * 4 + 2] = this.colors[key * 4 + 2];
+				newColors[i * 4 + 3] = this.colors[key * 4 + 3];
 			}
 
-			newFaces.push(i);
+			newFaces[i] = i;
 		}
 
 		this.positions = newPositions;
@@ -213,7 +215,7 @@ class Submesh {
 			this.normals = newNormals;
 		}
 
-		if (this.texCoords2D) {
+		if (this.texCoords2D.length) {
 			this.texCoords2D[0] = newTexCoords2D;
 		}
 
