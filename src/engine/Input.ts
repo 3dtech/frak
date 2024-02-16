@@ -3,6 +3,8 @@ import Controller from '../scene/components/Controller';
 
 type ActivePointers = { [key: number]: PointerEvent };
 
+// TODO: Multi-touch, pause handling
+
 class Input {
 	private controllers: Controller[] = [];
 
@@ -21,6 +23,7 @@ class Input {
 
 		this.setupPanEvents();
 		this.setupWheelEvent();
+		this.setupClickEvent();
 	}
 
 	/** Used to set up handlers for events involving pointers */
@@ -84,11 +87,12 @@ class Input {
 		this.canvas.addEventListener('pointerdown', pointerDown);
 	}
 
-	/** Helper for handling panning */
+	/** Helper for handling events involving panning */
 	private setupPanEvent(
 		startPredicate: (touches: ActivePointers, id: number) => boolean,
-		started = () => {},
-		ended = () => {},
+		started = (pos: [number, number], button: number) => {},
+		moved = (delta: [number, number], button: number) => {},
+		ended = (pos: [number, number]) => {},
 	) {
 		let id = 0;
 		let button = -1;
@@ -103,7 +107,7 @@ class Input {
 			button = ev.button;
 
 			vec2.set(lastXY, ev.clientX, ev.clientY);
-			started();
+			started(lastXY, button);
 		}
 
 		const move = (touches: ActivePointers, pointerId: number) => {
@@ -115,16 +119,13 @@ class Input {
 			vec2.sub(delta, xy, lastXY);
 			vec2.copy(lastXY, xy);
 
-			for (const controller of this.controllers) {
-				// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
-				controller.onMouseMove(null, button, delta);
-			}
+			moved(delta, button);
 		}
 
 		const end = (touches: ActivePointers, pointerId: number) => {
 			id = 0;
 			button = -1;
-			ended();
+			ended(lastXY);
 		}
 
 		const testPointerDown = (touches: ActivePointers, pointerId: number) => {
@@ -139,15 +140,52 @@ class Input {
 	}
 
 	private setupPanEvents() {
-		// Mouse panning
 		this.setupPanEvent(
-			(touches, id) => touches[id].pointerType === 'mouse',
+			(touches, id) => Object.keys(touches).length === 1,
+			undefined,
+			(delta: [number, number], button: number) => {
+				for (const controller of this.controllers) {
+					// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
+					controller.onMouseMove(null, button, delta);
+				}
+			}
 		);
+	}
 
-		// Single touch panning
+	private setupClickEvent() {
+		const MAX_DELTA_TIME = 250;
+		const MAX_DELTA_SQ = 100;
+
+		let startTime = 0;
+		let distance = 0;
+		let button = -1;
+
 		this.setupPanEvent(
-			(touches, id) =>
-				Object.values(touches).filter(t => t.pointerType === 'touch').length === 1
+			(touches, id) => true,
+			(pos, btn) => {
+				startTime = performance.now();
+				distance = 0;
+				button = btn;
+			},
+			(delta, btn) => {
+				distance += delta[0] * delta[0] + delta[1] * delta[1];
+			},
+			pos => {
+				const endTime = performance.now();
+				const deltaTime = endTime - startTime;
+
+				if (deltaTime > MAX_DELTA_TIME) {
+					return;
+				}
+
+				if (distance > MAX_DELTA_SQ) {
+					return;
+				}
+
+				for (const controller of this.controllers) {
+					controller.onClick(null, button, [0, 0]);
+				}
+			}
 		);
 	}
 
