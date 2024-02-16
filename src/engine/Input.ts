@@ -14,14 +14,16 @@ class Input {
 		this.setupPointerEvents();
 	}
 
-	setupPointerEvents() {
+	private setupPointerEvents() {
+		// Prevent page scroll
 		this.canvas.addEventListener('touchmove', ev => ev.preventDefault());
 		this.canvas.addEventListener('contextmenu', ev => ev.preventDefault());
 
 		this.setupPanEvents();
 	}
 
-	setupPointerEvent(
+	/** Used to set up handlers for events involving pointers */
+	public setupPointerEvent(
 		start: (touches: ActivePointers, id: number) => void,
 		move: (touches: ActivePointers, id: number) => void,
 		end: (touches: ActivePointers, id: number) => void,
@@ -81,7 +83,8 @@ class Input {
 		this.canvas.addEventListener('pointerdown', pointerDown);
 	}
 
-	setupPanEvent(
+	/** Helper for handling panning */
+	private setupPanEvent(
 		startPredicate: (touches: ActivePointers, id: number) => boolean,
 		started = () => {},
 		ended = () => {},
@@ -93,10 +96,12 @@ class Input {
 		const delta = vec2.create();
 
 		const start = (touches: ActivePointers, pointerId: number) => {
-			id = pointerId;
-			button = touches[pointerId].button;
+			const ev = touches[pointerId];
 
-			vec2.set(lastXY, touches[pointerId].clientX, touches[pointerId].clientY);
+			id = pointerId;
+			button = ev.button;
+
+			vec2.set(lastXY, ev.clientX, ev.clientY);
 			started();
 		}
 
@@ -110,11 +115,8 @@ class Input {
 			vec2.copy(lastXY, xy);
 
 			for (const controller of this.controllers) {
-				if (button === -1) {
-					controller.onPan(null, delta);
-				} else {
-					controller.onMouseMove(null, button, delta);
-				}
+				// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
+				controller.onMouseMove(null, button, delta);
 			}
 		}
 
@@ -135,28 +137,17 @@ class Input {
 		this.setupPointerEvent(start, move, end, testPointerDown, testPointerUp);
 	}
 
-	setupMouseEvent(button: number) {
-		let started = false;
+	private setupPanEvents() {
+		// Mouse panning
+		this.setupPanEvent(
+			(touches, id) => touches[id].pointerType === 'mouse',
+		);
 
-		// We want to listen to mouse events even when more buttons are pressed
+		// Single touch panning
 		this.setupPanEvent(
 			(touches, id) =>
-				started ||
-				(touches[id].button === button && touches[id].pointerType === 'mouse'),
-			() => {
-				started = true;
-			},
-			() => {
-				started = false;
-			},
+				Object.values(touches).filter(t => t.pointerType === 'touch').length === 1
 		);
-	}
-
-	setupPanEvents() {
-		this.setupMouseEvent(0);
-		this.setupMouseEvent(2);
-
-		this.setupPanEvent((touches, id) => Object.keys(touches).length === 1);
 	}
 
 	setupPinchEvent() {}
