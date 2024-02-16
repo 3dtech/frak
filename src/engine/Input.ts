@@ -15,11 +15,9 @@ class Input {
 	}
 
 	setupPointerEvents() {
-		this.canvas.addEventListener('contextmenu', ev => {
-			ev.preventDefault();
+		this.canvas.addEventListener('touchmove', ev => ev.preventDefault());
+		this.canvas.addEventListener('contextmenu', ev => ev.preventDefault());
 
-			return false;
-		});
 		this.setupPanEvents();
 	}
 
@@ -52,6 +50,9 @@ class Input {
 		};
 
 		const pointerMove = (ev: PointerEvent) => {
+			// Prevent page panning with touch
+			ev.preventDefault();
+
 			activePointers[ev.pointerId] = ev;
 			move(activePointers, ev.pointerId);
 		};
@@ -118,10 +119,6 @@ class Input {
 		}
 
 		const end = (touches: ActivePointers, pointerId: number) => {
-			if (pointerId !== id) {
-				return;
-			}
-
 			id = 0;
 			button = -1;
 			ended();
@@ -143,7 +140,9 @@ class Input {
 
 		// We want to listen to mouse events even when more buttons are pressed
 		this.setupPanEvent(
-			(touches, id) => started || touches[id].button === button,
+			(touches, id) =>
+				started ||
+				(touches[id].button === button && touches[id].pointerType === 'mouse'),
 			() => {
 				started = true;
 			},
