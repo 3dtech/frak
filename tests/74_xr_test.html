@@ -58,7 +58,7 @@
 		}
 
 		function setupScene(scene) {
-			scene.root.addNode(scene.engine.assetsManager.addModel('data/gltf/space/space.gltf')).transform.scale([0.1, 0.1, 0.1]);
+			scene.root.addNode(scene.engine.assetsManager.addModel('data/gltf/OrientationTest.gltf'))/*.transform.scale([50, 50, 50])*/;
 		}
 
 		var engine;
@@ -68,6 +68,7 @@
 				'assetsPath': '../assets/',
 				'transparencyMode': 'blended',
 				'antialias': true,
+				'emissiveEnabled': true,
 			});
 
 			Engine.isImmersiveSupported().then(function (supported) {

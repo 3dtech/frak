@@ -11,15 +11,16 @@ class Input {
 		@param canvas The canvas element we want the events from
 	*/
 	constructor(public engine: Engine, private canvas: HTMLCanvasElement) {
-		this.setupPointerEvents();
+		this.setupEvents();
 	}
 
-	private setupPointerEvents() {
+	private setupEvents() {
 		// Prevent page scroll
 		this.canvas.addEventListener('touchmove', ev => ev.preventDefault());
 		this.canvas.addEventListener('contextmenu', ev => ev.preventDefault());
 
 		this.setupPanEvents();
+		this.setupWheelEvent();
 	}
 
 	/** Used to set up handlers for events involving pointers */
@@ -151,6 +152,25 @@ class Input {
 	}
 
 	setupPinchEvent() {}
+
+	setupWheelEvent() {
+		const handler = (ev: WheelEvent) => {
+			ev.preventDefault();
+
+			let delta = ev.deltaY;
+			if (delta === 0) {
+				return;
+			}
+
+			const direction = Math.sign(delta);
+
+			for (const controller of this.controllers) {
+				controller.onMouseWheel(null, delta, direction);
+			}
+		};
+
+		this.canvas.addEventListener('wheel', handler, { passive: false });
+	}
 
 	update() {}
 

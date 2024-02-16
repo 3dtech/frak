@@ -271,7 +271,7 @@ class OrbitController extends FlightController {
 		this.onChange("rotate", rotation);
 	}
 
-	onMouseWheel(position, delta, direction, type, event){
+	onMouseWheel(position, delta, direction){
 		if(direction<0) {
 			this.zoomIn();
 		}

@@ -84,15 +84,9 @@ class Controller extends Component {
 		@param delta Mouse movement delta as vec2 */
 	onMouseMove(position, buttons, delta): any {}
 
-	onMouseDown(position, button, delta): any {
-		this.buttons[button] = true;
-	}
-
-	onMouseUp(position, button, delta){
-		this.buttons[button] = false;
-	}
-
 	onPan(position, delta) {}
+
+	onMouseWheel(position, delta, direction) {}
 }
 
 globalThis.Controller = Controller;
