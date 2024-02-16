@@ -1,7 +1,6 @@
 import '../lib/gl-matrix.js';
 import '../lib/gl-matrix-3dtech-ext.js';
 import '../lib/jdataview.js';
-import '../lib/hammer.min.js';
 
 import 'Helpers';
 import 'scene/Cloneable';

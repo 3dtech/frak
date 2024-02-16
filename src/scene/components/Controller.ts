@@ -91,6 +91,8 @@ class Controller extends Component {
 	onMouseUp(position, button, delta){
 		this.buttons[button] = false;
 	}
+
+	onPan(position, delta) {}
 }
 
 globalThis.Controller = Controller;
