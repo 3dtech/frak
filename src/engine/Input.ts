@@ -2,19 +2,20 @@ import Engine from './Engine';
 import Controller, { Events } from '../scene/components/Controller';
 
 type ActivePointers = { [key: number]: PointerEvent };
+type RemoveListener = () => void;
 
-// TODO: Multi-touch, pause handling
+// TODO: Multi-touch, position
 
 class Input {
 	private controllers: Controller[] = [];
+	private metaListeners: RemoveListener[] = [];
+	private listeners: RemoveListener[] = [];
 
 	/** Constructor
 		@param engine The engine instance
 		@param canvas The canvas element we want the events from
 	*/
-	constructor(public engine: Engine, private canvas: HTMLCanvasElement) {
-		this.setupEvents();
-	}
+	constructor(public engine: Engine, private canvas: HTMLCanvasElement) {}
 
 	private dispatch<K extends keyof Events>(name: K, ...args: Events[K]) {
 		for (const controller of this.controllers) {
@@ -22,14 +23,67 @@ class Input {
 		}
 	}
 
-	private setupEvents() {
+	private createListener(target: EventTarget, name: string, handler: EventListener, options?: AddEventListenerOptions): RemoveListener {
+		target.addEventListener(name, handler, options);
+
+		return () => target.removeEventListener(name, handler, options);
+	}
+
+	/** Adds a listener with a remove function that removes itself */
+	private addListener(target: EventTarget, name: string, handler: EventListener, options?: AddEventListenerOptions, list = this.listeners): RemoveListener {
+		const innerRemove = this.createListener(target, name, handler, options);
+		const remove = () => {
+			innerRemove();
+			list.splice(list.indexOf(remove), 1);
+		};
+
+		list.push(remove);
+
+		return remove;
+	}
+
+	private addMetaListener(target: EventTarget, name: string, handler: EventListener, options?: AddEventListenerOptions) {
+		return this.addListener(target, name, handler, options, this.metaListeners);
+	}
+
+	private setupMetaListeners() {
+		if (this.metaListeners.length) {
+			return;
+		}
+
 		// Prevent page scroll
-		this.canvas.addEventListener('touchmove', ev => ev.preventDefault());
-		this.canvas.addEventListener('contextmenu', ev => ev.preventDefault());
+		this.addMetaListener(this.canvas, 'touchmove', ev => ev.preventDefault());
+		this.addMetaListener(this.canvas, 'contextmenu', ev => ev.preventDefault());
+	}
+
+	private setupListeners() {
+		if (this.listeners.length) {
+			return;
+		}
 
 		this.setupPanEvents();
 		this.setupWheelEvent();
 		this.setupClickEvent();
+	}
+
+	private removeListeners(list = this.listeners) {
+		for (let i = list.length - 1; i >= 0; i--) {
+			list[i]();
+		}
+	}
+
+	public start() {
+		this.setupMetaListeners();
+		this.setupListeners();
+	}
+
+	public pause() {
+		this.removeListeners();
+	}
+
+	public stop() {
+		this.removeListeners(this.metaListeners);
+		this.removeListeners();
 	}
 
 	/** Used to set up handlers for events involving pointers */
@@ -42,6 +96,8 @@ class Input {
 	) {
 		const activePointers: ActivePointers = {};
 		let active = false;
+		let removeMove: RemoveListener | null = null;
+		let removeUp: RemoveListener | null = null;
 
 		// We only listen for this once the first pointer is down, to ignore other pointerup events from other elements
 		const pointerUp = (ev: PointerEvent) => {
@@ -50,12 +106,12 @@ class Input {
 			delete activePointers[ev.pointerId];
 
 			if (Object.keys(activePointers).length === 0) {
-				document.removeEventListener('pointerup', pointerUp);
+				removeUp?.();
 			}
 
 			if (active && test) {
 				active = false;
-				document.removeEventListener('pointermove', pointerMove);
+				removeMove?.();
 
 				end(activePointers, ev.pointerId);
 			}
@@ -73,24 +129,24 @@ class Input {
 			activePointers[ev.pointerId] = ev;
 
 			if (Object.keys(activePointers).length === 1) {
-				document.addEventListener('pointerup', pointerUp);
+				removeUp = this.addListener(document, 'pointerup', pointerUp);
 			}
 
 			const test = testPointerDown(activePointers, ev.pointerId);
 			if (!active && test) {
 				active = true;
-				document.addEventListener('pointermove', pointerMove);
+				removeMove = this.addListener(document, 'pointermove', pointerMove);
 
 				start(activePointers, ev.pointerId);
 			} else if (active && !test) {
 				active = false;
-				document.removeEventListener('pointermove', pointerMove);
+				removeMove?.();
 
 				end(activePointers, ev.pointerId);
 			}
 		};
 
-		this.canvas.addEventListener('pointerdown', pointerDown);
+		this.addListener(this.canvas, 'pointerdown', pointerDown);
 	}
 
 	/** Helper for handling events involving panning */
@@ -207,7 +263,7 @@ class Input {
 			this.dispatch('onMouseWheel', [ev.clientX, ev.clientY], delta, direction);
 		};
 
-		this.canvas.addEventListener('wheel', handler, { passive: false });
+		this.addListener(this.canvas, 'wheel', handler, { passive: false });
 	}
 
 	update() {}

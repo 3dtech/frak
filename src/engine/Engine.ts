@@ -247,6 +247,7 @@ class Engine {
 
 		this.running = true;
 
+		this.input.start();
 		this.runInline();
 	}
 
@@ -350,6 +351,7 @@ class Engine {
 		Subsequent call to run() will start the engine again. */
 	stop(): any {
 		this.pause();
+		this.input.stop();
 		if (this.scene.started) this.scene.end(this.context, this);
 	}
 
@@ -358,6 +360,7 @@ class Engine {
 		this.running = false;
 		this.immersiveSession?.end();
 		this.pauseInline();
+		this.input.pause();
 	}
 
 	/** Toggles engine pause */
