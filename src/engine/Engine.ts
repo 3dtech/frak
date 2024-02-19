@@ -2,33 +2,35 @@ import FPS from 'engine/FPS';
 import AssetsManager from 'loading/AssetsManager';
 import Texture from 'rendering/materials/Texture';
 import Sampler from 'rendering/shaders/Sampler';
-import RenderingContext from 'rendering/RenderingContext';
+import RenderingContext, { Canvas } from 'rendering/RenderingContext';
 import Input from 'engine/Input';
 import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
 import WebXRPolyfill from 'webxr-polyfill';
 
-interface Options {
-	anisotropicFiltering?: number | false;
-	antialias?: boolean;
-	assetsPath?: string;
-	builtinShaders?: boolean;
-	directionalShadowResolution?: number;
-	captureScreenshot?: boolean;
-	contextErrorCallback?: any;
-	contextOptions?: WebGLContextAttributes;
-	debug?: boolean;
-	defaultRequestedFPS?: number;
-	emissiveEnabled?: boolean;
-	legacyAmbient?: boolean;
-	requestedFPS?: number;
-	runInBackground?: boolean;
-	shadowManualUpdate?: boolean;
-	showDebug?: boolean;
-	softShadows?: boolean;
-	ssao?: boolean;
-	tonemap?: string;
-}
+const DEFAULT_OPTIONS = {
+	anisotropicFiltering: 4 as number | false, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
+	antialias: false,
+	assetsPath: '',
+	builtinShaders: true,
+	captureScreenshot: false,
+	contextErrorCallback: undefined as any,
+	contextOptions: undefined as WebGLContextAttributes | undefined,
+	debug: false,
+	defaultRequestedFPS: 60.0,
+	directionalShadowResolution: 2048,
+	emissiveEnabled: false,	// TODO: Remove this for an automatic detection
+	legacyAmbient: true,
+	requestedFPS: 60.0,
+	runInBackground: false,
+	shadowManualUpdate: false,
+	showDebug: false,
+	softShadows: false,
+	ssao: false,
+	tonemap: 'aces',
+};
+
+type Options = typeof DEFAULT_OPTIONS;
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
@@ -53,13 +55,13 @@ class Engine {
 	useUpscaling: any;
 	_externallyPaused: any;
 	_savedCanvasStyles: any;
-	immersiveSession?: XRSession;
-	public immersiveRefSpace?: XRReferenceSpace;
+	immersiveSession: XRSession | null = null;
+	public immersiveRefSpace: XRReferenceSpace | null = null;
 
 	private externallyPaused = false;
 	private immersiveExitCB?: () => void;
-	private queuedImmersiveFrame: number;
-	private queuedInlineFrame?: number;
+	private queuedImmersiveFrame: number | null = null;
+	private queuedInlineFrame: number | null = null;
 
 	static async isImmersiveSupported() {
 		return navigator.xr?.isSessionSupported('immersive-ar');
@@ -68,28 +70,8 @@ class Engine {
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
 		@param options Engine options [optional] */
-	constructor(canvas, options: Options = {}) {
-		this.options = merge({
-			anisotropicFiltering: 4, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
-			antialias: false,
-			assetsPath: '',
-			builtinShaders: true,
-			captureScreenshot: false,
-			contextErrorCallback: null,
-			contextOptions: null,
-			debug: false,
-			defaultRequestedFPS: 60.0,
-			directionalShadowResolution: 2048,
-			emissiveEnabled: false,	// TODO: Remove this for an automatic detection
-			legacyAmbient: true,
-			requestedFPS: 60.0,
-			runInBackground: false,
-			shadowManualUpdate: false,
-			showDebug: false,
-			softShadows: false,
-			ssao: false,
-			tonemap: 'aces',
-		} as Options, options);
+	constructor(canvas: Canvas, options: Partial<Options> = {}) {
+		this.options = merge(DEFAULT_OPTIONS, options);
 
 		let _polyfill = new WebXRPolyfill();
 
@@ -275,6 +257,12 @@ class Engine {
 	}
 
 	async startImmersive(cb?: () => void) {
+		if (!navigator.xr) {
+			console.error('WebXR is not supported in this browser');
+
+			return;
+		}
+
 		try {
 			this.immersiveSession = await navigator.xr?.requestSession(
 				'immersive-ar',
@@ -285,6 +273,8 @@ class Engine {
 			);
 		} catch (e) {
 			console.error(`Failed to start immersive session: ${e}`);
+
+			return;
 		}
 
 		this.immersiveExitCB = cb;
@@ -296,7 +286,7 @@ class Engine {
 			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
 		});
 
-		if (this.immersiveSession.enabledFeatures.includes('local-floor')) {
+		if (this.immersiveSession.enabledFeatures?.includes('local-floor')) {
 			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
 		} else {
 			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local');
@@ -331,7 +321,7 @@ class Engine {
 		this.immersiveSession = null;
 		this.scene.camera.renderStage.generator.setImmersive(false);
 		this.immersiveExitCB?.();
-		this.immersiveExitCB = null;
+		this.immersiveExitCB = undefined;
 
 		if (this.running) {
 			this.runInline();
@@ -365,7 +355,7 @@ class Engine {
 
 	/** Toggles engine pause */
 	togglePause(): any {
-		if (this.running===false) this.run();
+		if (!this.running) this.run();
 		else this.pause();
 	}
 
@@ -472,7 +462,7 @@ class Engine {
 			canvas.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
 
 			var parent = this.context.canvas.parentNode;
-			parent.insertBefore(canvas, parent.firstChild);
+			parent!.insertBefore(canvas, parent!.firstChild);
 
 			this.debugCTX = canvas.getContext("2d");
 		}

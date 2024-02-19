@@ -10,6 +10,8 @@ interface ShaderCache {
 	[key: number]: Shader;
 }
 
+type Canvas = HTMLCanvasElement | string | null;
+
 /** Wraps webgl rendering context of canvas */
 class RenderingContext {
 	canvas: HTMLCanvasElement;
@@ -25,13 +27,13 @@ class RenderingContext {
 	/** Constructor
 		@param canvas The canvas element that provides rendering context
 	*/
-	constructor(canvas, engine: Engine, contextOptions?: WebGLContextAttributes, errorCallback?) {
+	constructor(canvas: Canvas, engine: Engine, contextOptions?: WebGLContextAttributes, errorCallback?) {
 		if (typeof canvas === 'string' && typeof document !== 'undefined') {
-			canvas = document.getElementById(canvas);
+			canvas = document.getElementById(canvas) as HTMLCanvasElement;
 		}
 
 		if (typeof window !== 'undefined' && (window as any).jQuery && canvas instanceof (window as any).jQuery) {
-			canvas = canvas[0];
+			canvas = (canvas as any)[0];
 		}
 
 		if (!('WebGL2RenderingContext' in window)) {
@@ -41,7 +43,7 @@ class RenderingContext {
 		if (!canvas)
 			throw 'RenderingContext requires a canvas element';
 
-		this.canvas = canvas;
+		this.canvas = canvas as HTMLCanvasElement;
 
 		if (typeof WebGLDebugUtils !== 'undefined') {
 			this.canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
@@ -49,12 +51,12 @@ class RenderingContext {
 		}
 
 		// Try to get rendering context for WebGL
-		this.gl = this.canvas.getContext('webgl2', Object.assign({
+		const gl = this.canvas.getContext('webgl2', Object.assign({
 			xrCompatible: true,
 		}, contextOptions));
 
 		// Acquiring context failed
-		if (!this.gl) {
+		if (!gl) {
 			var hideError = false;
 			if (FRAK.isFunction(errorCallback))
 				hideError = errorCallback();
@@ -66,12 +68,14 @@ class RenderingContext {
 				msg.style.backgroundColor = 'red';
 				msg.style.padding = '8px';
 				msg.textContent = 'WebGL seems to be unavailable in this browser.';
-				var parent = canvas.parentNode;
-				parent.insertBefore(msg, parent.firstChild);
+				var parent = this.canvas.parentNode;
+				parent!.insertBefore(msg, parent!.firstChild);
 			}
 
 			throw 'Failed to acquire GL context from canvas';
 		}
+
+		this.gl = gl;
 
 		if (typeof(WebGLDebugUtils) !== 'undefined') {
 			this.gl = WebGLDebugUtils.makeDebugContext(
@@ -187,4 +191,4 @@ class RenderingContext {
 }
 
 globalThis.RenderingContext = RenderingContext;
-export default RenderingContext;
+export { RenderingContext as default, Canvas };

@@ -15,6 +15,7 @@ import ImageBasedLight from './lights/ImageBasedLight';
 import RenderingContext from '../rendering/RenderingContext';
 import ImmersiveCamera from './components/ImmersiveCamera';
 import OrbitController from './components/OrbitController';
+import Material from '../rendering/materials/Material';
 
 /** Scene keeps track of components and nodes, cameras etc */
 class Scene extends Serializable {
@@ -133,8 +134,7 @@ class Scene extends Serializable {
 				me.startingQueue.push(component);
 			});
 
-			var timer = null;
-			timer = function() {
+			var timer = function() {
 				var delay = 50.0;	// Delay 50 milliseconds
 				var maximumTime = (new Date()).getTime() + delay;	// Store current time
 				while((new Date()).getTime() < maximumTime) {
@@ -229,7 +229,7 @@ class Scene extends Serializable {
 
 	/** @return All materials used in the scene */
 	getMaterials(): any {
-		var result = [];
+		var result: Material[] = [];
 
 		this.root.onEachChildComponent(
 			function(c) {

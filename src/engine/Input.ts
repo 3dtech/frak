@@ -4,7 +4,7 @@ import Controller, { Events } from '../scene/components/Controller';
 type ActivePointers = { [key: number]: PointerEvent };
 type RemoveListener = () => void;
 
-// TODO: Multi-touch, position
+// TODO: Multi-touch, position in canvas coordinates
 
 class Input {
 	private controllers: Controller[] = [];
@@ -153,7 +153,7 @@ class Input {
 	private setupPanEvent(
 		startPredicate: (touches: ActivePointers, id: number) => boolean,
 		started = (pos: [number, number], button: number) => {},
-		moved = (delta: [number, number], button: number) => {},
+		moved = (pos: [number, number], delta: [number, number], button: number) => {},
 		ended = (pos: [number, number]) => {},
 	) {
 		let id = 0;
@@ -181,7 +181,7 @@ class Input {
 			vec2.sub(delta, xy, lastXY);
 			vec2.copy(lastXY, xy);
 
-			moved(delta, button);
+			moved(xy, delta, button);
 		}
 
 		const end = (touches: ActivePointers, pointerId: number) => {
@@ -205,9 +205,9 @@ class Input {
 		this.setupPanEvent(
 			(touches, id) => Object.keys(touches).length === 1,
 			undefined,
-			(delta: [number, number], button: number) => {
+			(pos: [number, number], delta: [number, number], button: number) => {
 				// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
-				this.dispatch('onMouseMove', null, button, delta);
+				this.dispatch('onMouseMove', pos, button, delta);
 			}
 		);
 	}
