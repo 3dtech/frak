@@ -1,5 +1,13 @@
 import Component from 'scene/components/Component';
 
+type Vec2 = [number, number];
+
+interface Events {
+	onClick: [position: Vec2, button: number, delta: Vec2];
+	onMouseMove: [position: Vec2, button: number, delta: Vec2];
+	onMouseWheel: [position: Vec2, delta: number, direction: number];
+}
+
 /** Controller components are used to handle user input. */
 class Controller extends Component {
 	delta: any;
@@ -60,6 +68,16 @@ class Controller extends Component {
 	onUpdate(engine, pass): any {
 	}
 
+	onEvent<K extends keyof Events>(event: K, args: Events[K]): any {
+		if(event === "onClick") {
+			this.onClick(...args as Events["onClick"]);
+		} else if (event === "onMouseMove") {
+			this.onMouseMove(...args as Events["onMouseMove"]);
+		} else if (event === "onMouseWheel") {
+			this.onMouseWheel(...args as Events["onMouseWheel"]);
+		}
+	}
+
 	/** Called when key is either pressed or released */
 	onKeyStateChange(key, state): any { }
 
@@ -78,11 +96,8 @@ class Controller extends Component {
 	/** Called when button is clicked */
 	onClick(position, button, delta): any { }
 
-	/** Called when mouse is moved
-		@param position Position of mouse as vec2
-		@param buttons Buttons as array
-		@param delta Mouse movement delta as vec2 */
-	onMouseMove(position, buttons, delta): any {}
+	/** Called when mouse is moved */
+	onMouseMove(position, button, delta): any {}
 
 	onPan(position, delta) {}
 
@@ -90,4 +105,4 @@ class Controller extends Component {
 }
 
 globalThis.Controller = Controller;
-export default Controller;
+export { Controller as default, Events };

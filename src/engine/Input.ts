@@ -1,5 +1,5 @@
 import Engine from './Engine';
-import Controller from '../scene/components/Controller';
+import Controller, { Events } from '../scene/components/Controller';
 
 type ActivePointers = { [key: number]: PointerEvent };
 
@@ -14,6 +14,12 @@ class Input {
 	*/
 	constructor(public engine: Engine, private canvas: HTMLCanvasElement) {
 		this.setupEvents();
+	}
+
+	private dispatch<K extends keyof Events>(name: K, ...args: Events[K]) {
+		for (const controller of this.controllers) {
+			controller.onEvent(name, args);
+		}
 	}
 
 	private setupEvents() {
@@ -144,10 +150,8 @@ class Input {
 			(touches, id) => Object.keys(touches).length === 1,
 			undefined,
 			(delta: [number, number], button: number) => {
-				for (const controller of this.controllers) {
-					// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
-					controller.onMouseMove(null, button, delta);
-				}
+				// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
+				this.dispatch('onMouseMove', null, button, delta);
 			}
 		);
 	}
@@ -182,9 +186,7 @@ class Input {
 					return;
 				}
 
-				for (const controller of this.controllers) {
-					controller.onClick(null, button, [0, 0]);
-				}
+				this.dispatch('onClick', pos, button, [0, 0]);
 			}
 		);
 	}
@@ -202,9 +204,7 @@ class Input {
 
 			const direction = Math.sign(delta);
 
-			for (const controller of this.controllers) {
-				controller.onMouseWheel(null, delta, direction);
-			}
+			this.dispatch('onMouseWheel', [ev.clientX, ev.clientY], delta, direction);
 		};
 
 		this.canvas.addEventListener('wheel', handler, { passive: false });
