@@ -17,12 +17,14 @@ class Input {
 	*/
 	constructor(public engine: Engine, private canvas: HTMLCanvasElement) {}
 
+	/** Dispatches an event to all controllers */
 	private dispatch<K extends keyof Events>(name: K, ...args: Events[K]) {
 		for (const controller of this.controllers) {
 			controller.onEvent(name, args);
 		}
 	}
 
+	/** Creates a listener and returns a remove function */
 	private createListener(target: EventTarget, name: string, handler: EventListener, options?: AddEventListenerOptions): RemoveListener {
 		target.addEventListener(name, handler, options);
 
@@ -42,11 +44,13 @@ class Input {
 		return remove;
 	}
 
+	/** Adds a listener to the canvas that is removed when the input is stopped */
 	private addMetaListener(target: EventTarget, name: string, handler: EventListener, options?: AddEventListenerOptions) {
 		return this.addListener(target, name, handler, options, this.metaListeners);
 	}
 
-	private setupMetaListeners() {
+	/** Sets up listeners for meta events */
+	private setupMetaEvents() {
 		if (this.metaListeners.length) {
 			return;
 		}
@@ -56,7 +60,8 @@ class Input {
 		this.addMetaListener(this.canvas, 'contextmenu', ev => ev.preventDefault());
 	}
 
-	private setupListeners() {
+	/** Sets up listeners for input events */
+	private setupEvents() {
 		if (this.listeners.length) {
 			return;
 		}
@@ -64,23 +69,29 @@ class Input {
 		this.setupPanEvents();
 		this.setupWheelEvent();
 		this.setupClickEvent();
+		this.setupPinchEvent();
+		this.setupRotateEvent();
 	}
 
+	/** Removes listeners from a given list */
 	private removeListeners(list = this.listeners) {
 		for (let i = list.length - 1; i >= 0; i--) {
 			list[i]();
 		}
 	}
 
+	/** Starts input, sets up events */
 	public start() {
-		this.setupMetaListeners();
-		this.setupListeners();
+		this.setupMetaEvents();
+		this.setupEvents();
 	}
 
+	/** Pauses input, removes listeners */
 	public pause() {
 		this.removeListeners();
 	}
 
+	/** Stops input, removes all listeners */
 	public stop() {
 		this.removeListeners(this.metaListeners);
 		this.removeListeners();
@@ -107,22 +118,26 @@ class Input {
 
 			if (Object.keys(activePointers).length === 0) {
 				removeUp?.();
+				removeMove?.();
 			}
 
 			if (active && test) {
 				active = false;
-				removeMove?.();
 
 				end(activePointers, ev.pointerId);
 			}
 		};
 
 		const pointerMove = (ev: PointerEvent) => {
-			// Prevent page panning with touch
-			ev.preventDefault();
-
+			// Update pointer location even if not active
 			activePointers[ev.pointerId] = ev;
-			move(activePointers, ev.pointerId);
+
+			if (active) {
+				// Prevent page panning with touch
+				ev.preventDefault();
+
+				move(activePointers, ev.pointerId);
+			}
 		};
 
 		const pointerDown = (ev: PointerEvent) => {
@@ -130,17 +145,16 @@ class Input {
 
 			if (Object.keys(activePointers).length === 1) {
 				removeUp = this.addListener(document, 'pointerup', pointerUp);
+				removeMove = this.addListener(document, 'pointermove', pointerMove);
 			}
 
 			const test = testPointerDown(activePointers, ev.pointerId);
 			if (!active && test) {
 				active = true;
-				removeMove = this.addListener(document, 'pointermove', pointerMove);
 
 				start(activePointers, ev.pointerId);
 			} else if (active && !test) {
 				active = false;
-				removeMove?.();
 
 				end(activePointers, ev.pointerId);
 			}
@@ -221,7 +235,7 @@ class Input {
 		let button = -1;
 
 		this.setupPanEvent(
-			(touches, id) => true,
+			(touches, id) => Object.keys(touches).length === 1,
 			(pos, btn) => {
 				startTime = performance.now();
 				distance = 0;
@@ -247,7 +261,43 @@ class Input {
 		);
 	}
 
-	setupPinchEvent() {}
+	setupPinchEvent() {
+		let startCenter = vec2.create();
+		let startDistance = 0;
+		let lastScale = 0;
+
+		this.setupPointerEvent(
+			(touches, id) => {
+				const keys = Object.keys(touches);
+				const a = touches[keys[0]];
+				const b = touches[keys[1]];
+
+				lastScale = 0;
+				startDistance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+				vec2.set(startCenter, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+			},
+			(touches, id) => {
+				const keys = Object.keys(touches);
+				const a = touches[keys[0]];
+				const b = touches[keys[1]];
+
+				const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+				const center = vec2.set(vec2.create(), (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+
+				const eventScale = distance / startDistance;
+				const scale = eventScale - lastScale;
+
+				lastScale = eventScale - 1;
+
+				this.dispatch('onPinch', center, scale);
+			},
+			() => {},
+			(touches, id) => Object.keys(touches).length === 2,
+			(touches, id) => Object.keys(touches).length !== 2,
+		);
+	}
+
+	setupRotateEvent() {}
 
 	setupWheelEvent() {
 		const handler = (ev: WheelEvent) => {

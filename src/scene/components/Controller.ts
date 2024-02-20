@@ -6,6 +6,8 @@ interface Events {
 	onClick: [position: Vec2, button: number, delta: Vec2];
 	onMouseMove: [position: Vec2, button: number, delta: Vec2];
 	onMouseWheel: [position: Vec2, delta: number, direction: number];
+	onRotate: [position: Vec2, rotation: number];
+	onPinch: [position: Vec2, scale: number];
 }
 
 /** Controller components are used to handle user input. */
@@ -69,13 +71,7 @@ class Controller extends Component {
 	}
 
 	onEvent<K extends keyof Events>(event: K, args: Events[K]): any {
-		if(event === "onClick") {
-			this.onClick(...args as Events["onClick"]);
-		} else if (event === "onMouseMove") {
-			this.onMouseMove(...args as Events["onMouseMove"]);
-		} else if (event === "onMouseWheel") {
-			this.onMouseWheel(...args as Events["onMouseWheel"]);
-		}
+		this[event].apply(this, args);
 	}
 
 	/** Called when key is either pressed or released */
@@ -102,6 +98,10 @@ class Controller extends Component {
 	onPan(position, delta) {}
 
 	onMouseWheel(position, delta, direction) {}
+
+	onRotate(position, rotation) {}
+
+	onPinch(position, scale) {}
 }
 
 globalThis.Controller = Controller;
