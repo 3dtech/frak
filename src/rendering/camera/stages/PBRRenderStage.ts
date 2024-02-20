@@ -8,7 +8,7 @@ import Scene from "scene/Scene";
  * Deferred shading light accumulation pass
  */
 class PBRRenderStage extends RenderStage {
-	parent: MainRenderStage;
+	declare parent: MainRenderStage;
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		var gl = context.gl;

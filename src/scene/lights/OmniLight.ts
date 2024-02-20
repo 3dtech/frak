@@ -13,7 +13,6 @@ import Primitives from 'scene/geometry/Primitives';
 class OmniLight extends Light {
 	size: any;
 	geometry: any;
-	material: any;
 
 	constructor(size, color) {
 		super();

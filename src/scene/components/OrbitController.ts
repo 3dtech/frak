@@ -12,7 +12,6 @@ class OrbitController extends FlightController {
 	panXAxis: any;
 	panYAxis: any;
 	panSpeed: any;
-	rotation: any;
 	minimumPitch: any;
 	maximumPitch: any;
 	lastPinch: any;

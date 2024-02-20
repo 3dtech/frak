@@ -8,7 +8,6 @@ import BuiltInShaders from 'rendering/shaders/BuiltInShaders';
  * Used by AssetsManager to load shaders.
  */
 class ShadersManager extends Manager<ShaderDescriptor, Shader> {
-	sourceCallback: any;
 	context: any;
 	builtin: any;
 	shaderBundle: any;

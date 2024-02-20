@@ -7,7 +7,6 @@ import DataParser from 'loading/DataParser';
 class ThreadedDataParser extends DataParser {
 	timer: any;
 	inverval: any;
-	onError: any;
 
 	/**
 	 * Constructor

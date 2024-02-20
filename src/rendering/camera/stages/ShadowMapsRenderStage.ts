@@ -10,7 +10,7 @@ import Renderer from "rendering/renderers/Renderer";
 import Color from "rendering/Color";
 
 class ShadowMapsRenderStage extends RenderStage {
-	parent: MainRenderStage;
+	declare parent: MainRenderStage;
 	opaqueShader: Shader;
 	blendShader: Shader;
 	damaged = -1;

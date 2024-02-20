@@ -11,7 +11,7 @@ import UniformColor from "../../shaders/UniformColor";
 import Renderer from "../../renderers/Renderer";
 
 class BuffersRenderStage extends RenderStage {
-	parent: MainRenderStage;
+	declare parent: MainRenderStage;
 	opaqueShader: Shader;
 	blendShader: Shader;
 	clearColor = new Color(0, 0, 0, 0);

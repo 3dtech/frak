@@ -17,7 +17,7 @@ interface ShaderCache {
 }
 
 class TransparentRenderStage extends RenderStage {
-	parent: MainRenderStage;
+	declare parent: MainRenderStage;
 	size = vec2.create();
 	shaderCache: ShaderCache = {};
 	clearBlack = new Color(0, 0, 0, 0);

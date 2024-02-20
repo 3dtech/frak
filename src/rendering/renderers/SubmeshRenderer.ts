@@ -11,12 +11,8 @@ import Color from 'rendering/Color';
 
 class SubmeshRenderer extends Renderer {
 	submesh: any;
-	material: any;
 	buffer: any;
 	failed: any;
-	transparent: any;
-	localBoundingBox: any;
-	localBoundingSphere: any;
 	_cache: any;
 
 	constructor(context, matrix, submesh, material) {

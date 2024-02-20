@@ -6,10 +6,8 @@ import LinesRenderBufferInstanced from 'rendering/buffers/LinesRenderBufferInsta
  */
 
 class LineRenderer extends Renderer {
-	material: any;
 	buffer: any;
 	instanced: any;
-	unlit: any;
 	count: any;
 	_cache: any;
 

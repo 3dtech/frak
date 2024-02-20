@@ -34,7 +34,7 @@ class UnbindDstTarget extends RenderStage {
 
 class MainRenderStage extends RenderStage {
 	gbuffer: TargetTextureMulti;
-	parent: PBRPipeline;
+	declare parent: PBRPipeline;
 	oitAccum: TargetTextureFloat;
 	oitReveal: TargetTexture;
 	size = vec2.create();
