@@ -1,20 +1,20 @@
+/// <reference path="Input.d.ts" />
+
 import Engine from './Engine';
 import Controller, { Events } from '../scene/components/Controller';
 
-type ActivePointers = { [key: number]: PointerEvent };
-type RemoveListener = () => void;
+// TODO: Position in canvas coordinates
 
-// TODO: Multi-touch, position in canvas coordinates
-
+/** Input manager */
 class Input {
 	private controllers: Controller[] = [];
 	private metaListeners: RemoveListener[] = [];
 	private listeners: RemoveListener[] = [];
 
 	/** Constructor
-		@param engine The engine instance
-		@param canvas The canvas element we want the events from
-	*/
+	 * @param engine The engine instance
+	 * @param canvas The canvas element we want the events from
+	 * */
 	constructor(public engine: Engine, private canvas: HTMLCanvasElement) {}
 
 	/** Dispatches an event to all controllers */
@@ -97,15 +97,21 @@ class Input {
 		this.removeListeners();
 	}
 
-	/** Used to set up handlers for events involving pointers */
+	/** Used to set up handlers for events involving pointers
+	 * @param start The callback for when the event is started
+	 * @param move The callback for when a pointer is moved
+	 * @param end The callback for when the event is ended
+	 * @param testPointerDown The test for if the event should be started on pointer down
+	 * @param testPointerUp The test for if the event should be ended on pointer up
+	 * */
 	public setupPointerEvent(
-		start: (touches: ActivePointers, id: number) => void,
-		move: (touches: ActivePointers, id: number) => void,
-		end: (touches: ActivePointers, id: number) => void,
-		testPointerDown: (touches: ActivePointers, id: number) => boolean,
-		testPointerUp: (touches: ActivePointers, id: number) => boolean,
+		start: PointerEventCallback,
+		move: PointerEventCallback,
+		end: PointerEventCallback,
+		testPointerDown: TestPointerDown,
+		testPointerUp: TestPointerUp,
 	) {
-		const activePointers: ActivePointers = {};
+		const activePointers: ActivePointers = new Map();
 		let active = false;
 		let removeMove: RemoveListener | null = null;
 		let removeUp: RemoveListener | null = null;
@@ -113,9 +119,9 @@ class Input {
 		const pointerUp = (ev: PointerEvent) => {
 			const test = testPointerUp(activePointers, ev.pointerId);
 
-			delete activePointers[ev.pointerId];
+			activePointers.delete(ev.pointerId);
 
-			if (Object.keys(activePointers).length === 0) {
+			if (activePointers.size === 0) {
 				removeUp?.();
 				removeMove?.();
 			}
@@ -129,7 +135,7 @@ class Input {
 
 		const pointerMove = (ev: PointerEvent) => {
 			// Update pointer location even if not active, so when start is finally called, we have the correct position
-			activePointers[ev.pointerId] = ev;
+			activePointers.set(ev.pointerId, ev);
 
 			if (active) {
 				// Prevent page panning with touch
@@ -140,9 +146,9 @@ class Input {
 		};
 
 		const pointerDown = (ev: PointerEvent) => {
-			activePointers[ev.pointerId] = ev;
+			activePointers.set(ev.pointerId, ev);
 
-			if (Object.keys(activePointers).length === 1) {
+			if (activePointers.size === 1) {
 				removeUp = this.addListener(document, 'pointerup', pointerUp);
 				removeMove = this.addListener(document, 'pointermove', pointerMove);
 			}
@@ -164,10 +170,10 @@ class Input {
 
 	/** Helper for handling events involving panning */
 	private setupPanEvent(
-		startPredicate: (touches: ActivePointers, id: number) => boolean,
-		started = (pos: [number, number], button: number) => {},
-		moved = (pos: [number, number], delta: [number, number], button: number) => {},
-		ended = (pos: [number, number]) => {},
+		startPredicate: TestPointerDown,
+		started = (pos: Vec2, button: number) => {},
+		moved = (pos: Vec2, delta: Vec2, button: number) => {},
+		ended = (pos: Vec2) => {},
 	) {
 		let id = 0;
 		let button = -1;
@@ -176,7 +182,7 @@ class Input {
 		const delta = vec2.create();
 
 		const start = (touches: ActivePointers, pointerId: number) => {
-			const ev = touches[pointerId];
+			const ev = touches.get(pointerId);
 
 			id = pointerId;
 			button = ev.button;
@@ -190,7 +196,8 @@ class Input {
 				return;
 			}
 
-			vec2.set(xy, touches[pointerId].clientX, touches[pointerId].clientY);
+			const ev = touches.get(pointerId);
+			vec2.set(xy, ev.clientX, ev.clientY);
 			vec2.sub(delta, xy, lastXY);
 			vec2.copy(lastXY, xy);
 
@@ -203,22 +210,18 @@ class Input {
 			ended(lastXY);
 		}
 
-		const testPointerDown = (touches: ActivePointers, pointerId: number) => {
-			return startPredicate(touches, pointerId);
-		}
-
 		const testPointerUp = (touches: ActivePointers, pointerId: number) => {
 			return pointerId === id;
 		}
 
-		this.setupPointerEvent(start, move, end, testPointerDown, testPointerUp);
+		this.setupPointerEvent(start, move, end, startPredicate, testPointerUp);
 	}
 
 	private setupPanEvents() {
 		this.setupPanEvent(
-			(touches, id) => Object.keys(touches).length === 1,
+			(touches, id) => touches.size === 1,
 			undefined,
-			(pos: [number, number], delta: [number, number], button: number) => {
+			(pos: Vec2, delta: Vec2, button: number) => {
 				// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
 				this.dispatch('onMouseMove', pos, button, delta);
 			}
@@ -229,21 +232,27 @@ class Input {
 		const MAX_DELTA_TIME = 250;
 		const MAX_DELTA_SQ = 100;
 
+		const startPosition = vec2.create();
+		const delta = vec2.create();
 		let startTime = 0;
-		let distance = 0;
+		let distanceSq = 0;
 		let button = -1;
 
 		this.setupPanEvent(
-			(touches, id) => Object.keys(touches).length === 1,
+			(touches, id) => touches.size === 1,
 			(pos, btn) => {
+				vec2.copy(startPosition, pos);
+
 				startTime = performance.now();
-				distance = 0;
+				distanceSq = 0;
 				button = btn;
 			},
 			(delta, btn) => {
-				distance += delta[0] * delta[0] + delta[1] * delta[1];
+				distanceSq += delta[0] * delta[0] + delta[1] * delta[1];
 			},
 			pos => {
+				vec2.sub(delta, pos, startPosition);
+
 				const endTime = performance.now();
 				const deltaTime = endTime - startTime;
 
@@ -251,33 +260,35 @@ class Input {
 					return;
 				}
 
-				if (distance > MAX_DELTA_SQ) {
+				if (distanceSq > MAX_DELTA_SQ) {
 					return;
 				}
 
-				this.dispatch('onClick', pos, button, [0, 0]);
+				this.dispatch('onClick', pos, button, delta);
 			}
 		);
 	}
 
 	setupPinchEvent() {
 		const center = vec2.create();
+		let aId = 0;
+		let bId = 0;
 		let startDistance = 0;
 		let lastScale = 0;
 
 		this.setupPointerEvent(
 			(touches, id) => {
-				const activeTouches = Object.values(touches);
-				const a = activeTouches[0];
-				const b = activeTouches[1];
+				[ aId, bId ] = [ ...touches.keys() ];
+
+				const a = touches.get(aId);
+				const b = touches.get(bId);
 
 				lastScale = 0;
 				startDistance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 			},
 			(touches, id) => {
-				const activeTouches = Object.values(touches);
-				const a = activeTouches[0];
-				const b = activeTouches[1];
+				const a = touches.get(aId);
+				const b = touches.get(bId);
 
 				const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
@@ -290,27 +301,28 @@ class Input {
 				this.dispatch('onPinch', center, scale);
 			},
 			() => {},
-			(touches, id) => Object.keys(touches).length === 2,
-			(touches, id) => Object.keys(touches).length === 2,
+			(touches, id) => touches.size === 2,
+			(touches, id) => touches.size === 2,
 		);
 	}
 
 	setupRotateEvent() {
 		const center = vec2.create();
+		let aId = 0;
+		let bId = 0;
 		let lastRotation = 0;
 
 		this.setupPointerEvent(
 			(touches, id) => {
-				const activeTouches = Object.values(touches);
-				const a = activeTouches[0];
-				const b = activeTouches[1];
+				[ aId, bId ] = [ ...touches.keys() ];
+				const a = touches.get(aId);
+				const b = touches.get(bId);
 
 				lastRotation = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
 			},
 			(touches, id) => {
-				const activeTouches = Object.values(touches);
-				const a = activeTouches[0];
-				const b = activeTouches[1];
+				const a = touches.get(aId);
+				const b = touches.get(bId);
 
 				const rotation = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
 				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
@@ -327,8 +339,8 @@ class Input {
 				this.dispatch('onRotate', center, delta);
 			},
 			() => {},
-			(touches, id) => Object.keys(touches).length === 2,
-			(touches, id) => Object.keys(touches).length === 2,
+			(touches, id) => touches.size === 2,
+			(touches, id) => touches.size === 2,
 		);
 	}
 
