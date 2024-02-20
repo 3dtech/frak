@@ -110,7 +110,6 @@ class Input {
 		let removeMove: RemoveListener | null = null;
 		let removeUp: RemoveListener | null = null;
 
-		// We only listen for this once the first pointer is down, to ignore other pointerup events from other elements
 		const pointerUp = (ev: PointerEvent) => {
 			const test = testPointerUp(activePointers, ev.pointerId);
 
@@ -129,7 +128,7 @@ class Input {
 		};
 
 		const pointerMove = (ev: PointerEvent) => {
-			// Update pointer location even if not active
+			// Update pointer location even if not active, so when start is finally called, we have the correct position
 			activePointers[ev.pointerId] = ev;
 
 			if (active) {
@@ -262,27 +261,26 @@ class Input {
 	}
 
 	setupPinchEvent() {
-		let startCenter = vec2.create();
+		const center = vec2.create();
 		let startDistance = 0;
 		let lastScale = 0;
 
 		this.setupPointerEvent(
 			(touches, id) => {
-				const keys = Object.keys(touches);
-				const a = touches[keys[0]];
-				const b = touches[keys[1]];
+				const activeTouches = Object.values(touches);
+				const a = activeTouches[0];
+				const b = activeTouches[1];
 
 				lastScale = 0;
 				startDistance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-				vec2.set(startCenter, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
 			},
 			(touches, id) => {
-				const keys = Object.keys(touches);
-				const a = touches[keys[0]];
-				const b = touches[keys[1]];
+				const activeTouches = Object.values(touches);
+				const a = activeTouches[0];
+				const b = activeTouches[1];
 
 				const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-				const center = vec2.set(vec2.create(), (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
 
 				const eventScale = distance / startDistance;
 				const scale = eventScale - lastScale;
@@ -293,11 +291,46 @@ class Input {
 			},
 			() => {},
 			(touches, id) => Object.keys(touches).length === 2,
-			(touches, id) => Object.keys(touches).length !== 2,
+			(touches, id) => Object.keys(touches).length === 2,
 		);
 	}
 
-	setupRotateEvent() {}
+	setupRotateEvent() {
+		const center = vec2.create();
+		let lastRotation = 0;
+
+		this.setupPointerEvent(
+			(touches, id) => {
+				const activeTouches = Object.values(touches);
+				const a = activeTouches[0];
+				const b = activeTouches[1];
+
+				lastRotation = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
+			},
+			(touches, id) => {
+				const activeTouches = Object.values(touches);
+				const a = activeTouches[0];
+				const b = activeTouches[1];
+
+				const rotation = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
+				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+
+				let delta = rotation - lastRotation;
+				if (delta < -180) {
+					delta += 360;
+				} else if (delta > 180) {
+					delta -= 360;
+				}
+
+				lastRotation = rotation;
+
+				this.dispatch('onRotate', center, delta);
+			},
+			() => {},
+			(touches, id) => Object.keys(touches).length === 2,
+			(touches, id) => Object.keys(touches).length === 2,
+		);
+	}
 
 	setupWheelEvent() {
 		const handler = (ev: WheelEvent) => {

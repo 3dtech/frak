@@ -265,7 +265,7 @@ class OrbitController extends FlightController {
 		this.setZoom(scale);
 	}
 
-	onRotate(position, rotation, type, event): any {
+	onRotate(position, rotation): any {
 		var rad = (rotation * (Math.PI / 180));
 		this.rotation[1] = this.rotation[1] + rad;
 		this.onChange("rotate", rotation);
