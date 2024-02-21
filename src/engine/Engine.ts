@@ -6,7 +6,6 @@ import RenderingContext, { Canvas } from 'rendering/RenderingContext';
 import Input from 'engine/Input';
 import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
-import WebXRPolyfill from 'webxr-polyfill';
 
 const DEFAULT_OPTIONS = {
 	anisotropicFiltering: 4 as number | false, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
@@ -31,6 +30,7 @@ const DEFAULT_OPTIONS = {
 };
 
 type Options = typeof DEFAULT_OPTIONS;
+type ImmersiveMode = 'ar' | 'vr';
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
@@ -63,8 +63,8 @@ class Engine {
 	private queuedImmersiveFrame: number | null = null;
 	private queuedInlineFrame: number | null = null;
 
-	static async isImmersiveSupported() {
-		return navigator.xr?.isSessionSupported('immersive-ar');
+	static async isImmersiveSupported(mode: ImmersiveMode = 'ar') {
+		return navigator.xr?.isSessionSupported(`immersive-${mode}`);
 	}
 
 	/** Constructor
@@ -72,8 +72,6 @@ class Engine {
 		@param options Engine options [optional] */
 	constructor(canvas: Canvas, options: Partial<Options> = {}) {
 		this.options = merge(DEFAULT_OPTIONS, options);
-
-		let _polyfill = new WebXRPolyfill();
 
 		this.context = new RenderingContext(canvas, this, this.options.contextOptions, this.options.contextErrorCallback);
 

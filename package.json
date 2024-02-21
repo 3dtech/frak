@@ -31,8 +31,5 @@
   "devDependencies": {
     "@types/webxr": "^0.5.10",
     "esbuild": "^0.18.17"
-  },
-  "dependencies": {
-    "webxr-polyfill": "^2.0.3"
   }
 }
