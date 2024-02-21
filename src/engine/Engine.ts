@@ -7,6 +7,8 @@ import Input from 'engine/Input';
 import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
 
+type Tonemap = 'aces' | null;
+
 const DEFAULT_OPTIONS = {
 	anisotropicFiltering: 4 as number | false, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
 	antialias: false,
@@ -26,7 +28,7 @@ const DEFAULT_OPTIONS = {
 	showDebug: false,
 	softShadows: false,
 	ssao: false,
-	tonemap: 'aces',
+	tonemap: 'aces' as Tonemap,
 };
 
 type Options = typeof DEFAULT_OPTIONS;
@@ -53,13 +55,13 @@ class Engine {
 	WhiteTextureSampler: Sampler;
 	DiffuseFallbackSampler: Sampler;
 	useUpscaling: any;
-	_externallyPaused: any;
 	_savedCanvasStyles: any;
 	immersiveSession: XRSession | null = null;
 	public immersiveRefSpace: XRReferenceSpace | null = null;
 
 	private externallyPaused = false;
 	private immersiveExitCB?: () => void;
+	private immersiveMode: ImmersiveMode | null = null;
 	private queuedImmersiveFrame: number | null = null;
 	private queuedInlineFrame: number | null = null;
 
@@ -254,16 +256,22 @@ class Engine {
 		}
 	}
 
-	async startImmersive(cb?: () => void) {
+	async startImmersive(cb?: () => void, mode: ImmersiveMode = 'ar') {
 		if (!navigator.xr) {
 			console.error('WebXR is not supported in this browser');
 
 			return;
 		}
 
+		if (mode === 'ar' && !await Engine.isImmersiveSupported('ar')) {
+			console.error('AR is not supported in this browser, trying VR instead');
+
+			mode = 'vr';
+		}
+
 		try {
 			this.immersiveSession = await navigator.xr?.requestSession(
-				'immersive-ar',
+				`immersive-${mode}`,
 				{
 					optionalFeatures: ['local-floor'],
 					requiredFeatures: ['local'],
@@ -275,10 +283,11 @@ class Engine {
 			return;
 		}
 
+		this.immersiveMode = mode;
 		this.immersiveExitCB = cb;
 		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
 
-		this.scene.camera.renderStage.generator.setImmersive(true);
+		this.scene.camera.renderStage.generator.setImmersive(mode === 'ar');
 
 		await this.immersiveSession.updateRenderState({
 			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
@@ -288,7 +297,8 @@ class Engine {
 			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
 		} else {
 			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local');
-			this.scene.immersiveCamera.yOffset = 1.6;	// We don't have the right height, so let's guess an average
+			// No local-floor means we're probably running on a phone, so let's guess an average phone holding height
+			this.scene.immersiveCamera.yOffset = 1.5;
 		}
 
 		this.pauseInline();
@@ -317,6 +327,7 @@ class Engine {
 
 	private onExitImmersive() {
 		this.immersiveSession = null;
+		this.immersiveMode = null;
 		this.scene.camera.renderStage.generator.setImmersive(false);
 		this.immersiveExitCB?.();
 		this.immersiveExitCB = undefined;
