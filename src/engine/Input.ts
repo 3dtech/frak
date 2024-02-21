@@ -10,6 +10,7 @@ class Input {
 	private controllers: Controller[] = [];
 	private metaListeners: RemoveListener[] = [];
 	private listeners: RemoveListener[] = [];
+	private cacheVec2 = vec2.create();
 
 	/** Constructor
 	 * @param engine The engine instance
@@ -66,7 +67,7 @@ class Input {
 			return;
 		}
 
-		this.setupPanEvents();
+		this.setupPanEvent();
 		this.setupWheelEvent();
 		this.setupClickEvent();
 		this.setupPinchEvent();
@@ -80,10 +81,10 @@ class Input {
 		}
 	}
 
-	private transformCoordinates(out: Vec2) {
+	private transformCoordinates(xy: Vec2) {
 		const rect = this.canvas.getBoundingClientRect();
 
-		return vec2.set(out, out[0] - rect.left, out[1] - rect.top);
+		return vec2.set(this.cacheVec2, xy[0] - rect.left, xy[1] - rect.top);
 	}
 
 	/** Starts input, sets up events */
@@ -110,7 +111,7 @@ class Input {
 	 * @param testPointerDown The test for if the event should be started on pointer down
 	 * @param testPointerUp The test for if the event should be ended on pointer up
 	 * */
-	public setupPointerEvent(
+	public setupPointerHandler(
 		start: PointerEventCallback,
 		move: PointerEventCallback,
 		end: PointerEventCallback,
@@ -175,7 +176,7 @@ class Input {
 	}
 
 	/** Helper for handling events involving panning */
-	private setupPanEvent(
+	private setupPanHandler(
 		startPredicate: TestPointerDown,
 		started = (pos: Vec2, button: number) => {},
 		moved = (pos: Vec2, delta: Vec2, button: number) => {},
@@ -220,15 +221,14 @@ class Input {
 			return pointerId === id;
 		}
 
-		this.setupPointerEvent(start, move, end, startPredicate, testPointerUp);
+		this.setupPointerHandler(start, move, end, startPredicate, testPointerUp);
 	}
 
-	private setupPanEvents() {
-		this.setupPanEvent(
+	private setupPanEvent() {
+		this.setupPanHandler(
 			(touches, id) => touches.size === 1,
 			undefined,
 			(pos: Vec2, delta: Vec2, button: number) => {
-				// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
 				this.dispatch('onMouseMove', this.transformCoordinates(pos), button, delta);
 			}
 		);
@@ -241,20 +241,20 @@ class Input {
 		const startPosition = vec2.create();
 		const delta = vec2.create();
 		let startTime = 0;
-		let distanceSq = 0;
+		let deltaSq = 0;
 		let button = -1;
 
-		this.setupPanEvent(
+		this.setupPanHandler(
 			(touches, id) => touches.size === 1,
 			(pos, btn) => {
 				vec2.copy(startPosition, pos);
 
 				startTime = performance.now();
-				distanceSq = 0;
+				deltaSq = 0;
 				button = btn;
 			},
-			(delta, btn) => {
-				distanceSq += delta[0] * delta[0] + delta[1] * delta[1];
+			(pos, delta, btn) => {
+				deltaSq += delta[0] * delta[0] + delta[1] * delta[1];
 			},
 			pos => {
 				vec2.sub(delta, pos, startPosition);
@@ -266,7 +266,7 @@ class Input {
 					return;
 				}
 
-				if (distanceSq > MAX_DELTA_SQ) {
+				if (deltaSq > MAX_DELTA_SQ) {
 					return;
 				}
 
@@ -282,7 +282,7 @@ class Input {
 		let startDistance = 0;
 		let lastScale = 0;
 
-		this.setupPointerEvent(
+		this.setupPointerHandler(
 			(touches, id) => {
 				[ aId, bId ] = [ ...touches.keys() ];
 
@@ -318,7 +318,7 @@ class Input {
 		let bId = 0;
 		let lastRotation = 0;
 
-		this.setupPointerEvent(
+		this.setupPointerHandler(
 			(touches, id) => {
 				[ aId, bId ] = [ ...touches.keys() ];
 				const a = touches.get(aId);
@@ -334,9 +334,11 @@ class Input {
 				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
 
 				let delta = rotation - lastRotation;
-				if (delta < -180) {
+				while (delta < -180) {
 					delta += 360;
-				} else if (delta > 180) {
+				}
+
+				while (delta > 180) {
 					delta -= 360;
 				}
 
@@ -372,7 +374,14 @@ class Input {
 	update() {}
 
 	registerController(controller: Controller) {
-		this.controllers.push(controller);
+		const index = this.controllers.indexOf(controller);
+		if (index === -1) {
+			this.controllers.push(controller);
+
+			return true;
+		}
+
+		return false;
 	}
 
 	unregisterController(controller: Controller) {
