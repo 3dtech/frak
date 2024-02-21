@@ -80,6 +80,12 @@ class Input {
 		}
 	}
 
+	private transformCoordinates(out: Vec2) {
+		const rect = this.canvas.getBoundingClientRect();
+
+		return vec2.set(out, out[0] - rect.left, out[1] - rect.top);
+	}
+
 	/** Starts input, sets up events */
 	public start() {
 		this.setupMetaEvents();
@@ -223,7 +229,7 @@ class Input {
 			undefined,
 			(pos: Vec2, delta: Vec2, button: number) => {
 				// TODO: Pass along info about touch (legacy onPan isn't great, so let's break compatibility)
-				this.dispatch('onMouseMove', pos, button, delta);
+				this.dispatch('onMouseMove', this.transformCoordinates(pos), button, delta);
 			}
 		);
 	}
@@ -264,7 +270,7 @@ class Input {
 					return;
 				}
 
-				this.dispatch('onClick', pos, button, delta);
+				this.dispatch('onClick', this.transformCoordinates(pos), button, delta);
 			}
 		);
 	}
@@ -298,7 +304,7 @@ class Input {
 
 				lastScale = eventScale - 1;
 
-				this.dispatch('onPinch', center, scale);
+				this.dispatch('onPinch', this.transformCoordinates(center), scale);
 			},
 			() => {},
 			(touches, id) => touches.size === 2,
@@ -336,7 +342,7 @@ class Input {
 
 				lastRotation = rotation;
 
-				this.dispatch('onRotate', center, delta);
+				this.dispatch('onRotate', this.transformCoordinates(center), delta);
 			},
 			() => {},
 			(touches, id) => touches.size === 2,
@@ -345,6 +351,7 @@ class Input {
 	}
 
 	setupWheelEvent() {
+		const pos = vec2.create();
 		const handler = (ev: WheelEvent) => {
 			ev.preventDefault();
 
@@ -354,8 +361,9 @@ class Input {
 			}
 
 			const direction = Math.sign(delta);
+			vec2.set(pos, ev.clientX, ev.clientY);
 
-			this.dispatch('onMouseWheel', [ev.clientX, ev.clientY], delta, direction);
+			this.dispatch('onMouseWheel', this.transformCoordinates(pos), delta, direction);
 		};
 
 		this.addListener(this.canvas, 'wheel', handler, { passive: false });
@@ -365,6 +373,17 @@ class Input {
 
 	registerController(controller: Controller) {
 		this.controllers.push(controller);
+	}
+
+	unregisterController(controller: Controller) {
+		const index = this.controllers.indexOf(controller);
+		if (index !== -1) {
+			this.controllers.splice(index, 1);
+
+			return true;
+		}
+
+		return false;
 	}
 
 	bind(...args: any[]) {
