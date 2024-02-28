@@ -4,12 +4,17 @@ precision highp float;
 
 #include "snippets/camera.glsl"
 
+#ifdef LEGACY_AMBIENT
+uniform vec4 ambient;
+#endif
+
 uniform float alphaCutoff;
 uniform vec4 diffuse;
 
 uniform float metallic;
 uniform float perceptualRoughness;
 
+uniform vec4 ambientLight;
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;
@@ -118,6 +123,16 @@ vec2 occlusionUV() {
 
 const float PI = 3.1415926535897932384626433832795;
 const float REFLECTANCE = 0.5;
+
+const vec4 c0 = vec4(-1, -0.0275, -0.572, 0.022);
+const vec4 c1 = vec4(1, 0.0425, 1.04, -0.04);
+
+vec3 EnvBRDFApprox(vec3 f0, float perceptualRoughness, float NoV) {
+	vec4 r = perceptualRoughness * c0 + c1;
+	float a004 = min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
+	vec2 AB = vec2(-1.04, 1.04) * a004 + r.zw;
+	return f0 * AB.x + AB.y;
+}
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
@@ -255,8 +270,25 @@ void main(void) {
 	float shadow = 1.0;
 #endif
 
+#ifdef LEGACY_AMBIENT
+	vec4 legacyAmbient = ambient;
+#else
+	vec4 legacyAmbient = vec4(0.0);
+#endif
+
+	// Ambient
+	vec3 diffuseAmbient = outputColor.rgb;
+	vec3 specularAmbient = EnvBRDFApprox(F0, roughness, NdotV);
+	vec3 ambientColor = (diffuseAmbient + specularAmbient) * ambientLight.rgb;
+
+	// Directional light
     outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
 	outputColor.rgb *= shadow;
+
+	// Add ambient after shadow
+	outputColor.rgb += mix(ambientColor, legacyAmbient.rgb * diffuseAmbient, legacyAmbient.a) * occlusion;
+
+	// Tonemap
     outputColor.rgb = acesApprox(outputColor.rgb);
 #endif	// UNLIT
 
