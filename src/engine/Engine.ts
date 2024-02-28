@@ -256,7 +256,7 @@ class Engine {
 		}
 	}
 
-	async startImmersive(cb?: () => void, mode: ImmersiveMode = 'ar') {
+	async startImmersive(cb?: () => void, mode: ImmersiveMode = 'ar', domOverlay?: Element) {
 		if (!navigator.xr) {
 			console.error('WebXR is not supported in this browser');
 
@@ -269,13 +269,20 @@ class Engine {
 			mode = 'vr';
 		}
 
+		const options: XRSessionInit = {
+			optionalFeatures: ['local-floor'],
+			requiredFeatures: ['local'],
+		};
+
+		if (domOverlay) {
+			options.domOverlay = { root: domOverlay };
+			options.optionalFeatures.push('dom-overlay');
+		}
+
 		try {
 			this.immersiveSession = await navigator.xr?.requestSession(
 				`immersive-${mode}`,
-				{
-					optionalFeatures: ['local-floor'],
-					requiredFeatures: ['local'],
-				},
+				options,
 			);
 		} catch (e) {
 			console.error(`Failed to start immersive session: ${e}`);

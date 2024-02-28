@@ -10,15 +10,85 @@
 <body>
 	<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
 	<div>
-		<button id="xr-button" onclick="engine.startImmersive();">Start AR</button>
+		<button id="xr-button" onclick="startImmersive()" disabled>XR unavailable</button>
 		<button onclick="toggleDebug();">Debug</button>
 		<button onclick="pauseEngine(this);">PAUSE</button>
 		<button onclick="engine.requestFullscreen()">Fullscreen</button>
+	</div>
+	<div id="xr-overlay" style="display: none; position: absolute; bottom: 10%; left: 50%; transform: translate(-50%, -50%);">
+		<button onclick="engine.exitImmersive()" style="width: 50px; height: 30px; font-size: 12px;">Exit</button>
 	</div>
 
 	<script src="../builds/frak-latest.debug.js"></script>
 
 	<script type="text/javascript">
+		var ClickController = Controller.extend({
+			init: function() {
+				this._super();
+				this.marker = new Node('marker');
+				this.markers = new Node('markers');
+			},
+
+			type: function() {
+				return "ClickController";
+			},
+
+			onStart: function(context, engine) {
+				var material = new Material(
+					engine.assetsManager.addShaderSource("transparent"), {
+						"diffuse": new UniformColor({
+							r: 1.0,
+							g: 1.0,
+							b: 0.0,
+							a: 0.5
+						})
+					},
+					[]
+				);
+
+				var cone = Primitives.cone(0.3, 2.0, 16, material);
+				cone.transform.setPosition([0, -0.1, 0]);
+				this.marker.addNode(cone);
+
+				this.node.addNode(this.markers);
+
+				/*this.lightNode=new Node("Light");
+				this.light=new DirectionalLight();
+				this.light.color= new Color(0.7, 0.5, 0.9, 1);
+				this.light.intensity = 1.0;
+				this.light.setLightDirection(vec3.fromValues(-0.9, 0.7, 0.9));
+				this.lightNode.addComponent(this.light);
+				engine.scene.root.addNode(this.lightNode);*/
+			},
+
+			onClick: function(position, button) {
+				if (button != 0)
+					return;
+
+				var ray = this.node.scene.cameraComponent.screenPointToRay(position);
+				if (ray) {
+					var result = this.node.scene.dynamicSpace.rayCast(ray, 0xFFFFFFFF);
+					var nearest = result.nearest();
+					if (nearest) {
+						var instance = this.marker.instantiate();
+						instance.transform.setPosition(nearest.point);
+						var cone = instance.findChildWithName('Cone');
+						var original = vec3.fromValues(0, 1, 0);
+						var direction = ray.getDirection();
+						var costheta = vec3.dot(original, direction);
+						var theta = Math.acos(costheta);
+						var axis = vec3.cross(vec3.create(), original, direction);
+						vec3.normalize(axis, axis);
+						var rotation = quat.create();
+						quat.setAxisAngle(rotation, axis, theta);
+						var position = vec3.scale(direction, direction, -1.0);
+						mat4.fromRotationTranslation(cone.transform.relative, rotation, position);
+						this.markers.addNode(instance);
+					}
+				}
+			}
+		});
+
 		function setupCamera(scene) {
 			scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
 			scene.cameraComponent.setClipPlanes(1.0, 200.0);
@@ -58,6 +128,7 @@
 		}
 
 		function setupScene(scene) {
+			scene.root.addComponent(new ClickController());
 			scene.root.addNode(scene.engine.assetsManager.addModel('data/gltf/OrientationTest.gltf'))/*.transform.scale([50, 50, 50])*/;
 		}
 
@@ -71,9 +142,7 @@
 				'emissiveEnabled': true,
 			});
 
-			Engine.isImmersiveSupported().then(function (supported) {
-				document.getElementById('xr-button').disabled = !supported;
-			});
+			setupImmersiveButton();
 
 			engine.assetsManager.modelsManager.path = './';
 			engine.assetsManager.texturesManager.path = './'; // Load test textures locally
@@ -100,6 +169,33 @@
 				element.textContent = 'UNPAUSE';
 		}
 
+		var immersiveType;
+		function setupImmersiveButton() {
+			var button = document.getElementById('xr-button');
+			Engine.isImmersiveSupported('ar').then(function (supported) {
+				if (supported) {
+					button.disabled = false;
+					button.textContent = 'Start AR';
+					immersiveType = 'ar';
+				} else {
+					Engine.isImmersiveSupported('vr').then(function (supported) {
+						if (supported) {
+							button.disabled = false;
+							button.textContent = 'Start VR';
+							immersiveType = 'vr';
+						}
+					});
+				}
+			});
+		}
+
+		function startImmersive() {
+			var overlay = document.getElementById('xr-overlay');
+			overlay.style.display = 'block';
+			engine.startImmersive(function() {
+				overlay.style.display = 'none';
+			}, immersiveType, overlay);
+		}
 	</script>
 </body>
 
