@@ -134,7 +134,7 @@ function FrakCallback(classScope, fnCallback) {
 	return function() { return fnCallback.apply(classScope, arguments); };
 }
 
-function stringHash(str, seed = 0) {
+function stringHash(str: string, seed = 0) {
 	let hash = seed;
 	if (!str || !str.length) return hash;
 	for (let i = 0; i < str.length; i++) {

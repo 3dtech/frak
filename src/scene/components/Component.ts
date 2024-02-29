@@ -38,9 +38,8 @@ class Component extends Serializable {
 	}
 
 	/** Creates a new instance of the component */
-	instantiate(): any {
-		var instance=this.clone();
-		return instance;
+	instantiate(): this {
+		return new (this.constructor as new () => this)();
 	}
 
 	// Events

@@ -1,11 +1,8 @@
-import Cloneable from 'scene/Cloneable';
-
 /** Base uniform class. Uniforms are used as parameters for shaders. */
-class Uniform extends Cloneable {
+class Uniform {
 	value: any;
 
 	constructor(value?) {
-		super();
 		this.value = value;
 	}
 
@@ -14,10 +11,8 @@ class Uniform extends Cloneable {
 		@param uniformLocation Location of uniform */
 	bind(context, uniformLocation): any {}
 
-	clone() {
-		var c = super.clone();
-		c.value = this.value;
-		return c;
+	clone(): this {
+		return new (this.constructor as new (...args: any[]) => this)(this.value);
 	}
 }
 

@@ -133,10 +133,7 @@ class Sampler extends Serializable {
 
 	/** Clones the sampler */
 	clone() {
-		var c=super.clone();
-		c.name=this.name;
-		c.texture=this.texture;
-		return c;
+		return new Sampler(this.name, this.texture);
 	}
 
 }

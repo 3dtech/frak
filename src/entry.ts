@@ -3,7 +3,6 @@ import '../lib/gl-matrix-3dtech-ext.js';
 import '../lib/jdataview.js';
 
 import 'Helpers';
-import 'scene/Cloneable';
 import 'scene/Serializable';
 import 'scene/Serializer';
 import 'scene/CyclicSerializer';

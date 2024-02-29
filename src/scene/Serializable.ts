@@ -1,4 +1,3 @@
-import Cloneable from 'scene/Cloneable';
 import Serializer from 'scene/Serializer';
 import CyclicSerializer from 'scene/CyclicSerializer';
 import FRAK from 'Helpers';
@@ -11,14 +10,17 @@ var nextSerializableID=1;
 	with JSON.stringify, if they don't derive from Serializable.
 	If they derive from Serializable class, a copy will be made
 	from the original with only required fields. */
-class Serializable extends Cloneable {
+class Serializable {
 	serializable: boolean;
 	id: number;
 
 	constructor() {
-		super();
 		this.serializable=true;				//< If this flag is set to false, instance of serializable will not be serialized. Used for loading models
 		this.id=nextSerializableID++;
+	}
+
+	type(): string | false {
+		return false;
 	}
 
 	/** @return List of serializable attributes. Return true to include all fields. */

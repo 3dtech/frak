@@ -17,10 +17,10 @@ import RendererOrganizer from "rendering/camera/RendererOrganizer";
 import ScreenQuad from "rendering/camera/ScreenQuad";
 import Renderer from "rendering/renderers/Renderer";
 import SamplerAccumulator from "rendering/shaders/SamplerAccumulator";
+import Serializable from './scene/Serializable';
 import ShaderRequirements from "rendering/shaders/ShaderRequirements";
 import Subshader from "rendering/shaders/Subshader";
 import DynamicSpace from "rendering/spaces/DynamicSpace";
-import Cloneable from "scene/Cloneable";
 import CyclicSerializer from "scene/CyclicSerializer";
 import Serializer from "scene/Serializer";
 import CollisionOctreeNode from "scene/geometry/CollisionOctreeNode";
@@ -32,7 +32,7 @@ import Submesh from "scene/geometry/Submesh";
 
 // For every "base" (not extending) class, implement an extends function for backwards compatibility
 [
-	Cloneable,
+	Serializable,
 	Serializer,
 	Submesh,
 	RayTestResult,

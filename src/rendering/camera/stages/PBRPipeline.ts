@@ -114,11 +114,11 @@ class PBRPipeline extends PostProcessRenderStage {
 			gl.disable(gl.DEPTH_TEST);
 			gl.disable(gl.CULL_FACE);
 			context.modelview.push();
+			this.material.shader.use();
 			for (var i = 0; i < this.debugger.quads.length; i++) {
 				this.debugger.sampler.texture = this.debugger.quads[i].texture;
-				this.material.bind({}, [this.debugger.sampler]);
+				this.material.shader.bindSamplers([this.debugger.sampler]);
 				this.debugger.quads[i].quad.render(this.material.shader);
-				this.material.unbind();
 			}
 			context.modelview.pop();
 		}

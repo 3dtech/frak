@@ -487,7 +487,7 @@ class ModelLoaderGLTF {
 					material = this.materials[meshes[i].primitives[j].material];
 				} else {
 					material = new Material(
-						this.shadersManager.addSource('pbr', []),
+						null,
 						{},
 						[]
 					);

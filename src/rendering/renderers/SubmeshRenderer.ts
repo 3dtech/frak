@@ -150,10 +150,6 @@ class SubmeshRenderer extends Renderer {
 		// to prevent nonintuitive rendering problems
 		if (!material.uniforms.diffuse)
 			material.uniforms.diffuse = new UniformColor(new Color(1.0, 1.0, 1.0, 1.0));
-		if (!material.uniforms.specularStrength)
-			material.uniforms.specularStrength = new UniformFloat(0.0);
-		if (!material.uniforms.specularPower)
-			material.uniforms.specularPower = new UniformInt(8);
 		if (!material.uniforms.metallic)
 			material.uniforms.metallic = new UniformFloat(1.0);
 		if (!material.uniforms.perceptualRoughness)

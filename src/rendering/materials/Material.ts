@@ -2,15 +2,15 @@ import Serializable from 'scene/Serializable';
 import Sampler from 'rendering/shaders/Sampler';
 import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
 import DefinitionsHelper from "../DefinitionsHelper";
+import Shader from '../shaders/Shader';
+import Uniform from '../shaders/Uniform';
+
+interface Uniforms {
+	[key: string]: Uniform;
+}
 
 /** Material definition */
-
 class Material extends Serializable {
-	name: any;
-	shader: any;
-	uniforms: any;
-	samplers: any;
-	descriptor: any;
 	boundSamplers: any;
 	transparent = false;	// TODO: Requirements spread across too many files? (Shader, this, SubmeshRenderer)
 	unlit = false;
@@ -23,30 +23,23 @@ class Material extends Serializable {
 		@param uniforms Shader uniforms as object described in Shader.use
 		@param samplers Shader samplers as array described in Shader.bindSamplers/unbindSamplers
 		@param descriptor MaterialDescriptor instance [optional] */
-	constructor(shader?, uniforms?, samplers?: Sampler[], name?, descriptor?) {
+	constructor(public shader?: Shader, public uniforms?: Uniforms, public samplers: Sampler[] = [], public name?: string) {
 		super();
 		this.name = name;
 		if (!this.name)
 			this.name = 'unnamed_' + Math.round(Math.random() * Math.pow(36, 12)).toString(36);
 
-		this.shader = shader; ///< Instance of Shader
-		this.uniforms = uniforms; ///< Shader uniforms as described by Shader
-		this.samplers = samplers; ///< Shader samplers list
-		this.descriptor = descriptor;
+		for (const sampler of this.samplers) {
+			switch (sampler.name) {
+				case 'diffuse0':
+					this.definitions.addDefinition('DIFFUSE_TEXTURE');
 
-		if (this.samplers) {
-			for (const sampler of this.samplers) {
-				switch (sampler.name) {
-					case 'diffuse0':
-						this.definitions.addDefinition('DIFFUSE_TEXTURE');
+					break;
 
-						break;
+				case 'normal0':
+					this.definitions.addDefinition('NORMAL_TEXTURE');
 
-					case 'normal0':
-						this.definitions.addDefinition('NORMAL_TEXTURE');
-
-						break;
-				}
+					break;
 			}
 		}
 
@@ -57,10 +50,7 @@ class Material extends Serializable {
 		return "Material";
 	}
 
-	/** Binds material
-		@param uniforms Optional extra uniforms to go with the material
-		@param ... All the rest of the arguments are treated as optional
-		extra samplers or lists of samplers to go with the material */
+	/** @deprecated Prefer to bind your requirements directly in the appropriate render stage to avoid repeat work */
 	bind(uniforms?, ...samplers): any {
 		if (!this.shader)
 			return;
@@ -115,7 +105,8 @@ class Material extends Serializable {
 				samplers.push(this.samplers[i].clone());
 		}
 
-		var copy = new Material(this.shader, uniforms, samplers, this.descriptor);
+		var copy = new Material(this.shader, uniforms, samplers);
+		copy.definitions = this.definitions.clone();
 		copy.name = this.name+" (instance)";
 		return copy;
 	}
