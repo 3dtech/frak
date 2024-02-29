@@ -25,7 +25,7 @@ class Shader extends Serializable {
 	failed: any;
 	uniformLocations: any;
 	bindings: any;
-	definitions = new DefinitionsHelper();
+	definitions = new DefinitionsHelper([], 'SH_');
 	vertexShader: VertexShader;
 	fragmentShader: FragmentShader;
 	nameHash: number;

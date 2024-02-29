@@ -100,7 +100,9 @@ class RenderingContext {
 
 		if (!this.shaderCache[hash]) {
 			const shader = new Shader(this, baseShader.descriptor);
+			shader.hash ^= shader.definitions.hash;	// Remove old definitions hash
 			shader.definitions = baseShader.definitions.clone();	// In case there were definitions not in the descriptor
+			shader.hash ^= shader.definitions.hash;	// Re-add hash
 			shader.addVertexShader(baseShader.vertexShader.code);
 			shader.addFragmentShader(baseShader.fragmentShader.code);
 			for (const definition of definitions.definitions) {

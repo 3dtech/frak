@@ -16,8 +16,8 @@ interface ShaderCache {
  */
 class PBRLightsRenderStage extends PBRRenderStage {
 	shaderCache: ShaderCache = {};
-	emptyDefinitions = new DefinitionsHelper();
-	shadowDefinitions = new DefinitionsHelper(['SHADOWS']);
+	emptyDefinitions = new DefinitionsHelper([], 'LI_');
+	shadowDefinitions = new DefinitionsHelper(['SHADOWS'], 'LI_');
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
 		if (engine.options.legacyAmbient) {

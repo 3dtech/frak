@@ -409,19 +409,13 @@ class ModelLoaderGLTF {
 			}
 
 			var diffuse = new Color();
-			var emissive = new Color(0.0, 0.0, 0.0);
 			var metallic = 1.0;
 			var roughness = 1.0;
-			var cutoff = 0.5;
 			if (materials[i].pbrMetallicRoughness) {
 				var mr = materials[i].pbrMetallicRoughness;
 				var bcf = mr.baseColorFactor;
 				if (bcf) {
 					diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
-
-					if (bcf[3] < 1.0) {
-						materials[i].alphaMode = 'BLEND';
-					}
 				}
 
 				var metallicFactor = parseFloat(mr.metallicFactor);
@@ -438,32 +432,42 @@ class ModelLoaderGLTF {
 				setSampler(material, mr.metallicRoughnessTexture, 'metallicRoughness');
 			}
 
-			var alphaCutoff = parseFloat(materials[i].alphaCutoff);
-			if (!isNaN(alphaCutoff)) {
-				cutoff = alphaCutoff;
-			}
-
-			var eF = materials[i].emissiveFactor;
-			if (eF && eF.length > 2) {
-				emissive.set(eF[0], eF[1], eF[2]);
-			}
-
 			material.uniforms.diffuse = new UniformColor(diffuse);
 			material.uniforms.perceptualRoughness = new UniformFloat(roughness);
 			material.uniforms.metallic = new UniformFloat(metallic);
-			material.uniforms.emissive = new UniformColor(emissive);
-			material.uniforms.alphaCutoff = new UniformFloat(cutoff);
+
+			material.uniforms.emissive = new UniformColor(new Color(0, 0, 0));
+
+			const eF = materials[i].emissiveFactor;
+			if (eF && eF.length > 2) {
+				vec4.set(material.uniforms.emissive.value, eF[0], eF[1], eF[2], 1.0);
+			}
 
 			setSampler(material, materials[i].normalTexture, 'normal');
 			setSampler(material, materials[i].occlusionTexture, 'occlusion');
 			setSampler(material, materials[i].emissiveTexture, 'emissive');
 
-			if (materials[i].alphaMode) {
-				material.definitions.addDefinition('ALPHAMODE', `ALPHAMODE_${materials[i].alphaMode}`);
+			if (!materials[i].alphaMode) {
+				if (diffuse.a < 1.0) {	// Legacy compatibility
+					materials[i].alphaMode = 'BLEND';
+				} else {
+					materials[i].alphaMode = 'OPAQUE';
+				}
 			}
+
+			material.definitions.addDefinition('ALPHAMODE', `ALPHAMODE_${materials[i].alphaMode}`);
 
 			if (materials[i].alphaMode === 'BLEND') {
 				material.transparent = true;
+			} else if (materials[i].alphaMode === 'MASK') {
+				let cutoff = 0.5;
+
+				const alphaCutoff = parseFloat(materials[i].alphaCutoff);
+				if (!isNaN(alphaCutoff)) {
+					cutoff = alphaCutoff;
+				}
+
+				material.uniforms.alphaCutoff = new UniformFloat(cutoff);
 			}
 
 			if (materials[i].extensions) {

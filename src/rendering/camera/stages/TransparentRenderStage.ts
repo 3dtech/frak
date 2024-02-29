@@ -25,9 +25,9 @@ class TransparentRenderStage extends RenderStage {
 	clearWhite = new Color(1, 1, 1, 1);
 	revealMaterial: Material;
 	ppMaterial: Material;
-	emptyDefinitions = new DefinitionsHelper();
-	shadowDefinitions = new DefinitionsHelper(['SHADOWS']);
-	unlitDefinitions = new DefinitionsHelper(['MATERIAL_UNLIT']);
+	emptyDefinitions = new DefinitionsHelper([], 'TR_');
+	shadowDefinitions = new DefinitionsHelper(['SHADOWS'], 'TR_');
+	unlitDefinitions = new DefinitionsHelper(['MATERIAL_UNLIT'], 'TR_');
 	ambientLightUniform = {
 		ambientLight: new UniformColor(new Color(0, 0, 0, 0)),
 	};

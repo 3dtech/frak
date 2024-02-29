@@ -3,9 +3,9 @@ import {stringHash} from "../Helpers";
 class DefinitionsHelper {
 	hash = 0;
 
-	constructor(public definitions: string[] = []) {
+	constructor(public definitions: string[] = [], private hashPrefix = '') {
 		for (const definition of definitions) {
-			this.hash ^= stringHash(definition);
+			this.hash ^= stringHash(`${hashPrefix}${definition}`);
 		}
 	}
 
@@ -16,7 +16,7 @@ class DefinitionsHelper {
 		if (value) {
 			for (let i = 0; i < this.definitions.length; i++) {
 				if (this.definitions[i].startsWith(`${name} `)) {
-					this.hash ^= stringHash(this.definitions[i]);	// Remove hash
+					this.hash ^= stringHash(`${this.hashPrefix}${this.definitions[i]}`);	// Remove hash
 					this.definitions.splice(i, 1);
 					break;
 				}
@@ -26,7 +26,7 @@ class DefinitionsHelper {
 		// Add new definition
 		if (value || this.definitions.indexOf(definition) === -1) {
 			this.definitions.push(definition);
-			this.hash ^= stringHash(definition);
+			this.hash ^= stringHash(`${this.hashPrefix}${definition}`);	// Add hash
 		}
 	}
 

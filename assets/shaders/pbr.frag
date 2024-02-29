@@ -4,7 +4,10 @@ precision highp float;
 
 #include "snippets/camera.glsl"
 
+#if ALPHAMODE == ALPHAMODE_MASK
 uniform float alphaCutoff;
+#endif
+
 uniform vec4 ambient;
 uniform vec4 diffuse;
 uniform vec4 emissive;
