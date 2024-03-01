@@ -7,7 +7,9 @@ import Shader from "./shaders/Shader";
 import DefinitionsHelper from "./DefinitionsHelper";
 
 interface ShaderCache {
-	[key: number]: Shader;
+	[shaderHash: number]: {
+		[definitionsHash: number]: Shader;
+	};
 }
 
 type Canvas = HTMLCanvasElement | string | null;
@@ -96,9 +98,11 @@ class RenderingContext {
 	}
 
 	selectShader(baseShader: Shader, definitions: DefinitionsHelper): Shader {
-		const hash = baseShader.hash ^ definitions.hash;
+		if (!this.shaderCache[baseShader.hash]) {
+			this.shaderCache[baseShader.hash] = {};
+		}
 
-		if (!this.shaderCache[hash]) {
+		if (!this.shaderCache[baseShader.hash][definitions.hash]) {
 			const shader = new Shader(this, baseShader.descriptor);
 			shader.hash ^= shader.definitions.hash;	// Remove old definitions hash
 			shader.definitions = baseShader.definitions.clone();	// In case there were definitions not in the descriptor
@@ -110,10 +114,10 @@ class RenderingContext {
 				shader.addDefinition(name, value);
 			}
 
-			this.shaderCache[hash] = shader;
+			this.shaderCache[baseShader.hash][definitions.hash] = shader;
 		}
 
-		return this.shaderCache[hash];
+		return this.shaderCache[baseShader.hash][definitions.hash];
 	}
 
 	getShaderSnippet(name: string): string {
