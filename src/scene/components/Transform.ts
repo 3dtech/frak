@@ -96,8 +96,8 @@ class Transform extends Component {
 
 	/** Returns a clone of this transformation.
 		@return a new instance of {Transform} */
-	clone() {
-		var t = new Transform();
+	clone(): this {
+		var t = super.clone();
 		t.relative=mat4.clone(this.relative);
 		t.absolute=mat4.clone(this.absolute);
 		return t;

@@ -39,7 +39,7 @@ class Component extends Serializable {
 
 	/** Creates a new instance of the component */
 	instantiate(): this {
-		return new (this.constructor as new () => this)();
+		return this.clone();
 	}
 
 	// Events
@@ -119,6 +119,10 @@ class Component extends Serializable {
 		@param engine Instance of Engine
 		@param pass Update pass */
 	onUpdate(engine: Engine, pass) { }
+
+	clone(): this {
+		return new (this.constructor as any)();
+	}
 }
 
 globalThis.Component = Component;
