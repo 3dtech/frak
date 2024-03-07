@@ -4,7 +4,7 @@ in vec3 position;
 in vec3 pointA;
 in vec3 pointB;
 in float width;
-in vec4 color;
+layout(location = 5) in vec4 color;
 
 uniform vec2 viewport;
 uniform mat4 model;
