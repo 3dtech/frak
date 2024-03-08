@@ -1,5 +1,5 @@
 import Renderer from "../renderers/Renderer";
-import Material from "../materials/Material";
+import Material, { RendererType as Type, TransparencyType as Transparency } from "../materials/Material";
 import RenderingContext from "../RenderingContext";
 import Shader from "../shaders/Shader";
 
@@ -75,13 +75,18 @@ class View {
 	}
 }
 
+// Shorthand to get the material properties of a renderer
+const g = (r: Renderer) => r.material.properties;
+
 class RendererOrganizer {
 	private views: View[] = [];
 
-	public opaqueRenderers = this.addView(new View(r => !r.transparent && !r.customShader && !r.unlit));
-	public transparentRenderers = this.addView(new View(r => r.transparent && !r.customShader && !r.unlit));
-	public unlitRenderers = this.addView(new View(r => r.unlit && !r.customShader));	// Include transparent renderers for the opaque parts
-	public customRenderers = this.addView(new View(r => r.customShader));
+	public opaqueRenderers = this.addView(new View(r => g(r).type === Type.PBR));	// Include transparent renderers for the opaque parts
+	public transparentRenderers = this.addView(
+		new View(r => g(r).transparency === Transparency.Transparent && g(r).type !== Type.Custom)	// Include all but custom renderers for the transparent parts
+	);
+	public unlitRenderers = this.addView(new View(r => g(r).type === Type.Unlit));	// Include transparent renderers for the opaque parts
+	public customRenderers = this.addView(new View(r => g(r).type === Type.Custom));
 
 	addView(view: View): View {
 		this.views.push(view);

@@ -14,15 +14,11 @@ class Renderer {
 	receiveShadows: any;
 	lightContribution: any;
 	reflectivity: any;
-	transparent: any;
-	customShader: any;
 	localBoundingBox: any;
 	localBoundingSphere: any;
 	globalBoundingBox: any;
 	globalBoundingSphere: any;
-	unlit: boolean;
 	material: Material;
-	stencilLayer = 1;	// For masking when rendering to depth buffer for immersive
 
 	/** Constructor
 		@param matrix Matrix applied to anything rendered
@@ -36,9 +32,6 @@ class Renderer {
 		this.receiveShadows = true;
 		this.lightContribution = 1.0;
 		this.reflectivity = 0.0;
-
-		this.transparent = false; ///< Value must be set to true to have renderer passed through transparent pipeline
-		this.customShader = false;
 
 		this.localBoundingBox = new BoundingBox();
 		this.localBoundingSphere = new BoundingSphere();

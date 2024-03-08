@@ -21,7 +21,6 @@ class SubmeshRenderer extends Renderer {
 		this.material = material;
 		this.buffer = [];
 		this.failed = false;
-		this.transparent = false;
 		this.localBoundingBox = this.submesh.boundingBox;
 		this.localBoundingSphere = this.submesh.boundingSphere;
 		this.updateGlobalBoundingVolumes();
@@ -154,16 +153,6 @@ class SubmeshRenderer extends Renderer {
 			material.uniforms.metallic = new UniformFloat(1.0);
 		if (!material.uniforms.perceptualRoughness)
 			material.uniforms.perceptualRoughness = new UniformFloat(1.0);
-
-		// Set this renderer to transparent, if its material is transparent or if diffuse color or ambient color has alpha less than 1
-		this.transparent = material.transparent ||
-			(material.shader && material.shader.requirements.transparent) ||
-			(material.uniforms['diffuse'] && material.uniforms['diffuse'].value[3] < 1.0) ||
-			(material.uniforms['ambient'] && material.uniforms['ambient'].value[3] < 1.0);
-
-		this.unlit = material.unlit;
-		this.customShader = material.customShader;
-		this.stencilLayer = material.stencilLayer;
 
 		this.failed = false;
 	}

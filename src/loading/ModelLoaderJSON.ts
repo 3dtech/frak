@@ -1,5 +1,5 @@
 import Sampler from 'rendering/shaders/Sampler';
-import Material from 'rendering/materials/Material';
+import Material, { TransparencyType } from 'rendering/materials/Material';
 import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
 import UniformColor from 'rendering/shaders/UniformColor';
 import UniformInt from 'rendering/shaders/UniformInt';
@@ -85,17 +85,13 @@ class ModelLoaderJSON {
 	}
 
 	/** Loads a material */
-	loadMaterial(material, parsedMaterial): any {
+	loadMaterial(material: Material, parsedMaterial): any {
 		var shaderName = parsedMaterial.shader || 'diffuse';
 		material.name = parsedMaterial.name;
 		material.shader = this.shadersManager.addSource(shaderName);
 
-		// FIXME: shaders should always download the accompanying requirements json file and apply requirements from there
 		if (shaderName.toLowerCase() == 'transparent') {
-			material.transparent = true;
-			material.definitions.addDefinition('ALPHAMODE', 'ALPHAMODE_BLEND');
-		} else {
-			material.definitions.addDefinition('ALPHAMODE', 'ALPHAMODE_OPAQUE');
+			material.setTransparency(TransparencyType.Transparent);
 		}
 
 		material.uniforms = {};

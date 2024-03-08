@@ -1,6 +1,6 @@
 import RendererComponent from 'scene/components/RendererComponent';
 import UniformColor from 'rendering/shaders/UniformColor';
-import Material from 'rendering/materials/Material';
+import Material, { RendererType } from 'rendering/materials/Material';
 import UniformVec2 from 'rendering/shaders/UniformVec2';
 import LineRenderer from 'rendering/renderers/LineRenderer';
 import BoundingBox from 'scene/geometry/BoundingBox';
@@ -50,6 +50,7 @@ class LineRendererComponent extends RendererComponent {
 		this.material = new Material(null, {
 			viewport: new UniformVec2(),
 		}, []);
+		this.material.setType(RendererType.Custom);
 		this.overlay = false; ///< If set to true the lines are rendered in onPostRender instead of the usual pipeline
 
 		this.lines = [];

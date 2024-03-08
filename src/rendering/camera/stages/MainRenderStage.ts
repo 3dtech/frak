@@ -57,10 +57,10 @@ class MainRenderStage extends RenderStage {
 		this.addStage(new BindDstTarget());
 		this.backgroundRenderStage = this.addStage(new BackgroundRenderStage());
 		this.addStage(new TonemapRenderStage());
+		this.emissiveStage = this.addStage(new EmissiveRenderStage()).disable();
 		this.addStage(new UnlitRenderStage());
 		this.addStage(new CustomRenderStage());
 		this.addStage(new TransparentRenderStage());
-		this.emissiveStage = this.addStage(new EmissiveRenderStage()).disable();
 		this.addStage(new UnbindDstTarget());
 	}
 

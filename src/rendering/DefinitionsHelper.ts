@@ -9,29 +9,38 @@ class DefinitionsHelper {
 		}
 	}
 
-	/** Add a #define, replacing an existing one if needed */
-	addDefinition(name: string, value?: string) {
-		const definition = `${name}${value ? ` ${value}` : ''}`;
-		// Remove existing definition if value is provided
-		if (value) {
-			for (let i = 0; i < this.definitions.length; i++) {
-				if (this.definitions[i].startsWith(`${name} `)) {
-					this.hash ^= stringHash(`${this.hashPrefix}${this.definitions[i]}`);	// Remove hash
-					this.definitions.splice(i, 1);
-					break;
-				}
+	removeDefinition(name: string, hasValue = false) {
+		const test = (v: string) => {
+			if (hasValue) {
+				return v.startsWith(`${name} `);
+			} else {
+				return v === name;
 			}
-		}
+		};
 
-		// Add new definition
-		if (value || this.definitions.indexOf(definition) === -1) {
-			this.definitions.push(definition);
-			this.hash ^= stringHash(`${this.hashPrefix}${definition}`);	// Add hash
+		for (let i = 0; i < this.definitions.length; i++) {
+			if (test(this.definitions[i])) {
+				this.hash ^= stringHash(`${this.hashPrefix}${this.definitions[i]}`);	// Remove hash
+				this.definitions.splice(i, 1);
+
+				break;
+			}
 		}
 	}
 
+	/** Add a #define, replacing an existing one if needed */
+	addDefinition(name: string, value?: string) {
+		const hasValue = value !== undefined;
+		const definition = `${name}${hasValue ? ` ${value}` : ''}`;
+
+		this.removeDefinition(name, hasValue);
+
+		this.definitions.push(definition);
+		this.hash ^= stringHash(`${this.hashPrefix}${definition}`);	// Add hash
+	}
+
 	clone() {
-		return new DefinitionsHelper(this.definitions.slice());
+		return new DefinitionsHelper(this.definitions.slice(), this.hashPrefix);
 	}
 }
 

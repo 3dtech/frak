@@ -18,8 +18,6 @@ class LineRenderer extends Renderer {
 		this.buffer = new LinesRenderBufferInstanced(context);
 		this.instanced = true;
 
-		this.customShader = true;
-
 		this.count = 0;
 	}
 

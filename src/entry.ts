@@ -18,7 +18,6 @@ import 'rendering/shaders/AttributeLocations';
 import 'rendering/shaders/Subshader';
 import 'rendering/shaders/VertexShader';
 import 'rendering/shaders/FragmentShader';
-import 'rendering/shaders/ShaderRequirements';
 import 'rendering/shaders/Shader';
 import 'rendering/shaders/Uniform';
 import 'rendering/shaders/UniformInt';

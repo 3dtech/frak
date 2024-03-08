@@ -4,6 +4,62 @@ import SamplerAccumulator from 'rendering/shaders/SamplerAccumulator';
 import DefinitionsHelper from "../DefinitionsHelper";
 import Shader from '../shaders/Shader';
 import Uniform from '../shaders/Uniform';
+import { stringHash } from '../../Helpers';
+
+enum RendererType {
+	PBR = 'PBR',
+	Unlit = 'Unlit',
+	Custom = 'Custom',
+}
+
+enum TransparencyType {
+	Opaque = 'Opaque',
+	Transparent = 'Transparent',
+	Mask = 'Mask',
+}
+
+const TransparencyToDefinition = {
+	[TransparencyType.Opaque]: 'OPAQUE',
+	[TransparencyType.Transparent]: 'BLEND',
+	[TransparencyType.Mask]: 'MASK',
+};
+
+interface Properties {
+	type: RendererType;
+	transparency: TransparencyType;
+}
+
+class MaterialProperties implements Properties {
+	hash = 0;
+
+	constructor(
+		public type: RendererType = RendererType.PBR,
+		public transparency: TransparencyType = TransparencyType.Opaque,
+	) {
+		this.hash ^= stringHash(type);
+		this.hash ^= stringHash(transparency);
+	}
+
+	setType(type: RendererType) {
+		if (type === this.type) {
+			return;
+		}
+
+		this.hash ^= stringHash(this.type);
+		this.type = type;
+		this.hash ^= stringHash(type);
+	}
+
+	setTransparency(transparency: TransparencyType) {
+		if (transparency === this.transparency) {
+			return;
+		}
+
+		this.hash ^= stringHash(this.transparency);
+		this.transparency = transparency;
+		this.hash ^= stringHash(transparency);
+	}
+}
 
 interface Uniforms {
 	[key: string]: Uniform;
@@ -12,17 +68,18 @@ interface Uniforms {
 /** Material definition */
 class Material extends Serializable {
 	boundSamplers: any;
-	transparent = false;	// TODO: Requirements spread across too many files? (Shader, this, SubmeshRenderer)
-	unlit = false;
-	customShader = false;
 	stencilLayer = 1;
-	definitions = new DefinitionsHelper();
+	properties = new MaterialProperties();
+	definitions = new DefinitionsHelper([
+		`ALPHAMODE ALPHAMODE_${TransparencyToDefinition[this.properties.transparency]}`,
+	]);
+	hash = this.properties.hash;
 
 	/** Constructor
 		@param shader Shader that will be used
 		@param uniforms Shader uniforms as object described in Shader.use
 		@param samplers Shader samplers as array described in Shader.bindSamplers/unbindSamplers
-		@param descriptor MaterialDescriptor instance [optional] */
+		@param name string name of the material */
 	constructor(public shader?: Shader, public uniforms?: Uniforms, public samplers: Sampler[] = [], public name?: string) {
 		super();
 		this.name = name;
@@ -93,6 +150,36 @@ class Material extends Serializable {
 		this.boundSamplers.clear();
 	}
 
+	setOptions(options: Partial<Properties>) {
+		this.hash ^= this.properties.hash;
+
+		if (options.type !== undefined) {
+			this.properties.setType(options.type);
+			if (options.type === RendererType.Unlit) {
+				this.definitions.addDefinition('MATERIAL_UNLIT');
+			} else {
+				this.definitions.removeDefinition('MATERIAL_UNLIT');
+			}
+		}
+
+		if (options.transparency !== undefined) {
+			this.properties.setTransparency(options.transparency);
+			this.definitions.addDefinition('ALPHAMODE', `ALPHAMODE_${TransparencyToDefinition[options.transparency]}`);
+		}
+
+		// TODO: More options (presence of textures, etc)
+
+		this.hash ^= this.properties.hash;
+	}
+
+	setType(type: RendererType) {
+		this.setOptions({ type });
+	}
+
+	setTransparency(transparency: TransparencyType) {
+		this.setOptions({ transparency });
+	}
+
 	instantiate() {
 		var uniforms = {};
 		for (var i in this.uniforms) {
@@ -107,6 +194,8 @@ class Material extends Serializable {
 
 		var copy = new Material(this.shader, uniforms, samplers);
 		copy.definitions = this.definitions.clone();
+		copy.setOptions(this.properties);
+		// TODO: hash
 		copy.name = this.name+" (instance)";
 		return copy;
 	}
@@ -115,4 +204,4 @@ class Material extends Serializable {
 
 globalThis.Material = Material;
 
-export default Material;
+export { Material as default, MaterialProperties, RendererType, TransparencyType };

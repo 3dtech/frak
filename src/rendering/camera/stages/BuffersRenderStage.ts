@@ -13,7 +13,6 @@ import Renderer from "../../renderers/Renderer";
 class BuffersRenderStage extends RenderStage {
 	declare parent: MainRenderStage;
 	opaqueShader: Shader;
-	blendShader: Shader;
 	clearColor = new Color(0, 0, 0, 0);
 	private materialBind = (m: Material, s: Shader) => {
 		s.bindUniforms(m.uniforms);
@@ -59,13 +58,6 @@ class BuffersRenderStage extends RenderStage {
 			defs.concat([
 				'ALPHAMODE ALPHAMODE_OPAQUE'
 			]));
-
-		this.blendShader = engine.assetsManager.addShader(
-			'shaders/mesh.vert',
-			'shaders/pbr.frag',
-			defs.concat([
-				'ALPHAMODE ALPHAMODE_BLEND'
-			]));
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
@@ -93,7 +85,7 @@ class BuffersRenderStage extends RenderStage {
 		// depth buffer for immersive rendering
 		let currentlyVisible = true;
 		const render = (r: Renderer, s: Shader) => {
-			const toBeVisible = !!(camera.stencilMask & r.stencilLayer);
+			const toBeVisible = !!(camera.stencilMask & r.material.stencilLayer);
 			if (toBeVisible !== currentlyVisible) {
 				gl.stencilFunc(gl.ALWAYS, toBeVisible ? 1 : 0, 0xFF);
 				currentlyVisible = toBeVisible;
@@ -106,16 +98,6 @@ class BuffersRenderStage extends RenderStage {
 		scene.organizer.opaqueRenderers.run(
 			context,
 			this.opaqueShader,
-			this.parent.filteredRenderers,
-			undefined,
-			this.materialBind,
-			render
-		);
-
-		// Render parts of transparent geometry to the g-buffer where alpha = 1
-		scene.organizer.transparentRenderers.run(
-			context,
-			this.blendShader,
 			this.parent.filteredRenderers,
 			undefined,
 			this.materialBind,

@@ -1,7 +1,7 @@
 import MeshComponent from 'scene/components/MeshComponent';
 import Mesh from 'scene/geometry/Mesh';
 import Sampler from 'rendering/shaders/Sampler';
-import Material from 'rendering/materials/Material';
+import Material, { RendererType, TransparencyType } from 'rendering/materials/Material';
 import UniformColor from 'rendering/shaders/UniformColor';
 import Texture from 'rendering/materials/Texture';
 import Submesh from 'scene/geometry/Submesh';
@@ -95,9 +95,10 @@ class CanvasBoardComponent extends MeshComponent {
 			},
 			[ this.sampler ]
 		);
-		this.material.transparent = true;
-		this.material.definitions.addDefinition('ALPHAMODE', 'ALPHAMODE_BLEND');
-		this.material.unlit = this.unlit;
+		this.material.setOptions({
+			type: this.unlit ? RendererType.Unlit : RendererType.PBR,
+			transparency: TransparencyType.Transparent,
+		});
 		this.material.stencilLayer = this.stencilLayer;
 		this.material.name = 'CanvasBoardMaterial';
 		this.texture = new Texture(context);

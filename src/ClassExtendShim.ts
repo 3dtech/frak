@@ -18,7 +18,6 @@ import ScreenQuad from "rendering/camera/ScreenQuad";
 import Renderer from "rendering/renderers/Renderer";
 import SamplerAccumulator from "rendering/shaders/SamplerAccumulator";
 import Serializable from './scene/Serializable';
-import ShaderRequirements from "rendering/shaders/ShaderRequirements";
 import Subshader from "rendering/shaders/Subshader";
 import DynamicSpace from "rendering/spaces/DynamicSpace";
 import CyclicSerializer from "scene/CyclicSerializer";
@@ -43,7 +42,6 @@ import Submesh from "scene/geometry/Submesh";
 	CyclicSerializer,
 	DynamicSpace,
 	Subshader,
-	ShaderRequirements,
 	SamplerAccumulator,
 	RenderingContext,
 	Renderer,

@@ -1,7 +1,7 @@
 import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
 import Sampler from 'rendering/shaders/Sampler';
 import UniformMat3 from 'rendering/shaders/UniformMat3';
-import Material from 'rendering/materials/Material';
+import Material, { RendererType, TransparencyType } from 'rendering/materials/Material';
 import UniformColor from 'rendering/shaders/UniformColor';
 import UniformFloat from 'rendering/shaders/UniformFloat';
 import Mesh from 'scene/geometry/Mesh';
@@ -455,10 +455,8 @@ class ModelLoaderGLTF {
 				}
 			}
 
-			material.definitions.addDefinition('ALPHAMODE', `ALPHAMODE_${materials[i].alphaMode}`);
-
 			if (materials[i].alphaMode === 'BLEND') {
-				material.transparent = true;
+				material.setTransparency(TransparencyType.Transparent);
 			} else if (materials[i].alphaMode === 'MASK') {
 				let cutoff = 0.5;
 
@@ -468,12 +466,12 @@ class ModelLoaderGLTF {
 				}
 
 				material.uniforms.alphaCutoff = new UniformFloat(cutoff);
+				material.setTransparency(TransparencyType.Mask);
 			}
 
 			if (materials[i].extensions) {
 				if (materials[i].extensions.KHR_materials_unlit) {
-					material.unlit = true;
-					material.definitions.addDefinition('MATERIAL_UNLIT');
+					material.setType(RendererType.Unlit);
 				}
 			}
 

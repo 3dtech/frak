@@ -1,11 +1,7 @@
 import Serializable from 'scene/Serializable';
-import ShadersManager from 'loading/ShadersManager';
 import RenderingContext from 'rendering/RenderingContext';
-import ShaderRequirements from 'rendering/shaders/ShaderRequirements';
 import VertexShader from 'rendering/shaders/VertexShader';
 import FragmentShader from 'rendering/shaders/FragmentShader';
-import Uniform from 'rendering/shaders/Uniform';
-import Sampler from 'rendering/shaders/Sampler';
 import ExplicitAttributeLocations from './AttributeLocations';
 import {stringHash} from "../../Helpers";
 import ShaderDescriptor from "../../scene/descriptors/ShaderDescriptor";
@@ -20,7 +16,7 @@ class Shader extends Serializable {
 	context: any;
 	program: any;
 	shaders: any;
-	requirements: any;
+	requirements = {};	// Legacy
 	linked: any;
 	failed: any;
 	uniformLocations: any;
@@ -45,7 +41,6 @@ class Shader extends Serializable {
 		this.context = context;
 		this.program = context.gl.createProgram();
 		this.shaders = [];
-		this.requirements = new ShaderRequirements();
 		this.linked = false;
 		this.failed = false;
 		this.uniformLocations = {};
