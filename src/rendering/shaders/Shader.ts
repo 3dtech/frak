@@ -6,6 +6,7 @@ import ExplicitAttributeLocations from './AttributeLocations';
 import {stringHash} from "../../Helpers";
 import ShaderDescriptor from "../../scene/descriptors/ShaderDescriptor";
 import DefinitionsHelper from "../DefinitionsHelper";
+import BlockLocations from './BlockLocations';
 
 /**
  * Used to compile and link vertex and fragment shader to a shader program.
@@ -116,7 +117,7 @@ class Shader extends Serializable {
 		}
 
 		// if supported, map standard binding blocks immediately
-		this.updateBlockBindings(this.context);
+		this.updateGlobalBlockBindings(this.context);
 	}
 
 	/** Uses the shader program. Links automatically, if not linked
@@ -167,7 +168,7 @@ class Shader extends Serializable {
 		for (var uniformName in uniforms) {
 			var uniformLocation = this.getUniformLocation(uniformName);
 
-			if (!uniformLocation || uniformLocation == -1) {
+			if (uniformLocation === null || uniformLocation == -1) {
 				continue;
 			}
 
@@ -197,7 +198,7 @@ class Shader extends Serializable {
 			}
 
 			var uniformLocation = this.getUniformLocation(sampler.name);
-			if (uniformLocation == -1) {
+			if (uniformLocation === null || uniformLocation == -1) {
 				continue;
 			}
 
@@ -225,7 +226,7 @@ class Shader extends Serializable {
 			}
 
 			var uniformLocation = this.getUniformLocation(sampler.name);
-			if(uniformLocation == -1) {
+			if(uniformLocation === null || uniformLocation == -1) {
 				continue;
 			}
 
@@ -250,10 +251,12 @@ class Shader extends Serializable {
 		this.link();
 	}
 
-	updateBlockBindings(context) {
-		const index = context.gl.getUniformBlockIndex(this.program, 'Camera');
-		if (index !== context.gl.INVALID_INDEX) {
-			context.gl.uniformBlockBinding(this.program, index, 0);
+	updateGlobalBlockBindings(context: RenderingContext) {
+		for (const blockName in BlockLocations) {
+			const index = context.gl.getUniformBlockIndex(this.program, blockName);
+			if (index !== context.gl.INVALID_INDEX) {
+				context.gl.uniformBlockBinding(this.program, index, BlockLocations[blockName]);
+			}
 		}
 	}
 

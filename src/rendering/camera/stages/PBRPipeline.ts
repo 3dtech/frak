@@ -5,16 +5,24 @@ import RenderingContext from "rendering/RenderingContext";
 import Scene from "scene/Scene";
 import Camera from "../Camera";
 import Engine from "engine/Engine";
+import UniformBlock from '../../shaders/UniformBlock';
+
+type CameraBlock = {
+	projection: Float32Array;
+	projectionInverse: Float32Array;
+	view: Float32Array;
+	viewInverse: Float32Array;
+	zNear: Float32Array;
+	zFar: Float32Array;
+	cameraPosition: Float32Array;
+};
 
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
 	debugger: any;
 	debugActive = false;
-	uboBuffer: WebGLBuffer;
-	uboOffsets = {};
-	zNear = new Float32Array();
-	zFar = new Float32Array();
-	inverseProjection = mat4.create();
+	cameraBlock: UniformBlock;
+	cameraBlockValues: CameraBlock;
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
 		super.onStart(context, engine, camera);
@@ -28,33 +36,19 @@ class PBRPipeline extends PostProcessRenderStage {
 				this.material.shader.link();
 			}
 
-			const gl = context.gl;
-			const blockIndex = gl.getUniformBlockIndex(this.material.shader.program, "Camera");
-			const blockSize = gl.getActiveUniformBlockParameter(this.material.shader.program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE);
+			this.cameraBlockValues = {
+				projection: mat4.create(),
+				projectionInverse: mat4.create(),
+				view: mat4.create(),
+				viewInverse: mat4.create(),
+				zNear: new Float32Array(1),
+				zFar: new Float32Array(1),
+				cameraPosition: vec3.create(),
+			};
 
-			this.uboBuffer = gl.createBuffer();
-
-			gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
-			gl.bufferData(gl.UNIFORM_BUFFER, blockSize, gl.DYNAMIC_DRAW);
-			gl.bindBuffer(gl.UNIFORM_BUFFER, null);
-
-			gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, this.uboBuffer);
-
-			const uboVariables = [
-				'projection',
-				'projectionInverse',
-				'view',
-				'viewInverse',
-				'zNear',
-				'zFar',
-				'cameraPosition'
-			];
-			const uboIndices = gl.getUniformIndices(this.material.shader.program, uboVariables);
-			const uboOffsets = gl.getActiveUniforms(this.material.shader.program, uboIndices, gl.UNIFORM_OFFSET);
-
-			uboVariables.forEach((v, i) => {
-				this.uboOffsets[v] = uboOffsets[i];
-			});
+			this.cameraBlock = new UniformBlock(context, 'Camera', this.cameraBlockValues);
+			this.cameraBlock.create(context, this.material.shader.program);
+			this.cameraBlock.bind(context, 0);
 
 			this.enable();
 		});
@@ -72,29 +66,15 @@ class PBRPipeline extends PostProcessRenderStage {
 			this.dst.resetViewport();
 		}
 
-		const gl = context.gl;
+		mat4.copy(this.cameraBlockValues.projection, context.projection.top());
+		mat4.invert(this.cameraBlockValues.projectionInverse, context.projection.top());
+		mat4.copy(this.cameraBlockValues.view, camera.viewMatrix);
+		mat4.invert(this.cameraBlockValues.viewInverse, camera.viewInverseMatrix);
+		this.cameraBlockValues.zNear[0] = camera.near;
+		this.cameraBlockValues.zFar[0] = camera.far;
+		vec3.copy(this.cameraBlockValues.cameraPosition, camera.getPosition());
 
-		gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
-
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projection'], context.projection.top());
-		mat4.invert(this.inverseProjection, context.projection.top());
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projectionInverse'], this.inverseProjection);
-
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['view'], camera.viewMatrix);
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['viewInverse'], camera.viewInverseMatrix);
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['cameraPosition'], camera.getPosition());
-
-		if (camera.near) {
-			this.zNear[0] = camera.near;
-			gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['zNear'], this.zNear);
-		}
-
-		if (camera.far) {
-			this.zFar[0] = camera.far;
-			gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['zFar'], this.zFar);
-		}
-
-		gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+		this.cameraBlock.update(context);
 
 		super.onPreRender(context, scene, camera);
 	}
@@ -126,18 +106,18 @@ class PBRPipeline extends PostProcessRenderStage {
 
 	replaceViewProjection(context: RenderingContext, projection: any, view: any) {
 		const gl = context.gl;
-		gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projection'], projection);
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['view'], view);
-		gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+		this.cameraBlock.bindBuffer(context);
+		this.cameraBlock.updateIndividual(context, 'projection', projection);
+		this.cameraBlock.updateIndividual(context, 'view', view);
+		this.cameraBlock.unbindBuffer(context);
 	}
 
 	restoreViewProjection(context: RenderingContext, camera: Camera) {
 		const gl = context.gl;
-		gl.bindBuffer(gl.UNIFORM_BUFFER, this.uboBuffer);
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['projection'], context.projection.top());
-		gl.bufferSubData(gl.UNIFORM_BUFFER, this.uboOffsets['view'], camera.viewMatrix);
-		gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+		this.cameraBlock.bindBuffer(context);
+		this.cameraBlock.updateIndividual(context, 'projection', context.projection.top());
+		this.cameraBlock.updateIndividual(context, 'view', camera.viewMatrix);
+		this.cameraBlock.unbindBuffer(context);
 	}
 
 	debug(v) {
