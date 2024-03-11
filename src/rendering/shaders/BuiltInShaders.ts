@@ -20,6 +20,7 @@ import unlit_frag from '../../../assets/shaders/unlit.frag';
 import uv_vert from '../../../assets/shaders/uv.vert';
 import vsm_frag from '../../../assets/shaders/vsm.frag';
 import camera_glsl from '../../../assets/shaders/snippets/camera.glsl';
+import pbr_glsl from '../../../assets/shaders/snippets/pbr.glsl';
 import shadow_glsl from '../../../assets/shaders/snippets/shadow.glsl';
 
 const BuiltInShaders = {
@@ -47,6 +48,7 @@ const BuiltInShaders = {
 	},
 	'snippets': {
 		'shaders/snippets/camera.glsl': camera_glsl,
+		'shaders/snippets/pbr.glsl': pbr_glsl,
 		'shaders/snippets/shadow.glsl': shadow_glsl,
 	},
 };

@@ -3,17 +3,7 @@
 precision highp float;
 
 #include "snippets/camera.glsl"
-
-#if ALPHAMODE == ALPHAMODE_MASK
-uniform float alphaCutoff;
-#endif
-
-uniform vec4 ambient;
-uniform vec4 diffuse;
-uniform vec4 emissive;
-
-uniform float metallic;
-uniform float perceptualRoughness;
+#include "snippets/pbr.glsl"
 
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
@@ -81,10 +71,10 @@ layout(location = 1) out vec4 fragNormalRoughness;
 layout(location = 2) out vec4 fragPositionOcclusion;
 #ifdef EMISSIVE_OUT
 layout(location = 3) out vec4 fragEmissive;
-#ifdef AMBIENT_OUT
+#ifdef LEGACY_AMBIENT
 layout(location = 4) out vec4 fragAmbient;
 #endif
-#elif defined(AMBIENT_OUT)
+#elif defined(LEGACY_AMBIENT)
 layout(location = 3) out vec4 fragAmbient;
 #endif
 
@@ -181,8 +171,13 @@ void main(void) {
 	float occlusion = 1.0;
 #endif
 
-#ifdef EMISSIVE_TEXTURE
+#ifdef EMISSIVE
 	vec4 emissive = emissive;
+#else
+	vec4 emissive = vec4(0.0, 0.0, 0.0, 1.0);
+#endif
+
+#ifdef EMISSIVE_TEXTURE
 	emissive.rgb *= texture(emissive0, emissiveUV()).rgb;
 #endif
 
@@ -194,7 +189,7 @@ void main(void) {
 	fragEmissive = vec4(emissive.rgb, 1.0);
 #endif
 
-#ifdef AMBIENT_OUT
+#ifdef LEGACY_AMBIENT
 	fragAmbient = ambient;
 #endif
 

@@ -436,11 +436,10 @@ class ModelLoaderGLTF {
 			material.uniforms.perceptualRoughness = new UniformFloat(roughness);
 			material.uniforms.metallic = new UniformFloat(metallic);
 
-			material.uniforms.emissive = new UniformColor(new Color(0, 0, 0));
-
 			const eF = materials[i].emissiveFactor;
 			if (eF && eF.length > 2) {
-				vec4.set(material.uniforms.emissive.value, eF[0], eF[1], eF[2], 1.0);
+				material.uniforms.emissive = new UniformColor(new Color(eF[0], eF[1], eF[2]));
+				material.definitions.addDefinition('EMISSIVE');
 			}
 
 			setSampler(material, materials[i].normalTexture, 'normal');

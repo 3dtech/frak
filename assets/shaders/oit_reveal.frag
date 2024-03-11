@@ -2,7 +2,7 @@
 
 precision highp float;
 
-uniform vec4 diffuse;
+#include "snippets/pbr.glsl"
 
 #ifdef DIFFUSE_TEXTURE
 uniform sampler2D diffuse0;

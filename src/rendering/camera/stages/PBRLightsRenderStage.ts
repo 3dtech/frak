@@ -21,8 +21,8 @@ class PBRLightsRenderStage extends PBRRenderStage {
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera): any {
 		if (engine.options.legacyAmbient) {
-			this.emptyDefinitions.addDefinition('AMBIENT_BUFFER');
-			this.shadowDefinitions.addDefinition('AMBIENT_BUFFER');
+			this.emptyDefinitions.addDefinition('LEGACY_AMBIENT');
+			this.shadowDefinitions.addDefinition('LEGACY_AMBIENT');
 		}
 
 		for (const type of ['ambient', 'directional', 'ibl']) {

@@ -6,7 +6,7 @@ uniform sampler2D colorMetallic;
 uniform sampler2D normalRoughness;
 uniform sampler2D positionOcclusion;
 
-#ifdef AMBIENT_BUFFER
+#ifdef LEGACY_AMBIENT
 uniform sampler2D ambientBuffer;
 #endif
 
@@ -43,7 +43,7 @@ void main(void) {
     vec3 position = pR.xyz;
     float occlusion = pR.w;
 
-#ifdef AMBIENT_BUFFER
+#ifdef LEGACY_AMBIENT
 	vec4 ambient = texture(ambientBuffer, uv);
 #else
 	vec4 ambient = vec4(0.0);

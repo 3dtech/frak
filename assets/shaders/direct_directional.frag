@@ -3,16 +3,7 @@
 precision highp float;
 
 #include "snippets/camera.glsl"
-
-#ifdef LEGACY_AMBIENT
-uniform vec4 ambient;
-#endif
-
-uniform float alphaCutoff;
-uniform vec4 diffuse;
-
-uniform float metallic;
-uniform float perceptualRoughness;
+#include "snippets/pbr.glsl"
 
 uniform vec4 ambientLight;
 uniform vec3 lightDirection;

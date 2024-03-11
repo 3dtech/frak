@@ -24,18 +24,14 @@ class BuffersRenderStage extends RenderStage {
 	};
 
 	onStart(context: any, engine: Engine, camera: any) {
-		const defs = [
-			'ALPHAMODE_OPAQUE 0',
-			'ALPHAMODE_MASK 1',
-			'ALPHAMODE_BLEND 2',
-		];
+		const defs = [];
 
 		if (engine.options.emissiveEnabled) {
 			defs.push('EMISSIVE_OUT');
 		}
 
 		if (engine.options.legacyAmbient) {
-			defs.push('AMBIENT_OUT');
+			defs.push('LEGACY_AMBIENT');
 
 			// We overwrite the material bind function to handle legacy ambient for objects that don't have the ambient
 			// uniform set. This is so a previous object's ambient value doesn't bleed into the next object.
@@ -55,9 +51,7 @@ class BuffersRenderStage extends RenderStage {
 		this.opaqueShader = engine.assetsManager.addShader(
 			'shaders/mesh.vert',
 			'shaders/pbr.frag',
-			defs.concat([
-				'ALPHAMODE ALPHAMODE_OPAQUE'
-			]));
+			defs);
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {

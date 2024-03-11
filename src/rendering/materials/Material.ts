@@ -71,6 +71,9 @@ class Material extends Serializable {
 	stencilLayer = 1;
 	properties = new MaterialProperties();
 	definitions = new DefinitionsHelper([
+		'ALPHAMODE_OPAQUE 0',
+		'ALPHAMODE_MASK 1',
+		'ALPHAMODE_BLEND 2',
 		`ALPHAMODE ALPHAMODE_${TransparencyToDefinition[this.properties.transparency]}`,
 	]);
 	hash = this.properties.hash;
