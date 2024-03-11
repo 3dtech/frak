@@ -147,7 +147,7 @@ class PBRPipeline extends PostProcessRenderStage {
 	initDebugger(context, scene) {
 		this.debugger = {
 			quads: [],
-			sampler: new Sampler('tex0', null)
+			sampler: new Sampler('src', null)
 		};
 
 		function createQuad(x, y, width, height) {
