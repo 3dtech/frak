@@ -2,36 +2,13 @@
 
 precision highp float;
 
-#include "snippets/pbr.glsl"
-
-#ifdef DIFFUSE_TEXTURE
-uniform sampler2D diffuse0;
-
-#ifdef DIFFUSE_UV_TRANSFORM
-uniform mat3 diffuseUVTransform;
-#endif
-#endif
-
 in vec2 uv0;
+
+#include "snippets/pbr.glsl"
 
 out vec4 fragColor;
 
-vec2 diffuseUV() {
-    vec3 uv = vec3(uv0, 1.0);
-
-#ifdef DIFFUSE_UV_TRANSFORM
-	uv = diffuseUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
 void main(void) {
-    vec4 outputColor = diffuse;
-#ifdef DIFFUSE_TEXTURE
-	outputColor *= texture(diffuse0, diffuseUV());
-#endif
-
     // blend func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA
-    fragColor = vec4(outputColor.a);
+    fragColor = vec4(diffuseValue().a);
 }

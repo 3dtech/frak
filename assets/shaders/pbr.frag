@@ -3,51 +3,10 @@
 precision highp float;
 
 #include "snippets/camera.glsl"
-#include "snippets/pbr.glsl"
 
 uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float lightIntensity;
-
-#ifdef DIFFUSE_TEXTURE
-uniform sampler2D diffuse0;
-
-#ifdef DIFFUSE_UV_TRANSFORM
-uniform mat3 diffuseUVTransform;
-#endif
-#endif
-
-#ifdef METALLICROUGHNESS_TEXTURE
-uniform sampler2D metallicRoughness0;
-
-#ifdef METALLICROUGHNESS_UV_TRANSFORM
-uniform mat3 metallicRoughnessUVTransform;
-#endif
-#endif
-
-#ifdef NORMAL_TEXTURE
-uniform sampler2D normal0;
-
-#ifdef NORMAL_UV_TRANSFORM
-uniform mat3 normalUVTransform;
-#endif
-#endif
-
-#ifdef OCCLUSION_TEXTURE
-uniform sampler2D occlusion0;
-
-#ifdef OCCLUSION_UV_TRANSFORM
-uniform mat3 occlusionUVTransform;
-#endif
-#endif
-
-#ifdef EMISSIVE_TEXTURE
-uniform sampler2D emissive0;
-
-#ifdef EMISSIVE_UV_TRANSFORM
-uniform mat3 emissiveUVTransform;
-#endif
-#endif
 
 in vec2 uv0;
 in vec4 worldPosition;
@@ -65,6 +24,8 @@ in vec4 viewPosition;
 in vec3 viewNormal;
 in vec4 shadowPosition;
 
+#include "snippets/pbr.glsl"
+
 // TODO: Optionally limit number of buffers
 layout(location = 0) out vec4 fragColorMetallic;
 layout(location = 1) out vec4 fragNormalRoughness;
@@ -78,81 +39,19 @@ layout(location = 4) out vec4 fragAmbient;
 layout(location = 3) out vec4 fragAmbient;
 #endif
 
-float perceptualRoughnessToRoughness(float perceptualRoughness) {
-	float clampedPerceptualRoughness = clamp(perceptualRoughness, 0.089, 1.0);
-	return clampedPerceptualRoughness * clampedPerceptualRoughness;
-}
-
-vec2 diffuseUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef DIFFUSE_UV_TRANSFORM
-	uv = diffuseUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
-vec2 metallicRoughnessUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef METALLICROUGHNESS_UV_TRANSFORM
-	uv = metallicRoughnessUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
-vec2 normalUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef NORMAL_UV_TRANSFORM
-	uv = normalUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
-vec2 occlusionUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef OCCLUSION_UV_TRANSFORM
-	uv = occlusionUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
-vec2 emissiveUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef EMISSIVE_UV_TRANSFORM
-	uv = emissiveUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
-
 void main(void) {
-	vec4 outputColor = diffuse;
+	vec4 outputColor = diffuseValue();
 #ifdef VERTEX_COLORS
 	outputColor *= vertexColor;
-#endif
-#ifdef DIFFUSE_TEXTURE
-	outputColor *= texture(diffuse0, diffuseUV());
 #endif
 
 #if ALPHAMODE == ALPHAMODE_OPAQUE
 	outputColor.a = 1.0;
 #endif
 
-#ifdef METALLICROUGHNESS_TEXTURE
-	vec4 metallicRoughness = texture(metallicRoughness0, metallicRoughnessUV());
-	float metallic = metallic * metallicRoughness.b;
-	float perceptualRoughness = perceptualRoughness * metallicRoughness.g;
-#endif
-
-	float roughness = perceptualRoughnessToRoughness(perceptualRoughness);
+	vec2 metallicRoughness = metallicRoughnessValue();
+	float metallic = metallicRoughness.x;
+	float roughness = metallicRoughness.y;
 
 	vec3 N = normalize(worldNormal);
 #ifdef VERTEX_TANGENTS
@@ -165,27 +64,14 @@ void main(void) {
 #endif
 #endif
 
-#ifdef OCCLUSION_TEXTURE
-	float occlusion = texture(occlusion0, occlusionUV()).r;
-#else
-	float occlusion = 1.0;
-#endif
-
-#ifdef EMISSIVE
-	vec4 emissive = emissive;
-#else
-	vec4 emissive = vec4(0.0, 0.0, 0.0, 1.0);
-#endif
-
-#ifdef EMISSIVE_TEXTURE
-	emissive.rgb *= texture(emissive0, emissiveUV()).rgb;
-#endif
+	float occlusion = occlusionValue();
 
 	fragColorMetallic = vec4(outputColor.rgb, metallic);
 	fragNormalRoughness = vec4(N, roughness);
 	fragPositionOcclusion = vec4(worldPosition.xyz, occlusion);
 
 #ifdef EMISSIVE_OUT
+	vec4 emissive = emissiveValue();
 	fragEmissive = vec4(emissive.rgb, 1.0);
 #endif
 
