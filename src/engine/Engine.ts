@@ -13,7 +13,6 @@ const DEFAULT_OPTIONS = {
 	anisotropicFiltering: 4 as number | false, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
 	antialias: false,
 	assetsPath: '',
-	builtinShaders: true,
 	captureScreenshot: false,
 	contextErrorCallback: undefined as any,
 	contextOptions: undefined as WebGLContextAttributes | undefined,
@@ -90,9 +89,6 @@ class Engine {
 		this.debugCount = 24;
 
 		this.assetsManager = new AssetsManager(this.context, this.options.assetsPath);
-		if (!this.options.builtinShaders) {
-			this.assetsManager.shadersManager.builtin = {};
-		}
 
 		// Universal 1x1 opaque white texture
 		this.WhiteTexture = new Texture(this.context);

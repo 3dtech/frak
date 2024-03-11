@@ -38,7 +38,13 @@ class ShadersManager extends Manager<ShaderDescriptor, Shader> {
 
 	setAliases(): any {
 		this.aliases = {
-			'lines': 'shaders/lines',
+			'lines': ['shaders/lines', 'shaders/lines'],
+
+			// Legacy
+			'diffuse': ['shaders/mesh', 'shaders/pbr'],
+			'transparent': ['shaders/mesh', 'shaders/pbr'],
+			'shaders/webgl2/diffuse': ['shaders/mesh', 'shaders/pbr'],
+			'shaders/webgl2/transparent': ['shaders/mesh', 'shaders/pbr'],
 		};
 	}
 
@@ -57,12 +63,18 @@ class ShadersManager extends Manager<ShaderDescriptor, Shader> {
 	}
 
 	/** Adds both vertex and fragment shader by appending .vert and .frag to source */
-	addSource(source, definitions?): Shader {
-		var alias = source.toLowerCase();
+	addSource(source: string, definitions?: string[]): Shader {
+		let vert = source;
+		let frag = source;
+
+		const alias = source.toLowerCase();
 		if (alias in this.aliases)
-			source = this.aliases[alias];
-		source = this.sourceCallback(source);
-		return this.addDescriptor(new ShaderDescriptor(source+'.vert', source+'.frag', definitions));
+			[vert, frag] = this.aliases[alias];
+
+		vert = this.sourceCallback(vert);
+		frag = this.sourceCallback(frag);
+
+		return this.addDescriptor(new ShaderDescriptor(vert+'.vert', frag+'.frag', definitions));
 	}
 
 	// Protected methods
