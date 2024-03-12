@@ -5,6 +5,9 @@ import OrbitController from './OrbitController';
 import { RenderCallback } from '../../rendering/camera/Camera';
 
 class ImmersiveCamera extends CameraComponent {
+	private rotation = quat.create();
+	private position = vec3.create();
+	private up = vec3.fromValues(0, 1, 0);
 	yOffset = 0.0;
 
 	onAddScene(node) {}
@@ -37,13 +40,22 @@ class ImmersiveCamera extends CameraComponent {
 
 	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
 		let space = scene.engine.immersiveRefSpace;
-		const controllerTarget = this.node.getComponent(OrbitController)?.targetPosition;
-		if (controllerTarget) {
+		const controller = this.node.getComponent(OrbitController);
+		if (controller) {
+			const p = controller.targetPosition;
+			const yRotation = controller.rotation[1];
+			quat.setAxisAngle(this.rotation, this.up, -yRotation);
+			vec3.transformQuat(this.position, p, this.rotation);
 			space = space.getOffsetReferenceSpace(new XRRigidTransform({
-				x: -controllerTarget[0],
-				y: -controllerTarget[1] - this.yOffset,
-				z: -controllerTarget[2],
-				w: 1
+				x: -this.position[0],
+				y: -this.position[1] - this.yOffset,
+				z: -this.position[2],
+				w: 1,
+			}, {
+				x: this.rotation[0],
+				y: this.rotation[1],
+				z: this.rotation[2],
+				w: this.rotation[3],
 			}));
 		}
 
