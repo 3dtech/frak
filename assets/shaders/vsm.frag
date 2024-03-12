@@ -3,36 +3,14 @@
 /** Directional light shadow-map */
 precision highp float;
 
-uniform float alphaCutoff;
-uniform vec4 diffuse;
-
-#ifdef DIFFUSE_TEXTURE
-uniform sampler2D diffuse0;
-
-#ifdef DIFFUSE_UV_TRANSFORM
-uniform mat3 diffuseUVTransform;
-#endif
-#endif
-
 in float depth;
 in vec2 uv0;
 out vec4 fragColor;
 
-vec2 diffuseUV() {
-	vec3 uv = vec3(uv0, 1.0);
-
-#ifdef DIFFUSE_UV_TRANSFORM
-	uv = diffuseUVTransform * uv;
-#endif
-
-	return uv.xy;
-}
+#include "snippets/pbr.glsl"
 
 void main() {
-	vec4 outputColor = diffuse;
-#ifdef DIFFUSE_TEXTURE
-	outputColor *= texture(diffuse0, diffuseUV());
-#endif
+	vec4 outputColor = diffuseValue();
 
 #if ALPHAMODE == ALPHAMODE_OPAQUE
 	outputColor.a = 1.0;
