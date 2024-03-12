@@ -17,10 +17,21 @@ class CustomRenderStage extends PBRRenderStage {
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		const gl = context.gl;
 
-		scene.organizer.customRenderers.run(context, null, this.parent.filteredRenderers, r => {
-			r.material.shader.use();
-			return r.material.shader;
-		});
+		scene.organizer.customRenderers.run(
+			context,
+			null,
+			this.parent.filteredRenderers,
+			r => {
+				r.material.shader.use();
+				return r.material.shader;
+			},
+			undefined,
+			(r, s) => {
+				if (!!(camera.stencilMask & r.material.stencilLayer)) {
+					r.renderGeometry(context, s);
+				}
+			}
+		);
 
 		gl.depthMask(false);
 		gl.disable(gl.DEPTH_TEST);

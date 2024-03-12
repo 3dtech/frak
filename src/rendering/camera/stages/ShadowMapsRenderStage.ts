@@ -11,8 +11,7 @@ import Color from "rendering/Color";
 
 class ShadowMapsRenderStage extends RenderStage {
 	declare parent: MainRenderStage;
-	opaqueShader: Shader;
-	blendShader: Shader;
+	shader: Shader;
 	damaged = -1;
 	sceneAABB = new BoundingBox();
 	filteredRenderers: Renderer[] = [];
@@ -20,26 +19,10 @@ class ShadowMapsRenderStage extends RenderStage {
 	shadowManualUpdate = false;
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
-		const defs = [
-			'ALPHAMODE_OPAQUE 0',
-			'ALPHAMODE_MASK 1',
-			'ALPHAMODE_BLEND 2',
-			'DEPTH'
-		];
-
-		this.opaqueShader = engine.assetsManager.addShader(
+		this.shader = engine.assetsManager.addShader(
 			'shaders/mesh.vert',
 			'shaders/vsm.frag',
-			defs.concat([
-				'ALPHAMODE ALPHAMODE_OPAQUE'
-			]));
-
-		this.blendShader = engine.assetsManager.addShader(
-			'shaders/mesh.vert',
-			'shaders/vsm.frag',
-			defs.concat([
-				'ALPHAMODE ALPHAMODE_BLEND'
-			]));
+			['DEPTH']);
 
 		this.shadowManualUpdate = engine.options.shadowManualUpdate;
 	}
@@ -129,13 +112,7 @@ class ShadowMapsRenderStage extends RenderStage {
 
 			scene.organizer.opaqueRenderers.run(
 				context,
-				this.opaqueShader,
-				light.filteredRenderers,
-			);
-
-			scene.organizer.transparentRenderers.run(
-				context,
-				this.blendShader,
+				this.shader,
 				light.filteredRenderers,
 			);
 		}

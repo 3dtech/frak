@@ -124,7 +124,13 @@ class TransparentRenderStage extends RenderStage {
 					s.use(light.material.uniforms);
 					return s;
 				},
-				materialBind
+				materialBind,
+				(r, s) => {
+					// Test for mask
+					if (!!(camera.stencilMask & r.material.stencilLayer)) {
+						r.renderGeometry(context, s);
+					}
+				}
 			);
 		};
 

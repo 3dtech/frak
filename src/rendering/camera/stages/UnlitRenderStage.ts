@@ -12,13 +12,7 @@ class UnlitRenderStage extends PBRRenderStage {
 		this.shader = engine.assetsManager.addShader(
 			'shaders/mesh.vert',
 			'shaders/unlit.frag',
-			[
-				'ALPHAMODE_OPAQUE 0',
-				'ALPHAMODE_MASK 1',
-				'ALPHAMODE_BLEND 2',
-				'ALPHAMODE ALPHAMODE_OPAQUE',
-				'MATERIAL_UNLIT',
-			]);
+			['MATERIAL_UNLIT']);
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
@@ -34,7 +28,18 @@ class UnlitRenderStage extends PBRRenderStage {
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		const gl = context.gl;
 
-		scene.organizer.unlitRenderers.run(context, this.shader, this.parent.filteredRenderers);
+		scene.organizer.unlitRenderers.run(
+			context,
+			this.shader,
+			this.parent.filteredRenderers,
+			undefined,
+			undefined,
+			(r, s) => {
+				if (!!(camera.stencilMask & r.material.stencilLayer)) {
+					r.renderGeometry(context, s);
+				}
+			}
+		);
 
 		gl.depthMask(false);
 		gl.disable(gl.DEPTH_TEST);
