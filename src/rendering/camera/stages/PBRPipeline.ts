@@ -67,9 +67,9 @@ class PBRPipeline extends PostProcessRenderStage {
 		}
 
 		mat4.copy(this.cameraBlockValues.projection, context.projection.top());
-		mat4.invert(this.cameraBlockValues.projectionInverse, context.projection.top());
+		mat4.invert(this.cameraBlockValues.projectionInverse, this.cameraBlockValues.projection);
 		mat4.copy(this.cameraBlockValues.view, camera.viewMatrix);
-		mat4.invert(this.cameraBlockValues.viewInverse, camera.viewInverseMatrix);
+		mat4.copy(this.cameraBlockValues.viewInverse, camera.viewInverseMatrix);
 		this.cameraBlockValues.zNear[0] = camera.near;
 		this.cameraBlockValues.zFar[0] = camera.far;
 		vec3.copy(this.cameraBlockValues.cameraPosition, camera.getPosition());
