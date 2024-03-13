@@ -117,13 +117,16 @@ void main(void) {
 
 	vec3 R = reflect(-V, N);
 
+	vec3 lightDirection = normalize(lightDirection);
+
 #ifdef SHADOWS
-	float shadow = shadowmap(vec4(position, 1.0));
+	float bias = max(0.005 * (1.0 - dot(N, lightDirection)), 0.0005);
+	float shadow = shadowmap(vec4(position, 1.0), bias);
 #else
 	float shadow = 1.0;
 #endif
 
-	outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
+	outputColor.rgb = dirLight(lightDirection, lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
 	outputColor.rgb *= shadow;
 
 	fragColor = outputColor;

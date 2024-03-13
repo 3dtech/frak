@@ -24,7 +24,6 @@ import Renderer from "../../rendering/renderers/Renderer";
  */
 class DirectionalLight extends Light {
 	shadowResolution: any;
-	shadowBias: any;
 	shadow: TargetTextureFloat;
 	shadowSampler: Sampler;
 	lightView = mat4.create()
@@ -42,7 +41,6 @@ class DirectionalLight extends Light {
 		this.intensity = 1.0;
 		this.setLightDirection(direction);
 		this.shadowResolution = vec2.fromValues(2048, 2048);
-		this.shadowBias = 0.01; ///< Used to offset lightspace depth to avoid floating point errors in depth comparison
 
 		this.shadow = null;
 		this.shadowSampler = null;
@@ -87,8 +85,6 @@ class DirectionalLight extends Light {
 				'lightDirection': new UniformVec3(vec3.create()),
 				'lightView': new UniformMat4(mat4.create()),
 				'lightProjection': new UniformMat4(mat4.create()),
-				'useShadows': new UniformInt(0),
-				'shadowBias': new UniformFloat(0.01)
 			},
 			[]
 		);
@@ -107,8 +103,6 @@ class DirectionalLight extends Light {
 		vec4.set(this.material.uniforms.lightColor.value, this.color.r, this.color.g, this.color.b, this.color.a);
 		vec3.copy(this.material.uniforms.lightDirection.value, this.direction);
 		this.material.uniforms.lightIntensity.value = this.intensity;
-		this.material.uniforms.useShadows.value = this.shadowCasting ? 1 : 0;
-		this.material.uniforms.shadowBias.value = this.shadowBias;
 
 		this.updateSamplers(engine.context);
 	}

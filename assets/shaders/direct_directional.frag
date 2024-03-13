@@ -168,16 +168,19 @@ void main(void) {
 
     vec3 R = reflect(-V, N);
 
-#ifdef SHADOWS
-	float shadow = shadowmap(vec4(worldPosition.xyz, 1.0));
-#else
-	float shadow = 1.0;
-#endif
-
 #ifdef LEGACY_AMBIENT
 	vec4 legacyAmbient = ambient;
 #else
 	vec4 legacyAmbient = vec4(0.0);
+#endif
+
+	vec3 lightDirection = normalize(lightDirection);
+
+#ifdef SHADOWS
+	float bias = max(0.005 * (1.0 - dot(N, lightDirection)), 0.0005);
+	float shadow = shadowmap(vec4(worldPosition.xyz, 1.0), bias);
+#else
+	float shadow = 1.0;
 #endif
 
 	// Ambient
@@ -186,7 +189,7 @@ void main(void) {
 	vec3 ambientColor = (diffuseAmbient + specularAmbient) * ambientLight.rgb;
 
 	// Directional light
-    outputColor.rgb = dirLight(normalize(lightDirection), lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
+    outputColor.rgb = dirLight(lightDirection, lightColor * lightIntensity * 10.4, roughness, NdotV, N, V, R, F0, diffuseColor);
 	outputColor.rgb *= shadow;
 
 	// Add ambient after shadow
