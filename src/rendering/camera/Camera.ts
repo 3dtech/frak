@@ -50,7 +50,6 @@ class Camera extends Serializable {
 	_strafe: any;
 	_translation: any;
 	stencilMask = 0xFFFFFFFF;	// Not GL stencilMask, but used for hiding objects for immersive mode
-	block: UniformBlock;
 	blockValues: CameraBlock = {
 		projection: mat4.create(),
 		projectionInverse: mat4.create(),
@@ -60,6 +59,7 @@ class Camera extends Serializable {
 		zFar: new Float32Array(1),
 		cameraPosition: vec3.create(),
 	};
+	block = new UniformBlock('Camera', this.blockValues, WebGL2RenderingContext.DYNAMIC_DRAW);
 
 	/** Constructor */
 	constructor(viewMatrix, projectionMatrix) {

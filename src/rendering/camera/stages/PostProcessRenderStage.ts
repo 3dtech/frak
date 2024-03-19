@@ -2,18 +2,17 @@ import RenderStage from './RenderStage';
 import Sampler from 'rendering/shaders/Sampler';
 import Material from 'rendering/materials/Material';
 import ScreenQuad from '../ScreenQuad';
-import TargetTextureFloat from "../TargetTextureFloat";
-import RenderingContext from "rendering/RenderingContext";
-import Scene from "scene/Scene";
-import Camera from "../Camera";
-import MainRenderStage from "./MainRenderStage";
+import TargetTextureFloat from '../TargetTextureFloat';
+import RenderingContext from 'rendering/RenderingContext';
+import Scene from 'scene/Scene';
+import Camera from '../Camera';
 
 /**
  * Render-stage used to render MaterialRenderStage to a texture,
  * then apply sub-stages to it and then render the resulting texture
  * to a screen-aligned quad that covers the entire viewport.
  */
-class PostProcessRenderStage extends RenderStage {
+abstract class PostProcessRenderStage extends RenderStage {
 	size: any;
 	src: TargetTextureFloat;
 	dst: TargetTextureFloat;
@@ -21,7 +20,7 @@ class PostProcessRenderStage extends RenderStage {
 	dstSampler: Sampler;
 	screenQuad: ScreenQuad;
 	material: Material;
-	generator: any;
+	generator: RenderStage;
 
 	constructor() {
 		super();
@@ -38,9 +37,7 @@ class PostProcessRenderStage extends RenderStage {
 		this.size[1]=height;
 	}
 
-	getGeneratorStage(): any {
-		return new MainRenderStage();
-	}
+	abstract getGeneratorStage(): RenderStage;
 
 	onStart(context, engine, camera): any {
 		if (!this.size) {
@@ -63,13 +60,29 @@ class PostProcessRenderStage extends RenderStage {
 
 		this.screenQuad = new ScreenQuad(context);
 
-		engine.assetsManager.load();
+		engine.assetsManager.load(() => {
+			if (!this.material.shader.linked) {
+				this.material.shader.link();
+			}
+
+			// Cameras need the shader to be linked so they can init their uniform block
+			engine.initCameras(this.material.shader.program);
+		});
 
 		this.generator.start(context, engine, camera);
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		var cameraTarget = camera.target;
+
+		if (cameraTarget.size[0] != this.src.size[0] || cameraTarget.size[1] != this.src.size[1]) {
+			this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+			this.src.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+			this.dst.setSize(cameraTarget.size[0], cameraTarget.size[1]);
+
+			this.src.resetViewport();
+			this.dst.resetViewport();
+		}
 
 		camera.target = this.src;
 		this.generator.render(context, scene, camera);

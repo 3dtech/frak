@@ -3,6 +3,7 @@ import RenderingContext from "../../rendering/RenderingContext";
 import Scene from '../Scene';
 import OrbitController from './OrbitController';
 import { RenderCallback } from '../../rendering/camera/Camera';
+import Engine from '../../engine/Engine';
 
 class ImmersiveCamera extends CameraComponent {
 	private rotation = quat.create();
@@ -10,9 +11,29 @@ class ImmersiveCamera extends CameraComponent {
 	private up = vec3.fromValues(0, 1, 0);
 	yOffset = 0.0;
 
-	onAddScene(node) {}
-	onRemoveScene(node) {}
-	onStart(context, engine) {}
+	onAddScene(node) {
+		if (node.scene.immersiveCamera === this) {
+			return;
+		}
+
+		super.onAddScene(node);
+	}
+
+	onRemoveScene(node) {
+		if (node.scene.immersiveCamera === this) {
+			return;
+		}
+
+		super.onRemoveScene(node);
+	}
+
+	onStart(context: RenderingContext, engine: Engine) {
+		const canvas = context.canvas;
+		this.camera.target.setSize(canvas.width, canvas.height);
+
+		super.onStart(context, engine);
+	}
+
 	onUpdateTransform(absolute) {}
 
 	updateFromXR(context: RenderingContext, frame: XRFrame, view: XRView): boolean {

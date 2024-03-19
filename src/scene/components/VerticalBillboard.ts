@@ -8,11 +8,8 @@ class VerticalBillboard extends Billboard {
 	}
 
 	onUpdate(engine) {
-		if (!(this.cameraToLookAt instanceof Camera))
-			throw "VerticalBillboard.cameraToLookAt is not an instance of Camera";
-
 		var delta=engine.fps.getDelta()/1000.0;
-		var invViewMatrix = mat4.invert(this.cacheMat4[0], this.cameraToLookAt.blockValues.view);
+		var invViewMatrix = mat4.invert(this.cacheMat4[0], engine.scene.camera.blockValues.view);
 		var rotation = quat.fromMat4(this.cacheQuat[0], invViewMatrix);
 		quat.multiply(rotation, rotation, quat.euler(this.cacheQuat[1], 0.0, 180.0, 0.0));
 		if (this.smoothRotation) {

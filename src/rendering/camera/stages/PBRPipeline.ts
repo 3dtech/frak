@@ -1,45 +1,18 @@
 import Sampler from 'rendering/shaders/Sampler';
 import PostProcessRenderStage from './PostProcessRenderStage';
 import TrianglesRenderBufferVAO from 'rendering/buffers/TrianglesRenderBufferVAO';
-import RenderingContext from "rendering/RenderingContext";
-import Scene from "scene/Scene";
-import Camera from "../Camera";
-import Engine from "engine/Engine";
-import UniformBlock from '../../shaders/UniformBlock';
+import RenderingContext from 'rendering/RenderingContext';
+import Scene from 'scene/Scene';
+import Camera from '../Camera';
+import MainRenderStage from './MainRenderStage';
 
-// TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
+	declare generator: MainRenderStage;
 	debugger: any;
 	debugActive = false;
 
-	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
-		super.onStart(context, engine, camera);
-
-		this.material.shader = engine.assetsManager.addShader('shaders/uv.vert', 'shaders/quad.frag');
-
-		engine.assetsManager.shadersManager.load(() => {
-			if (!this.material.shader.linked) {
-				this.material.shader.link();
-			}
-
-			// Cameras need the shader to be linked so they can init their uniform block
-			engine.scene.initCameras(context, this.material.shader.program);
-		});
-	}
-
-	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
-		var cameraTarget = camera.target;
-
-		if (cameraTarget.size[0] != this.src.size[0] || cameraTarget.size[1] != this.src.size[1]) {
-			this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-			this.src.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-			this.dst.setSize(cameraTarget.size[0], cameraTarget.size[1]);
-
-			this.src.resetViewport();
-			this.dst.resetViewport();
-		}
-
-		super.onPreRender(context, scene, camera);
+	getGeneratorStage() {
+		return new MainRenderStage();
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {

@@ -29,10 +29,6 @@ class CameraComponent extends Component {
 	onAddScene(node): any {
 		this.useCameraViewMatrix();
 
-		if (node.scene.cameraComponent === this) {
-			return;	// We get rendered anyway
-		}
-
 		node.scene.cameras.push(this);
 		node.scene.cameras.sort(function(a,b) { return a.camera.order-b.camera.order; });
 	}
@@ -41,10 +37,6 @@ class CameraComponent extends Component {
 		if parent node is removed to the scene
 		@param node Parent {Node} */
 	onRemoveScene(node): any {
-		if (node.scene.cameraComponent === this) {
-			return;
-		}
-
 		var cameras = node.scene.cameras;
 		for (var i=0; i<cameras.length; i++) {
 			if (cameras[i]==this) {
@@ -221,7 +213,6 @@ class CameraComponent extends Component {
 	}
 
 	init(context: RenderingContext, program: WebGLProgram) {
-		this.camera.block = new UniformBlock(context, 'Camera', this.camera.blockValues, context.gl.DYNAMIC_DRAW);
 		this.camera.block.create(context, program);
 
 		this.enable();

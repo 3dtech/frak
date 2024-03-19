@@ -36,6 +36,24 @@ class PerspectiveCamera extends CameraComponent {
 		return "PerspectiveCamera";
 	}
 
+	onAddScene(node): any {
+		this.useCameraViewMatrix();
+
+		if (node.scene.cameraComponent === this) {
+			return;
+		}
+
+		super.onAddScene(node);
+	}
+
+	onRemoveScene(node): any {
+		if (node.scene.cameraComponent === this) {
+			return;
+		}
+
+		super.onRemoveScene(node);
+	}
+
 	/** Sets the camera's near and far clipping planes. */
 	setClipPlanes(near, far): any {
 		this.near = near;

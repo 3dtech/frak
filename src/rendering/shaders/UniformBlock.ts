@@ -9,22 +9,21 @@ interface Offsets {
 }
 
 class UniformBlock {
-	private readonly buffer: WebGLBuffer;
+	private buffer: WebGLBuffer;
 	private offsets: Offsets = {};
 
 	constructor(
-		context: RenderingContext,
 		public name: string,
 		public values: Block,
-		private type: number = context.gl.STATIC_DRAW
-	) {
-		this.buffer = context.gl.createBuffer();
-	}
+		private type: number = WebGL2RenderingContext.STATIC_DRAW
+	) {}
 
 	create(context: RenderingContext, program: WebGLProgram) {
 		const gl = context.gl;
 		const blockIndex = gl.getUniformBlockIndex(program, this.name);
 		const blockSize = gl.getActiveUniformBlockParameter(program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE);
+
+		this.buffer = gl.createBuffer();
 
 		gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
 		gl.bufferData(gl.UNIFORM_BUFFER, blockSize, this.type);

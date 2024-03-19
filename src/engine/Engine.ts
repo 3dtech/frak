@@ -55,6 +55,7 @@ class Engine {
 	DiffuseFallbackSampler: Sampler;
 	useUpscaling: any;
 	_savedCanvasStyles: any;
+	cameraBlockProgram?: WebGLProgram;
 	immersiveSession: XRSession | null = null;
 	public immersiveRefSpace: XRReferenceSpace | null = null;
 
@@ -214,10 +215,18 @@ class Engine {
 		}
 	}
 
+	initCameras(program: WebGLProgram) {
+		if (this.cameraBlockProgram !== undefined) {
+			return;
+		}
+
+		this.cameraBlockProgram = program;
+		this.scene.initCameras(this.context, program);
+	}
+
 	/** Starts the engine. The engine will try to draw frames at the "requestedFPS" specified
 		in the options that were passed to the constructor. The default value is 30fps.
 		If requestAnimationFrame function is not available then setTimeout is used. */
-
 	public run() {
 		if (this.running) {
 			return;
@@ -290,6 +299,8 @@ class Engine {
 		this.immersiveExitCB = cb;
 		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
 
+		this.scene.camera = this.scene.immersiveCamera.camera;
+		this.scene.cameraComponent = this.scene.immersiveCamera;
 		this.scene.camera.renderStage.generator.setImmersive(mode === 'ar');
 
 		await this.immersiveSession.updateRenderState({
@@ -331,7 +342,8 @@ class Engine {
 	private onExitImmersive() {
 		this.immersiveSession = null;
 		this.immersiveMode = null;
-		this.scene.camera.renderStage.generator.setImmersive(false);
+		this.scene.camera = this.scene.defaultCamera.camera;
+		this.scene.cameraComponent = this.scene.defaultCamera;
 		this.immersiveExitCB?.();
 		this.immersiveExitCB = undefined;
 
