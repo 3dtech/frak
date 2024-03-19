@@ -108,7 +108,7 @@ class ShadowMapsRenderStage extends RenderStage {
 
 			light.shadow.bind(context, false, this.clearColor);
 
-			camera.renderStage.replaceViewProjection(context, light.lightProj, light.lightView);
+			camera.replaceViewProjection(context, light.lightProj, light.lightView);
 
 			scene.organizer.opaqueRenderers.run(
 				context,
@@ -117,7 +117,7 @@ class ShadowMapsRenderStage extends RenderStage {
 			);
 		}
 
-		camera.renderStage.restoreViewProjection(context, camera);
+		camera.restoreViewProjection(context);
 
 		gl.disable(gl.DEPTH_TEST);
 	}

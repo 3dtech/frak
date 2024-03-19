@@ -7,28 +7,14 @@ import Camera from "../Camera";
 import Engine from "engine/Engine";
 import UniformBlock from '../../shaders/UniformBlock';
 
-type CameraBlock = {
-	projection: Float32Array;
-	projectionInverse: Float32Array;
-	view: Float32Array;
-	viewInverse: Float32Array;
-	zNear: Float32Array;
-	zFar: Float32Array;
-	cameraPosition: Float32Array;
-};
-
 // TODO: Remove PostProcessRenderStage for this? / vice-versa
 class PBRPipeline extends PostProcessRenderStage {
 	debugger: any;
 	debugActive = false;
-	cameraBlock: UniformBlock;
-	cameraBlockValues: CameraBlock;
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
 		super.onStart(context, engine, camera);
 
-		// We disable rendering before the shader is loaded and the UBO is created to avoid spamming the console with errors
-		this.disable();
 		this.material.shader = engine.assetsManager.addShader('shaders/uv.vert', 'shaders/quad.frag');
 
 		engine.assetsManager.shadersManager.load(() => {
@@ -36,21 +22,8 @@ class PBRPipeline extends PostProcessRenderStage {
 				this.material.shader.link();
 			}
 
-			this.cameraBlockValues = {
-				projection: mat4.create(),
-				projectionInverse: mat4.create(),
-				view: mat4.create(),
-				viewInverse: mat4.create(),
-				zNear: new Float32Array(1),
-				zFar: new Float32Array(1),
-				cameraPosition: vec3.create(),
-			};
-
-			this.cameraBlock = new UniformBlock(context, 'Camera', this.cameraBlockValues);
-			this.cameraBlock.create(context, this.material.shader.program);
-			this.cameraBlock.bind(context, 0);
-
-			this.enable();
+			// Cameras need the shader to be linked so they can init their uniform block
+			engine.scene.initCameras(context, this.material.shader.program);
 		});
 	}
 
@@ -65,16 +38,6 @@ class PBRPipeline extends PostProcessRenderStage {
 			this.src.resetViewport();
 			this.dst.resetViewport();
 		}
-
-		mat4.copy(this.cameraBlockValues.projection, context.projection.top());
-		mat4.invert(this.cameraBlockValues.projectionInverse, this.cameraBlockValues.projection);
-		mat4.copy(this.cameraBlockValues.view, camera.viewMatrix);
-		mat4.copy(this.cameraBlockValues.viewInverse, camera.viewInverseMatrix);
-		this.cameraBlockValues.zNear[0] = camera.near;
-		this.cameraBlockValues.zFar[0] = camera.far;
-		vec3.copy(this.cameraBlockValues.cameraPosition, camera.getPosition());
-
-		this.cameraBlock.update(context);
 
 		super.onPreRender(context, scene, camera);
 	}
@@ -102,22 +65,6 @@ class PBRPipeline extends PostProcessRenderStage {
 			}
 			context.modelview.pop();
 		}
-	}
-
-	replaceViewProjection(context: RenderingContext, projection: any, view: any) {
-		const gl = context.gl;
-		this.cameraBlock.bindBuffer(context);
-		this.cameraBlock.updateIndividual(context, 'projection', projection);
-		this.cameraBlock.updateIndividual(context, 'view', view);
-		this.cameraBlock.unbindBuffer(context);
-	}
-
-	restoreViewProjection(context: RenderingContext, camera: Camera) {
-		const gl = context.gl;
-		this.cameraBlock.bindBuffer(context);
-		this.cameraBlock.updateIndividual(context, 'projection', context.projection.top());
-		this.cameraBlock.updateIndividual(context, 'view', camera.viewMatrix);
-		this.cameraBlock.unbindBuffer(context);
 	}
 
 	debug(v) {

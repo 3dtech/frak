@@ -6,11 +6,13 @@ import Ray from 'scene/geometry/Ray';
 import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
 import RenderingContext from "../../rendering/RenderingContext";
 import Scene from '../Scene';
+import UniformBlock from '../../rendering/shaders/UniformBlock';
 
 /** Camera component */
 class CameraComponent extends Component {
 	constructor(public camera: Camera) {
 		super();
+		this.disable();
 	}
 
 	excluded(): any {
@@ -60,7 +62,7 @@ class CameraComponent extends Component {
 		@param absolute Absolute matrix used next frame. Instance of {mat4}. */
 	onUpdateTransform(absolute): any {
 		if(!this.node.transform) return;
-		mat4.invert(this.camera.viewMatrix, this.node.transform.absolute);
+		mat4.invert(this.camera.blockValues.view, this.node.transform.absolute);
 	}
 
 	/** Sets camera transform to look at given target position
@@ -70,7 +72,7 @@ class CameraComponent extends Component {
 		if(!up) up=[0.0, 1.0, 0.0];
 
 		// Set camera viewmatrix to look at given target
-		mat4.lookAt(this.camera.viewMatrix, this.camera.getPosition(), target, up);
+		mat4.lookAt(this.camera.blockValues.view, this.camera.getPosition(), target, up);
 		this.useCameraViewMatrix();
 	}
 
@@ -143,7 +145,7 @@ class CameraComponent extends Component {
 			2.0*point[2] - 1.0,
 			1.0
 		);
-		var mat = mat4.mul(mat4.create(), this.camera.projectionMatrix, this.camera.viewMatrix);
+		var mat = mat4.mul(mat4.create(), this.camera.blockValues.projection, this.camera.blockValues.view);
 		if (mat4.invert(mat, mat)) {
 			vec4.transformMat4(pt, pt, mat);
 			if (Math.abs(pt[3])<EPSILON)
@@ -169,7 +171,7 @@ class CameraComponent extends Component {
 		if (!out)
 			out = vec2.create();
 		var size = this.camera.target.getSize();
-		var viewProj = mat4.mul(mat4.create(), this.camera.projectionMatrix, this.camera.viewMatrix);
+		var viewProj = mat4.mul(mat4.create(), this.camera.blockValues.projection, this.camera.blockValues.view);
 		var projected = vec4.fromValues(point[0], point[1], point[2], 1.0);
 		vec4.transformMat4(projected, projected, viewProj);
 		projected[0] /= projected[3];
@@ -184,7 +186,7 @@ class CameraComponent extends Component {
 	useCameraViewMatrix(): any {
 		if(!this.node.transform) return;
 		// Construct new absolute position from inverse camera viewmatrix
-		this.node.transform.absolute=mat4.invert(mat4.create(), this.camera.viewMatrix);
+		this.node.transform.absolute=mat4.invert(mat4.create(), this.camera.blockValues.view);
 
 		// Calculate new relative transform matrix based on parent absolute and this node absolute matrix
 		this.node.calculateRelativeFromAbsolute();
@@ -218,7 +220,19 @@ class CameraComponent extends Component {
 		this.camera.renderStage.start(context, engine, this.camera);
 	}
 
+	init(context: RenderingContext, program: WebGLProgram) {
+		this.camera.block = new UniformBlock(context, 'Camera', this.camera.blockValues, context.gl.DYNAMIC_DRAW);
+		this.camera.block.create(context, program);
+
+		this.enable();
+	}
+
 	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
+		if (!this.enabled) {
+			return;
+		}
+
+		this.camera.block.bind(context, 0);
 		this.camera.render(context, scene, preRenderCallback, postRenderCallback);
 	}
 

@@ -118,19 +118,9 @@ class LineRendererComponent extends RendererComponent {
 		if (!this.overlay || !this.renderer || !this.enabled)
 			return;
 
-		context.projection.push();
-		context.modelview.push();
-
-		context.projection.load(camera.projectionMatrix);
-		context.modelview.load(camera.viewMatrix);
-		context.modelview.multiply(this.node.transform.absolute);
-
 		this.material.bind();
 		this.renderer.renderGeometry(context, this.material.shader);
 		this.material.unbind();
-
-		context.projection.pop();
-		context.modelview.pop();
 	}
 
 	rebuild(context): any {

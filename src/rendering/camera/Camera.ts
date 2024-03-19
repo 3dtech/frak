@@ -8,8 +8,18 @@ import PBRPipeline from './stages/PBRPipeline';
 import RenderTarget from './RenderTarget';
 import RenderingContext from '../RenderingContext';
 import Scene from '../../scene/Scene';
+import UniformBlock from '../shaders/UniformBlock';
 
 type RenderCallback = (context: RenderingContext, camera: Camera) => void;
+type CameraBlock = {
+	projection: Float32Array;
+	projectionInverse: Float32Array;
+	view: Float32Array;
+	viewInverse: Float32Array;
+	zNear: Float32Array;
+	zFar: Float32Array;
+	cameraPosition: Float32Array;
+};
 
 /** Camera is used to render to render target.
 	@param viewMatrix Camera view matrix {mat4}
@@ -21,10 +31,6 @@ type RenderCallback = (context: RenderingContext, camera: Camera) => void;
 	@param layerMask Bitmask for setting layers rendered by this camera {int}
  */
 class Camera extends Serializable {
-	viewMatrix: any;
-	projectionMatrix: any;
-	viewInverseMatrix = mat4.create();
-	projectionInverseMatrix = mat4.create();
 	renderStage: PBRPipeline;
 	target: RenderTarget;
 	backgroundColor: any;
@@ -44,14 +50,24 @@ class Camera extends Serializable {
 	_strafe: any;
 	_translation: any;
 	stencilMask = 0xFFFFFFFF;	// Not GL stencilMask, but used for hiding objects for immersive mode
+	block: UniformBlock;
+	blockValues: CameraBlock = {
+		projection: mat4.create(),
+		projectionInverse: mat4.create(),
+		view: mat4.create(),
+		viewInverse: mat4.create(),
+		zNear: new Float32Array(1),
+		zFar: new Float32Array(1),
+		cameraPosition: vec3.create(),
+	};
 
 	/** Constructor */
 	constructor(viewMatrix, projectionMatrix) {
 		super();
-		this.viewMatrix = viewMatrix;
-		this.projectionMatrix = projectionMatrix;
-		mat4.invert(this.viewInverseMatrix, this.viewMatrix);
-		mat4.invert(this.projectionInverseMatrix, this.projectionMatrix);
+		this.blockValues.view = viewMatrix;
+		this.blockValues.projection = projectionMatrix;
+		mat4.invert(this.blockValues.viewInverse, this.blockValues.view);
+		mat4.invert(this.blockValues.projectionInverse, this.blockValues.projection);
 		this.renderStage = new PBRPipeline();
 		this.target = new RenderTarget();
 		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
@@ -110,11 +126,11 @@ class Camera extends Serializable {
 	startRender(context: RenderingContext): any {
 		// Use projection matrix
 		context.projection.push();
-		context.projection.multiply(this.projectionMatrix);
+		context.projection.multiply(this.blockValues.projection);
 
 		// Use view matrix
 		context.modelview.push();
-		context.modelview.multiply(this.viewMatrix);
+		context.modelview.multiply(this.blockValues.view);
 	}
 
 	/** Renders the contents of this camera using assigned render-stage */
@@ -149,7 +165,7 @@ class Camera extends Serializable {
 		Note that this function assumes that a perspective projection has been used.
 		@return The current vertical field of view in radians {float} */
 	getFieldOfView(): any {
-		return 2.0*Math.atan(1.0/this.projectionMatrix[5]);
+		return 2.0*Math.atan(1.0/this.blockValues.projection[5]);
 	}
 
 	/** Returns camera direction (for perspective view).
@@ -158,9 +174,9 @@ class Camera extends Serializable {
 	getDirection(out?): any {
 		if (!out)
 			out=vec3.create();
-		out[0]=-this.viewMatrix[8];
-		out[1]=-this.viewMatrix[9];
-		out[2]=-this.viewMatrix[10];
+		out[0]=-this.blockValues.view[8];
+		out[1]=-this.blockValues.view[9];
+		out[2]=-this.blockValues.view[10];
 		return out;
 	}
 
@@ -170,9 +186,9 @@ class Camera extends Serializable {
 	getUpVector(out?): any {
 		if (!out)
 			out=vec3.create();
-		out[0]=this.viewMatrix[4];
-		out[1]=this.viewMatrix[5];
-		out[2]=this.viewMatrix[6];
+		out[0]=this.blockValues.view[4];
+		out[1]=this.blockValues.view[5];
+		out[2]=this.blockValues.view[6];
 		return out;
 	}
 
@@ -182,9 +198,9 @@ class Camera extends Serializable {
 	getStrafeVector(out?): any {
 		if (!out)
 			out=vec3.create();
-		out[0]=this.viewMatrix[0];
-		out[1]=this.viewMatrix[1];
-		out[2]=this.viewMatrix[2];
+		out[0]=this.blockValues.view[0];
+		out[1]=this.blockValues.view[1];
+		out[2]=this.blockValues.view[2];
 		return out;
 	}
 
@@ -194,7 +210,7 @@ class Camera extends Serializable {
 	getPosition(out?): any {
 		if (!out)
 			out=vec3.create();
-		mat4.translation(out, this.viewInverseMatrix);
+		mat4.translation(out, this.blockValues.viewInverse);
 		return out;
 	}
 
@@ -204,7 +220,7 @@ class Camera extends Serializable {
 		var p = this.getPosition();
 		vec3.sub(p, p, position); // inverted relative translation vector
 		var m = mat4.fromTranslation(mat4.create(), p);
-		mat4.mul(this.viewMatrix, this.viewMatrix, m);
+		mat4.mul(this.blockValues.view, this.blockValues.view, m);
 	}
 
 	/** Pans the camera on the current view plane so that
@@ -246,6 +262,22 @@ class Camera extends Serializable {
 		vec3.scale(dir, dir, -distance);
 		vec3.add(pos, boundingVolume.center, dir);
 		this.setPosition(pos);
+	}
+
+	replaceViewProjection(context: RenderingContext, projection: any, view: any) {
+		const gl = context.gl;
+		this.block.bindBuffer(context);
+		this.block.updateIndividual(context, 'projection', projection);
+		this.block.updateIndividual(context, 'view', view);
+		this.block.unbindBuffer(context);
+	}
+
+	restoreViewProjection(context: RenderingContext) {
+		const gl = context.gl;
+		this.block.bindBuffer(context);
+		this.block.updateIndividual(context, 'projection', this.blockValues.projection);
+		this.block.updateIndividual(context, 'view', this.blockValues.view);
+		this.block.unbindBuffer(context);
 	}
 }
 

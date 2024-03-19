@@ -26,19 +26,29 @@ class ImmersiveCamera extends CameraComponent {
 			return false;	// Needed when rendering only one eye of a stereo view to not spam console with errors
 		}
 
-		this.camera.projectionMatrix = view.projectionMatrix;
-		this.camera.viewMatrix = view.transform.inverse.matrix;
+		this.camera.blockValues.projection = view.projectionMatrix;
+		this.camera.blockValues.view = view.transform.inverse.matrix;
 		this.camera.target.frameBuffer = layer.framebuffer;
 		this.camera.target.set(viewport.x, viewport.y, viewport.width, viewport.height);
 		this.camera.target.resetViewport();
 
-		mat4.invert(this.camera.projectionInverseMatrix, this.camera.projectionMatrix);
-		mat4.invert(this.camera.viewInverseMatrix, this.camera.viewMatrix);
+		mat4.invert(this.camera.blockValues.projectionInverse, this.camera.blockValues.projection);
+		mat4.invert(this.camera.blockValues.viewInverse, this.camera.blockValues.view);
+
+		this.camera.blockValues.zNear[0] = this.camera.near;
+		this.camera.blockValues.zFar[0] = this.camera.far;
+		this.camera.getPosition(this.camera.blockValues.cameraPosition);
+
+		this.camera.block.update(context);
 
 		return true;
 	}
 
 	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
+		if (!this.enabled) {
+			return;
+		}
+
 		let space = scene.engine.immersiveRefSpace;
 		const controller = this.node.getComponent(OrbitController);
 		if (controller) {

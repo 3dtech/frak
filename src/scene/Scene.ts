@@ -180,6 +180,15 @@ class Scene extends Serializable {
 		this.started = false;
 	}
 
+	initCameras(context: RenderingContext, program: WebGLProgram) {
+		for (const camera of this.cameras) {
+			camera.init(context, program);
+		}
+
+		this.cameraComponent.init(context, program);
+		this.immersiveCamera.init(context, program);
+	}
+
 	/** Called to render the scene. */
 	render(context: RenderingContext, camera: CameraComponent, frame?: XRFrame) {
 		if (!this.started) {

@@ -35,7 +35,7 @@ class Billboard extends Component {
 			throw "Billboard.cameraToLookAt is not an instance of Camera";
 
 		var delta=engine.fps.getDelta()/1000.0;
-		var invViewMatrix = mat4.invert(this.cacheMat4[0], this.cameraToLookAt.viewMatrix);
+		var invViewMatrix = mat4.invert(this.cacheMat4[0], this.cameraToLookAt.blockValues.view);
 		var rotation = quat.fromMat4(this.cacheQuat[0], invViewMatrix);
 		if (this.smoothRotation) {
 			var localRotation = quat.fromMat4(this.cacheQuat[1], this.node.transform.relative);

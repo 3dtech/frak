@@ -68,8 +68,8 @@ class PerspectiveCamera extends CameraComponent {
 
 	/** Calculates projection matrix based on fov, aspect ratio and near/far clipping planes */
 	calculatePerspective() {
-		mat4.perspective(this.camera.projectionMatrix, this.fov / 180 * Math.PI, this.aspect, this.near, this.far);
-		mat4.invert(this.camera.projectionInverseMatrix, this.camera.projectionMatrix);
+		mat4.perspective(this.camera.blockValues.projection, this.fov / 180 * Math.PI, this.aspect, this.near, this.far);
+		mat4.invert(this.camera.blockValues.projectionInverse, this.camera.blockValues.projection);
 	}
 
 	updateCamera(context: RenderingContext) {
@@ -80,10 +80,21 @@ class PerspectiveCamera extends CameraComponent {
 		this.camera.target.resetViewport();
 
 		this.calculatePerspective();
-		mat4.invert(this.camera.viewInverseMatrix, this.camera.viewMatrix);
+
+		mat4.invert(this.camera.blockValues.viewInverse, this.camera.blockValues.view);
+
+		this.camera.blockValues.zNear[0] = this.camera.near;
+		this.camera.blockValues.zFar[0] = this.camera.far;
+		this.camera.getPosition(this.camera.blockValues.cameraPosition);
+
+		this.camera.block.update(context);
 	}
 
 	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
+		if (!this.enabled) {
+			return;
+		}
+
 		this.updateCamera(context);
 		super.render(context, scene, preRenderCallback, postRenderCallback);
 	}
