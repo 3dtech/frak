@@ -22,7 +22,7 @@ abstract class PostProcessRenderStage extends RenderStage {
 	material: Material;
 	generator: RenderStage;
 
-	constructor() {
+	protected constructor() {
 		super();
 		this.size = false;
 

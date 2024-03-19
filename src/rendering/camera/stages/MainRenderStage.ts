@@ -18,6 +18,7 @@ import TargetTexture from "../TargetTexture";
 import ShadowMapsRenderStage from "./ShadowMapsRenderStage";
 import UnlitRenderStage from "./UnlitRenderStage";
 import CustomRenderStage from "./CustomRenderStage";
+import PostProcessRenderStage from './PostProcessRenderStage';
 
 class BindDstTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -34,7 +35,7 @@ class UnbindDstTarget extends RenderStage {
 
 class MainRenderStage extends RenderStage {
 	gbuffer: TargetTextureMulti;
-	declare parent: PBRPipeline;
+	declare parent: PostProcessRenderStage;
 	oitAccum: TargetTextureFloat;
 	oitReveal: TargetTexture;
 	size = vec2.create();
