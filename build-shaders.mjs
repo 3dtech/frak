@@ -3,18 +3,15 @@
  * run: node build-shaders
  */
 
-const fs = require('fs');
-const path = require('path');
-const util = require('util');
-const readdir = util.promisify(fs.readdir);
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
+import { readdir, writeFile } from 'node:fs/promises';
+import { dirname, extname, join, relative } from 'node:path/posix';
 
 const OUTPUT_PATH = './src/rendering/shaders/BuiltInShaders.ts';
-const BUNDLE_RELATIVE_PATH = './assets';
+const ASSETS_PATH = './assets';
+const ASSETS_RELATIVE_PATH = relative(dirname(OUTPUT_PATH), ASSETS_PATH);
 const EXTENSION_FILTER = ['.vert', '.frag', '.glsl'];
 
-let profiles = {
+const profiles = {
 	'webgl2': './assets/shaders',
 	'snippets': './assets/shaders/snippets',
 };
@@ -26,18 +23,15 @@ async function main() {
 		console.log('Bundling profile: %s', profile);
 		output[profile] = {};
 		let shadersPath = profiles[profile];
-		let bundleBasePath = path.posix.relative(BUNDLE_RELATIVE_PATH, shadersPath);
+		let bundleBasePath = relative(ASSETS_PATH, shadersPath);
 
 		try {
 			let files = await readdir(shadersPath);
 			for (let file of files) {
-				if (EXTENSION_FILTER.indexOf(path.extname(file)) == -1)
+				if (EXTENSION_FILTER.indexOf(extname(file)) === -1)
 					continue;
-				let relativePath = path.join(shadersPath, file);
-				output[profile][path.posix.join(bundleBasePath, file)] = {
-					name: file.replace(/\./, "_"),
-					relativePath,
-				};
+
+				output[profile][join(bundleBasePath, file)] = file.replace(/\./, "_");
 			}
 		}
 		catch (err) {
@@ -48,24 +42,25 @@ async function main() {
 	let js = `// @ts-nocheck: Imports are fine with esbuild and TS doesn't let us turn off a single error type\n`;
 	for (let profile in output) {
 		for (const [path, shader] of Object.entries(output[profile])) {
-			js += `import ${shader.name} from '../../../assets/${path}';\n`;
+			js += `import ${shader} from '${ASSETS_RELATIVE_PATH}/${path}';\n`;
 		}
 	}
 
 	js += `\nconst BuiltInShaders = {\n`;
 
 	for (let profile in output) {
-		js += `	'${profile}': {\n`;
+		js += `\t'${profile}': {\n`;
 		for (const [path, shader] of Object.entries(output[profile])) {
-			js += `		'${path}': ${shader.name},\n`;
+			js += `\t\t'${path}': ${shader},\n`;
 		}
-		js += `	},\n`;
+		js += `\t},\n`;
 	}
 
 	js += `};\n\nglobalThis.BuiltInShaders = BuiltInShaders;\nexport default BuiltInShaders;\n`;
 
 	await writeFile(OUTPUT_PATH, js);
-	console.log('Output written to %s', OUTPUT_PATH);
 }
 
-main();
+main().then(() => {
+	console.log(`Shaders written to ${OUTPUT_PATH}`);
+});

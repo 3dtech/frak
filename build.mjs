@@ -1,4 +1,4 @@
-import { promises as fs } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import { argv, exit } from 'node:process';
 import { fileURLToPath } from "node:url";
@@ -56,23 +56,26 @@ let wasmPlugin = {
 		// built-in "binary" loader instead of manually embedding the
 		// binary data inside JavaScript code ourselves.
 		build.onLoad({ filter: /.*/, namespace: 'wasm-binary' }, async (args) => ({
-			contents: await fs.readFile(args.path),
+			contents: await readFile(args.path),
 			loader: 'binary',
 		}));
 	},
 }
 
 const debug = argv.includes('--debug');
+const OUTPUT_PATH = `builds/frak-latest.${debug ? 'debug' : 'min'}.js`;
 
 build({
 	entryPoints: ['src/entry.ts'],
 	bundle: true,
 	minify: !debug,
-	outfile: `builds/frak-latest.${debug ? 'debug' : 'min'}.js`,
+	outfile: OUTPUT_PATH,
 	plugins: [wasmPlugin],
 	loader: {
 		'.glsl': 'text',
 		'.frag': 'text',
 		'.vert': 'text',
 	}
+}).then(result => {
+	console.log(`Build written to ${OUTPUT_PATH}`);
 }).catch(() => exit(1))

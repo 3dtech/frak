@@ -10,6 +10,7 @@
   "scripts": {
     "build": "node build.mjs",
     "build-debug": "node build.mjs --debug",
+    "build-shaders": "node build-shaders.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
