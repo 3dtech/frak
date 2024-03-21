@@ -3,20 +3,29 @@
 import Engine from './Engine';
 import Controller, { Events } from '../scene/components/Controller';
 
-// TODO: Position in canvas coordinates
+const createListener: CreateListener = (
+	target: EventTarget,
+	name: string,
+	handler: EventListener,
+	options?: AddEventListenerOptions,
+) => {
+	target.addEventListener(name, handler, options);
+
+	return () => target.removeEventListener(name, handler, options);
+};
 
 /** Input manager */
 class Input {
-	private controllers: Controller[] = [];
-	private metaListeners: RemoveListener[] = [];
-	private listeners: RemoveListener[] = [];
-	private cacheVec2 = vec2.create();
+	private readonly controllers: Controller[] = [];
+	private readonly metaListeners: RemoveListener[] = [];
+	private readonly listeners: RemoveListener[] = [];
+	private readonly cacheVec2 = vec2.create();
 
 	/** Constructor
 	 * @param engine The engine instance
 	 * @param canvas The canvas element we want the events from
 	 * */
-	constructor(public engine: Engine, private canvas: HTMLCanvasElement) {}
+	constructor(public engine: Engine, private readonly canvas: HTMLCanvasElement) {}
 
 	/** Dispatches an event to all controllers */
 	private dispatch<K extends keyof Events>(name: K, ...args: Events[K]) {
@@ -25,16 +34,15 @@ class Input {
 		}
 	}
 
-	/** Creates a listener and returns a remove function */
-	private createListener(target: EventTarget, name: string, handler: EventListener, options?: AddEventListenerOptions): RemoveListener {
-		target.addEventListener(name, handler, options);
-
-		return () => target.removeEventListener(name, handler, options);
-	}
-
 	/** Adds a listener with a remove function that removes itself */
-	private addListener(target: EventTarget, name: string, handler: EventListener, options?: AddEventListenerOptions, list = this.listeners): RemoveListener {
-		const innerRemove = this.createListener(target, name, handler, options);
+	private addListener(
+		target: EventTarget,
+		name: string,
+		handler: EventListener,
+		options?: AddEventListenerOptions,
+		list = this.listeners,
+	): RemoveListener {
+		const innerRemove = createListener(target, name, handler, options);
 		const remove = () => {
 			innerRemove();
 			list.splice(list.indexOf(remove), 1);
@@ -46,7 +54,12 @@ class Input {
 	}
 
 	/** Adds a listener to the canvas that is removed when the input is stopped */
-	private addMetaListener(target: EventTarget, name: string, handler: EventListener, options?: AddEventListenerOptions) {
+	private addMetaListener(
+		target: EventTarget,
+		name: string,
+		handler: EventListener,
+		options?: AddEventListenerOptions,
+	) {
 		return this.addListener(target, name, handler, options, this.metaListeners);
 	}
 
@@ -84,7 +97,209 @@ class Input {
 	private transformCoordinates(xy: Vec2) {
 		const rect = this.canvas.getBoundingClientRect();
 
-		return vec2.set(this.cacheVec2, xy[0] - rect.left, xy[1] - rect.top);
+		return vec2.set(this.cacheVec2, xy[0] - rect.left, xy[1] - rect.top) as Vec2;
+	}
+
+	/** Helper for handling events involving panning */
+	private setupPanHandler(
+		startPredicate: TestPointerDown,
+		started = (pos: Vec2, button: number) => {},
+		moved = (pos: Vec2, delta: Vec2, button: number) => {},
+		ended = (touches: ActivePointers, pos: Vec2) => {},
+	) {
+		let id = 0;
+		let button = -1;
+		const lastXY = vec2.create();
+		const xy = vec2.create();
+		const delta = vec2.create();
+
+		const start = (touches: ActivePointers, pointerId: number) => {
+			const ev = touches.get(pointerId);
+
+			id = pointerId;
+			button = ev.button;
+
+			vec2.set(lastXY, ev.clientX, ev.clientY);
+			started(lastXY, button);
+		};
+
+		const move = (touches: ActivePointers, pointerId: number) => {
+			if (pointerId !== id) {
+				return;
+			}
+
+			const ev = touches.get(pointerId);
+
+			vec2.set(xy, ev.clientX, ev.clientY);
+			vec2.sub(delta, xy, lastXY);
+			vec2.copy(lastXY, xy);
+
+			moved(xy, delta, button);
+		};
+
+		const end = (touches: ActivePointers, pointerId: number) => {
+			id = 0;
+			button = -1;
+			ended(touches, lastXY);
+		};
+
+		const testPointerUp = (touches: ActivePointers, pointerId: number) => pointerId === id;
+
+		this.setupPointerHandler(start, move, end, startPredicate, testPointerUp);
+	}
+
+	private setupPanEvent() {
+		this.setupPanHandler(
+			(touches, id) => touches.size === 1,
+			undefined,
+			(pos: Vec2, delta: Vec2, button: number) => {
+				this.dispatch('onMouseMove', this.transformCoordinates(pos), button, delta);
+			},
+		);
+	}
+
+	private setupClickEvent() {
+		const MAX_DELTA_TIME = 250;
+		const MAX_DELTA_SQ = 100;
+
+		const startPosition = vec2.create();
+		const delta = vec2.create();
+		let startTime = 0;
+		let deltaSq = 0;
+		let button = -1;
+
+		this.setupPanHandler(
+			(touches, id) => touches.size === 1,
+			(pos, btn) => {
+				vec2.copy(startPosition, pos);
+
+				startTime = performance.now();
+				deltaSq = 0;
+				button = btn;
+			},
+			(pos, delta, btn) => {
+				deltaSq += delta[0] * delta[0] + delta[1] * delta[1];
+			},
+			(pointers, pos) => {
+				if (pointers.size !== 1) {
+					return;
+				}
+
+				vec2.sub(delta, pos, startPosition);
+
+				const endTime = performance.now();
+				const deltaTime = endTime - startTime;
+
+				if (deltaTime > MAX_DELTA_TIME) {
+					return;
+				}
+
+				if (deltaSq > MAX_DELTA_SQ) {
+					return;
+				}
+
+				this.dispatch('onClick', this.transformCoordinates(pos), button, delta);
+			},
+		);
+	}
+
+	private setupPinchEvent() {
+		const center = vec2.create();
+		let aId = 0;
+		let bId = 0;
+		let startDistance = 0;
+		let lastScale = 0;
+
+		this.setupPointerHandler(
+			(touches, id) => {
+				[aId, bId] = [...touches.keys()];
+
+				const a = touches.get(aId);
+				const b = touches.get(bId);
+
+				lastScale = 0;
+				startDistance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+			},
+			(touches, id) => {
+				const a = touches.get(aId);
+				const b = touches.get(bId);
+
+				const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+
+				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+
+				const eventScale = distance / startDistance;
+				const scale = eventScale - lastScale;
+
+				lastScale = eventScale - 1;
+
+				this.dispatch('onPinch', this.transformCoordinates(center), scale);
+			},
+			() => {},
+			(touches, id) => touches.size === 2,
+			(touches, id) => touches.size === 2,
+		);
+	}
+
+	private setupRotateEvent() {
+		const center = vec2.create();
+		let aId = 0;
+		let bId = 0;
+		let lastRotation = 0;
+
+		this.setupPointerHandler(
+			(touches, id) => {
+				[aId, bId] = [...touches.keys()];
+				const a = touches.get(aId);
+				const b = touches.get(bId);
+
+				lastRotation = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
+			},
+			(touches, id) => {
+				const a = touches.get(aId);
+				const b = touches.get(bId);
+
+				const rotation = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
+
+				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+
+				let delta = rotation - lastRotation;
+				while (delta < -180) {
+					delta += 360;
+				}
+
+				while (delta > 180) {
+					delta -= 360;
+				}
+
+				lastRotation = rotation;
+
+				this.dispatch('onRotate', this.transformCoordinates(center), delta);
+			},
+			() => {},
+			(touches, id) => touches.size === 2,
+			(touches, id) => touches.size === 2,
+		);
+	}
+
+	private setupWheelEvent() {
+		const pos = vec2.create();
+		const handler = (ev: WheelEvent) => {
+			ev.preventDefault();
+
+			let delta = ev.deltaY;
+			if (delta === 0) {
+				return;
+			}
+
+			const direction = Math.sign(delta);
+
+			vec2.set(pos, ev.clientX, ev.clientY);
+
+			this.dispatch('onMouseWheel', this.transformCoordinates(pos), delta, direction);
+		};
+
+		this.addListener(this.canvas, 'wheel', handler, { passive: false });
 	}
 
 	/** Starts input, sets up events */
@@ -175,205 +390,10 @@ class Input {
 		this.addListener(this.canvas, 'pointerdown', pointerDown);
 	}
 
-	/** Helper for handling events involving panning */
-	private setupPanHandler(
-		startPredicate: TestPointerDown,
-		started = (pos: Vec2, button: number) => {},
-		moved = (pos: Vec2, delta: Vec2, button: number) => {},
-		ended = (pos: Vec2) => {},
-	) {
-		let id = 0;
-		let button = -1;
-		const lastXY = vec2.create();
-		const xy = vec2.create();
-		const delta = vec2.create();
+	// eslint-disable-next-line class-methods-use-this
+	public update() {}
 
-		const start = (touches: ActivePointers, pointerId: number) => {
-			const ev = touches.get(pointerId);
-
-			id = pointerId;
-			button = ev.button;
-
-			vec2.set(lastXY, ev.clientX, ev.clientY);
-			started(lastXY, button);
-		}
-
-		const move = (touches: ActivePointers, pointerId: number) => {
-			if (pointerId !== id) {
-				return;
-			}
-
-			const ev = touches.get(pointerId);
-			vec2.set(xy, ev.clientX, ev.clientY);
-			vec2.sub(delta, xy, lastXY);
-			vec2.copy(lastXY, xy);
-
-			moved(xy, delta, button);
-		}
-
-		const end = (touches: ActivePointers, pointerId: number) => {
-			id = 0;
-			button = -1;
-			ended(lastXY);
-		}
-
-		const testPointerUp = (touches: ActivePointers, pointerId: number) => {
-			return pointerId === id;
-		}
-
-		this.setupPointerHandler(start, move, end, startPredicate, testPointerUp);
-	}
-
-	private setupPanEvent() {
-		this.setupPanHandler(
-			(touches, id) => touches.size === 1,
-			undefined,
-			(pos: Vec2, delta: Vec2, button: number) => {
-				this.dispatch('onMouseMove', this.transformCoordinates(pos), button, delta);
-			}
-		);
-	}
-
-	private setupClickEvent() {
-		const MAX_DELTA_TIME = 250;
-		const MAX_DELTA_SQ = 100;
-
-		const startPosition = vec2.create();
-		const delta = vec2.create();
-		let startTime = 0;
-		let deltaSq = 0;
-		let button = -1;
-
-		this.setupPanHandler(
-			(touches, id) => touches.size === 1,
-			(pos, btn) => {
-				vec2.copy(startPosition, pos);
-
-				startTime = performance.now();
-				deltaSq = 0;
-				button = btn;
-			},
-			(pos, delta, btn) => {
-				deltaSq += delta[0] * delta[0] + delta[1] * delta[1];
-			},
-			pos => {
-				vec2.sub(delta, pos, startPosition);
-
-				const endTime = performance.now();
-				const deltaTime = endTime - startTime;
-
-				if (deltaTime > MAX_DELTA_TIME) {
-					return;
-				}
-
-				if (deltaSq > MAX_DELTA_SQ) {
-					return;
-				}
-
-				this.dispatch('onClick', this.transformCoordinates(pos), button, delta);
-			}
-		);
-	}
-
-	setupPinchEvent() {
-		const center = vec2.create();
-		let aId = 0;
-		let bId = 0;
-		let startDistance = 0;
-		let lastScale = 0;
-
-		this.setupPointerHandler(
-			(touches, id) => {
-				[ aId, bId ] = [ ...touches.keys() ];
-
-				const a = touches.get(aId);
-				const b = touches.get(bId);
-
-				lastScale = 0;
-				startDistance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-			},
-			(touches, id) => {
-				const a = touches.get(aId);
-				const b = touches.get(bId);
-
-				const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
-
-				const eventScale = distance / startDistance;
-				const scale = eventScale - lastScale;
-
-				lastScale = eventScale - 1;
-
-				this.dispatch('onPinch', this.transformCoordinates(center), scale);
-			},
-			() => {},
-			(touches, id) => touches.size === 2,
-			(touches, id) => touches.size === 2,
-		);
-	}
-
-	setupRotateEvent() {
-		const center = vec2.create();
-		let aId = 0;
-		let bId = 0;
-		let lastRotation = 0;
-
-		this.setupPointerHandler(
-			(touches, id) => {
-				[ aId, bId ] = [ ...touches.keys() ];
-				const a = touches.get(aId);
-				const b = touches.get(bId);
-
-				lastRotation = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
-			},
-			(touches, id) => {
-				const a = touches.get(aId);
-				const b = touches.get(bId);
-
-				const rotation = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
-				vec2.set(center, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
-
-				let delta = rotation - lastRotation;
-				while (delta < -180) {
-					delta += 360;
-				}
-
-				while (delta > 180) {
-					delta -= 360;
-				}
-
-				lastRotation = rotation;
-
-				this.dispatch('onRotate', this.transformCoordinates(center), delta);
-			},
-			() => {},
-			(touches, id) => touches.size === 2,
-			(touches, id) => touches.size === 2,
-		);
-	}
-
-	setupWheelEvent() {
-		const pos = vec2.create();
-		const handler = (ev: WheelEvent) => {
-			ev.preventDefault();
-
-			let delta = ev.deltaY;
-			if (delta === 0) {
-				return;
-			}
-
-			const direction = Math.sign(delta);
-			vec2.set(pos, ev.clientX, ev.clientY);
-
-			this.dispatch('onMouseWheel', this.transformCoordinates(pos), delta, direction);
-		};
-
-		this.addListener(this.canvas, 'wheel', handler, { passive: false });
-	}
-
-	update() {}
-
-	registerController(controller: Controller) {
+	public registerController(controller: Controller) {
 		const index = this.controllers.indexOf(controller);
 		if (index === -1) {
 			this.controllers.push(controller);
@@ -384,7 +404,7 @@ class Input {
 		return false;
 	}
 
-	unregisterController(controller: Controller) {
+	public unregisterController(controller: Controller) {
 		const index = this.controllers.indexOf(controller);
 		if (index !== -1) {
 			this.controllers.splice(index, 1);
@@ -395,9 +415,8 @@ class Input {
 		return false;
 	}
 
-	bind(...args: any[]) {
-
-	}
+	// eslint-disable-next-line class-methods-use-this
+	public bind(...args: any[]) {}
 }
 
 globalThis.Input = Input;

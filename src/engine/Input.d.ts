@@ -5,6 +5,11 @@ type ActivePointers = Map<number, PointerEvent>;
 
 /** Removes a listener */
 type RemoveListener = () => void;
+type CreateListener = (target: EventTarget,
+	name: string,
+	handler: EventListener,
+	options?: AddEventListenerOptions,
+) => RemoveListener;
 
 /** Callback for pointer events
  * @param {ActivePointers} touches Map of active pointers
