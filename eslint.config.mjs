@@ -2,6 +2,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from "node:url";
 import tseslint from 'typescript-eslint';
 import parser from '@typescript-eslint/parser';
+import stylistic from '@stylistic/eslint-plugin';
 import rules from './eslint.rules.mjs';
 import typedRules from './eslint.rules.ts.mjs';
 
@@ -20,6 +21,7 @@ export default tseslint.config(
 			},
 		},
 		plugins: {
+			'@stylistic': stylistic,
 			'@typescript-eslint': tseslint.plugin,
 		},
 		rules,

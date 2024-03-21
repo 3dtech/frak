@@ -1,4 +1,15 @@
 export default {
+	'@stylistic/brace-style': [
+		'warn',
+		'1tbs',
+		{
+			allowSingleLine: true,
+		},
+	],
+	'@stylistic/nonblock-statement-body-position': [
+		'warn',
+		'below',
+	],
 	'@typescript-eslint/adjacent-overload-signatures': 'warn',
 	'@typescript-eslint/array-type': [
 		'warn',
@@ -7,7 +18,6 @@ export default {
 		},
 	],
 	'@typescript-eslint/await-thenable': 'warn',
-	'@typescript-eslint/brace-style': 'warn',
 	'@typescript-eslint/consistent-type-assertions': 'warn',
 	'@typescript-eslint/consistent-type-definitions': [
 		'warn',
@@ -62,19 +72,11 @@ export default {
 		},
 	],
 	'@typescript-eslint/no-inferrable-types': 'warn',
-	'@typescript-eslint/no-magic-numbers': [
-		'warn',
-		{
-			ignore: [-1, 0, 1, 2],
-			ignoreArrayIndexes: true,
-			ignoreEnums: true,
-			ignoreNumericLiteralTypes: true,
-		},
-	],
 	'@typescript-eslint/no-require-imports': 'warn',
 	'@typescript-eslint/no-this-alias': 'warn',
 	'@typescript-eslint/no-unnecessary-qualifier': 'warn',
 	'@typescript-eslint/no-unnecessary-type-arguments': 'warn',
+	'@typescript-eslint/no-unsafe-return': 'warn',
 	'@typescript-eslint/no-unused-expressions': 'warn',
 	'@typescript-eslint/no-unused-vars': [
 		'warn',

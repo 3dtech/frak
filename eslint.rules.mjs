@@ -12,7 +12,6 @@ export default {
 	'arrow-parens': ['warn', 'as-needed'],
 	'arrow-spacing': 'warn',
 	'block-spacing': 'warn',
-	'brace-style': 'warn',
 	camelcase: 'warn',
 	'class-methods-use-this': 'warn',
 	'comma-dangle': [
@@ -68,12 +67,6 @@ export default {
 	'new-parens': 'warn',
 	'newline-per-chained-call': 'warn',
 	'no-cond-assign': ['warn', 'except-parens'],
-	'no-console': [
-		'warn',
-		{
-			allow: ['warn', 'error'],
-		},
-	],
 	'no-constant-condition': 'warn',
 	'no-debugger': 'warn',
 	'no-duplicate-case': 'warn',
@@ -107,6 +100,7 @@ export default {
 	'no-unexpected-multiline': 'warn',
 	'no-unsafe-finally': 'warn',
 	'no-unused-labels': 'warn',
+	'no-var': 'warn',
 	'no-whitespace-before-property': 'warn',
 	'object-curly-spacing': [
 		'warn',
