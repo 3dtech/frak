@@ -8,13 +8,14 @@ import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
 
 type Tonemap = 'aces' | null;
+type Filtering = 2 | 4 | 8 | 16 | false;
 
 const DEFAULT_OPTIONS = {
-	anisotropicFiltering: 4 as number | false, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
+	anisotropicFiltering: 4 as Filtering, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
 	antialias: false,
 	assetsPath: '',
 	captureScreenshot: false,
-	contextErrorCallback: undefined as any,
+	contextErrorCallback: undefined as (() => boolean) | undefined,
 	contextOptions: undefined as WebGLContextAttributes | undefined,
 	debug: false,
 	defaultRequestedFPS: 60.0,
