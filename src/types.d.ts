@@ -8,7 +8,6 @@ declare global {
 	var mat3: any;
 	var mat4: any;
 
-	var HammerWF: any;
 	var jDataView: any;
 	var WebGLDebugUtils: any;
 
