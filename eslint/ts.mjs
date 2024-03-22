@@ -1,15 +1,4 @@
 export default {
-	'@stylistic/brace-style': [
-		'warn',
-		'1tbs',
-		{
-			allowSingleLine: true,
-		},
-	],
-	'@stylistic/nonblock-statement-body-position': [
-		'warn',
-		'below',
-	],
 	'@typescript-eslint/adjacent-overload-signatures': 'warn',
 	'@typescript-eslint/array-type': [
 		'warn',
@@ -29,14 +18,6 @@ export default {
 			overrides: {
 				constructors: 'off',
 			},
-		},
-	],
-	'@typescript-eslint/indent': [
-		'warn',
-		'tab',
-		{
-			MemberExpression: 0,
-			SwitchCase: 1,
 		},
 	],
 	'@typescript-eslint/member-ordering': [
@@ -94,7 +75,5 @@ export default {
 	'@typescript-eslint/promise-function-async': 'warn',
 	'@typescript-eslint/require-await': 'warn',
 	'@typescript-eslint/restrict-plus-operands': 'warn',
-	'@typescript-eslint/semi': 'warn',
 	'@typescript-eslint/triple-slash-reference': 'warn',
-	'@typescript-eslint/type-annotation-spacing': 'warn',
 };

@@ -3,8 +3,10 @@ import { fileURLToPath } from "node:url";
 import tseslint from 'typescript-eslint';
 import parser from '@typescript-eslint/parser';
 import stylistic from '@stylistic/eslint-plugin';
-import rules from './eslint.rules.mjs';
-import typedRules from './eslint.rules.ts.mjs';
+import jsdoc from 'eslint-plugin-jsdoc';
+import rules from './eslint/rules.mjs';
+import stylisticRules from './eslint/stylistic.mjs';
+import typedRules from './eslint/ts.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,10 +23,14 @@ export default tseslint.config(
 			},
 		},
 		plugins: {
+			'@jsdoc': jsdoc,
 			'@stylistic': stylistic,
 			'@typescript-eslint': tseslint.plugin,
 		},
 		rules,
+	},
+	{
+		rules: stylisticRules,
 	},
 	{
 		files: ['**/*.ts'],
