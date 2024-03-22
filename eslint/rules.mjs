@@ -10,7 +10,18 @@ export default {
 	],
 	'arrow-body-style': 'warn',
 	camelcase: 'warn',
-	'class-methods-use-this': 'warn',
+	'class-methods-use-this': [
+		'warn',
+		{
+			enforceForClassFields: false,
+		},
+	],
+	'consistent-return': [
+		'warn',
+		{
+			treatUndefinedAsUnspecified: true,
+		},
+	],
 	'consistent-this': [
 		'warn',
 		'scope',
@@ -21,6 +32,7 @@ export default {
 		'multi-line',
 	],
 	'default-case': 'warn',
+	'default-param-last': 'warn',
 	'dot-notation': [
 		'warn',
 		{
@@ -29,11 +41,18 @@ export default {
 	],
 	eqeqeq: 'error',
 	'max-classes-per-file': 'warn',
+	'no-array-constructor': 'warn',
 	'no-cond-assign': ['warn', 'except-parens'],
 	'no-constant-condition': 'warn',
 	'no-debugger': 'warn',
 	'no-duplicate-case': 'warn',
 	'no-empty': 'warn',
+	'no-empty-function': [
+		'warn',
+		{
+			allow: ['arrowFunctions'],
+		},
+	],
 	'no-eval': 'warn',
 	'no-extra-semi': 'warn',
 	'no-fallthrough': 'warn',

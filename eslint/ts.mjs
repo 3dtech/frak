@@ -1,50 +1,116 @@
 export default {
 	'@typescript-eslint/adjacent-overload-signatures': 'warn',
-	'@typescript-eslint/array-type': [
+	'@typescript-eslint/array-type': 'warn',
+	'@typescript-eslint/await-thenable': 'warn',
+	'@typescript-eslint/ban-ts-comment': [
 		'warn',
 		{
-			default: 'array-simple',
+			'ts-check': 'allow-with-description',
+			'ts-expect-error': 'allow-with-description',
+			'ts-ignore': 'allow-with-description',
+			'ts-nocheck': 'allow-with-description',
 		},
 	],
-	'@typescript-eslint/await-thenable': 'warn',
-	'@typescript-eslint/consistent-type-assertions': 'warn',
-	'@typescript-eslint/consistent-type-definitions': [
+	'@typescript-eslint/ban-types': 'warn',
+	'@typescript-eslint/class-literal-property-style': 'warn',
+	'@typescript-eslint/class-methods-use-this': [
 		'warn',
-		'interface',
+		{
+			enforceForClassFields: false,
+			ignoreOverrideMethods: true,
+		},
+	],
+	'@typescript-eslint/consistent-generic-constructors': [
+		'warn',
+		'type-annotation',
+	],
+	'@typescript-eslint/consistent-indexed-object-style': [
+		'warn',
+		'index-signature',
+	],
+	'@typescript-eslint/consistent-return': [
+		'warn',
+		{
+			treatUndefinedAsUnspecified: true,
+		},
+	],
+	'@typescript-eslint/consistent-type-assertions': 'warn',
+	'@typescript-eslint/consistent-type-definitions': 'warn',
+	'@typescript-eslint/consistent-type-exports': 'warn',
+	'@typescript-eslint/consistent-type-imports': 'warn',
+	'@typescript-eslint/default-param-last': 'warn',
+	'@typescript-eslint/dot-notation': [
+		'warn',
+		{
+			allowPattern: '^[a-z]+(_[a-z]+)+$',
+		},
 	],
 	'@typescript-eslint/explicit-member-accessibility': [
 		'warn',
 		{
+			accessibility: 'no-public',
 			overrides: {
 				constructors: 'off',
+				parameterProperties: 'explicit',
 			},
 		},
 	],
 	'@typescript-eslint/member-ordering': [
 		'warn',
 		{
-			default: [
-				// Statics
-				'private-static-field',
-				'protected-static-field',
-				'public-static-field',
-				'private-static-method',
-				'protected-static-method',
-				'public-static-method',
-				// Fields
-				'private-instance-field',
-				'protected-instance-field',
-				'public-instance-field',
+			default: {
+				memberTypes: [
+					// Statics
+					'private-static-field',
+					'protected-static-field',
+					'public-static-field',
 
-				'constructor',
+					'private-static-method',
+					'protected-static-method',
+					'public-static-method',
 
-				// Methods
-				'private-instance-method',
-				'protected-instance-method',
-				'public-instance-method',
+					// Fields
+					'private-instance-field',
+					'protected-instance-field',
+					'public-instance-field',
+
+					'constructor',
+
+					// Methods
+					'private-instance-method',
+					'protected-instance-method',
+					'public-instance-method',
+				],
+				order: 'alphabetically',
+			},
+		},
+	],
+	'@typescript-eslint/method-signature-style': 'warn',
+	'@typescript-eslint/naming-convention': 'warn',
+	'@typescript-eslint/no-array-constructor': 'warn',
+	'@typescript-eslint/no-array-delete': 'warn',
+	'@typescript-eslint/no-base-to-string': 'warn',
+	'@typescript-eslint/no-confusing-non-null-assertion': 'warn',
+	'@typescript-eslint/no-confusing-void-expression': [
+		'warn',
+		{
+			ignoreArrowShorthand: true,
+			ignoreVoidOperator: true,
+		},
+	],
+	'@typescript-eslint/no-duplicate-enum-values': 'warn',
+	'@typescript-eslint/no-duplicate-type-constituents': 'warn',
+	'@typescript-eslint/no-dynamic-delete': 'warn',
+	'@typescript-eslint/no-empty-function': [
+		'warn',
+		{
+			allow: [
+				'arrowFunctions',
+				'overrideMethods'
 			],
 		},
 	],
+	//
 	'@typescript-eslint/no-extraneous-class': 'warn',
 	'@typescript-eslint/no-floating-promises': [
 		'warn',
@@ -76,4 +142,12 @@ export default {
 	'@typescript-eslint/require-await': 'warn',
 	'@typescript-eslint/restrict-plus-operands': 'warn',
 	'@typescript-eslint/triple-slash-reference': 'warn',
+
+	// Disable overridden eslint rules
+	'class-methods-use-this': 'off',
+	'consistent-return': 'off',
+	'default-param-last': 'off',
+	'dot-notation': 'off',
+	'no-array-constructor': 'off',
+	'no-empty-function': 'off',
 };
