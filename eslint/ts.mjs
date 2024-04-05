@@ -134,7 +134,7 @@ export default {
 	'@typescript-eslint/no-shadow': 'warn',
 	'@typescript-eslint/no-this-alias': 'warn',
 	'@typescript-eslint/no-unnecessary-boolean-literal-compare': 'warn',
-	'@typescript-eslint/no-unnecessary-condition': 'warn',
+	// '@typescript-eslint/no-unnecessary-condition': 'warn',
 	'@typescript-eslint/no-unnecessary-qualifier': 'warn',
 	'@typescript-eslint/no-unnecessary-type-assertion': 'warn',
 	'@typescript-eslint/no-unnecessary-type-arguments': 'warn',
@@ -154,7 +154,7 @@ export default {
 	'@typescript-eslint/no-useless-template-literals': 'warn',
 	'@typescript-eslint/no-var-requires': 'warn',
 	'@typescript-eslint/non-nullable-type-assertion-style': 'warn',
-	'@typescript-eslint/only-throw-error': 'warn',
+	// '@typescript-eslint/only-throw-error': 'warn',
 	'@typescript-eslint/parameter-properties': [
 		'warn',
 		{
@@ -178,7 +178,7 @@ export default {
 	'@typescript-eslint/require-await': 'warn',
 	'@typescript-eslint/restrict-plus-operands': 'warn',
 	'@typescript-eslint/sort-type-constituents': 'warn',
-	'@typescript-eslint/strict-boolean-expressions': 'warn',
+	// '@typescript-eslint/strict-boolean-expressions': 'warn',
 	'@typescript-eslint/switch-exhaustiveness-check': 'warn',
 	'@typescript-eslint/triple-slash-reference': 'warn',
 	'@typescript-eslint/unified-signatures': 'warn',

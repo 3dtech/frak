@@ -14,7 +14,6 @@ import AmbientLight from './lights/AmbientLight';
 import ImageBasedLight from './lights/ImageBasedLight';
 import RenderingContext from '../rendering/RenderingContext';
 import ImmersiveCamera from './components/ImmersiveCamera';
-import OrbitController from './components/OrbitController';
 import Material from '../rendering/materials/Material';
 
 /** Scene keeps track of components and nodes, cameras etc */
@@ -32,7 +31,7 @@ class Scene extends Serializable {
 	ambientLights: AmbientLight[] = [];
 	directionalLights: DirectionalLight[] = [];
 	imageBasedLights: ImageBasedLight[] = [];
-	pointLights: any = [];	// TODO
+	pointLights: any = []; // TODO
 	/** If scene is being started, it is set to true */
 	starting = false;
 	/** If scene has started, it's set to true */

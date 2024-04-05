@@ -2,7 +2,7 @@ import FPS from 'engine/FPS';
 import AssetsManager from 'loading/AssetsManager';
 import Texture from 'rendering/materials/Texture';
 import Sampler from 'rendering/shaders/Sampler';
-import RenderingContext, { Canvas } from 'rendering/RenderingContext';
+import RenderingContext, { type Canvas } from 'rendering/RenderingContext';
 import Input from 'engine/Input';
 import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
@@ -20,7 +20,7 @@ const DEFAULT_OPTIONS = {
 	debug: false,
 	defaultRequestedFPS: 60.0,
 	directionalShadowResolution: 2048,
-	emissiveEnabled: false,	// TODO: Remove this for an automatic detection
+	emissiveEnabled: false, // TODO: Remove this for an automatic detection
 	legacyAmbient: true,
 	requestedFPS: 60.0,
 	runInBackground: false,
@@ -33,42 +33,43 @@ const DEFAULT_OPTIONS = {
 
 type Options = typeof DEFAULT_OPTIONS;
 type ImmersiveMode = 'ar' | 'vr';
+type LegacyImmersiveMode = 'legacy-ar' | 'legacy-vr';
 
 /**
  * Engine is what ties everything together and handles the real-time rendering and updates.
  */
 class Engine {
-	public static async isImmersiveSupported(mode: ImmersiveMode = 'ar') {
+	static async isImmersiveSupported(mode: ImmersiveMode = 'ar') {
 		return navigator.xr?.isSessionSupported(`immersive-${mode}`);
 	}
 
 	private externallyPaused = false;
 	private immersiveExitCB?: () => void;
-	private immersiveMode: ImmersiveMode | null = null;
+	private immersiveMode: ImmersiveMode | LegacyImmersiveMode | null = null;
 	private queuedImmersiveFrame: number | null = null;
 	private queuedInlineFrame: number | null = null;
 
-	public options: Options;
-	public context: RenderingContext;
-	public scene: Scene;
-	public fps: FPS;
-	public running: boolean;
-	public input: Input;
-	public screenshot: any;
-	public onScreenshotCaptured: any;
-	public debugCTX: any;
-	public debugWidth: any;
-	public debugFPS: any;
-	public debugCount: any;
-	public assetsManager: AssetsManager;
-	public WhiteTexture: Texture;
-	public WhiteTextureSampler: Sampler;
-	public DiffuseFallbackSampler: Sampler;
-	public useUpscaling: any;
-	public _savedCanvasStyles: any;
-	public cameraBlockProgram?: WebGLProgram;
-	public immersiveSession: XRSession | null = null;
-	public immersiveRefSpace: XRReferenceSpace | null = null;
+	options: Options;
+	context: RenderingContext;
+	scene: Scene;
+	fps: FPS;
+	running: boolean;
+	input: Input;
+	screenshot: any;
+	onScreenshotCaptured: any;
+	debugCTX: any;
+	debugWidth: any;
+	debugFPS: any;
+	debugCount: any;
+	assetsManager: AssetsManager;
+	WhiteTexture: Texture;
+	WhiteTextureSampler: Sampler;
+	DiffuseFallbackSampler: Sampler;
+	useUpscaling: any;
+	_savedCanvasStyles: any;
+	cameraBlockProgram?: WebGLProgram;
+	immersiveSession: XRSession | null = null;
+	immersiveRefSpace: XRReferenceSpace | null = null;
 
 	/** Constructor
 		@param canvas Canvas element or ID or jQuery container
@@ -124,6 +125,26 @@ class Engine {
 		this.input = new Input(this, this.context.canvas);
 	}
 
+	private onExitImmersive() {
+		this.immersiveSession = null;
+		this.immersiveMode = null;
+		this.scene.camera = this.scene.defaultCamera.camera;
+		this.scene.cameraComponent = this.scene.defaultCamera;
+		this.immersiveExitCB?.();
+		this.immersiveExitCB = undefined;
+
+		if (this.running) {
+			this.runInline();
+		}
+	}
+
+	private pauseInline() {
+		if (this.queuedInlineFrame) {
+			window.cancelAnimationFrame(this.queuedInlineFrame);
+			this.queuedInlineFrame = null;
+		}
+	}
+
 	private runInline() {
 		let then = performance.now();
 		const draw = (t: DOMHighResTimeStamp) => {
@@ -141,27 +162,7 @@ class Engine {
 		this.queuedInlineFrame = window.requestAnimationFrame(draw);
 	}
 
-	private pauseInline() {
-		if (this.queuedInlineFrame) {
-			window.cancelAnimationFrame(this.queuedInlineFrame);
-			this.queuedInlineFrame = null;
-		}
-	}
-
-	private onExitImmersive() {
-		this.immersiveSession = null;
-		this.immersiveMode = null;
-		this.scene.camera = this.scene.defaultCamera.camera;
-		this.scene.cameraComponent = this.scene.defaultCamera;
-		this.immersiveExitCB?.();
-		this.immersiveExitCB = undefined;
-
-		if (this.running) {
-			this.runInline();
-		}
-	}
-
-	private runImmersive(session: XRSession) {
+	private runXR(session: XRSession) {
 		let then = performance.now();
 		const draw = (t: DOMHighResTimeStamp, frame: XRFrame) => {
 			then = this.update(then, t);
@@ -178,20 +179,71 @@ class Engine {
 		this.queuedImmersiveFrame = session.requestAnimationFrame(draw);
 	}
 
-	public onContextLost(event) {
+	private async startXR(cb?: () => void, mode: ImmersiveMode = 'ar', domOverlay?: Element) {
+		const options: XRSessionInit = {
+			optionalFeatures: ['local-floor'],
+			requiredFeatures: ['local'],
+		};
+
+		if (domOverlay) {
+			options.domOverlay = { root: domOverlay };
+			options.optionalFeatures.push('dom-overlay');
+		}
+
+		let err = 'No XR support';
+
+		try {
+			this.immersiveSession = await navigator.xr?.requestSession(
+				`immersive-${mode}`,
+				options,
+			);
+		} catch (e) {
+			err = e;
+			this.immersiveSession = null;
+		}
+
+		if (!this.immersiveSession) {
+			console.error(`Failed to start immersive session: ${err}`);
+
+			return;
+		}
+
+		this.immersiveMode = mode;
+		this.immersiveExitCB = cb;
+		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
+
+		this.scene.camera.renderStage.generator.setImmersive(mode === 'ar');
+
+		await this.immersiveSession.updateRenderState({
+			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
+		});
+
+		if (this.immersiveSession.enabledFeatures?.includes('local-floor')) {
+			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
+		} else {
+			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local');
+
+			// No local-floor means we're probably running on a phone, so let's guess an average phone holding height
+			this.scene.immersiveCamera.yOffset = 1.5;
+		}
+
+		this.runXR(this.immersiveSession);
+	}
+
+	onContextLost(event) {
 		console.log('FRAK: Rendering context lost');
 		event.preventDefault();
 		this.pause();
 	}
 
-	public onContextRestored(event) {
+	onContextRestored(event) {
 		console.log('FRAK: Rendering context restored');
 		this.context.engine = this;
 		this.context.restore();
 		this.run();
 	}
 
-	public onVisibilityChange() {
+	onVisibilityChange() {
 		if (!this.options.runInBackground) {
 			if (document.hidden) {
 				if (this.running === false) {
@@ -213,7 +265,7 @@ class Engine {
 		}
 	}
 
-	public onFullscreenChange() {
+	onFullscreenChange() {
 		const canvas = this.context.canvas;
 		if (FRAK.isFullscreen()) {
 			// Save original canvas state
@@ -271,7 +323,7 @@ class Engine {
 		}
 	}
 
-	public initCameras(program: WebGLProgram) {
+	initCameras(program: WebGLProgram) {
 		if (this.cameraBlockProgram !== undefined) {
 			return;
 		}
@@ -283,7 +335,7 @@ class Engine {
 	/** Starts the engine. The engine will try to draw frames at the "requestedFPS" specified
 		in the options that were passed to the constructor. The default value is 30fps.
 		If requestAnimationFrame function is not available then setTimeout is used. */
-	public run() {
+	run() {
 		if (this.running) {
 			return;
 		}
@@ -294,65 +346,29 @@ class Engine {
 		this.runInline();
 	}
 
-	public async startImmersive(cb?: () => void, mode: ImmersiveMode = 'ar', domOverlay?: Element) {
-		if (!navigator.xr) {
-			console.error('WebXR is not supported in this browser');
-
-			return;
-		}
-
-		if (mode === 'ar' && !await Engine.isImmersiveSupported('ar')) {
-			console.error('AR is not supported in this browser, trying VR instead');
-
-			mode = 'vr';
-		}
-
-		const options: XRSessionInit = {
-			optionalFeatures: ['local-floor'],
-			requiredFeatures: ['local'],
-		};
-
-		if (domOverlay) {
-			options.domOverlay = { root: domOverlay };
-			options.optionalFeatures.push('dom-overlay');
-		}
-
-		try {
-			this.immersiveSession = await navigator.xr?.requestSession(
-				`immersive-${mode}`,
-				options,
-			);
-		} catch (e) {
-			console.error(`Failed to start immersive session: ${e}`);
-
-			return;
-		}
-
-		this.immersiveMode = mode;
-		this.immersiveExitCB = cb;
-		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
-
-		this.scene.camera = this.scene.immersiveCamera.camera;
-		this.scene.cameraComponent = this.scene.immersiveCamera;
-		this.scene.camera.renderStage.generator.setImmersive(mode === 'ar');
-
-		await this.immersiveSession.updateRenderState({
-			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
-		});
-
-		if (this.immersiveSession.enabledFeatures?.includes('local-floor')) {
-			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
-		} else {
-			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local');
-			// No local-floor means we're probably running on a phone, so let's guess an average phone holding height
-			this.scene.immersiveCamera.yOffset = 1.5;
-		}
-
+	async startImmersive(cb?: () => void, mode: ImmersiveMode = 'ar', domOverlay?: Element) {
 		this.pauseInline();
-		this.runImmersive(this.immersiveSession);
+
+		if (navigator.xr) {
+			if (mode === 'ar' && !await Engine.isImmersiveSupported('ar')) {
+				console.error('AR is not supported in this browser, trying VR instead');
+
+				mode = 'vr';
+			}
+
+			this.scene.camera = this.scene.immersiveCamera.camera;
+			this.scene.cameraComponent = this.scene.immersiveCamera;
+
+			await this.startXR(cb, mode, domOverlay);
+		}
+
+		if (!this.immersiveMode) {
+			console.error('Failed to start immersive session');
+			this.onExitImmersive();
+		}
 	}
 
-	public async exitImmersive() {
+	async exitImmersive() {
 		await this.immersiveSession?.end();
 	}
 
@@ -363,12 +379,12 @@ class Engine {
 		XXX: It would probably make more sense to have this callback in the Scene class.
 	*/
 	// eslint-disable-next-line class-methods-use-this
-	public sceneStarted() {}
+	sceneStarted() {}
 
 	/** Stops the engine by pausing the engine and calling Scene.end() method.
 		Component.onEnd(context,engine) method will be called for all components.
 		Subsequent call to run() will start the engine again. */
-	public stop() {
+	stop() {
 		this.pause();
 		this.input.stop();
 
@@ -378,7 +394,7 @@ class Engine {
 	}
 
 	/** Pauses the engine, call run to start it again. */
-	public pause() {
+	pause() {
 		this.running = false;
 		void this.immersiveSession?.end();
 		this.pauseInline();
@@ -386,7 +402,7 @@ class Engine {
 	}
 
 	/** Toggles engine pause */
-	public togglePause() {
+	togglePause() {
 		if (!this.running) {
 			this.run();
 		} else {
@@ -395,7 +411,7 @@ class Engine {
 	}
 
 	/** Requests engine to go to fullscreen */
-	public requestFullscreen(useUpscaling?) {
+	requestFullscreen(useUpscaling?) {
 		if (!FRAK.fullscreenEnabled) {
 			console.warn('FRAK: Fullscreen API is disabled in this browser.');
 
@@ -408,7 +424,7 @@ class Engine {
 
 	/** Requests engine to exit fullscreen */
 	// eslint-disable-next-line class-methods-use-this
-	public exitFullscreen() {
+	exitFullscreen() {
 		if (!FRAK.fullscreenEnabled) {
 			console.warn('FRAK: Fullscreen API is disabled in this browser.');
 
@@ -422,19 +438,19 @@ class Engine {
 		Idle rendering. Try'is to draw in low (1) fps
 		@fps {float} idle at given fps, default is 1
 	*/
-	public startIdle(fps = 1.0) {
+	startIdle(fps = 1.0) {
 		this.options.requestedFPS = fps;
 	}
 
 	/**
 		Stop idling and return to normal fps
 	*/
-	public stopIdle() {
+	stopIdle() {
 		this.options.requestedFPS = this.options.defaultRequestedFPS;
 	}
 
 	/** Runs engine to render a single frame and do an update */
-	public update(then: DOMHighResTimeStamp, now: DOMHighResTimeStamp): DOMHighResTimeStamp {
+	update(then: DOMHighResTimeStamp, now: DOMHighResTimeStamp): DOMHighResTimeStamp {
 		let delta = now - then;
 		let interval = 1000 / this.options.requestedFPS;
 		if (delta > interval) {
@@ -457,7 +473,7 @@ class Engine {
 		return then;
 	}
 
-	public validateOptions(context: RenderingContext) {
+	validateOptions(context: RenderingContext) {
 		const gl = context.gl;
 		const maxBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
 		if (maxBuffers < 4) {
@@ -477,12 +493,12 @@ class Engine {
 	}
 
 	// eslint-disable-next-line class-methods-use-this
-	public resize() {
+	resize() {
 		// Legacy
 	}
 
 	/** Helper function for displaying renderer statistics. */
-	public stats() {
+	stats() {
 		if (!this.scene) {
 			return;
 		}
@@ -494,7 +510,7 @@ class Engine {
 		console.log('================================================');
 	}
 
-	public renderDebugInfo() {
+	renderDebugInfo() {
 		const organizer = this.scene.organizer;
 
 		if (!this.debugCTX) {
@@ -558,7 +574,7 @@ class Engine {
 		this.debugCount--;
 	}
 
-	public _captureScreenshot() {
+	_captureScreenshot() {
 		const shot = (this.context.gl.canvas as HTMLCanvasElement).toDataURL();
 		if (shot && this.onScreenshotCaptured) {
 			this.options.captureScreenshot = false;
@@ -566,7 +582,7 @@ class Engine {
 		}
 	}
 
-	public captureScreenshot(callback) {
+	captureScreenshot(callback) {
 		if (typeof callback === 'function') {
 			this.options.captureScreenshot = true;
 			this.onScreenshotCaptured = callback;
