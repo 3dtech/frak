@@ -26,7 +26,7 @@ class Scene extends Serializable {
 	cameras: CameraComponent[] = [];
 	cameraComponent: CameraComponent;
 	defaultCamera: PerspectiveCamera;
-	xrCamera: XRCamera;
+	xrCamera: XRCamera | null;
 	lights: Light[] = [];
 	ambientLights: AmbientLight[] = [];
 	directionalLights: DirectionalLight[] = [];
@@ -92,7 +92,6 @@ class Scene extends Serializable {
 		this.defaultCamera=this.cameraNode.addComponent(new PerspectiveCamera());
 		this.camera=this.defaultCamera.camera;	///< Main camera used for rendering scene. Beware! This is not camera component meaning that its view matrix gets overwritten by camera component each frame
 		this.cameraComponent = this.defaultCamera;
-		this.xrCamera = this.cameraNode.addComponent(new XRCamera(new Camera(mat4.create(), mat4.create())));
 		this.root.addNode(this.cameraNode);
 
 		this.lightNode=new Node("Light");
@@ -187,7 +186,7 @@ class Scene extends Serializable {
 		}
 
 		this.defaultCamera.init(context, program);
-		this.xrCamera.init(context, program);
+		this.xrCamera?.init(context, program);
 	}
 
 	/** Called to render the scene. */

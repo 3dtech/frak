@@ -48,6 +48,10 @@ class CameraComponent extends Component {
 
 	onStart(context, engine): any {
 		this.initRenderStage(context, engine);
+
+		if (engine.cameraBlockProgram) {
+			this.init(context, engine.cameraBlockProgram);
+		}
 	}
 
 	/** Set actual camera matrix
@@ -189,21 +193,6 @@ class CameraComponent extends Component {
 			var canvas = context.canvas;
 			this.camera.target.setSize(canvas.width, canvas.height);
 		}
-
-		/* if (engine.options.renderer == 'forward') {
-			if (engine.options.transparencyMode == 'blended' || engine.options.transparencyMode == 'stochastic') {
-				this.camera.renderStage.addStage(new OITPostProcess());
-			}
-
-			if (engine.options.ssao === true) {
-				this.camera.renderStage.addStage(new SSAOPostProcess());
-			}
-		}
-		else if (engine.options.renderer == 'deferred') {
-			delete this.camera.renderStage;
-			this.camera.renderStage = new DeferredRenderStage();
-			this.camera.renderStage.addStage(new OITPostProcess());
-		} */
 
 		if (engine.options.antialias === true) {
 			this.camera.renderStage.addStage(new AntiAliasPostProcess());

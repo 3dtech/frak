@@ -6,6 +6,8 @@ import RenderingContext, { type Canvas } from 'rendering/RenderingContext';
 import Input from 'engine/Input';
 import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
+import XRCamera from '../scene/components/XRCamera';
+import Camera from '../rendering/camera/Camera';
 
 type Tonemap = 'aces' | null;
 type Filtering = 2 | 4 | 8 | 16 | false;
@@ -208,6 +210,14 @@ class Engine {
 			return;
 		}
 
+		if (!this.scene.xrCamera) {
+			this.scene.xrCamera = new XRCamera(new Camera(mat4.create(), mat4.create()));
+			this.scene.cameraNode.addComponent(this.scene.xrCamera);
+		}
+
+		this.scene.camera = this.scene.xrCamera.camera;
+		this.scene.cameraComponent = this.scene.xrCamera;
+
 		this.immersiveMode = mode;
 		this.immersiveExitCB = cb;
 		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
@@ -355,9 +365,6 @@ class Engine {
 
 				mode = 'vr';
 			}
-
-			this.scene.camera = this.scene.xrCamera.camera;
-			this.scene.cameraComponent = this.scene.xrCamera;
 
 			await this.startXR(cb, mode, domOverlay);
 		}
