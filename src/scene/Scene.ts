@@ -15,6 +15,7 @@ import ImageBasedLight from './lights/ImageBasedLight';
 import RenderingContext from '../rendering/RenderingContext';
 import XRCamera from './components/XRCamera';
 import Material from '../rendering/materials/Material';
+import LegacyImmersiveCamera from './components/LegacyImmersiveCamera';
 
 /** Scene keeps track of components and nodes, cameras etc */
 class Scene extends Serializable {
@@ -26,7 +27,8 @@ class Scene extends Serializable {
 	cameras: CameraComponent[] = [];
 	cameraComponent: CameraComponent;
 	defaultCamera: PerspectiveCamera;
-	xrCamera: XRCamera | null;
+	legacyImmersiveCamera: LegacyImmersiveCamera | null = null;
+	xrCamera: XRCamera | null = null;
 	lights: Light[] = [];
 	ambientLights: AmbientLight[] = [];
 	directionalLights: DirectionalLight[] = [];
@@ -186,6 +188,7 @@ class Scene extends Serializable {
 		}
 
 		this.defaultCamera.init(context, program);
+		this.legacyImmersiveCamera?.init(context, program);
 		this.xrCamera?.init(context, program);
 	}
 

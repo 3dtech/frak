@@ -172,19 +172,13 @@
 		var immersiveType;
 		function setupImmersiveButton() {
 			var button = document.getElementById('xr-button');
-			Engine.isImmersiveSupported('ar').then(function (supported) {
-				if (supported) {
+			Engine.getImmersiveSupport().then(function(support) {
+				if (support.length) {
+					immersiveType = support[0];
 					button.disabled = false;
-					button.textContent = 'Start AR';
-					immersiveType = 'ar';
+					button.textContent = 'Start ' + immersiveType.toUpperCase();
 				} else {
-					Engine.isImmersiveSupported('vr').then(function (supported) {
-						if (supported) {
-							button.disabled = false;
-							button.textContent = 'Start VR';
-							immersiveType = 'vr';
-						}
-					});
+					button.disabled = true;
 				}
 			});
 		}

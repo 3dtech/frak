@@ -1,3 +1,4 @@
+import type { Navigator as NavigatorUA } from './UserAgentData';
 import FPS from 'engine/FPS';
 import AssetsManager from 'loading/AssetsManager';
 import Texture from 'rendering/materials/Texture';
@@ -8,6 +9,7 @@ import FRAK, { FrakCallback, merge } from 'Helpers';
 import Scene from 'scene/Scene';
 import XRCamera from '../scene/components/XRCamera';
 import Camera from '../rendering/camera/Camera';
+import LegacyImmersiveCamera from '../scene/components/LegacyImmersiveCamera';
 
 type Tonemap = 'aces' | null;
 type Filtering = 2 | 4 | 8 | 16 | false;
@@ -34,20 +36,56 @@ const DEFAULT_OPTIONS = {
 };
 
 type Options = typeof DEFAULT_OPTIONS;
-type ImmersiveMode = 'ar' | 'vr';
+type XRMode = 'ar' | 'vr';
 type LegacyImmersiveMode = 'legacy-ar' | 'legacy-vr';
+type ImmersiveMode = LegacyImmersiveMode | XRMode;
 
-/**
- * Engine is what ties everything together and handles the real-time rendering and updates.
- */
+/** The FRAK Web Engine */
 class Engine {
-	static async isImmersiveSupported(mode: ImmersiveMode = 'ar') {
+	/** Tries and returns supported modes in the order: ar, vr, legacy-ar, legacy-vr */
+	static async getImmersiveSupport(): Promise<ImmersiveMode[]> {
+		const modes: ImmersiveMode[] = [];
+		if (navigator.xr) {
+			if (await navigator.xr.isSessionSupported('immersive-ar')) {
+				modes.push('ar');
+			}
+
+			if (await navigator.xr.isSessionSupported('immersive-vr')) {
+				modes.push('vr');
+			}
+		}
+
+		if (modes.length) {
+			return modes;
+		}
+
+		if ((navigator as NavigatorUA).userAgentData && !(navigator as NavigatorUA).userAgentData.mobile) {
+			// Not a mobile device, no immersive mode
+			return [];
+		} else if (navigator.platform) {
+			if (navigator.platform.startsWith('Mac') || navigator.platform.startsWith('Win') || navigator.platform.startsWith('Linux')) {
+				// Desktop, no immersive mode
+				return [];
+			}
+		}
+
+		// TODO: Legacy AR, check camera permissions
+
+		if (window.hasOwnProperty('ondeviceorientationabsolute') || window.hasOwnProperty('ondeviceorientation')) {
+			return ['legacy-vr'];
+		}
+
+		return [];
+	}
+
+	/** @deprecated Whether the requested immersive mode is supported */
+	static async isImmersiveSupported(mode: XRMode = 'ar') {
 		return navigator.xr?.isSessionSupported(`immersive-${mode}`);
 	}
 
 	private externallyPaused = false;
 	private immersiveExitCB?: () => void;
-	private immersiveMode: ImmersiveMode | LegacyImmersiveMode | null = null;
+	private immersiveMode: ImmersiveMode | null = null;
 	private queuedImmersiveFrame: number | null = null;
 	private queuedInlineFrame: number | null = null;
 
@@ -128,15 +166,17 @@ class Engine {
 	}
 
 	private onExitImmersive() {
-		this.immersiveSession = null;
-		this.immersiveMode = null;
-		this.scene.camera = this.scene.defaultCamera.camera;
-		this.scene.cameraComponent = this.scene.defaultCamera;
-		this.immersiveExitCB?.();
-		this.immersiveExitCB = undefined;
+		if (this.immersiveMode) {
+			this.immersiveSession = null;
+			this.immersiveMode = null;
+			this.scene.camera = this.scene.defaultCamera.camera;
+			this.scene.cameraComponent = this.scene.defaultCamera;
+			this.immersiveExitCB?.();
+			this.immersiveExitCB = undefined;
+		}
 
-		if (this.running) {
-			this.runInline();
+		if (this.running && !this.queuedInlineFrame) {
+			this.runWindow();
 		}
 	}
 
@@ -147,7 +187,8 @@ class Engine {
 		}
 	}
 
-	private runInline() {
+	// TODO: Combine the following two functions
+	private runWindow() {
 		let then = performance.now();
 		const draw = (t: DOMHighResTimeStamp) => {
 			then = this.update(then, t);
@@ -181,7 +222,24 @@ class Engine {
 		this.queuedImmersiveFrame = session.requestAnimationFrame(draw);
 	}
 
-	private async startXR(cb?: () => void, mode: ImmersiveMode = 'ar', domOverlay?: Element) {
+	private startLegacyImmersive(cb?: () => void, mode: LegacyImmersiveMode = 'legacy-ar', _domOverlay?: Element) {
+		if (!this.scene.legacyImmersiveCamera) {
+			this.scene.legacyImmersiveCamera = new LegacyImmersiveCamera(new Camera(mat4.create(), mat4.create()));
+			this.scene.cameraNode.addComponent(this.scene.legacyImmersiveCamera);
+		}
+
+		this.scene.camera = this.scene.legacyImmersiveCamera.camera;
+		this.scene.cameraComponent = this.scene.legacyImmersiveCamera;
+
+		this.immersiveMode = mode;
+		this.immersiveExitCB = cb;
+
+		this.scene.camera.renderStage.generator.setImmersive(mode === 'legacy-ar');
+
+		this.runWindow();
+	}
+
+	private async startXR(cb?: () => void, mode: XRMode = 'ar', domOverlay?: Element) {
 		const options: XRSessionInit = {
 			optionalFeatures: ['local-floor'],
 			requiredFeatures: ['local'],
@@ -353,20 +411,25 @@ class Engine {
 		this.running = true;
 
 		this.input.start();
-		this.runInline();
+		this.runWindow();
 	}
 
+	/** Starts immersive mode, call `Engine.getImmersiveSupport()` first for which mode you can launch */
 	async startImmersive(cb?: () => void, mode: ImmersiveMode = 'ar', domOverlay?: Element) {
 		this.pauseInline();
 
-		if (navigator.xr) {
-			if (mode === 'ar' && !await Engine.isImmersiveSupported('ar')) {
-				console.error('AR is not supported in this browser, trying VR instead');
+		if (!mode.startsWith('legacy')) {
+			if (!navigator.xr) {
+				console.error('XR is not supported in this browser, did you forget to call Engine.getImmersiveSupport()?');
 
-				mode = 'vr';
+				this.onExitImmersive();
+
+				return;
 			}
 
-			await this.startXR(cb, mode, domOverlay);
+			await this.startXR(cb, mode as XRMode, domOverlay);
+		} else {
+			this.startLegacyImmersive(cb, mode as LegacyImmersiveMode, domOverlay);
 		}
 
 		if (!this.immersiveMode) {
@@ -375,8 +438,10 @@ class Engine {
 		}
 	}
 
+	/** Exits immersive mode */
 	async exitImmersive() {
 		await this.immersiveSession?.end();
+		this.onExitImmersive(); // For legacy immersive sessions, where end event is not fired
 	}
 
 	/**
