@@ -12,7 +12,7 @@ class XRCamera extends CameraComponent {
 	yOffset = 0.0;
 
 	onAddScene(node) {
-		if (node.scene.immersiveCamera === this) {
+		if (node.scene.xrCamera === this) {
 			return;
 		}
 
@@ -20,7 +20,7 @@ class XRCamera extends CameraComponent {
 	}
 
 	onRemoveScene(node) {
-		if (node.scene.immersiveCamera === this) {
+		if (node.scene.xrCamera === this) {
 			return;
 		}
 
