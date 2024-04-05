@@ -13,7 +13,7 @@ import CameraComponent from './components/CameraComponent';
 import AmbientLight from './lights/AmbientLight';
 import ImageBasedLight from './lights/ImageBasedLight';
 import RenderingContext from '../rendering/RenderingContext';
-import ImmersiveCamera from './components/ImmersiveCamera';
+import XRCamera from './components/XRCamera';
 import Material from '../rendering/materials/Material';
 
 /** Scene keeps track of components and nodes, cameras etc */
@@ -26,7 +26,7 @@ class Scene extends Serializable {
 	cameras: CameraComponent[] = [];
 	cameraComponent: CameraComponent;
 	defaultCamera: PerspectiveCamera;
-	immersiveCamera: ImmersiveCamera;
+	xrCamera: XRCamera;
 	lights: Light[] = [];
 	ambientLights: AmbientLight[] = [];
 	directionalLights: DirectionalLight[] = [];
@@ -92,7 +92,7 @@ class Scene extends Serializable {
 		this.defaultCamera=this.cameraNode.addComponent(new PerspectiveCamera());
 		this.camera=this.defaultCamera.camera;	///< Main camera used for rendering scene. Beware! This is not camera component meaning that its view matrix gets overwritten by camera component each frame
 		this.cameraComponent = this.defaultCamera;
-		this.immersiveCamera = this.cameraNode.addComponent(new ImmersiveCamera(new Camera(mat4.create(), mat4.create())));
+		this.xrCamera = this.cameraNode.addComponent(new XRCamera(new Camera(mat4.create(), mat4.create())));
 		this.root.addNode(this.cameraNode);
 
 		this.lightNode=new Node("Light");
@@ -187,7 +187,7 @@ class Scene extends Serializable {
 		}
 
 		this.defaultCamera.init(context, program);
-		this.immersiveCamera.init(context, program);
+		this.xrCamera.init(context, program);
 	}
 
 	/** Called to render the scene. */

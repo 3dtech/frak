@@ -5,7 +5,7 @@ import OrbitController from './OrbitController';
 import { RenderCallback } from '../../rendering/camera/Camera';
 import Engine from '../../engine/Engine';
 
-class ImmersiveCamera extends CameraComponent {
+class XRCamera extends CameraComponent {
 	private rotation = quat.create();
 	private position = vec3.create();
 	private up = vec3.fromValues(0, 1, 0);
@@ -99,5 +99,5 @@ class ImmersiveCamera extends CameraComponent {
 	}
 }
 
-globalThis.ImmersiveCamera = ImmersiveCamera;
-export default ImmersiveCamera;
+globalThis.XRCamera = XRCamera;
+export default XRCamera;

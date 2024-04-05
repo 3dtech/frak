@@ -169,7 +169,7 @@ class Engine {
 
 			this.queuedImmersiveFrame = frame.session.requestAnimationFrame(draw);
 
-			this.scene.render(this.context, this.scene.immersiveCamera, frame);
+			this.scene.render(this.context, this.scene.xrCamera, frame);
 		};
 
 		if (!this.scene.started) {
@@ -224,7 +224,7 @@ class Engine {
 			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local');
 
 			// No local-floor means we're probably running on a phone, so let's guess an average phone holding height
-			this.scene.immersiveCamera.yOffset = 1.5;
+			this.scene.xrCamera.yOffset = 1.5;
 		}
 
 		this.runXR(this.immersiveSession);
@@ -356,8 +356,8 @@ class Engine {
 				mode = 'vr';
 			}
 
-			this.scene.camera = this.scene.immersiveCamera.camera;
-			this.scene.cameraComponent = this.scene.immersiveCamera;
+			this.scene.camera = this.scene.xrCamera.camera;
+			this.scene.cameraComponent = this.scene.xrCamera;
 
 			await this.startXR(cb, mode, domOverlay);
 		}
