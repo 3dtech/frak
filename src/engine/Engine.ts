@@ -222,7 +222,25 @@ class Engine {
 		this.queuedImmersiveFrame = session.requestAnimationFrame(draw);
 	}
 
-	private startLegacyImmersive(cb?: () => void, mode: LegacyImmersiveMode = 'legacy-ar', _domOverlay?: Element) {
+	private async startLegacyImmersive(cb?: () => void, mode: LegacyImmersiveMode = 'legacy-ar', _domOverlay?: Element) {
+		if (
+			window.DeviceOrientationEvent !== undefined &&
+			typeof (window.DeviceOrientationEvent as any).requestPermission === 'function'
+		) {
+			try {
+				const response = await (window.DeviceOrientationEvent as any).requestPermission();
+				if (response !== 'granted') {
+					console.error('Device orientation permission denied');
+
+					return;
+				}
+			} catch (e) {
+				console.error(`Device orientation permission request failed: ${e}`);
+
+				return;
+			}
+		}
+
 		if (!this.scene.legacyImmersiveCamera) {
 			this.scene.legacyImmersiveCamera = new LegacyImmersiveCamera(new Camera(mat4.create(), mat4.create()));
 			this.scene.cameraNode.addComponent(this.scene.legacyImmersiveCamera);
@@ -429,11 +447,12 @@ class Engine {
 
 			await this.startXR(cb, mode as XRMode, domOverlay);
 		} else {
-			this.startLegacyImmersive(cb, mode as LegacyImmersiveMode, domOverlay);
+			await this.startLegacyImmersive(cb, mode as LegacyImmersiveMode, domOverlay);
 		}
 
 		if (!this.immersiveMode) {
 			console.error('Failed to start immersive session');
+
 			this.onExitImmersive();
 		}
 	}

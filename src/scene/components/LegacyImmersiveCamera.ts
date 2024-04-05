@@ -5,6 +5,7 @@ import type { RenderCallback } from '../../rendering/camera/Camera';
 import type Engine from '../../engine/Engine';
 
 class LegacyImmersiveCamera extends CameraComponent {
+	private orientationChangeEventName = 'deviceorientationabsolute';
 	private readonly position = vec3.create();
 	private readonly rotation = quat.create();
 	private readonly up = vec3.fromValues(0, 1, 0);
@@ -39,6 +40,11 @@ class LegacyImmersiveCamera extends CameraComponent {
 		const canvas = context.canvas;
 
 		this.camera.target.setSize(canvas.width, canvas.height);
+
+		this.orientationChangeEventName =
+			'ondeviceorientationabsolute' in window ?
+				'deviceorientationabsolute' :
+				'deviceorientation';
 
 		super.onStart(context, engine);
 	}
