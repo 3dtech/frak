@@ -62,11 +62,6 @@ class Engine {
 		if ((navigator as NavigatorUA).userAgentData && !(navigator as NavigatorUA).userAgentData.mobile) {
 			// Not a mobile device, no immersive mode
 			return [];
-		} else if (navigator.platform) {
-			if (navigator.platform.startsWith('Mac') || navigator.platform.startsWith('Win') || navigator.platform.startsWith('Linux')) {
-				// Desktop, no immersive mode
-				return [];
-			}
 		}
 
 		// TODO: Legacy AR, check camera permissions
@@ -255,6 +250,7 @@ class Engine {
 		this.scene.camera.renderStage.generator.setImmersive(mode === 'legacy-ar');
 
 		this.runWindow();
+		this.requestFullscreen();
 	}
 
 	private async startXR(cb?: () => void, mode: XRMode = 'ar', domOverlay?: Element) {
@@ -405,6 +401,10 @@ class Engine {
 				}
 
 				delete this._savedCanvasStyles;
+			}
+
+			if (this.immersiveMode?.startsWith('legacy')) {
+				void this.exitImmersive();
 			}
 		}
 	}
