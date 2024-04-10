@@ -77,12 +77,13 @@ class LegacyImmersiveCamera extends CameraComponent {
 
 		const controller = this.node.getComponent(OrbitController);
 		if (controller) {
-			const p = controller.targetPosition;
+			vec3.copy(this.position, controller.targetPosition);
 			const yRotation = controller.rotation[1];
 
 			quat.setAxisAngle(this.rotation, this.up, -yRotation);
-			vec3.transformQuat(this.position, p, this.rotation);
 		}
+
+		this.position[1] += this.yOffset;
 
 		quat.mul(this.rotation, this.rotation, this.deviceRotation);
 
