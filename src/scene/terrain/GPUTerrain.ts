@@ -9,6 +9,7 @@ import Mesh from 'scene/geometry/Mesh';
 import Submesh from 'scene/geometry/Submesh';
 import MeshComponent from 'scene/components/MeshComponent';
 import FRAK, { merge } from 'Helpers';
+import TerrainMesh from './TerrainMesh';
 
 /** GPU terrain renderer */
 

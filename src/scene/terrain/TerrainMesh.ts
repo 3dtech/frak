@@ -189,3 +189,6 @@ function TerrainMesh() {
 		scope.faces = faces;
 	};
 }
+
+globalThis.TerrainMesh = TerrainMesh;
+export default TerrainMesh;
