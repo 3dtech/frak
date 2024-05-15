@@ -181,7 +181,7 @@ class Input {
 				deltaSq += delta[0] * delta[0] + delta[1] * delta[1];
 			},
 			(pointers, pos) => {
-				if (pointers.size !== 1) {
+				if (pointers.size !== 0) {
 					return;
 				}
 
