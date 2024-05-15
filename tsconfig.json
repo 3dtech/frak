@@ -6,7 +6,6 @@
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"noEmit": true,
-		"outDir": "./tscache",
 		"target": "ESNext",
 	},
 	"include": [

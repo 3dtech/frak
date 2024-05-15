@@ -6,6 +6,7 @@ import BoundingSphere from 'scene/geometry/BoundingSphere';
 
 /** MeshRendererComponent is used to add meshes to scene rendering spaces */
 class MeshRendererComponent extends RendererComponent {
+	private absoluteTransform = mat4.create();
 	meshRenderers: any;
 
 	constructor() {
@@ -72,6 +73,12 @@ class MeshRendererComponent extends RendererComponent {
 	}
 
 	onUpdateTransform(absolute): any {
+		if (mat4.equals(this.absoluteTransform, absolute)) {
+			return;
+		}
+
+		mat4.copy(this.absoluteTransform, absolute);
+
 		var renderer;
 		var castShadows = this.castShadows;
 		var layer = this.node.layer;
