@@ -2,11 +2,11 @@ import Component from 'scene/components/Component';
 import Engine from "../../engine/Engine";
 
 class RendererComponent extends Component {
+	protected previousCastShadows: boolean;
 	castShadows: boolean;
 	receiveShadows: any;
 	lightContribution: any;
 	reflectivity: any;
-	private previousCastShadows: boolean;
 
 	constructor() {
 		super();

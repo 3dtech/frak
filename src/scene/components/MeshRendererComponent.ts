@@ -3,6 +3,7 @@ import SubmeshRenderer from 'rendering/renderers/SubmeshRenderer';
 import MeshComponent from 'scene/components/MeshComponent';
 import BoundingBox from 'scene/geometry/BoundingBox';
 import BoundingSphere from 'scene/geometry/BoundingSphere';
+import Engine from 'engine/Engine';
 
 /** MeshRendererComponent is used to add meshes to scene rendering spaces */
 class MeshRendererComponent extends RendererComponent {
@@ -160,6 +161,18 @@ class MeshRendererComponent extends RendererComponent {
 		super.onContextRestored(context);
 		for (var i = 0; i < this.meshRenderers.length; ++i) {
 			this.meshRenderers[i].onContextRestored(context);
+		}
+	}
+
+	onUpdate(engine: Engine) {
+		if (this.castShadows !== this.previousCastShadows) {
+			this.previousCastShadows = this.castShadows;
+			
+			for (var i = 0, l = this.meshRenderers.length; i < l; ++i) {
+				this.meshRenderers[i].castShadows = this.castShadows;
+			}
+
+			this.getScene()?.dynamicSpace.damage();
 		}
 	}
 }
