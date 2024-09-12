@@ -1,43 +1,55 @@
+import type Engine from 'engine/Engine';
 import OrbitController from 'scene/components/OrbitController';
 
 /** Provides restricted flight mode that is used for orbiting. */
 class SmoothOrbitController extends OrbitController {
-	speed: any;
-	currentRotation: any;
 	currentDistance: any;
+	currentRotation: any;
 	enableRotatingX: any;
 	enableRotatingY: any;
+	speed: any;
 
+	/**
+	 *
+	 */
 	constructor() {
 		super();
 
-		this.speed=5.0;
+		this.speed = 5.0;
 
-		this.currentRotation=vec2.create();
-		this.currentDistance=this.distance;
+		this.currentRotation = vec2.create();
+		this.currentDistance = this.distance;
 		this.enableRotatingX = true;
 		this.enableRotatingY = true;
 	}
 
+	/**
+	 *
+	 */
 	excluded(): any {
-		return super.excluded().concat(["currentRotation", "currentDistance", "tmpRotation"]);
-	}
-
-	type(): any {
-		return "SmoothOrbitController";
+		return super.excluded().concat(['currentRotation', 'currentDistance', 'tmpRotation']);
 	}
 
 	// Events
 	/** Called on each scene update */
-	onUpdate(engine, pass) {
-		if(this.target.isNull()) return; // No target, no orbit!
+	onUpdate(engine: Engine) {
+		if (this.target.isNull()) {
+			return; // No target, no orbit!
+		}
 
-		var dt = engine.fps.getDelta()/1000.0 * this.speed;
+		let dt = engine.fps.getDelta() / 1000.0 * this.speed;
+
 		dt = Math.min(dt, 1.0);
-		if (this.enableRotatingX)
+
+		if (this.enableRotatingX) {
 			this.currentRotation[0] = lerp(this.currentRotation[0], this.rotation[0], dt);
-		if (this.enableRotatingY)
+		}
+
+		if (this.enableRotatingY) {
 			this.currentRotation[1] = lerp(this.currentRotation[1], this.rotation[1], dt);
+		}
+
+		this.currentRotation[0] = Math.min(Math.max(this.currentRotation[0], this.minimumPitch), this.maximumPitch);
 
 		this.currentDistance = lerp(this.currentDistance, this.distance, dt);
 
@@ -60,8 +72,21 @@ class SmoothOrbitController extends OrbitController {
 
 		this.node.calculateRelativeFromAbsolute();
 
-		if(this.doZoomIn) this.zoomIn();
-		if(this.doZoomOut) this.zoomOut();
+		if (this.doZoomIn) {
+			this.zoomIn();
+		}
+
+		if (this.doZoomOut) {
+			this.zoomOut();
+		}
+	}
+
+	/**
+	 *
+	 */
+	// eslint-disable-next-line @typescript-eslint/class-methods-use-this
+	type(): any {
+		return 'SmoothOrbitController';
 	}
 }
 
