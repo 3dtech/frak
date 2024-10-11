@@ -26,6 +26,7 @@ const DEFAULT_OPTIONS = {
 	directionalShadowResolution: 2048,
 	emissiveEnabled: false, // TODO: Remove this for an automatic detection
 	legacyAmbient: true,
+	renderScale: 1.0,
 	requestedFPS: 60.0,
 	runInBackground: false,
 	shadowManualUpdate: false,
@@ -118,6 +119,8 @@ class Engine {
 			this.options.contextOptions,
 			this.options.contextErrorCallback,
 		);
+
+		this.context.renderScale = this.options.renderScale;
 
 		this.validateOptions(this.context);
 
@@ -312,12 +315,18 @@ class Engine {
 		this.runXR(this.immersiveSession);
 	}
 
+	/**
+	 *
+	 */
 	onContextLost(event) {
 		console.log('FRAK: Rendering context lost');
 		event.preventDefault();
 		this.pause();
 	}
 
+	/**
+	 *
+	 */
 	onContextRestored(event) {
 		console.log('FRAK: Rendering context restored');
 		this.context.engine = this;
@@ -325,17 +334,20 @@ class Engine {
 		this.run();
 	}
 
+	/**
+	 *
+	 */
 	onVisibilityChange() {
 		if (!this.options.runInBackground) {
 			if (document.hidden) {
-				if (this.running === false) {
+				if (!this.running) {
 					this.externallyPaused = true;
 
 					return;
 				}
 
 				this.pause();
-			} 	else {
+			} else {
 				if (this.externallyPaused) {
 					this.externallyPaused = false;
 
@@ -347,6 +359,9 @@ class Engine {
 		}
 	}
 
+	/**
+	 *
+	 */
 	onFullscreenChange() {
 		const canvas = this.context.canvas;
 		if (FRAK.isFullscreen()) {
@@ -409,6 +424,9 @@ class Engine {
 		}
 	}
 
+	/**
+	 *
+	 */
 	initCameras(program: WebGLProgram) {
 		if (this.cameraBlockProgram !== undefined) {
 			return;
@@ -564,6 +582,9 @@ class Engine {
 		return then;
 	}
 
+	/**
+	 *
+	 */
 	validateOptions(context: RenderingContext) {
 		const gl = context.gl;
 		const maxBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
@@ -584,6 +605,9 @@ class Engine {
 	}
 
 	// eslint-disable-next-line class-methods-use-this
+	/**
+	 *
+	 */
 	resize() {
 		// Legacy
 	}
@@ -601,6 +625,9 @@ class Engine {
 		console.log('================================================');
 	}
 
+	/**
+	 *
+	 */
 	renderDebugInfo() {
 		const organizer = this.scene.organizer;
 
@@ -617,7 +644,7 @@ class Engine {
 
 			const parent = this.context.canvas.parentNode;
 
-			parent!.insertBefore(canvas, parent!.firstChild);
+			parent.insertBefore(canvas, parent.firstChild);
 
 			this.debugCTX = canvas.getContext('2d');
 		}
@@ -665,6 +692,9 @@ class Engine {
 		this.debugCount--;
 	}
 
+	/**
+	 *
+	 */
 	_captureScreenshot() {
 		const shot = (this.context.gl.canvas as HTMLCanvasElement).toDataURL();
 		if (shot && this.onScreenshotCaptured) {
@@ -673,6 +703,9 @@ class Engine {
 		}
 	}
 
+	/**
+	 *
+	 */
 	captureScreenshot(callback) {
 		if (typeof callback === 'function') {
 			this.options.captureScreenshot = true;
