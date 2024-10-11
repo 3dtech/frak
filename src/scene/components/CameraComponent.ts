@@ -114,8 +114,8 @@ class CameraComponent extends Component {
 		@return Instance of {vec2} in normalized viewport coordinates */
 	screenPointToViewportPoint(point): any {
 		var p = vec2.create();
-		var pos = this.camera.target.getPosition();
-		var size = this.camera.target.getSize();
+		var pos = this.camera.target.getViewportPosition();
+		var size = this.camera.target.getViewportSize();
 		if (Math.abs(size[0])<EPSILON || Math.abs(size[1])<EPSILON)
 			return p;
 		p[0]=(point[0]-pos[0])/size[0];
@@ -130,7 +130,7 @@ class CameraComponent extends Component {
 		@param point Instance of {vec3} (x,y in screen coordinates, z is the depth between near and far plane)
 		@return Instance of {vec3} in camera view space */
 	unprojectScreenPoint(point): any {
-		var size = this.node.scene.camera.target.getSize();
+		var size = this.node.scene.camera.target.getViewportSize();
 		var offset = vec2.create();
 		var p = vec2.fromValues(point[0]-offset[0], size[1]-point[1]+offset[1]);
 		if (Math.abs(size[0])<EPSILON || Math.abs(size[1])<EPSILON)

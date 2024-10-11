@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<title>glTF models</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
+	<div>
+		<button onclick="engine.requestFullscreen();">Go to fullscreen</button>
+		<button onclick="toggleDebug();">Debug</button>
+		<button onclick="pauseEngine(this);">PAUSE</button>
+	</div>
+	<div>
+		<input id="scale" type="range" min="-1" max="2" value="0" step="0.01" />
+		<button onclick="setScale(0);">Reset scale</button>
+	</div>
+
+	<script src="../builds/frak-latest.debug.js"></script>
+
+	<script type="text/javascript">
+		var ClickController = Controller.extend({
+			init: function() {
+				this._super();
+				this.marker = new Node('marker');
+				this.markers = new Node('markers');
+			},
+
+			type: function() {
+				return "ClickController";
+			},
+
+			onStart: function(context, engine) {
+				var material = new Material(
+					engine.assetsManager.addShaderSource("transparent"), {
+					"diffuse": new UniformColor({
+						r: 1.0,
+						g: 1.0,
+						b: 0.0,
+						a: 0.5
+					})
+				},
+					[]
+				);
+
+				var cone = Primitives.cone(0.3, 2.0, 16, material);
+				cone.transform.setPosition([0, -0.1, 0]);
+				this.marker.addNode(cone);
+
+				this.node.addNode(this.markers);
+
+				/*this.lightNode=new Node("Light");
+				this.light=new DirectionalLight();
+				this.light.color= new Color(0.7, 0.5, 0.9, 1);
+				this.light.intensity = 1.0;
+				this.light.setLightDirection(vec3.fromValues(-0.9, 0.7, 0.9));
+				this.lightNode.addComponent(this.light);
+				engine.scene.root.addNode(this.lightNode);*/
+			},
+
+			onClick: function(position, button) {
+				if (button != 0)
+					return;
+
+				var ray = this.node.scene.cameraComponent.screenPointToRay(position);
+				if (ray) {
+					var result = this.node.scene.dynamicSpace.rayCast(ray, 0xFFFFFFFF);
+					var nearest = result.nearest();
+					if (nearest) {
+						var instance = this.marker.instantiate();
+						instance.transform.setPosition(nearest.point);
+						var cone = instance.findChildWithName('Cone');
+						var original = vec3.fromValues(0, 1, 0);
+						var direction = ray.getDirection();
+						var costheta = vec3.dot(original, direction);
+						var theta = Math.acos(costheta);
+						var axis = vec3.cross(vec3.create(), original, direction);
+						vec3.normalize(axis, axis);
+						var rotation = quat.create();
+						quat.setAxisAngle(rotation, axis, theta);
+						var position = vec3.scale(direction, direction, -1.0);
+						mat4.fromRotationTranslation(cone.transform.relative, rotation, position);
+						this.markers.addNode(instance);
+					}
+				}
+			}
+		});
+
+		function setupCamera(scene) {
+			scene.camera.backgroundColor = new Color(0.48, 0.80, 0.92, 1.0);
+			scene.cameraComponent.setClipPlanes(1.0, 200.0);
+			var orbitController = scene.cameraNode.addComponent(new SmoothOrbitController());
+			orbitController.distance = 50.0;
+			orbitController.minimumDistance = 1.0;
+			orbitController.maximumDistance = 100.0;
+			orbitController.distanceSteps = 64;
+			orbitController.maximumPitch = Math.PI / 2.2;
+			orbitController.rotation[0] = -0.5;
+			orbitController.rotation[1] = 1.0;
+			orbitController.target.value = scene.root.transform;
+
+			// Skybox
+			scene.cameraNode.addComponent(new SkyboxComponent(
+				scene.engine.assetsManager.texturesManager.addCube([
+					'data/skybox/yokohama/negz.jpg',
+					'data/skybox/yokohama/posz.jpg',
+					'data/skybox/yokohama/posx.jpg',
+					'data/skybox/yokohama/negx.jpg',
+					'data/skybox/yokohama/negy.jpg',
+					'data/skybox/yokohama/posy.jpg',
+				])
+			));
+		}
+
+		function setupLights(scene) {
+			var lights = scene.root.addNode(new Node('lights'));
+			var lightAmbient = lights.addComponent(new AmbientLight(new Color(0.2, 0.2, 0.2)));
+			var lightDirectional = scene.light;
+			lightDirectional.setLightDirection([1, 1, 1]);
+			lightDirectional.shadowCasting = true;
+			//lightDirectional.intensity = 0.0;
+
+			var skybox = scene.cameraNode.getComponent(SkyboxComponent);
+			//lights.addComponent(new ImageBasedLight(skybox.cubeTexture));
+		}
+
+		function setupScene(scene) {
+			scene.root.addComponent(new ClickController());
+
+			// Grid
+			var grid = scene.root.addNode(new Node('grid'));
+			var lines = grid.addComponent(new LineRendererComponent(new Color(0.5, 0.5, 0.5, 1.0)));
+			lines.addGrid([0, 0, 0], [100, 100], [1.0, 1.0]);
+
+			var boxRGB = scene.engine.assetsManager.addModel('data/gltf/WaterBottle.glb');
+			scene.root.addNode(boxRGB);
+			boxRGB.transform.scale([40, 40, 40]);
+		}
+
+		var engine;
+		window.onload = function() {
+			engine = new Engine('canvas', {
+				'requestedFPS': 60,
+				'assetsPath': '../assets/',
+				'transparencyMode': 'blended',
+				'antialias': false,
+				emissiveEnabled: true,
+			});
+
+			engine.assetsManager.modelsManager.path = './';
+			engine.assetsManager.texturesManager.path = './'; // Load test textures locally
+
+			setupCamera(engine.scene);
+			setupLights(engine.scene);
+			setupScene(engine.scene);
+
+			engine.assetsManager.load(function() {
+				engine.run();
+			});
+
+			document.getElementById('scale').addEventListener('change', e => setScale(e.target.value));
+		};
+
+		function toggleDebug() {
+			var renderStage = engine.scene.camera.renderStage;
+			renderStage.debug(!renderStage.debugActive);
+		}
+
+		function pauseEngine(element) {
+			engine.togglePause();
+			if (engine.running)
+				element.textContent = 'PAUSE';
+			else
+				element.textContent = 'UNPAUSE';
+		}
+
+		function setScale(value) {
+			engine.context.renderScale = Math.pow(2, value);
+			console.log('Render scale:', engine.context.renderScale);
+		}
+
+	</script>
+</body>
+
+</html>

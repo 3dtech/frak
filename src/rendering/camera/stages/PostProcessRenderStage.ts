@@ -44,10 +44,10 @@ abstract class PostProcessRenderStage extends RenderStage {
 			this.size = vec2.clone(camera.target.size);
 		}
 
-		this.src = new TargetTextureFloat(this.size, context, false, true);
+		this.src = new TargetTextureFloat(this.size, context, false, false);
 		this.srcSampler = new Sampler('src', this.src.texture);
 
-		this.dst = new TargetTextureFloat(this.size, context, false, true);
+		this.dst = new TargetTextureFloat(this.size, context, false, false);
 		this.dstSampler = new Sampler('src', this.dst.texture);
 
 		this.material = new Material(

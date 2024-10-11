@@ -1,12 +1,16 @@
 import CameraComponent from 'scene/components/CameraComponent';
-import RenderingContext from "../../rendering/RenderingContext";
-import Camera, { RenderCallback } from "../../rendering/camera/Camera";
-import Scene from '../Scene';
+import type RenderingContext from '../../rendering/RenderingContext';
+import type { RenderCallback } from '../../rendering/camera/Camera';
+import Camera from '../../rendering/camera/Camera';
+import type Scene from '../Scene';
 
 /** Camera component providing perspective projection */
 class PerspectiveCamera extends CameraComponent {
 	aspect = 4 / 3;
 
+	/**
+	 *
+	 */
 	constructor(
 		public fov = 45,
 		public near = 0.3,
@@ -23,7 +27,8 @@ class PerspectiveCamera extends CameraComponent {
 		// n - Look direction vector
 		// e - Eye position vector
 
-		var lookAt=mat4.create();
+		let lookAt = mat4.create();
+
 		mat4.lookAt(lookAt, [0.0, 0.0, -100.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 
 		super(new Camera(lookAt, mat4.create()));
@@ -32,10 +37,16 @@ class PerspectiveCamera extends CameraComponent {
 		this.camera.far = this.far;
 	}
 
+	/**
+	 *
+	 */
 	type(): any {
-		return "PerspectiveCamera";
+		return 'PerspectiveCamera';
 	}
 
+	/**
+	 *
+	 */
 	onAddScene(node): any {
 		this.useCameraViewMatrix();
 
@@ -46,6 +57,9 @@ class PerspectiveCamera extends CameraComponent {
 		super.onAddScene(node);
 	}
 
+	/**
+	 *
+	 */
 	onRemoveScene(node): any {
 		if (node.scene.cameraComponent === this) {
 			return;
@@ -65,23 +79,24 @@ class PerspectiveCamera extends CameraComponent {
 
 	/** Sets the camera vertical field of view (in degrees) */
 	setVerticalFieldOfView(fov): any {
-		this.fov=fov;
+		this.fov = fov;
 		this.calculatePerspective();
 	}
 
 	/** Returns the current vertical field of view in degrees.
 		@return The current vertical field of view in degrees {float} */
 	getVerticalFieldOfView(): any {
-		return this.camera.getFieldOfView()*180.0/Math.PI;
+		return this.camera.getFieldOfView() * 180.0 / Math.PI;
 	}
 
 	/** Returns the current horizontal field of view in degrees.
 		@return The current vertical field of view in degrees {float} */
 	getHorizontalFieldOfView(): any {
-		var vpx = Math.tan(this.camera.getFieldOfView() * 0.5);
-		var hpx = this.aspect * vpx;
-		var fovx = Math.atan(hpx) * 2.0;
-		return fovx * 180.0/Math.PI;
+		let vpx = Math.tan(this.camera.getFieldOfView() * 0.5);
+		let hpx = this.aspect * vpx;
+		let fovx = Math.atan(hpx) * 2.0;
+
+		return fovx * 180.0 / Math.PI;
 	}
 
 	/** Calculates projection matrix based on fov, aspect ratio and near/far clipping planes */
@@ -90,12 +105,19 @@ class PerspectiveCamera extends CameraComponent {
 		mat4.invert(this.camera.blockValues.projectionInverse, this.camera.blockValues.projection);
 	}
 
+	/**
+	 *
+	 */
 	updateCamera(context: RenderingContext) {
 		this.aspect = context.canvas.width / context.canvas.height;
 
-		this.camera.target.frameBuffer = null;
-		this.camera.target.set(0, 0, context.canvas.width, context.canvas.height);
-		this.camera.target.resetViewport();
+		const target = this.camera.target;
+
+		target.frameBuffer = null;
+		target.set(0, 0, context.canvas.width * context.renderScale, context.canvas.height * context.renderScale);
+
+		// target.resetViewport();
+		target.setViewport(0, 0, context.canvas.width, context.canvas.height);
 
 		this.calculatePerspective();
 
@@ -108,6 +130,9 @@ class PerspectiveCamera extends CameraComponent {
 		this.camera.block.update(context);
 	}
 
+	/**
+	 *
+	 */
 	render(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback) {
 		if (!this.enabled) {
 			return;

@@ -24,6 +24,7 @@ class RenderingContext {
 	shadow: any;
 	camera: any;
 	engine: Engine;
+	renderScale = 1;
 	shaderCache: ShaderCache = {};
 
 	/** Constructor

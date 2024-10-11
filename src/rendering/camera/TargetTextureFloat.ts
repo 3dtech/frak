@@ -4,14 +4,14 @@ import Texture from 'rendering/materials/Texture';
 class TargetTextureFloat extends TargetTexture {
 	linear: any;
 
-	constructor(sizeOrTexture, context, useDepthTexture, useNearestFiltering?) {
+	constructor(sizeOrTexture, context, useDepthTexture, useNearestFiltering = true) {
 		var extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
 		if (!extColorFloat)
 			throw('TargetTextureFloat: Floating point COLOR textures are not supported on this system.');
 
 		super(sizeOrTexture, context, useDepthTexture);
 
-		this.linear = false;
+		this.linear = !useNearestFiltering;
 	}
 
 	type(): any {

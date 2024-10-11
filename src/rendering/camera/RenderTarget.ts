@@ -48,6 +48,14 @@ class RenderTarget {
 		return this.size;
 	}
 
+	getViewportPosition(): any {
+		return this.viewport.position;
+	}
+
+	getViewportSize(): any {
+		return this.viewport.size;
+	}
+
 	set(x, y, width, height) {
 		this.setPosition(x, y);
 		this.setSize(width, height);
