@@ -166,7 +166,7 @@ class CameraComponent extends Component {
 	worldToScreenPoint(point, out): any {
 		if (!out)
 			out = vec2.create();
-		var size = this.camera.target.getSize();
+		var size = this.camera.target.getViewportSize();
 		var viewProj = mat4.mul(mat4.create(), this.camera.blockValues.projection, this.camera.blockValues.view);
 		var projected = vec4.fromValues(point[0], point[1], point[2], 1.0);
 		vec4.transformMat4(projected, projected, viewProj);
