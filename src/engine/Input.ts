@@ -1,7 +1,8 @@
 /// <reference path="Input.d.ts" />
 
-import Engine from './Engine';
-import Controller, { Events } from '../scene/components/Controller';
+import type Engine from './Engine';
+import type { Events } from '../scene/components/Controller';
+import type Controller from '../scene/components/Controller';
 
 const createListener: CreateListener = (
 	target: EventTarget,
@@ -303,18 +304,18 @@ class Input {
 	}
 
 	/** Starts input, sets up events */
-	public start() {
+	start() {
 		this.setupMetaEvents();
 		this.setupEvents();
 	}
 
 	/** Pauses input, removes listeners */
-	public pause() {
+	pause() {
 		this.removeListeners();
 	}
 
 	/** Stops input, removes all listeners */
-	public stop() {
+	stop() {
 		this.removeListeners(this.metaListeners);
 		this.removeListeners();
 	}
@@ -326,7 +327,7 @@ class Input {
 	 * @param testPointerDown The test for if the event should be started on pointer down
 	 * @param testPointerUp The test for if the event should be ended on pointer up
 	 * */
-	public setupPointerHandler(
+	setupPointerHandler(
 		start: PointerEventCallback,
 		move: PointerEventCallback,
 		end: PointerEventCallback,
@@ -346,6 +347,9 @@ class Input {
 			if (activePointers.size === 0) {
 				removeUp?.();
 				removeMove?.();
+
+				removeUp = null;
+				removeMove = null;
 			}
 
 			if (active && test) {
@@ -357,7 +361,10 @@ class Input {
 
 		const pointerMove = (ev: PointerEvent) => {
 			// Update pointer location even if not active, so when start is finally called, we have the correct position
-			activePointers.set(ev.pointerId, ev);
+
+			if (activePointers.has(ev.pointerId)) {
+				activePointers.set(ev.pointerId, ev);
+			}
 
 			if (active) {
 				// Prevent page panning with touch
@@ -370,9 +377,9 @@ class Input {
 		const pointerDown = (ev: PointerEvent) => {
 			activePointers.set(ev.pointerId, ev);
 
-			if (activePointers.size === 1) {
-				removeUp = this.addListener(document, 'pointerup', pointerUp);
-				removeMove = this.addListener(document, 'pointermove', pointerMove);
+			if (activePointers.size > 0 && !removeMove && !removeUp) {
+				removeUp = this.addListener(window, 'pointerup', pointerUp);
+				removeMove = this.addListener(window, 'pointermove', pointerMove);
 			}
 
 			const test = testPointerDown(activePointers, ev.pointerId);
@@ -391,9 +398,15 @@ class Input {
 	}
 
 	// eslint-disable-next-line class-methods-use-this
-	public update() {}
+	/**
+	 *
+	 */
+	update() {}
 
-	public registerController(controller: Controller) {
+	/**
+	 *
+	 */
+	registerController(controller: Controller) {
 		const index = this.controllers.indexOf(controller);
 		if (index === -1) {
 			this.controllers.push(controller);
@@ -404,7 +417,10 @@ class Input {
 		return false;
 	}
 
-	public unregisterController(controller: Controller) {
+	/**
+	 *
+	 */
+	unregisterController(controller: Controller) {
 		const index = this.controllers.indexOf(controller);
 		if (index !== -1) {
 			this.controllers.splice(index, 1);
@@ -416,7 +432,10 @@ class Input {
 	}
 
 	// eslint-disable-next-line class-methods-use-this
-	public bind(...args: any[]) {}
+	/**
+	 *
+	 */
+	bind(...args: any[]) {}
 }
 
 globalThis.Input = Input;
