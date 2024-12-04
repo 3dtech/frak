@@ -71,8 +71,8 @@ class Input {
 		}
 
 		// Prevent page scroll
-		this.addMetaListener(this.canvas, 'touchmove', ev => ev.preventDefault());
-		this.addMetaListener(this.canvas, 'contextmenu', ev => ev.preventDefault());
+		this.addMetaListener(this.canvas, 'touchmove', ev => {if (ev.cancelable) ev.preventDefault()});
+		this.addMetaListener(this.canvas, 'contextmenu', ev =>{if (ev.cancelable) ev.preventDefault()});
 	}
 
 	/** Sets up listeners for input events */
@@ -141,6 +141,7 @@ class Input {
 		const end = (touches: ActivePointers, pointerId: number) => {
 			id = 0;
 			button = -1;
+			vec2.set(delta, 0, 0);
 			ended(touches, lastXY);
 		};
 
@@ -277,7 +278,9 @@ class Input {
 
 				this.dispatch('onRotate', this.transformCoordinates(center), delta);
 			},
-			() => {},
+			() => {
+				
+			},
 			(touches, id) => touches.size === 2,
 			(touches, id) => touches.size === 2,
 		);
@@ -286,7 +289,9 @@ class Input {
 	private setupWheelEvent() {
 		const pos = vec2.create();
 		const handler = (ev: WheelEvent) => {
-			ev.preventDefault();
+			if (ev.cancelable) {
+				ev.preventDefault();
+			}
 
 			let delta = ev.deltaY;
 			if (delta === 0) {
@@ -351,24 +356,35 @@ class Input {
 				removeUp = null;
 				removeMove = null;
 			}
+			else {
+				let now = Date.now();
+				// Check if we missed some pointerUp. Probably hackish
+				for (const item of activePointers) {
+				  if(item[1].updated && now - item[1].updated > 3000) {
+					activePointers.delete(item[0]);
+					console.warn('Delete sleepy pointer', now - item[1].updated, item[0])
+				  }
+				}
+			  }
 
 			if (active && test) {
 				active = false;
-
 				end(activePointers, ev.pointerId);
 			}
 		};
 
 		const pointerMove = (ev: PointerEvent) => {
 			// Update pointer location even if not active, so when start is finally called, we have the correct position
-
+			ev.updated = Date.now(); // TS complains. Fuck it
 			if (activePointers.has(ev.pointerId)) {
 				activePointers.set(ev.pointerId, ev);
 			}
 
 			if (active) {
 				// Prevent page panning with touch
-				ev.preventDefault();
+				if (ev.cancelable) { //Browser complains
+					ev.preventDefault();
+				}
 
 				move(activePointers, ev.pointerId);
 			}
