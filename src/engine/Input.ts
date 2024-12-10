@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="Input.d.ts" />
 
 import type Engine from './Engine';
@@ -17,23 +18,16 @@ const createListener: CreateListener = (
 
 /** Input manager */
 class Input {
-	private readonly controllers: Controller[] = [];
-	private readonly metaListeners: RemoveListener[] = [];
-	private readonly listeners: RemoveListener[] = [];
 	private readonly cacheVec2 = vec2.create();
+	private readonly controllers: Controller[] = [];
+	private readonly listeners: RemoveListener[] = [];
+	private readonly metaListeners: RemoveListener[] = [];
 
 	/** Constructor
 	 * @param engine The engine instance
 	 * @param canvas The canvas element we want the events from
 	 * */
 	constructor(public engine: Engine, private readonly canvas: HTMLCanvasElement) {}
-
-	/** Dispatches an event to all controllers */
-	private dispatch<K extends keyof Events>(name: K, ...args: Events[K]) {
-		for (const controller of this.controllers) {
-			controller.onEvent(name, args);
-		}
-	}
 
 	/** Adds a listener with a remove function that removes itself */
 	private addListener(
@@ -64,20 +58,63 @@ class Input {
 		return this.addListener(target, name, handler, options, this.metaListeners);
 	}
 
-	/** Sets up listeners for meta events */
-	private setupMetaEvents() {
-		if (this.metaListeners.length) {
-			return;
+	/** Dispatches an event to all controllers */
+	private dispatch<K extends keyof Events>(name: K, ...args: Events[K]) {
+		for (const controller of this.controllers) {
+			controller.onEvent(name, args);
 		}
+	}
 
-		// Prevent page scroll
-		this.addMetaListener(this.canvas, 'touchmove', ev => {
-			if (ev.cancelable) { ev.preventDefault(); }
-		});
+	/** Removes listeners from a given list */
+	private removeListeners(list = this.listeners) {
+		for (let i = list.length - 1; i >= 0; i--) {
+			list[i]();
+		}
+	}
 
-		this.addMetaListener(this.canvas, 'contextmenu', ev => {
-			if (ev.cancelable) { ev.preventDefault(); }
-		});
+	private setupClickEvent() {
+		const MAX_DELTA_TIME = 250;
+		const MAX_DELTA_SQ = 100;
+
+		const startPosition = vec2.create();
+		const delta = vec2.create();
+		let startTime = 0;
+		let deltaSq = 0;
+		let button = -1;
+
+		this.setupPanHandler(
+			(touches, id) => touches.size === 1,
+			(pos, btn) => {
+				vec2.copy(startPosition, pos);
+
+				startTime = performance.now();
+				deltaSq = 0;
+				button = btn;
+			},
+			(pos, d, btn) => {
+				deltaSq += (d[0] * d[0]) + (d[1] * d[1]);
+			},
+			(pointers, pos) => {
+				if (pointers.size !== 0) {
+					return;
+				}
+
+				vec2.sub(delta, pos, startPosition);
+
+				const endTime = performance.now();
+				const deltaTime = endTime - startTime;
+
+				if (deltaTime > MAX_DELTA_TIME) {
+					return;
+				}
+
+				if (deltaSq > MAX_DELTA_SQ) {
+					return;
+				}
+
+				this.dispatch('onClick', this.transformCoordinates(pos), button, delta);
+			},
+		);
 	}
 
 	/** Sets up listeners for input events */
@@ -93,17 +130,34 @@ class Input {
 		this.setupRotateEvent();
 	}
 
-	/** Removes listeners from a given list */
-	private removeListeners(list = this.listeners) {
-		for (let i = list.length - 1; i >= 0; i--) {
-			list[i]();
+	/** Sets up listeners for meta events */
+	private setupMetaEvents() {
+		if (this.metaListeners.length) {
+			return;
 		}
+
+		// Prevent page scroll
+		this.addMetaListener(this.canvas, 'touchmove', ev => {
+			if (ev.cancelable) {
+				ev.preventDefault();
+			}
+		});
+
+		this.addMetaListener(this.canvas, 'contextmenu', ev => {
+			if (ev.cancelable) {
+				ev.preventDefault();
+			}
+		});
 	}
 
-	private transformCoordinates(xy: Vec2) {
-		const rect = this.canvas.getBoundingClientRect();
-
-		return vec2.set(this.cacheVec2, xy[0] - rect.left, xy[1] - rect.top) as Vec2;
+	private setupPanEvent() {
+		this.setupPanHandler(
+			(touches, id) => touches.size === 1,
+			undefined,
+			(pos: Vec2, delta: Vec2, button: number) => {
+				this.dispatch('onMouseMove', this.transformCoordinates(pos), button, delta);
+			},
+		);
 	}
 
 	/** Helper for handling events involving panning */
@@ -151,61 +205,6 @@ class Input {
 		};
 
 		this.setupPointerHandler(start, move, end, startPredicate);
-	}
-
-	private setupPanEvent() {
-		this.setupPanHandler(
-			(touches, id) => touches.size === 1,
-			undefined,
-			(pos: Vec2, delta: Vec2, button: number) => {
-				this.dispatch('onMouseMove', this.transformCoordinates(pos), button, delta);
-			},
-		);
-	}
-
-	private setupClickEvent() {
-		const MAX_DELTA_TIME = 250;
-		const MAX_DELTA_SQ = 100;
-
-		const startPosition = vec2.create();
-		const delta = vec2.create();
-		let startTime = 0;
-		let deltaSq = 0;
-		let button = -1;
-
-		this.setupPanHandler(
-			(touches, id) => touches.size === 1,
-			(pos, btn) => {
-				vec2.copy(startPosition, pos);
-
-				startTime = performance.now();
-				deltaSq = 0;
-				button = btn;
-			},
-			(pos, delta, btn) => {
-				deltaSq += delta[0] * delta[0] + delta[1] * delta[1];
-			},
-			(pointers, pos) => {
-				if (pointers.size !== 0) {
-					return;
-				}
-
-				vec2.sub(delta, pos, startPosition);
-
-				const endTime = performance.now();
-				const deltaTime = endTime - startTime;
-
-				if (deltaTime > MAX_DELTA_TIME) {
-					return;
-				}
-
-				if (deltaSq > MAX_DELTA_SQ) {
-					return;
-				}
-
-				this.dispatch('onClick', this.transformCoordinates(pos), button, delta);
-			},
-		);
 	}
 
 	private setupPinchEvent() {
@@ -309,10 +308,10 @@ class Input {
 		this.addListener(this.canvas, 'wheel', handler, { passive: false });
 	}
 
-	/** Starts input, sets up events */
-	start() {
-		this.setupMetaEvents();
-		this.setupEvents();
+	private transformCoordinates(xy: Vec2) {
+		const rect = this.canvas.getBoundingClientRect();
+
+		return vec2.set(this.cacheVec2, xy[0] - rect.left, xy[1] - rect.top) as Vec2;
 	}
 
 	/** Pauses input, removes listeners */
@@ -320,10 +319,18 @@ class Input {
 		this.removeListeners();
 	}
 
-	/** Stops input, removes all listeners */
-	stop() {
-		this.removeListeners(this.metaListeners);
-		this.removeListeners();
+	/**
+	 *
+	 */
+	registerController(controller: Controller) {
+		const index = this.controllers.indexOf(controller);
+		if (index === -1) {
+			this.controllers.push(controller);
+
+			return true;
+		}
+
+		return false;
 	}
 
 	/** Used to set up handlers for events involving pointers
@@ -413,24 +420,16 @@ class Input {
 		this.addListener(this.canvas, 'pointerdown', pointerDown);
 	}
 
-	// eslint-disable-next-line class-methods-use-this
-	/**
-	 *
-	 */
-	update() {}
+	/** Starts input, sets up events */
+	start() {
+		this.setupMetaEvents();
+		this.setupEvents();
+	}
 
-	/**
-	 *
-	 */
-	registerController(controller: Controller) {
-		const index = this.controllers.indexOf(controller);
-		if (index === -1) {
-			this.controllers.push(controller);
-
-			return true;
-		}
-
-		return false;
+	/** Stops input, removes all listeners */
+	stop() {
+		this.removeListeners(this.metaListeners);
+		this.removeListeners();
 	}
 
 	/**
@@ -447,10 +446,17 @@ class Input {
 		return false;
 	}
 
-	// eslint-disable-next-line class-methods-use-this
 	/**
 	 *
 	 */
+	// eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function
+	update() {}
+
+	/**
+	 *
+	 */
+	// eslint-disable-next-line @stylistic/max-len
+	// eslint-disable-next-line @typescript-eslint/member-ordering, @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function
 	bind(...args: any[]) {}
 }
 
