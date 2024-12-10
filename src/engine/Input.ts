@@ -71,8 +71,13 @@ class Input {
 		}
 
 		// Prevent page scroll
-		this.addMetaListener(this.canvas, 'touchmove', ev => {if (ev.cancelable) ev.preventDefault()});
-		this.addMetaListener(this.canvas, 'contextmenu', ev =>{if (ev.cancelable) ev.preventDefault()});
+		this.addMetaListener(this.canvas, 'touchmove', ev => {
+			if (ev.cancelable) { ev.preventDefault(); }
+		});
+
+		this.addMetaListener(this.canvas, 'contextmenu', ev => {
+			if (ev.cancelable) { ev.preventDefault(); }
+		});
 	}
 
 	/** Sets up listeners for input events */
@@ -145,9 +150,7 @@ class Input {
 			ended(touches, lastXY);
 		};
 
-		const testPointerUp = (touches: ActivePointers, pointerId: number) => pointerId === id;
-
-		this.setupPointerHandler(start, move, end, startPredicate, testPointerUp);
+		this.setupPointerHandler(start, move, end, startPredicate);
 	}
 
 	private setupPanEvent() {
@@ -239,7 +242,6 @@ class Input {
 			},
 			() => {},
 			(touches, id) => touches.size === 2,
-			(touches, id) => touches.size === 2,
 		);
 	}
 
@@ -279,9 +281,8 @@ class Input {
 				this.dispatch('onRotate', this.transformCoordinates(center), delta);
 			},
 			() => {
-				
+
 			},
-			(touches, id) => touches.size === 2,
 			(touches, id) => touches.size === 2,
 		);
 	}
@@ -329,60 +330,59 @@ class Input {
 	 * @param start The callback for when the event is started
 	 * @param move The callback for when a pointer is moved
 	 * @param end The callback for when the event is ended
-	 * @param testPointerDown The test for if the event should be started on pointer down
-	 * @param testPointerUp The test for if the event should be ended on pointer up
+	 * @param testPointerDown The test for if the event should be started on pointer down,
+	 * called *after* pointer added to active pointers
 	 * */
 	setupPointerHandler(
 		start: PointerEventCallback,
 		move: PointerEventCallback,
 		end: PointerEventCallback,
 		testPointerDown: TestPointerDown,
-		testPointerUp: TestPointerUp,
 	) {
 		const activePointers: ActivePointers = new Map();
 		let active = false;
 		let removeMove: RemoveListener | null = null;
 		let removeUp: RemoveListener | null = null;
 
+		const clear = () => {
+			activePointers.clear();
+
+			removeUp?.();
+			removeMove?.();
+
+			removeUp = null;
+			removeMove = null;
+
+			active = false;
+		};
+
 		const pointerUp = (ev: PointerEvent) => {
-			const test = testPointerUp(activePointers, ev.pointerId);
+			if (!activePointers.has(ev.pointerId)) {
+				// Ignore other pointers
+
+				return;
+			}
 
 			activePointers.delete(ev.pointerId);
 
-			if (activePointers.size === 0) {
-				removeUp?.();
-				removeMove?.();
-
-				removeUp = null;
-				removeMove = null;
-			}
-			else {
-				let now = Date.now();
-				// Check if we missed some pointerUp. Probably hackish
-				for (const item of activePointers) {
-				  if(item[1].updated && now - item[1].updated > 3000) {
-					activePointers.delete(item[0]);
-					console.warn('Delete sleepy pointer', now - item[1].updated, item[0])
-				  }
-				}
-			  }
-
-			if (active && test) {
-				active = false;
+			if (active) {
 				end(activePointers, ev.pointerId);
 			}
+
+			clear();
 		};
 
 		const pointerMove = (ev: PointerEvent) => {
-			// Update pointer location even if not active, so when start is finally called, we have the correct position
-			ev.updated = Date.now(); // TS complains. Fuck it
 			if (activePointers.has(ev.pointerId)) {
 				activePointers.set(ev.pointerId, ev);
+			} else {
+				// Ignore other pointers
+				return;
 			}
 
 			if (active) {
 				// Prevent page panning with touch
-				if (ev.cancelable) { //Browser complains
+				if (ev.cancelable) { // Browser complains
 					ev.preventDefault();
 				}
 
@@ -404,9 +404,9 @@ class Input {
 
 				start(activePointers, ev.pointerId);
 			} else if (active && !test) {
-				active = false;
-
+				// Too many pointers
 				end(activePointers, ev.pointerId);
+				clear();
 			}
 		};
 
