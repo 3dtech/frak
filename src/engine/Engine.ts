@@ -494,6 +494,7 @@ class Engine {
 		Component.onEnd(context,engine) method will be called for all components.
 		Subsequent call to run() will start the engine again. */
 	stop() {
+		this.running = false;
 		this.pause();
 		this.input.stop();
 
