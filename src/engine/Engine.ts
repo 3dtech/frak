@@ -79,6 +79,7 @@ class Engine {
 		return navigator.xr?.isSessionSupported(`immersive-${mode}`);
 	}
 
+	private currentlyUpdating = false;
 	private externallyPaused = false;
 	private immersiveExitCB?: () => void;
 	private immersiveMode: ImmersiveMode | null = null;
@@ -188,12 +189,26 @@ class Engine {
 	// TODO: Combine the following two functions
 	private runWindow() {
 		let then = performance.now();
+		let lastThen = then;
 		const draw = (t: DOMHighResTimeStamp) => {
-			then = this.update(then, t);
-
 			this.queuedInlineFrame = window.requestAnimationFrame(draw);
 
-			this.scene.render(this.context, this.scene.cameraComponent);
+			if (this.currentlyUpdating) {
+				return;
+			}
+
+			this.currentlyUpdating = true;
+
+			then = this.update(then, t);
+
+			// Update returns a new then value if it updated
+			// If it's the same, then our FPS is limited and we skip rendering
+			if (then !== lastThen) {
+				this.scene.render(this.context, this.scene.cameraComponent);
+				lastThen = then;
+			}
+
+			this.currentlyUpdating = false;
 		};
 
 		if (!this.scene.started) {
@@ -206,11 +221,20 @@ class Engine {
 	private runXR(session: XRSession) {
 		let then = performance.now();
 		const draw = (t: DOMHighResTimeStamp, frame: XRFrame) => {
-			then = this.update(then, t);
-
 			this.queuedImmersiveFrame = frame.session.requestAnimationFrame(draw);
 
+			if (this.currentlyUpdating) {
+				return;
+			}
+
+			this.currentlyUpdating = true;
+
+			then = this.update(then, t);
+
+			// We always render in XR mode to avoid motion sickness
 			this.scene.render(this.context, this.scene.xrCamera, frame);
+
+			this.currentlyUpdating = false;
 		};
 
 		if (!this.scene.started) {
