@@ -2,37 +2,31 @@ import Descriptor from 'scene/descriptors/Descriptor';
 
 /** Model descriptor is used for describing model source path */
 class ModelDescriptor extends Descriptor {
-	format: any;
-
-	constructor(source?, format?) {
+	constructor(public source = '', public format = 'auto') {
 		super();
-		this.source = source;
-		this.format = format || 'auto';
 	}
 
-	type(): any {
-		return "ModelDescriptor";
-	}
-
+	/**
+	 *
+	 */
 	getFormat() {
-		if (this.format == 'auto') {
-			if (this.source.endsWith('.data'))
+		if (this.format === 'auto') {
+			if (this.source.endsWith('.data')) {
+				// Legacy
 				return 'binary';
-			if (this.source.endsWith('.json'))
-				return 'json';
-			if (this.source.endsWith('.gltf'))
-				return 'gltf';
-			if (this.source.endsWith('.glb'))
-				return 'glb';
-			return 'binary';
+			}
+
+			return this.source.split('.').pop() ?? 'binary';
 		}
+
 		return this.format;
 	}
 
-	isJSON() {
-		const format = this.getFormat();
-
-		return format === 'json' || format === 'gltf';
+	/**
+	 *
+	 */
+	override type(): any {
+		return 'ModelDescriptor';
 	}
 }
 
