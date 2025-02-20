@@ -56,7 +56,7 @@ class Manager<T extends Descriptor, R> {
 	/** Gets loading progress. This can be overridden by child-managers
 		that use composition of other managers to load child-resources.
 		@return Current loading progress from 0 to 1 */
-	getProgress(): any {
+	getProgress(): number {
 		if(this.getTotalItems()==0) return 1;	// No items added means ready
 		return 1.0-this.getWaitingItems()/this.getTotalItems();
 	}

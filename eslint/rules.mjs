@@ -2,10 +2,8 @@ export default {
 	'@jsdoc/require-jsdoc': [
 		'warn',
 		{
+			contexts: ['MethodDefinition[override!=true][kind!="constructor"] > FunctionExpression', 'ClassDeclaration'],
 			publicOnly: true,
-			require: {
-				MethodDefinition: true,
-			},
 		},
 	],
 	'arrow-body-style': 'warn',
@@ -90,6 +88,7 @@ export default {
 		'warn',
 		'as-needed',
 	],
+
 	/* 'sort-keys': [
 		'warn',
 		'asc',

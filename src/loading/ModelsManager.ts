@@ -8,39 +8,118 @@ import ModelLoaderJSON from 'loading/ModelLoaderJSON';
 import ModelLoader from 'loading/ModelLoader';
 import ThreadedDataParser from 'loading/ThreadedDataParser';
 
-type Loader = ModelLoader | ModelLoaderGLTF | ModelLoaderJSON;
+// TODO: Move all the fetching to load, instead of the specific loaders
+
+type Loader = (manager: ModelsManager, descriptor: ModelDescriptor, resource: Node, data: ArrayBuffer) => Promise<void>;
+
 /** Models manager is used to load entire models together with shaders and textures. */
 class ModelsManager extends Manager<ModelDescriptor, Node> {
-	shadersManager: any;
-	texturesManager: any;
+	private readonly loaders: Map<string, Loader> = new Map();
 
-	constructor(context, assetsPath, shadersManager, texturesManager) {
+	constructor(
+		context: RenderingContext,
+		assetsPath: string,
+		public shadersManager: ShadersManager = new ShadersManager(context),
+		public texturesManager: TexturesManager = new TexturesManager(context),
+	) {
 		super(assetsPath);
 
-		if(!shadersManager) shadersManager=new ShadersManager(context);
-		this.shadersManager=shadersManager;
+		const loadGLTF = async (
+			manager: ModelsManager,
+			descriptor: ModelDescriptor,
+			resource: Node,
+			data: ArrayBuffer,
+		) => {
+			let parsedData: any = data;
+			const format = descriptor.getFormat();
+			if (format === 'gltf') {
+				parsedData = JSON.parse(new TextDecoder().decode(data));
+			}
 
-		if(!texturesManager) texturesManager=new TexturesManager(context);
-		this.texturesManager=texturesManager;
+			const loader = new ModelLoaderGLTF(descriptor, manager.shadersManager, manager.texturesManager, format);
+
+			await loader.load(resource, parsedData);
+		};
+
+		this.registerLoader('gltf', loadGLTF);
+		this.registerLoader('glb', loadGLTF);
+		this.registerLoader(
+			'json',
+			async (
+				manager: ModelsManager,
+				descriptor: ModelDescriptor,
+				resource: Node,
+				data: ArrayBuffer,
+			) => {
+				const parsedData = JSON.parse(new TextDecoder().decode(data));
+
+				const loader = new ModelLoaderJSON(descriptor, manager.shadersManager, manager.texturesManager);
+
+				await loader.load(resource, parsedData);
+			},
+		);
+
+		this.registerLoader(
+			'binary',
+			async (
+				manager: ModelsManager,
+				descriptor: ModelDescriptor,
+				resource: Node,
+				data: ArrayBuffer,
+			) => {
+				const parsedData = await new Promise((resolve, reject) => {
+					const parser = this.createParser(
+						data,
+						resolve,
+						() => reject(descriptor),
+						null,
+						resource,
+					);
+
+					parser.parse();
+				});
+
+				const loader = new ModelLoader(descriptor, manager.shadersManager, manager.texturesManager);
+
+				await loader.load(resource, parsedData);
+			},
+		);
+	}
+
+	/** This function can be overridden to provide alternative parser instances */
+	// eslint-disable-next-line @typescript-eslint/class-methods-use-this
+	protected createParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata?) {
+		return new ThreadedDataParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata);
+	}
+
+	/**
+	 *
+	 */
+	add(source, format?): any {
+		source = this.sourceCallback(source);
+
+		return this.addDescriptor(new ModelDescriptor(source, format));
+	}
+
+	/**
+	 *
+	 */
+	// eslint-disable-next-line @typescript-eslint/class-methods-use-this
+	createResource() {
+		return new Node();
 	}
 
 	/** Gets loading progress. The progress per resource also depends on progress of
 		shaders and textures manager used by models manager.
 		@return Current loading progress from 0 to 1 */
-	getProgress(): any {
-		var progress = super.getProgress();
-		if (progress == 1.0)
+	override getProgress(): number {
+		let progress = super.getProgress();
+		if (progress >= 1.0) {
 			return progress;
-		return progress+(this.texturesManager.getProgress()+this.shadersManager.getProgress())/2.0/this.getTotalItems();
-	}
+		}
 
-	add(source, format?): any {
-		source = this.sourceCallback(source);
-		return this.addDescriptor(new ModelDescriptor(source, format));
-	}
-
-	createResource() {
-		return new Node();
+		return progress +
+			((this.texturesManager.getProgress() + this.shadersManager.getProgress()) / 2.0 / this.getTotalItems());
 	}
 
 	/** Starts loading all currently added resources recursively.
@@ -51,50 +130,38 @@ class ModelsManager extends Manager<ModelDescriptor, Node> {
 	async load(callback?, progressCallback?) {
 		await super.load(callback, progressCallback);
 
-		this.shadersManager.load();
-		this.texturesManager.load();
+		await this.shadersManager.load();
+		await this.texturesManager.load();
 	}
 
+	/**
+	 *
+	 */
 	async loadResource(modelDescriptor: ModelDescriptor, resource: Node) {
 		const descriptor = this.descriptorCallback(modelDescriptor);
+
 		try {
 			const format = modelDescriptor.getFormat();
 
-			const response = await fetch(descriptor.getFullPath());
-			let data = descriptor.isJSON() ? await response.json() : await response.arrayBuffer();
+			if (this.loaders.has(format)) {
+				const response = await fetch(descriptor.getFullPath());
+				const data = await response.arrayBuffer();
+				const loader = this.loaders.get(format);
 
-			let loader: Loader;
-			if (format !== 'binary') {
-				loader = format === 'json' ?
-					new ModelLoaderJSON(descriptor, this.shadersManager, this.texturesManager, format) :
-					new ModelLoaderGLTF(descriptor, this.shadersManager, this.texturesManager, format);
+				await loader(this, descriptor, resource, data);
+
+				return [descriptor, resource] as [ModelDescriptor, Node];
 			} else {
-				data = await new Promise((resolve, reject) => {
-					const parser = this.createParser(
-						data,
-						resolve,
-						() => reject(descriptor),
-						null,
-						resource
-					);
-
-					parser.parse();
-				});
-
-				loader = new ModelLoader(descriptor, this.shadersManager, this.texturesManager);
+				throw new Error(`No loader for format: ${format}`);
 			}
-
-			await loader.load(resource, data);
-
-			return [descriptor, resource] as [ModelDescriptor, Node];
 		} catch (e) {
 			throw descriptor;
 		}
 	}
 
-	/** This function can be overridden to provide alternative parser instances */
-	createParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata?) {
-		return new ThreadedDataParser(data, cbOnComplete, cbOnError, cbOnProgress, userdata);
+	/** Register a function to load a model for the given model format */
+	registerLoader(format: string, loader: Loader) {
+		this.loaders.set(format, loader);
 	}
 }
 
