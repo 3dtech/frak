@@ -143,6 +143,7 @@ class Engine {
 		this.debugWidth = 256;
 		this.debugFPS = [];
 		this.debugCount = 24;
+		this.arCam = null;
 
 		this.assetsManager = new AssetsManager(this.context, this.options.assetsPath);
 
@@ -253,10 +254,13 @@ class Engine {
 		if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 			navigator.mediaDevices.getUserMedia({ video: true}).then(stream => {
 				  if (stream.getVideoTracks().length > 0){
+					//this.arCam = stream;
 					var camOut = document.createElement("video");
 					camOut.setAttribute("autoplay", "true");
+
 					camOut.style.width = "100%";
 					camOut.style.height = "100%";
+					camOut.style.objectFit = "cover";
 					camOut.style.position = "absolute";
 					
 					if(this.context.canvas.parentElement) {
