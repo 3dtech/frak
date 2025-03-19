@@ -22,7 +22,7 @@ const DEFAULT_OPTIONS = {
 	contextErrorCallback: undefined as (() => boolean) | undefined,
 	contextOptions: undefined as WebGLContextAttributes | undefined,
 	debug: false,
-	defaultRequestedFPS: 60.0,
+	defaultRequestedFPS: 60.0, // was 60
 	directionalShadowResolution: 2048,
 	emissiveEnabled: false, // TODO: Remove this for an automatic detection
 	legacyAmbient: true,
@@ -37,8 +37,8 @@ const DEFAULT_OPTIONS = {
 };
 
 type Options = typeof DEFAULT_OPTIONS;
-type XRMode = 'ar' | 'vr';
-type LegacyImmersiveMode = 'legacy-ar' | 'legacy-vr';
+type XRMode = 'ar' | 'vr' | 'fallback';
+type LegacyImmersiveMode = 'legacy-ar' | 'legacy-vr' | 'fallback';
 type ImmersiveMode = LegacyImmersiveMode | XRMode;
 
 /** The FRAK Web Engine */
@@ -59,16 +59,26 @@ class Engine {
 		if (modes.length) {
 			return modes;
 		}
-
+		console.log('navigator', navigator)
 		if ((navigator as NavigatorUA).userAgentData && !(navigator as NavigatorUA).userAgentData.mobile) {
 			// Not a mobile device, no immersive mode
 			return [];
 		}
 
-		// TODO: Legacy AR, check camera permissions
-
+		
 		if (window.hasOwnProperty('ondeviceorientationabsolute') || window.hasOwnProperty('ondeviceorientation')) {
-			return ['legacy-vr'];
+			if(navigator.mediaDevices) {
+				const devices = await navigator.mediaDevices.enumerateDevices();
+				const cams = devices.filter(d => d.kind == 'videoinput');
+				if (cams.length > 0) {
+					modes.push('legacy-ar');
+				}
+			}
+
+			modes.push('legacy-vr');
+			
+			
+			return modes;
 		}
 
 		return [];
@@ -237,6 +247,32 @@ class Engine {
 
 				return;
 			}
+		}
+
+		// ask for camera
+		if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+			navigator.mediaDevices.getUserMedia({ video: true}).then(stream => {
+				  if (stream.getVideoTracks().length > 0){
+					var camOut = document.createElement("video");
+					camOut.setAttribute("autoplay", "true");
+					camOut.style.width = "100%";
+					camOut.style.height = "100%";
+					camOut.style.position = "absolute";
+					
+					if(this.context.canvas.parentElement) {
+						this.context.canvas.parentElement.insertBefore(camOut, this.context.canvas);
+					}
+					else {
+						document.body.insertBefore(camOut, this.context.canvas);
+					}
+					camOut.srcObject = stream;
+
+
+				  }
+			})
+		   .catch(function (error) { 
+				console.warn(error);
+			});
 		}
 
 		if (!this.scene.legacyImmersiveCamera) {
