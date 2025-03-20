@@ -252,7 +252,7 @@ class Engine {
 
 		// ask for camera
 		if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-			navigator.mediaDevices.getUserMedia({ video: true}).then(stream => {
+			navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment"}}, audio: false}).then(stream => {
 				  if (stream.getVideoTracks().length > 0){
 					//this.arCam = stream;
 					var camOut = document.createElement("video");
