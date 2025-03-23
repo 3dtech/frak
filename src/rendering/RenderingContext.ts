@@ -6,6 +6,12 @@ import Engine from 'engine/Engine';
 import Shader from "./shaders/Shader";
 import DefinitionsHelper from "./DefinitionsHelper";
 
+declare global {
+	var WebGLDebugUtils: any;
+	var fallbackTexture: any;
+	var fallbackCubeTexture: any;
+}
+
 interface ShaderCache {
 	[shaderHash: number]: {
 		[definitionsHash: number]: Shader;

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import { argv, exit } from 'node:process';
-import { fileURLToPath } from "node:url";
+import { fileURLToPath } from 'node:url';
 
 import { build } from 'esbuild';
 
@@ -22,7 +22,7 @@ let wasmPlugin = {
 				return {
 					path: relativePath,
 					namespace: 'wasm-binary',
-				}
+				};
 			}
 
 			// Otherwise, generate the JavaScript stub module for this
@@ -33,18 +33,22 @@ let wasmPlugin = {
 			// resolve callback is given "resolveDir", the directory to
 			// resolve imports against.
 			if (args.resolveDir === '') {
-				return // Ignore unresolvable paths
+				return; // Ignore unresolvable paths
 			}
+
 			return {
 				path: relativePath,
 				namespace: 'wasm-stub',
-			}
+			};
 		});
 
 		// Virtual modules in the "wasm-stub" namespace are filled with
 		// the JavaScript code for compiling the WebAssembly binary. The
 		// binary itself is imported from a second virtual module.
-		build.onLoad({ filter: /.*/, namespace: 'wasm-stub' }, async (args) => ({
+		build.onLoad({
+			filter: /.*/,
+			namespace: 'wasm-stub',
+		}, async args => ({
 			contents: `import wasm from ${JSON.stringify(args.path)}
         export default (imports) =>
           WebAssembly.instantiate(wasm, imports).then(
@@ -55,19 +59,24 @@ let wasmPlugin = {
 		// actual bytes of the WebAssembly file. This uses esbuild's
 		// built-in "binary" loader instead of manually embedding the
 		// binary data inside JavaScript code ourselves.
-		build.onLoad({ filter: /.*/, namespace: 'wasm-binary' }, async (args) => ({
+		build.onLoad({
+			filter: /.*/,
+			namespace: 'wasm-binary',
+		}, async args => ({
 			contents: await readFile(args.path),
 			loader: 'binary',
 		}));
 	},
-}
+};
 
 const debug = argv.includes('--debug');
-const OUTPUT_PATH = `builds/frak-latest.${debug ? 'debug' : 'min'}.js`;
+const module = argv.includes('--module');
+const OUTPUT_PATH = 'builds/frak.js';
 
 build({
 	entryPoints: ['src/entry.ts'],
 	bundle: true,
+	format: module ? 'esm' : 'iife',
 	minify: !debug,
 	outfile: OUTPUT_PATH,
 	plugins: [wasmPlugin],
@@ -75,7 +84,8 @@ build({
 		'.glsl': 'text',
 		'.frag': 'text',
 		'.vert': 'text',
-	}
+	},
 }).then(result => {
 	console.log(`Build written to ${OUTPUT_PATH}`);
-}).catch(() => exit(1))
+})
+.catch(() => exit(1));

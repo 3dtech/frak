@@ -3,6 +3,10 @@ import DataParserResult from 'loading/DataParserResult';
 import DataParserNode from './DataParserNode';
 import DataParserTypes from './DataParserTypes';
 
+declare global {
+	var jDataView: any;
+}
+
 /**
  * 3DTech DATA format parser
  **/

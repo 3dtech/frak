@@ -1,5 +1,31 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="Input.d.ts" />
+// Helper types
+
+/** Map of active pointers for events */
+type ActivePointers = Map<number, PointerEvent>;
+
+/** Removes a listener */
+type RemoveListener = () => void;
+type CreateListener = (target: EventTarget,
+	name: string,
+	handler: EventListener,
+	options?: AddEventListenerOptions,
+) => RemoveListener;
+
+/** Callback for pointer events
+ * @param {ActivePointers} touches Map of active pointers
+ * @param {number} id The id of the pointer that triggered the event
+ * */
+type PointerEventCallback = (touches: ActivePointers, id: number) => void;
+
+/** Test if the event should be started on pointer down
+ * @param {ActivePointers} touches Map of active pointers
+ * @param {number} id The id of the pointer that was pressed
+ *
+ * @returns {boolean} True if the event should be started
+ * */
+type TestPointerDown = (touches: ActivePointers, id: number) => boolean;
+
+type Vec2 = [number, number];
 
 import type Engine from './Engine';
 import type { Events } from '../scene/components/Controller';

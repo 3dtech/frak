@@ -1,5 +1,9 @@
 import BoundingVolume from 'scene/geometry/BoundingVolume';
 
+declare global {
+	var BoundingVolumeVectorCache: any;
+}
+
 /** BoundingSphere class */
 class BoundingSphere extends BoundingVolume {
 	radius: any;

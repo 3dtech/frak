@@ -1,5 +1,10 @@
 import BoundingVolume from 'scene/geometry/BoundingVolume';
 
+declare global {
+	var BoundingVolumeVectorCache: any;
+	var AABBPlaneCache: any;
+}
+
 /**
  * Axis aligned bounding box class
  */

@@ -1,5 +1,5 @@
 import { dirname } from 'node:path';
-import { fileURLToPath } from "node:url";
+import { fileURLToPath } from 'node:url';
 import tseslint from 'typescript-eslint';
 import parser from '@typescript-eslint/parser';
 import stylistic from '@stylistic/eslint-plugin';

@@ -2,6 +2,9 @@ import BoundingVolume from 'scene/geometry/BoundingVolume';
 import BoundingSphere from 'scene/geometry/BoundingSphere';
 import BoundingBox from 'scene/geometry/BoundingBox';
 
+declare global {
+	var RayTestLocalCache: any;
+}
 
 /** Ray class */
 class Ray {
