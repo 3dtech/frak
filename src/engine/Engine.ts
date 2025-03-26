@@ -114,6 +114,9 @@ class Engine {
 	useUpscaling: any;
 	_savedCanvasStyles: any;
 	cameraBlockProgram?: WebGLProgram;
+
+	/** Opaque incremental version that's for tracking feature support */
+	readonly featuresVersion = 2;
 	immersiveSession: XRSession | null = null;
 	immersiveRefSpace: XRReferenceSpace | null = null;
 
