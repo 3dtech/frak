@@ -11,11 +11,13 @@
 	<canvas tabindex="1" id="canvas" width="1200" height="800"></canvas>
 	<div>
 		<button id="xr-button" onclick="startImmersive()" disabled>XR unavailable</button>
+		<button onclick="startImmersive(true)">Start legacy immersive</button>
 		<button onclick="toggleDebug();">Debug</button>
 		<button onclick="pauseEngine(this);">PAUSE</button>
 		<button onclick="engine.requestFullscreen()">Fullscreen</button>
 	</div>
-	<div id="xr-overlay" style="display: none; position: absolute; bottom: 10%; left: 50%; transform: translate(-50%, -50%);">
+	<div id="xr-overlay"
+		style="display: none; position: absolute; bottom: 10%; left: 50%; transform: translate(-50%, -50%);">
 		<button onclick="engine.exitImmersive()" style="width: 50px; height: 30px; font-size: 12px;">Exit</button>
 	</div>
 
@@ -36,13 +38,13 @@
 			onStart: function(context, engine) {
 				var material = new Material(
 					engine.assetsManager.addShaderSource("transparent"), {
-						"diffuse": new UniformColor({
-							r: 1.0,
-							g: 1.0,
-							b: 0.0,
-							a: 0.5
-						})
-					},
+					"diffuse": new UniformColor({
+						r: 1.0,
+						g: 1.0,
+						b: 0.0,
+						a: 0.5
+					})
+				},
 					[]
 				);
 
@@ -129,7 +131,7 @@
 
 		function setupScene(scene) {
 			scene.root.addComponent(new ClickController());
-			scene.root.addNode(scene.engine.assetsManager.addModel('data/gltf/OrientationTest.gltf'))/*.transform.scale([50, 50, 50])*/;
+			scene.root.addNode(scene.engine.assetsManager.addModel('data/gltf/space/space.gltf'))/*.transform.scale([50, 50, 50])*/;
 		}
 
 		var engine;
@@ -183,12 +185,12 @@
 			});
 		}
 
-		function startImmersive() {
+		function startImmersive(legacy) {
 			var overlay = document.getElementById('xr-overlay');
 			overlay.style.display = 'block';
 			engine.startImmersive(function() {
 				overlay.style.display = 'none';
-			}, immersiveType, overlay);
+			}, legacy ? 'legacy-ar' : immersiveType, overlay);
 		}
 	</script>
 </body>

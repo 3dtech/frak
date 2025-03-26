@@ -37,8 +37,8 @@ const DEFAULT_OPTIONS = {
 };
 
 type Options = typeof DEFAULT_OPTIONS;
-type XRMode = 'ar' | 'vr' | 'fallback';
-type LegacyImmersiveMode = 'legacy-ar' | 'legacy-vr' | 'fallback';
+type XRMode = 'ar' | 'vr';
+type LegacyImmersiveMode = 'legacy-ar' | 'legacy-vr';
 type ImmersiveMode = LegacyImmersiveMode | XRMode;
 
 /** The FRAK Web Engine */
@@ -59,25 +59,23 @@ class Engine {
 		if (modes.length) {
 			return modes;
 		}
-		console.log('navigator', navigator)
+
 		if ((navigator as NavigatorUA).userAgentData && !(navigator as NavigatorUA).userAgentData.mobile) {
 			// Not a mobile device, no immersive mode
 			return [];
 		}
 
-		
 		if (window.hasOwnProperty('ondeviceorientationabsolute') || window.hasOwnProperty('ondeviceorientation')) {
-			if(navigator.mediaDevices) {
+			if (navigator.mediaDevices) {
 				const devices = await navigator.mediaDevices.enumerateDevices();
-				const cams = devices.filter(d => d.kind == 'videoinput');
+				const cams = devices.filter(d => d.kind === 'videoinput');
 				if (cams.length > 0) {
 					modes.push('legacy-ar');
 				}
 			}
 
 			modes.push('legacy-vr');
-			
-			
+
 			return modes;
 		}
 
@@ -92,6 +90,7 @@ class Engine {
 	private externallyPaused = false;
 	private immersiveExitCB?: () => void;
 	private immersiveMode: ImmersiveMode | null = null;
+	private stopCamera?: () => void;
 	private queuedImmersiveFrame: number | null = null;
 	private queuedInlineFrame: number | null = null;
 
@@ -143,7 +142,6 @@ class Engine {
 		this.debugWidth = 256;
 		this.debugFPS = [];
 		this.debugCount = 24;
-		this.arCam = null;
 
 		this.assetsManager = new AssetsManager(this.context, this.options.assetsPath);
 
@@ -182,6 +180,8 @@ class Engine {
 			this.scene.cameraComponent = this.scene.defaultCamera;
 			this.immersiveExitCB?.();
 			this.immersiveExitCB = undefined;
+			this.stopCamera?.();
+			this.stopCamera = undefined;
 		}
 
 		if (this.running && !this.queuedInlineFrame) {
@@ -231,7 +231,7 @@ class Engine {
 		this.queuedImmersiveFrame = session.requestAnimationFrame(draw);
 	}
 
-	private async startLegacyImmersive(cb?: () => void, mode: LegacyImmersiveMode = 'legacy-ar', _domOverlay?: Element) {
+	private async startLegacyImmersive(mode: LegacyImmersiveMode = 'legacy-ar', _domOverlay?: Element) {
 		if (
 			window.DeviceOrientationEvent !== undefined &&
 			typeof (window.DeviceOrientationEvent as any).requestPermission === 'function'
@@ -250,33 +250,46 @@ class Engine {
 			}
 		}
 
-		// ask for camera
-		if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-			navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment"}}, audio: false}).then(stream => {
-				  if (stream.getVideoTracks().length > 0){
-					//this.arCam = stream;
-					var camOut = document.createElement("video");
-					camOut.setAttribute("autoplay", "true");
+		if (mode === 'legacy-ar') {
+			// ask for camera
+			if (navigator.mediaDevices?.getUserMedia) {
+				try {
+					const stream = await navigator.mediaDevices.getUserMedia({
+						video: { facingMode: { exact: 'environment' } },
+						audio: false,
+					});
 
-					camOut.style.width = "100%";
-					camOut.style.height = "100%";
-					camOut.style.objectFit = "cover";
-					camOut.style.position = "absolute";
-					
-					if(this.context.canvas.parentElement) {
-						this.context.canvas.parentElement.insertBefore(camOut, this.context.canvas);
+					if (stream.getVideoTracks().length > 0) {
+						// this.arCam = stream;
+						let camOut = document.createElement('video');
+
+						camOut.setAttribute('autoplay', 'true');
+
+						camOut.style.width = '100%';
+						camOut.style.height = '100%';
+						camOut.style.objectFit = 'cover';
+						camOut.style.position = 'absolute';
+
+						if (this.context.canvas.parentElement) {
+							this.context.canvas.parentElement.insertBefore(camOut, this.context.canvas);
+						} else {
+							document.body.insertBefore(camOut, this.context.canvas);
+						}
+
+						camOut.srcObject = stream;
+
+						this.stopCamera = () => {
+							stream.getTracks().forEach(track => track.stop());
+							camOut.remove();
+						};
 					}
-					else {
-						document.body.insertBefore(camOut, this.context.canvas);
-					}
-					camOut.srcObject = stream;
+				} catch (error) {
+					console.warn(error);
 
-
-				  }
-			})
-		   .catch(function (error) { 
-				console.warn(error);
-			});
+					// Camera probably denied, fallback to VR
+					mode = 'legacy-vr';
+				}
+			}
 		}
 
 		if (!this.scene.legacyImmersiveCamera) {
@@ -288,7 +301,6 @@ class Engine {
 		this.scene.cameraComponent = this.scene.legacyImmersiveCamera;
 
 		this.immersiveMode = mode;
-		this.immersiveExitCB = cb;
 
 		this.scene.camera.renderStage.generator.setImmersive(mode === 'legacy-ar');
 
@@ -296,7 +308,7 @@ class Engine {
 		this.requestFullscreen();
 	}
 
-	private async startXR(cb?: () => void, mode: XRMode = 'ar', domOverlay?: Element) {
+	private async startXR(mode: XRMode = 'ar', domOverlay?: Element) {
 		const options: XRSessionInit = {
 			optionalFeatures: ['local-floor'],
 			requiredFeatures: ['local'],
@@ -334,7 +346,6 @@ class Engine {
 		this.scene.cameraComponent = this.scene.xrCamera;
 
 		this.immersiveMode = mode;
-		this.immersiveExitCB = cb;
 		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
 
 		this.scene.camera.renderStage.generator.setImmersive(mode === 'ar');
@@ -494,6 +505,9 @@ class Engine {
 	async startImmersive(cb?: () => void, mode: ImmersiveMode = 'ar', domOverlay?: Element) {
 		this.pauseInline();
 
+		// So the callback gets called even when we fail to start immersive mode
+		this.immersiveExitCB = cb;
+
 		if (!mode.startsWith('legacy')) {
 			if (!navigator.xr) {
 				console.error('XR is not supported in this browser, did you forget to call Engine.getImmersiveSupport()?');
@@ -503,9 +517,9 @@ class Engine {
 				return;
 			}
 
-			await this.startXR(cb, mode as XRMode, domOverlay);
+			await this.startXR(mode as XRMode, domOverlay);
 		} else {
-			await this.startLegacyImmersive(cb, mode as LegacyImmersiveMode, domOverlay);
+			await this.startLegacyImmersive(mode as LegacyImmersiveMode, domOverlay);
 		}
 
 		if (!this.immersiveMode) {
