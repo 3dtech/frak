@@ -8,8 +8,6 @@ import ModelLoaderJSON from 'loading/ModelLoaderJSON';
 import ModelLoader from 'loading/ModelLoader';
 import ThreadedDataParser from 'loading/ThreadedDataParser';
 
-// TODO: Move all the fetching to load, instead of the specific loaders
-
 type Loader = (manager: ModelsManager, descriptor: ModelDescriptor, resource: Node, data: ArrayBuffer) => Promise<void>;
 
 /** Models manager is used to load entire models together with shaders and textures. */
@@ -30,17 +28,12 @@ class ModelsManager extends Manager<ModelDescriptor, Node> {
 			resource: Node,
 			data: ArrayBuffer,
 		) => {
-			let parsedData: any = data;
-			const format = descriptor.getFormat();
-			if (format === 'gltf') {
-				parsedData = JSON.parse(new TextDecoder().decode(data));
-			}
+			const loader = new ModelLoaderGLTF(descriptor, manager.shadersManager, manager.texturesManager);
 
-			const loader = new ModelLoaderGLTF(descriptor, manager.shadersManager, manager.texturesManager, format);
-
-			await loader.load(resource, parsedData);
+			await loader.load(resource, data);
 		};
 
+		// TODO: Separate extension and format
 		this.registerLoader('gltf', loadGLTF);
 		this.registerLoader('glb', loadGLTF);
 		this.registerLoader(
@@ -51,11 +44,9 @@ class ModelsManager extends Manager<ModelDescriptor, Node> {
 				resource: Node,
 				data: ArrayBuffer,
 			) => {
-				const parsedData = JSON.parse(new TextDecoder().decode(data));
-
 				const loader = new ModelLoaderJSON(descriptor, manager.shadersManager, manager.texturesManager);
 
-				await loader.load(resource, parsedData);
+				await loader.load(resource, data);
 			},
 		);
 
@@ -144,8 +135,13 @@ class ModelsManager extends Manager<ModelDescriptor, Node> {
 			const format = modelDescriptor.getFormat();
 
 			if (this.loaders.has(format)) {
-				const response = await fetch(descriptor.getFullPath());
-				const data = await response.arrayBuffer();
+				let data = descriptor.data;
+				if (!data) {
+					const response = await fetch(descriptor.getFullPath());
+
+					data = await response.arrayBuffer();
+				}
+
 				const loader = this.loaders.get(format);
 
 				await loader(this, descriptor, resource, data);

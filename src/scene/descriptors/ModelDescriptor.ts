@@ -2,6 +2,8 @@ import Descriptor from 'scene/descriptors/Descriptor';
 
 /** Model descriptor is used for describing model source path */
 class ModelDescriptor extends Descriptor {
+	data: ArrayBuffer | null = null;
+
 	constructor(public source = '', public format = 'auto') {
 		super();
 	}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/member-ordering */
 import TextureDescriptor from 'scene/descriptors/TextureDescriptor';
 import Sampler from 'rendering/shaders/Sampler';
 import UniformMat3 from 'rendering/shaders/UniformMat3';
@@ -12,12 +13,12 @@ import MeshComponent from 'scene/components/MeshComponent';
 import MeshCollider from 'scene/components/MeshCollider';
 import Color from 'rendering/Color';
 import FRAK from 'Helpers';
-import DirectionalLight from "../scene/lights/DirectionalLight";
+import DirectionalLight from '../scene/lights/DirectionalLight';
 import init, { generateTangents } from '../../lib/mikktspace';
-import { TextureOptions } from '../rendering/materials/BaseTexture';
-import TexturesManager from './TexturesManager';
-import ShadersManager from './ShadersManager';
-import ModelDescriptor from '../scene/descriptors/ModelDescriptor';
+import type { TextureOptions } from '../rendering/materials/BaseTexture';
+import type TexturesManager from './TexturesManager';
+import type ShadersManager from './ShadersManager';
+import type ModelDescriptor from '../scene/descriptors/ModelDescriptor';
 
 function defaultSampler(): TextureOptions {
 	return {
@@ -37,7 +38,6 @@ class ModelLoaderGLTF {
 	submeshesByID: any;
 	submeshes: any;
 	textureUniformMap: any;
-	binary: any;
 	binaryBuffer: any;
 	buffers: any;
 	bufferViews: any;
@@ -48,7 +48,7 @@ class ModelLoaderGLTF {
 	materials: any;
 	meshes: any;
 
-	constructor(descriptor, shadersManager, texturesManager, format) {
+	constructor(descriptor, shadersManager, texturesManager) {
 		this.descriptor = descriptor;
 		this.shadersManager = shadersManager;
 		this.texturesManager = texturesManager;
@@ -59,9 +59,8 @@ class ModelLoaderGLTF {
 		this.textureUniformMap = {
 			texturesDiffuse: 'diffuse',
 			texturesNormals: 'normal',
-		}
+		};
 
-		this.binary = format === 'glb';
 		this.binaryBuffer = false;
 
 		this.buffers = [];
@@ -75,24 +74,21 @@ class ModelLoaderGLTF {
 	}
 
 	/** Loads parsed data to scene hierarchy at given node */
-	async load(node, data) {
+	async load(node, data: ArrayBuffer) {
 		await init();
-		var parsedData;
-
-		if (!this.binary) {
-			parsedData = data;
+		let parsedData;
+		let view = new DataView(data);
+		if (
+			view.getUint32(0, true) === 0x46546C67 && // magic === 'glTF'
+			view.getUint32(4, true) === 2 && // version === 2
+			view.getUint32(8, true) === data.byteLength
+		) {
+			// .glb
+			parsedData = this.parseJSON(view);
+			this.binaryBuffer = this.parseBinaryBuffer(view);
 		} else {
-			var view = new DataView(data);
-			if (
-				view.getUint32(0, true) === 0x46546C67 && // magic === 'glTF'
-				view.getUint32(4, true) === 2 && // version === 2
-				view.getUint32(8, true) === data.byteLength
-			) {
-				parsedData = this.parseJSON(view);
-				this.binaryBuffer = this.parseBinaryBuffer(view);
-			} else {
-				throw 'Invalid data';
-			}
+			// .gltf
+			parsedData = JSON.parse(new TextDecoder().decode(data));
 		}
 
 		if (
@@ -115,23 +111,29 @@ class ModelLoaderGLTF {
 		this.loadScene(node, parsedData);
 	}
 
+	/**
+	 *
+	 */
 	parseJSON(view): any {
-		var length = view.getUint32(12, true);
+		let length = view.getUint32(12, true);
 		if (view.getUint32(16, true) !== 0x4E4F534A) { // type === 'JSON'
 			throw 'Invalid JSON data';
 		}
 
-		var data = new Uint8Array(view.buffer, 20, length);
+		let data = new Uint8Array(view.buffer, 20, length);
 
 		return JSON.parse(new TextDecoder().decode(data));
 	}
 
+	/**
+	 *
+	 */
 	parseBinaryBuffer(view): any {
-		var jsonLength = view.getUint32(12, true);
+		let jsonLength = view.getUint32(12, true);
 		if (20 + jsonLength === view.byteLength) {
 			return;
 		} else {
-			var length = view.getUint32(20 + jsonLength, true);
+			let length = view.getUint32(20 + jsonLength, true);
 			if (28 + jsonLength + length !== view.byteLength) {
 				return;
 			}
@@ -144,11 +146,14 @@ class ModelLoaderGLTF {
 		}
 	}
 
+	/**
+	 *
+	 */
 	async loadBuffers(buffers) {
 		const loadingBuffers = [];
-		for (var i = 0, l = buffers.length; i < l; i++) {
+		for (let i = 0, l = buffers.length; i < l; i++) {
 			var byteLength = buffers[i].byteLength;
-			var buffer = {
+			let buffer = {
 				data: undefined,
 				length: byteLength,
 			};
@@ -156,7 +161,7 @@ class ModelLoaderGLTF {
 			this.buffers.push(buffer);
 
 			if (!buffers[i].uri) {
-				if (i === 0) {	 // Spec says only the first buffer can be embedded
+				if (i === 0) { // Spec says only the first buffer can be embedded
 					buffer.data = this.binaryBuffer;
 				}
 
@@ -164,17 +169,18 @@ class ModelLoaderGLTF {
 			}
 
 			var uri = buffers[i].uri;
-			if (!(new RegExp('^//|(?:[a-z]+:)', 'i')).test(uri)) {
-				var source = this.descriptor.source.split('/');
+			if (!new RegExp('^//|(?:[a-z]+:)', 'i').test(uri)) {
+				let source = this.descriptor.source.split('/');
+
 				source.pop();
 				source.push(buffers[i].uri);
 				uri = source.join('/');
 			}
 
-			loadingBuffers.push((async (buffer) => {
+			loadingBuffers.push((async buffer => {
 				const response = await fetch(uri);
 				const data = await response.arrayBuffer();
-				if (data.byteLength == byteLength) {
+				if (data.byteLength === byteLength) {
 					buffer.data = data;
 				}
 			})(buffer));
@@ -183,56 +189,68 @@ class ModelLoaderGLTF {
 		await Promise.allSettled(loadingBuffers);
 	}
 
+	/**
+	 *
+	 */
 	loadBufferViews(bufferViews): any {
-		for (var i = 0, l = bufferViews.length; i < l; i++) {
-			var view = bufferViews[i];
-			var buffer = this.buffers[view.buffer];
+		for (let i = 0, l = bufferViews.length; i < l; i++) {
+			let view = bufferViews[i];
+			let buffer = this.buffers[view.buffer];
 
 			this.bufferViews.push(new DataView(buffer.data, view.byteOffset || 0, view.byteLength || buffer.length));
 		}
 	}
 
+	/**
+	 *
+	 */
 	loadAccessors(accessors): any {
 		for (var i = 0, l = accessors.length; i < l; i++) {
 			var accessor;
-			var view = this.bufferViews[accessors[i].bufferView];
+			let view = this.bufferViews[accessors[i].bufferView];
 			var itemCount;
 
 			switch (accessors[i].type) {
-			case 'VEC2':
-				itemCount = 2;
-				break;
+				case 'VEC2':
+					itemCount = 2;
 
-			case 'VEC3':
-				itemCount = 3;
-				break;
+					break;
 
-			case 'VEC4':
-				itemCount = 4;
-				break;
+				case 'VEC3':
+					itemCount = 3;
 
-			case 'MAT2':
-				itemCount = 4;
-				break;
+					break;
 
-			case 'MAT3':
-				itemCount = 9;
-				break;
+				case 'VEC4':
+					itemCount = 4;
 
-			case 'MAT4':
-				itemCount = 16;
-				break;
+					break;
 
-			default:
-				itemCount = 1;
+				case 'MAT2':
+					itemCount = 4;
+
+					break;
+
+				case 'MAT3':
+					itemCount = 9;
+
+					break;
+
+				case 'MAT4':
+					itemCount = 16;
+
+					break;
+
+				default:
+					itemCount = 1;
 			}
 
-			var arrays = [Int8Array, Uint8Array, Int16Array, Uint16Array, undefined, Uint32Array, Float32Array];
+			let arrays = [Int8Array, Uint8Array, Int16Array, Uint16Array, undefined, Uint32Array, Float32Array];
 
 			accessor = new arrays[accessors[i].componentType - 5120](
 				view.buffer,
 				view.byteOffset + (accessors[i].byteOffset || 0),
-				accessors[i].count * itemCount
+				accessors[i].count * itemCount,
 			);
 
 			if (accessors[i].max && itemCount === accessors[i].max.length) {
@@ -251,32 +269,40 @@ class ModelLoaderGLTF {
 		}
 	}
 
+	/**
+	 *
+	 */
 	loadImages(images): any {
-		for (var i = 0, l = images.length; i < l; i++) {
+		for (let i = 0, l = images.length; i < l; i++) {
 			var uri;
 			if (images[i].uri) {
 				uri = images[i].uri;
-				if (!(new RegExp('^//|(?:[a-z]+:)', 'i')).test(uri)) {
-					var source = this.descriptor.source.split('/');
+
+				if (!new RegExp('^//|(?:[a-z]+:)', 'i').test(uri)) {
+					let source = this.descriptor.source.split('/');
+
 					source.pop();
 					source.push(uri);
 					uri = source.join('/');
 				}
 			} else if (!isNaN(parseInt(images[i].bufferView)) && images[i].mimeType) {
-				var blob = new Blob([this.bufferViews[images[i].bufferView]], { type: images[i].mimeType });
+				let blob = new Blob([this.bufferViews[images[i].bufferView]], { type: images[i].mimeType });
 
 				uri = URL.createObjectURL(blob);
 			}
 
 			if (uri) {
 				this.images.push({
-					locked: (new RegExp('^//|(?:[a-z]+:)', 'i')).test(uri),
+					locked: new RegExp('^//|(?:[a-z]+:)', 'i').test(uri),
 					uri: uri,
 				});
 			}
 		}
 	}
 
+	/**
+	 *
+	 */
 	loadSamplers(samplers) {
 		for (let i = 0, l = samplers.length; i < l; i++) {
 			const sampler = defaultSampler();
@@ -325,14 +351,17 @@ class ModelLoaderGLTF {
 		}
 	}
 
+	/**
+	 *
+	 */
 	loadTextures(textures): any {
-		for (var i = 0, l = textures.length; i < l; i++) {
+		for (let i = 0, l = textures.length; i < l; i++) {
 			if (isNaN(parseInt(textures[i].source))) {
 				continue;
 			}
 
-			var descriptorImage = this.images[textures[i].source];
-			var descriptor = new TextureDescriptor(descriptorImage.uri);
+			let descriptorImage = this.images[textures[i].source];
+			let descriptor = new TextureDescriptor(descriptorImage.uri);
 
 			descriptor.locked = descriptorImage.locked;
 
@@ -352,22 +381,25 @@ class ModelLoaderGLTF {
 		}
 	}
 
+	/**
+	 *
+	 */
 	loadMaterials(materials): any {
-		var textures = this.textures;
+		let textures = this.textures;
 
 		function setSampler(material: Material, textureData, name) {
 			if (textureData) {
-				var upperCaseName = name.toUpperCase();
+				let upperCaseName = name.toUpperCase();
 
 				material.samplers.push(new Sampler(name + '0', textures[textureData.index]));
 
 				material.definitions.addDefinition(upperCaseName + '_TEXTURE');
 
-				if (textureData.extensions && textureData.extensions.KHR_texture_transform) {
-					var transform = textureData.extensions.KHR_texture_transform;
+				if (textureData.extensions?.KHR_texture_transform) {
+					let transform = textureData.extensions.KHR_texture_transform;
 
-					var uvMatrix = mat3.create();
-					var tmp = mat3.create();
+					let uvMatrix = mat3.create();
+					let tmp = mat3.create();
 
 					if (transform.offset) {
 						tmp[6] = transform.offset[0];
@@ -377,8 +409,8 @@ class ModelLoaderGLTF {
 					}
 
 					if (transform.rotation) {
-						var s = Math.sin(transform.rotation);
-						var c = Math.cos(transform.rotation);
+						let s = Math.sin(transform.rotation);
+						let c = Math.cos(transform.rotation);
 
 						tmp[0] = tmp[4] = c;
 						tmp[1] = -s;
@@ -402,28 +434,28 @@ class ModelLoaderGLTF {
 			}
 		}
 
-		for (var i = 0, l = materials.length; i < l; i++) {
-			var material = new Material(null, {}, []);
+		for (let i = 0, l = materials.length; i < l; i++) {
+			let material = new Material(null, {}, []);
 			if (materials[i].name) {
 				material.name = materials[i].name;
 			}
 
-			var diffuse = new Color();
-			var metallic = 1.0;
-			var roughness = 1.0;
+			let diffuse = new Color();
+			let metallic = 1.0;
+			let roughness = 1.0;
 			if (materials[i].pbrMetallicRoughness) {
-				var mr = materials[i].pbrMetallicRoughness;
-				var bcf = mr.baseColorFactor;
+				let mr = materials[i].pbrMetallicRoughness;
+				let bcf = mr.baseColorFactor;
 				if (bcf) {
 					diffuse.set(bcf[0], bcf[1], bcf[2], bcf[3]);
 				}
 
-				var metallicFactor = parseFloat(mr.metallicFactor);
+				let metallicFactor = parseFloat(mr.metallicFactor);
 				if (!isNaN(metallicFactor)) {
 					metallic = metallicFactor;
 				}
 
-				var roughnessFactor = parseFloat(mr.roughnessFactor);
+				let roughnessFactor = parseFloat(mr.roughnessFactor);
 				if (!isNaN(roughnessFactor)) {
 					roughness = roughnessFactor;
 				}
@@ -478,11 +510,14 @@ class ModelLoaderGLTF {
 		}
 	}
 
+	/**
+	 *
+	 */
 	loadMeshes(meshes): any {
-		for (var i = 0, l = meshes.length; i < l; i++) {
-			var mesh = new Mesh();
+		for (let i = 0, l = meshes.length; i < l; i++) {
+			let mesh = new Mesh();
 
-			for (var j = 0, m = meshes[i].primitives.length; j < m; j++) {
+			for (let j = 0, m = meshes[i].primitives.length; j < m; j++) {
 				var material;
 				if (!isNaN(parseInt(meshes[i].primitives[j].material))) {
 					material = this.materials[meshes[i].primitives[j].material];
@@ -490,11 +525,11 @@ class ModelLoaderGLTF {
 					material = new Material(
 						null,
 						{},
-						[]
+						[],
 					);
 				}
 
-				var submesh = this.loadSubmesh(meshes[i].primitives[j], material);
+				let submesh = this.loadSubmesh(meshes[i].primitives[j], material);
 				if (submesh) {
 					mesh.addSubmesh(submesh, material);
 				} else {
@@ -506,8 +541,11 @@ class ModelLoaderGLTF {
 		}
 	}
 
+	/**
+	 *
+	 */
 	loadSubmesh(primitive, material): any {
-		var submesh = new Submesh();
+		let submesh = new Submesh();
 
 		if (isNaN(parseInt(primitive.indices)) || isNaN(parseInt(primitive.attributes.POSITION))) {
 			return;
@@ -534,6 +572,7 @@ class ModelLoaderGLTF {
 				material.definitions.addDefinition('VERTEX_COLORS');
 			} else if (colors.length / pointCount === 3) {
 				submesh.colors = [];
+
 				for (let i = 0; i < colors.length; i += 3) {
 					submesh.colors.push(colors[i], colors[i + 1], colors[i + 2], 1.0);
 				}
@@ -547,7 +586,7 @@ class ModelLoaderGLTF {
 			submesh.tangents = submesh.tangents4D.filter(
 				function(_, i) {
 					return i % 4 !== 3;
-				}
+				},
 			);
 
 			material.definitions.addDefinition('VERTEX_TANGENTS');
@@ -565,15 +604,19 @@ class ModelLoaderGLTF {
 		return submesh;
 	}
 
+	/**
+	 *
+	 */
 	loadScene(node, parsedData): any {
 		let hasSceneNodes = false;
-		var i, l;
+		let i, l;
 
 		const sceneId = parseInt(parsedData.scene);
 		if (parsedData.scenes && !isNaN(sceneId)) {
 			const scene = parsedData.scenes[sceneId];
-			if (scene && scene.nodes) {
+			if (scene?.nodes) {
 				hasSceneNodes = true;
+
 				for (let i = 0; i < scene.nodes.length; i++) {
 					node.addNode(this.loadNode(parsedData.nodes, scene.nodes[i], parsedData));
 				}
@@ -583,8 +626,8 @@ class ModelLoaderGLTF {
 		if (!hasSceneNodes) {
 			// Just add all meshes
 			for (i = 0, l = this.meshes.length; i < l; i++) {
-				var meshNode = new Node();
-				var renderer = new MeshRendererComponent();
+				let meshNode = new Node();
+				let renderer = new MeshRendererComponent();
 
 				meshNode.addComponent(new MeshComponent(this.meshes[i]));
 				meshNode.addComponent(renderer);
@@ -595,10 +638,13 @@ class ModelLoaderGLTF {
 		}
 	}
 
+	/**
+	 *
+	 */
 	loadNode(nodes, index, parsedData): any {
-		var node = nodes[index];
-		var sceneNode = new Node(node.name);
-		var renderer = new MeshRendererComponent();
+		let node = nodes[index];
+		let sceneNode = new Node(node.name);
+		let renderer = new MeshRendererComponent();
 
 		if (!isNaN(parseInt(node.mesh))) {
 			sceneNode.addComponent(new MeshComponent(this.meshes[node.mesh]));
@@ -613,24 +659,27 @@ class ModelLoaderGLTF {
 				mat4.create(),
 				node.rotation || quat.create(),
 				node.translation || vec3.create(),
-				node.scale || vec3.fromValues(1, 1, 1)
+				node.scale || vec3.fromValues(1, 1, 1),
 			);
 		}
 
-		if (node.extensions && node.extensions.KHR_lights_punctual) {
+		if (node.extensions?.KHR_lights_punctual) {
 			const light = this.loadLight(node.extensions.KHR_lights_punctual.light, parsedData, sceneNode.transform.relative);
 			if (light) {
 				sceneNode.addComponent(light);
 			}
 		}
 
-		for (var i = 0, l = (node.children && node.children.length) || 0; i < l; i++) {
+		for (let i = 0, l = node.children?.length || 0; i < l; i++) {
 			sceneNode.addNode(this.loadNode(nodes, node.children[i], parsedData));
 		}
 
 		return sceneNode;
 	}
 
+	/**
+	 *
+	 */
 	loadLight(index, parsedData, transform) {
 		const lightInfo = parsedData.extensions?.KHR_lights_punctual?.lights?.[index];
 		if (!lightInfo) {
@@ -638,14 +687,18 @@ class ModelLoaderGLTF {
 		}
 
 		let light;
+
 		switch (lightInfo.type) {
 			case 'directional':
 				light = new DirectionalLight();
 				const rotation = quat.fromMat4(quat.create(), transform);
+
 				light.setLightDirection(vec3.transformQuat(light.direction, vec3.fromValues(0, 0, -1), rotation));
+
 				break;
 
 			case 'point':	// TODO
+
 			default:
 				return;
 		}
@@ -655,7 +708,7 @@ class ModelLoaderGLTF {
 			light.intensity = intensity;
 		}
 
-		const color = lightInfo.color
+		const color = lightInfo.color;
 		if (color) {
 			light.color.set(color[0], color[1], color[2]);
 		}

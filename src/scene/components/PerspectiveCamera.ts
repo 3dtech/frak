@@ -69,7 +69,7 @@ class PerspectiveCamera extends CameraComponent {
 	}
 
 	/** Sets the camera's near and far clipping planes. */
-	setClipPlanes(near, far): any {
+	override setClipPlanes(near: number, far: number) {
 		this.near = near;
 		this.far = far;
 		this.camera.near = this.near;

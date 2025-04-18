@@ -53,7 +53,8 @@ class ModelLoaderJSON {
 	}
 
 	/** Loads parsed data to scene hierarchy at given node */
-	async load(node, parsedData) {
+	async load(node, data) {
+		var parsedData = JSON.parse(new TextDecoder().decode(data));
 		if (FRAK.isEmptyObject(parsedData))
 			return;
 		node.name = parsedData.scene.name;

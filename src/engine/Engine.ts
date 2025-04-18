@@ -43,7 +43,13 @@ type ImmersiveMode = LegacyImmersiveMode | XRMode;
 
 /** The FRAK Web Engine */
 class Engine {
-	/** Tries and returns supported modes in the order: ar, vr, legacy-ar, legacy-vr */
+	/** FRAK version */
+	static majorVersion = 2;
+
+	/**
+	 * Tries and returns supported modes in the order: `ar`, `vr`, `legacy-ar`, `legacy-vr`.
+	 * Non-legacy modes mean WebXR
+	 */
 	static async getImmersiveSupport(): Promise<ImmersiveMode[]> {
 		const modes: ImmersiveMode[] = [];
 		if (navigator.xr) {
@@ -91,9 +97,9 @@ class Engine {
 	private externallyPaused = false;
 	private immersiveExitCB?: () => void;
 	private immersiveMode: ImmersiveMode | null = null;
-	private stopCamera?: () => void;
 	private queuedImmersiveFrame: number | null = null;
 	private queuedInlineFrame: number | null = null;
+	private stopCamera?: () => void;
 
 	options: Options;
 	context: RenderingContext;
@@ -115,14 +121,16 @@ class Engine {
 	_savedCanvasStyles: any;
 	cameraBlockProgram?: WebGLProgram;
 
-	/** Opaque incremental version that's for tracking feature support */
-	readonly featuresVersion = 2;
 	immersiveSession: XRSession | null = null;
 	immersiveRefSpace: XRReferenceSpace | null = null;
 
-	/** Constructor
-		@param canvas Canvas element or ID or jQuery container
-		@param options Engine options [optional] */
+	/** The FRAK version of this engine instance */
+	readonly majorVersion = Engine.majorVersion;
+
+	/**
+	 * @param canvas Canvas element or ID or jQuery container
+	 * @param [options] Engine options
+	 */
 	constructor(canvas: Canvas, options: Partial<Options> = {}) {
 		this.options = merge(DEFAULT_OPTIONS, options);
 

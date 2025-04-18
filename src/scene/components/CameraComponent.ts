@@ -7,10 +7,9 @@ import Ray from 'scene/geometry/Ray';
 import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
 import type RenderingContext from '../../rendering/RenderingContext';
 import type Scene from '../Scene';
-import UniformBlock from '../../rendering/shaders/UniformBlock';
 
 /** Camera component */
-class CameraComponent extends Component {
+abstract class CameraComponent extends Component {
 	/**
 	 *
 	 */
@@ -49,7 +48,7 @@ class CameraComponent extends Component {
 	onRemoveScene(node): any {
 		let cameras = node.scene.cameras;
 		for (let i = 0; i < cameras.length; i++) {
-			if (cameras[i] == this) {
+			if (cameras[i] === this) {
 				cameras.splice(i, 1);
 				i--;
 			}
@@ -85,6 +84,10 @@ class CameraComponent extends Component {
 		mat4.lookAt(this.camera.blockValues.view, this.camera.getPosition(), target, up);
 		this.useCameraViewMatrix();
 	}
+
+	/** Sets the camera's near and far clipping planes. */
+	// eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function
+	setClipPlanes(near: number, far: number): void {}
 
 	/** Sets camera transform to position camera at the given point
 		@param position Instance of {vec3} */
