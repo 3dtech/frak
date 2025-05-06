@@ -5,6 +5,9 @@ import OrbitController from './OrbitController';
 import type { RenderCallback } from '../../rendering/camera/Camera';
 import type Engine from '../../engine/Engine';
 
+/**
+ *
+ */
 class XRCamera extends CameraComponent {
 	private readonly position = vec3.create();
 	private readonly rotation = quat.create();
@@ -84,9 +87,11 @@ class XRCamera extends CameraComponent {
 		}
 
 		const pose = scene.xrFrame.getViewerPose(space);
-		for (const view of pose.views) {
-			if (this.updateFromXR(context, scene.xrFrame, view)) {
-				super.render(context, scene, preRenderCallback, postRenderCallback);
+		if (pose) { // Pose might be null if tracking hasn't been found yet
+			for (const view of pose.views) {
+				if (this.updateFromXR(context, scene.xrFrame, view)) {
+					super.render(context, scene, preRenderCallback, postRenderCallback);
+				}
 			}
 		}
 	}

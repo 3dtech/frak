@@ -53,12 +53,16 @@ class Engine {
 	static async getImmersiveSupport(): Promise<ImmersiveMode[]> {
 		const modes: ImmersiveMode[] = [];
 		if (navigator.xr) {
-			if (await navigator.xr.isSessionSupported('immersive-ar')) {
-				modes.push('ar');
-			}
+			try {
+				if (await navigator.xr.isSessionSupported('immersive-ar')) {
+					modes.push('ar');
+				}
 
-			if (await navigator.xr.isSessionSupported('immersive-vr')) {
-				modes.push('vr');
+				if (await navigator.xr.isSessionSupported('immersive-vr')) {
+					modes.push('vr');
+				}
+			} catch (e) {
+				// Probably not in HTTPS, ignore, we'll try legacy modes
 			}
 		}
 
