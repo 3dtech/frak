@@ -44,7 +44,7 @@ type ImmersiveMode = LegacyImmersiveMode | XRMode;
 /** The FRAK Web Engine */
 class Engine {
 	/** FRAK version */
-	static majorVersion = 2;
+	static readonly majorVersion = 2;
 
 	/**
 	 * Tries and returns supported modes in the order: `ar`, `vr`, `legacy-ar`, `legacy-vr`.
@@ -52,7 +52,8 @@ class Engine {
 	 */
 	static async getImmersiveSupport(): Promise<ImmersiveMode[]> {
 		const modes: ImmersiveMode[] = [];
-		if (navigator.xr) {
+
+		/* if (navigator.xr) {
 			try {
 				if (await navigator.xr.isSessionSupported('immersive-ar')) {
 					modes.push('ar');
@@ -68,7 +69,7 @@ class Engine {
 
 		if (modes.length) {
 			return modes;
-		}
+		} */
 
 		if ((navigator as NavigatorUA).userAgentData && !(navigator as NavigatorUA).userAgentData.mobile) {
 			// Not a mobile device, no immersive mode
