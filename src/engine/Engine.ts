@@ -201,7 +201,7 @@ class Engine {
 			this.stopCamera = undefined;
 		}
 
-		if (this.running && !this.queuedInlineFrame) {
+		if (this.running) {
 			this.runWindow();
 		}
 	}
@@ -242,7 +242,9 @@ class Engine {
 			this.scene.start(this.context);
 		}
 
-		this.queuedInlineFrame = window.requestAnimationFrame(draw);
+		if (!this.queuedInlineFrame) {
+			this.queuedInlineFrame = window.requestAnimationFrame(draw);
+		}
 	}
 
 	private runXR(session: XRSession) {
@@ -345,7 +347,8 @@ class Engine {
 		this.scene.camera.renderStage.generator.setImmersive(mode === 'legacy-ar');
 
 		this.runWindow();
-		this.requestFullscreen();
+
+		// this.requestFullscreen();
 	}
 
 	private async startXR(mode: XRMode = 'ar', domOverlay?: Element) {
@@ -601,6 +604,7 @@ class Engine {
 	pause() {
 		this.running = false;
 		void this.immersiveSession?.end();
+		this.onExitImmersive();
 		this.pauseInline();
 		this.input.pause();
 	}

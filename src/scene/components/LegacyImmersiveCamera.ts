@@ -14,8 +14,9 @@ interface Orientation {
 
 type OrientationEventName = 'deviceorientation' | 'deviceorientationabsolute';
 
-function setQuat(quat: Float32Array, alpha: number, beta: number, gamma: number) {
+function setQuat(q: Float32Array, alpha: number, beta: number, gamma: number) {
 	const degToRad = Math.PI / 180;
+
 	const x = beta * degToRad;
 	const y = alpha * degToRad;
 	const z = -gamma * degToRad;
@@ -28,12 +29,17 @@ function setQuat(quat: Float32Array, alpha: number, beta: number, gamma: number)
 	const s2 = Math.sin(y / 2);
 	const s3 = Math.sin(z / 2);
 
-	quat[0] = (s1 * c2 * c3) + (c1 * s2 * s3);
-	quat[1] = (c1 * s2 * c3) - (s1 * c2 * s3);
-	quat[2] = (c1 * c2 * s3) - (s1 * s2 * c3);
-	quat[3] = (c1 * c2 * c3) + (s1 * s2 * s3);
+	q[0] = (s1 * c2 * c3) + (c1 * s2 * s3);
+	q[1] = (c1 * s2 * c3) - (s1 * c2 * s3);
+	q[2] = (c1 * c2 * s3) - (s1 * s2 * c3);
+	q[3] = (c1 * c2 * c3) + (s1 * s2 * s3);
+
+	quat.normalize(q, q);
 }
 
+/**
+ *
+ */
 class LegacyImmersiveCamera extends CameraComponent {
 	private aspect = 4 / 3;
 	private deviceOrientation: Orientation = {
@@ -44,13 +50,13 @@ class LegacyImmersiveCamera extends CameraComponent {
 	private readonly deviceRotation = quat.create();
 	private readonly deviceRotationAdjust = quat.fromValues(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 	private far = 1000;
-	private fov = 45;
+	private readonly fov = 85; // Roughly 25mm lens, should be close enough for most phone rear cameras
 	private near = 0.3;
 	private orientationChangeEventName: OrientationEventName = 'deviceorientationabsolute';
 	private readonly position = vec3.create();
 	private readonly rotation = quat.create();
 	private readonly up = vec3.fromValues(0, 1, 0);
-	yOffset = 1.5;
+	yOffset = 1.7;
 
 	private calculatePerspective(context: RenderingContext) {
 		this.aspect = context.canvas.width / context.canvas.height;
@@ -147,7 +153,7 @@ class LegacyImmersiveCamera extends CameraComponent {
 
 		const perspectiveCamera = this.node.getComponent(PerspectiveCamera);
 		if (perspectiveCamera) {
-			this.fov = perspectiveCamera.fov;
+			// this.fov = perspectiveCamera.fov;
 			this.near = perspectiveCamera.near;
 			this.far = perspectiveCamera.far;
 		}
