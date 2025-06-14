@@ -337,7 +337,11 @@ class Input {
 	private transformCoordinates(xy: Vec2) {
 		const rect = this.canvas.getBoundingClientRect();
 
-		return vec2.set(this.cacheVec2, xy[0] - rect.left, xy[1] - rect.top) as Vec2;
+		return vec2.set(
+			this.cacheVec2,
+			(xy[0] - rect.left) * this.canvas.width / this.canvas.offsetWidth,
+			(xy[1] - rect.top) * this.canvas.height / this.canvas.offsetHeight,
+		) as Vec2;
 	}
 
 	/** Pauses input, removes listeners */
