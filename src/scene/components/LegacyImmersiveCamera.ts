@@ -50,7 +50,7 @@ class LegacyImmersiveCamera extends CameraComponent {
 	private readonly deviceRotation = quat.create();
 	private readonly deviceRotationAdjust = quat.fromValues(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 	private far = 1000;
-	private readonly fov = 85; // Roughly 25mm lens, should be close enough for most phone rear cameras
+	private fov = 69; // Average tested FOV for mobile devices
 	private near = 0.3;
 	private orientationChangeEventName: OrientationEventName = 'deviceorientationabsolute';
 	private readonly position = vec3.create();
@@ -107,6 +107,22 @@ class LegacyImmersiveCamera extends CameraComponent {
 		this.camera.getPosition(this.camera.blockValues.cameraPosition);
 
 		this.camera.block.update(context);
+	}
+
+	/** Returns the camera horizontal field of view (in degrees) */
+	getHorizontalFieldOfView(): number {
+		// Calculate horizontal FOV based on vertical FOV and aspect ratio
+		const verticalFovRad = this.fov * (Math.PI / 180);
+		const horizontalFovRad = 2 * Math.atan(
+			Math.tan(verticalFovRad / 2) * this.aspect,
+		);
+
+		return horizontalFovRad * (180 / Math.PI);
+	}
+
+	/** Returns the camera vertical field of view (in degrees) */
+	getVerticalFieldOfView(): number {
+		return this.fov;
 	}
 
 	/**
@@ -181,6 +197,12 @@ class LegacyImmersiveCamera extends CameraComponent {
 
 		this.updateFromOrientation(context);
 		super.render(context, scene, preRenderCallback, postRenderCallback);
+	}
+
+	/** Sets the camera vertical field of view (in degrees) */
+	setVerticalFieldOfView(context: RenderingContext, fov: number) {
+		this.fov = fov;
+		this.calculatePerspective(context);
 	}
 }
 

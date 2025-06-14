@@ -71,11 +71,6 @@ class Engine {
 			return modes;
 		} */
 
-		if ((navigator as NavigatorUA).userAgentData && !(navigator as NavigatorUA).userAgentData.mobile) {
-			// Not a mobile device, no immersive mode
-			return [];
-		}
-
 		if (window.hasOwnProperty('ondeviceorientationabsolute') || window.hasOwnProperty('ondeviceorientation')) {
 			if (navigator.mediaDevices) {
 				const devices = await navigator.mediaDevices.enumerateDevices();
@@ -703,10 +698,10 @@ class Engine {
 		}
 	}
 
-	// eslint-disable-next-line class-methods-use-this
 	/**
 	 *
 	 */
+	// eslint-disable-next-line class-methods-use-this
 	resize() {
 		// Legacy
 	}
