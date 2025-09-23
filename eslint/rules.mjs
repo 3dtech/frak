@@ -1,11 +1,12 @@
 export default {
-	'@jsdoc/require-jsdoc': [
+	/* '@jsdoc/require-jsdoc': [
 		'warn',
 		{
-			contexts: ['MethodDefinition[override!=true][kind!="constructor"] > FunctionExpression', 'ClassDeclaration'],
+			contexts:
+				['MethodDefinition[override!=true][kind!="constructor"] > FunctionExpression', 'ClassDeclaration'],
 			publicOnly: true,
 		},
-	],
+	], */
 	'arrow-body-style': 'warn',
 	camelcase: 'warn',
 	'class-methods-use-this': [

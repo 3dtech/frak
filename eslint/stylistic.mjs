@@ -77,7 +77,11 @@ export default {
 		'warn',
 		{
 			enforce: [
-				{ blankLine: 'always', prev: '*', next: 'method' },
+				{
+					blankLine: 'always',
+					prev: '*',
+					next: 'method',
+				},
 			],
 		},
 	],
@@ -222,7 +226,7 @@ export default {
 	],
 	'@stylistic/quotes': [
 		'warn',
-		'single',
+		'double',
 	],
 	'@stylistic/rest-spread-spacing': 'warn',
 	'@stylistic/semi': 'warn',
