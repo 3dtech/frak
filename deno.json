@@ -4,6 +4,9 @@
 		"build-debug": "deno task build-shaders && deno task build-frak-debug",
 		"build-frak": "deno run --allow-env --allow-read --allow-run --allow-write=./builds build.mjs",
 		"build-frak-debug": "deno run --allow-env --allow-read --allow-run --allow-write=./builds build.mjs --debug",
-		"build-shaders": "deno run --allow-read=. --allow-write=./src/rendering/shaders/BuiltInShaders.ts build-shaders.mjs"
+		"build-module": "deno run --allow-env --allow-read --allow-run --allow-write=./builds build.mjs --module",
+		"build-debug-module": "deno run --allow-env --allow-read --allow-run --allow-write=./builds build.mjs --debug --module",
+		"build-shaders": "deno run --allow-read=. --allow-write=./src/rendering/shaders/BuiltInShaders.ts build-shaders.mjs",
+		"build-types": "dts-bundle-generator --project tsconfig.json -o builds/frak.d.ts src/entry.ts"
 	}
 }

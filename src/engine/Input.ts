@@ -154,6 +154,21 @@ class Input {
 		this.setupClickEvent();
 		this.setupPinchEvent();
 		this.setupRotateEvent();
+		this.setupKeyEvents();
+	}
+
+	/** Sets up listeners for key events */
+	private setupKeyEvents() {
+		const keydown = (ev: KeyboardEvent) => {
+			this.dispatch('onKeyDown', ev.key, ev.code);
+		};
+
+		const keyup = (ev: KeyboardEvent) => {
+			this.dispatch('onKeyUp', ev.key, ev.code);
+		};
+
+		this.addListener(document, 'keydown', keydown, { passive: false });
+		this.addListener(document, 'keyup', keyup, { passive: false });
 	}
 
 	/** Sets up listeners for meta events */
