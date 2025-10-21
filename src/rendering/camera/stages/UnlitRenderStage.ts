@@ -9,6 +9,10 @@ import PBRRenderStage from "./PBRRenderStage";
 class UnlitRenderStage extends PBRRenderStage {
 	shader: Shader;
 
+	constructor(private readonly transparent = false) {
+		super();
+	}
+
 	onStart(context: RenderingContext, engine: Engine, camera: any) {
 		this.shader = engine.assetsManager.addShader(
 			"shaders/mesh.vert",
@@ -33,7 +37,12 @@ class UnlitRenderStage extends PBRRenderStage {
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		const gl = context.gl;
 
-		const filteredRenderers = this.parent.filteredRenderers.filter(r => r && (camera.stencilMask & r.material.stencilLayer) && r.material.properties.type === "Unlit");
+		const filteredRenderers = this.parent.filteredRenderers.filter(
+			r => r &&
+			(camera.stencilMask & r.material.stencilLayer) &&
+			r.material.properties.type === "Unlit" &&
+			(r.material.properties.transparency === "Opaque") !== this.transparent,
+		);
 
 		function sort(a: Renderer, b: Renderer) {
 			const aCenter = a.globalBoundingSphere.center;

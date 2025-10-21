@@ -1,12 +1,12 @@
-import Component from 'scene/components/Component';
-import type { RenderCallback } from 'rendering/camera/Camera';
-import type Camera from 'rendering/camera/Camera';
-import BoundingBox from 'scene/geometry/BoundingBox';
-import MeshComponent from 'scene/components/MeshComponent';
-import Ray from 'scene/geometry/Ray';
-import AntiAliasPostProcess from 'rendering/camera/AntiAliasPostProcess';
-import type RenderingContext from '../../rendering/RenderingContext';
-import type Scene from '../Scene';
+import Component from "scene/components/Component";
+import type { RenderCallback } from "rendering/camera/Camera";
+import type Camera from "rendering/camera/Camera";
+import BoundingBox from "scene/geometry/BoundingBox";
+import MeshComponent from "scene/components/MeshComponent";
+import Ray from "scene/geometry/Ray";
+import AntiAliasPostProcess from "rendering/camera/AntiAliasPostProcess";
+import type RenderingContext from "../../rendering/RenderingContext";
+import type Scene from "../Scene";
 
 /** Camera component */
 abstract class CameraComponent extends Component {
@@ -22,14 +22,14 @@ abstract class CameraComponent extends Component {
 	 *
 	 */
 	excluded(): any {
-		return super.excluded().concat(['camera']);
+		return super.excluded().concat(["camera"]);
 	}
 
 	/**
 	 *
 	 */
 	type(): any {
-		return 'CameraComponent';
+		return "CameraComponent";
 	}
 
 	/** Called when component is added to a node that is in the scene or
@@ -226,10 +226,6 @@ abstract class CameraComponent extends Component {
 			let canvas = context.canvas;
 
 			this.camera.target.setSize(canvas.width, canvas.height);
-		}
-
-		if (engine.options.antialias === true) {
-			this.camera.renderStage.addStage(new AntiAliasPostProcess());
 		}
 
 		this.camera.renderStage.start(context, engine, this.camera);

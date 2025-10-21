@@ -1,5 +1,6 @@
-import RenderingContext from "rendering/RenderingContext";
-import Camera from "../Camera";
+/* eslint-disable max-classes-per-file */
+import type RenderingContext from "rendering/RenderingContext";
+import type Camera from "../Camera";
 import RenderStage from "./RenderStage";
 import TargetTextureMulti from "../TargetTextureMulti";
 import BuffersRenderStage from "./BuffersRenderStage";
@@ -10,15 +11,16 @@ import Sampler from "rendering/shaders/Sampler";
 import EmissiveRenderStage from "./EmissiveRenderStage";
 import BackgroundRenderStage from "./BackgroundRenderStage";
 import TransparentRenderStage from "./TransparentRenderStage";
-import Scene from "scene/Scene";
-import Renderer from "rendering/renderers/Renderer";
+import type Scene from "scene/Scene";
+import type Renderer from "rendering/renderers/Renderer";
 import TargetTextureFloat from "../TargetTextureFloat";
-import Engine from "engine/Engine";
+import type Engine from "engine/Engine";
 import TargetTexture from "../TargetTexture";
 import ShadowMapsRenderStage from "./ShadowMapsRenderStage";
 import UnlitRenderStage from "./UnlitRenderStage";
 import CustomRenderStage from "./CustomRenderStage";
-import PostProcessRenderStage from './PostProcessRenderStage';
+import type PostProcessRenderStage from "./PostProcessRenderStage";
+import { AntiAliasPostProcess } from "entry";
 
 class BindDstTarget extends RenderStage {
 	render(context: RenderingContext, _: any, camera: Camera) {
@@ -62,10 +64,19 @@ class MainRenderStage extends RenderStage {
 		this.addStage(new UnlitRenderStage());
 		this.addStage(new CustomRenderStage());
 		this.addStage(new TransparentRenderStage());
-		this.addStage(new UnbindDstTarget());
 	}
 
 	onStart(context: RenderingContext, engine: Engine, camera: Camera) {
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare
+		if (engine.options.antialias === true) {
+			this.addStage(new UnbindDstTarget());
+			this.addStage(new BindDstTarget());
+			this.addStage(new AntiAliasPostProcess());
+		}
+
+		this.addStage(new UnlitRenderStage(true));
+		this.addStage(new UnbindDstTarget());
+
 		const gl = context.gl;
 
 		vec2.copy(this.size, this.parent.size);
@@ -73,23 +84,27 @@ class MainRenderStage extends RenderStage {
 		if (engine.options.emissiveEnabled) {
 			numTargets++;
 		}
+
 		if (engine.options.legacyAmbient) {
 			numTargets++;
 		}
 
-		this.gbuffer = new TargetTextureMulti(context, this.size, {numTargets, stencil: true});
+		this.gbuffer = new TargetTextureMulti(context, this.size, {
+			numTargets,
+			stencil: true,
+		});
 
-		this.sharedSamplers.push(new Sampler('colorMetallic', this.gbuffer.targets[0]));
-		this.sharedSamplers.push(new Sampler('normalRoughness', this.gbuffer.targets[1]));
-		this.sharedSamplers.push(new Sampler('positionOcclusion', this.gbuffer.targets[2]));
+		this.sharedSamplers.push(new Sampler("colorMetallic", this.gbuffer.targets[0]));
+		this.sharedSamplers.push(new Sampler("normalRoughness", this.gbuffer.targets[1]));
+		this.sharedSamplers.push(new Sampler("positionOcclusion", this.gbuffer.targets[2]));
 
 		if (engine.options.emissiveEnabled) {
-			this.sharedSamplers.push(new Sampler('emissive', this.gbuffer.targets[3]));
+			this.sharedSamplers.push(new Sampler("emissive", this.gbuffer.targets[3]));
 			this.emissiveStage.enable();
 		}
 
 		if (engine.options.legacyAmbient) {
-			this.sharedSamplers.push(new Sampler('ambientBuffer', this.gbuffer.targets[numTargets - 1]));
+			this.sharedSamplers.push(new Sampler("ambientBuffer", this.gbuffer.targets[numTargets - 1]));
 		}
 
 		// OIT
@@ -101,12 +116,13 @@ class MainRenderStage extends RenderStage {
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.gbuffer.depth);
 		this.oitReveal.unbind(context);
 
-		this.oitSamplers.push(new Sampler('oitAccum', this.oitAccum.texture));
-		this.oitSamplers.push(new Sampler('oitReveal', this.oitReveal.texture));
+		this.oitSamplers.push(new Sampler("oitAccum", this.oitAccum.texture));
+		this.oitSamplers.push(new Sampler("oitReveal", this.oitReveal.texture));
 	}
 
 	onPreRender(context: any, scene: Scene, camera: any) {
 		scene.dynamicSpace.frustumCast(camera.frustum, camera.layerMask, this.filteredRenderers);
+
 		if (this.size[0] !== this.parent.size[0] || this.size[1] !== this.parent.size[1]) {
 			vec2.copy(this.size, this.parent.size);
 

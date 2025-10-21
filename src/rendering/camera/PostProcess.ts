@@ -1,5 +1,5 @@
-import RenderStage from './stages/RenderStage';
-import PostProcessRenderStage from './stages/PostProcessRenderStage';
+import RenderStage from "./stages/RenderStage";
+import PostProcessRenderStage from "./stages/PostProcessRenderStage";
 
 /**
  * Base class for creating image space post-processing render stages.
@@ -13,18 +13,19 @@ class PostProcess extends RenderStage {
 	}
 
 	onStart(context, engine, camera): any {
-		if (!(this.parent instanceof PostProcessRenderStage))
+		/* if (!(this.parent instanceof PostProcessRenderStage)) {
 			throw "PostProcess can only be the sub-stage of a PostProcessRenderStage";
+		} */
+		if (!this.material) {
+			throw "PostProcess must have a material defined";
+		}
 	}
 
 	onPostRender(context, scene, camera) {
-		if (!this.material)
-			throw "PostProcess must have a material defined"
-
-		this.parent.dst.bind(context);
-		this.parent.renderEffect(context, this.material, this.parent.srcSampler);
-		this.parent.dst.unbind(context);
-		this.parent.swapBuffers();
+		camera.renderStage.dst.bind(context);
+		camera.renderStage.renderEffect(context, this.material, camera.renderStage.srcSampler);
+		camera.renderStage.dst.unbind(context);
+		camera.renderStage.swapBuffers();
 	}
 }
 
