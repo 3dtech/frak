@@ -1,25 +1,26 @@
-import Serializable from 'scene/Serializable';
-import Plane from 'scene/geometry/Plane';
-import BoundingBox from 'scene/geometry/BoundingBox';
-import BoundingSphere from 'scene/geometry/BoundingSphere';
-import BoundingVolume from 'scene/geometry/BoundingVolume';
-import Color from 'rendering/Color';
-import PBRPipeline from './stages/PBRPipeline';
-import RenderTarget from './RenderTarget';
-import RenderingContext from '../RenderingContext';
-import Scene from '../../scene/Scene';
-import UniformBlock from '../shaders/UniformBlock';
+import Serializable from "scene/Serializable";
+import Plane from "scene/geometry/Plane";
+import BoundingBox from "scene/geometry/BoundingBox";
+import BoundingSphere from "scene/geometry/BoundingSphere";
+import BoundingVolume from "scene/geometry/BoundingVolume";
+import Color from "rendering/Color";
+import PBRPipeline from "./stages/PBRPipeline";
+import RenderTarget from "./RenderTarget";
+import type RenderingContext from "../RenderingContext";
+import type Scene from "../../scene/Scene";
+import UniformBlock from "../shaders/UniformBlock";
 
 type RenderCallback = (context: RenderingContext, camera: Camera) => void;
-type CameraBlock = {
-	projection: Float32Array;
-	projectionInverse: Float32Array;
-	view: Float32Array;
-	viewInverse: Float32Array;
-	zNear: Float32Array;
-	zFar: Float32Array;
-	cameraPosition: Float32Array;
-};
+interface CameraBlock {
+	projection: BufferSource;
+	projectionInverse: BufferSource;
+	view: BufferSource;
+	viewInverse: BufferSource;
+	zNear: BufferSource;
+	zFar: BufferSource;
+	cameraPosition: BufferSource;
+	[key: string]: BufferSource;
+}
 
 /** Camera is used to render to render target.
 	@param viewMatrix Camera view matrix {mat4}
@@ -59,7 +60,7 @@ class Camera extends Serializable {
 		zFar: new Float32Array(1),
 		cameraPosition: vec3.create(),
 	};
-	block = new UniformBlock('Camera', this.blockValues, WebGL2RenderingContext.DYNAMIC_DRAW);
+	block = new UniformBlock("Camera", this.blockValues, WebGL2RenderingContext.DYNAMIC_DRAW);
 
 	/** Constructor */
 	constructor(viewMatrix, projectionMatrix) {
@@ -70,24 +71,26 @@ class Camera extends Serializable {
 		mat4.invert(this.blockValues.projectionInverse, this.blockValues.projection);
 		this.renderStage = new PBRPipeline();
 		this.target = new RenderTarget();
-		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); ///< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
+		this.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0); // /< The background color used for clearing the color buffer (alpha 0.0 means that color buffer will not be cleared)
 		this.clearMask = false;
-		this.order = 0; ///< Cameras are rendered in succession from lowest to highest order
+		this.order = 0; // /< Cameras are rendered in succession from lowest to highest order
 		this.frustum = false; // TODO: implement frustum
 
-		var stereo = false;
-		this.stereo = function (v) {
-			if (v)
-				stereo = true;
-			if (v === false)
-				stereo = false;
+		let stereo = false;
+
+		this.stereo = function(v) {
+			if (v) { stereo = true; }
+
+			if (v === false) { stereo = false; }
+
 			return stereo;
 		};
 
-		var stereoEyeDistance = 2.0;
-		this.stereoEyeDistance = function (v) {
-			if (v)
-				stereoEyeDistance = v;
+		let stereoEyeDistance = 2.0;
+
+		this.stereoEyeDistance = function(v) {
+			if (v) { stereoEyeDistance = v; }
+
 			return stereoEyeDistance;
 		};
 
@@ -116,8 +119,7 @@ class Camera extends Serializable {
 
 		if (this.clearMask === false) {
 			context.gl.clear(context.gl.COLOR_BUFFER_BIT | context.gl.DEPTH_BUFFER_BIT);
-		}
-		else {
+		} else {
 			context.gl.clear(this.clearMask);
 		}
 	}
@@ -135,13 +137,11 @@ class Camera extends Serializable {
 
 	/** Renders the contents of this camera using assigned render-stage */
 	renderScene(context: RenderingContext, scene: Scene, preRenderCallback: RenderCallback, postRenderCallback: RenderCallback): any {
-		if (preRenderCallback)
-			preRenderCallback(context, this);
+		if (preRenderCallback) { preRenderCallback(context, this); }
 
 		this.renderStage.render(context, scene, this);
 
-		if (postRenderCallback)
-			postRenderCallback(context, this);
+		if (postRenderCallback) { postRenderCallback(context, this); }
 	}
 
 	/** Ends rendering with camera popping projection and view matrices */
@@ -165,18 +165,19 @@ class Camera extends Serializable {
 		Note that this function assumes that a perspective projection has been used.
 		@return The current vertical field of view in radians {float} */
 	getFieldOfView(): any {
-		return 2.0*Math.atan(1.0/this.blockValues.projection[5]);
+		return 2.0 * Math.atan(1.0 / this.blockValues.projection[5]);
 	}
 
 	/** Returns camera direction (for perspective view).
 		@param out Instance of {vec3} (optional)
 		@return Camera direction. Instance of {vec3} */
 	getDirection(out?): any {
-		if (!out)
-			out=vec3.create();
-		out[0]=-this.blockValues.view[8];
-		out[1]=-this.blockValues.view[9];
-		out[2]=-this.blockValues.view[10];
+		if (!out) { out = vec3.create(); }
+
+		out[0] = -this.blockValues.view[8];
+		out[1] = -this.blockValues.view[9];
+		out[2] = -this.blockValues.view[10];
+
 		return out;
 	}
 
@@ -184,11 +185,12 @@ class Camera extends Serializable {
 		@param out Instance of {vec3} (optional)
 		@return Camera up vector. Instance of {vec3} */
 	getUpVector(out?): any {
-		if (!out)
-			out=vec3.create();
-		out[0]=this.blockValues.view[4];
-		out[1]=this.blockValues.view[5];
-		out[2]=this.blockValues.view[6];
+		if (!out) { out = vec3.create(); }
+
+		out[0] = this.blockValues.view[4];
+		out[1] = this.blockValues.view[5];
+		out[2] = this.blockValues.view[6];
+
 		return out;
 	}
 
@@ -196,11 +198,12 @@ class Camera extends Serializable {
 		@param out Instance of {vec3} (optional)
 		@return Camera strafe vector. Instance of {vec3} */
 	getStrafeVector(out?): any {
-		if (!out)
-			out=vec3.create();
-		out[0]=this.blockValues.view[0];
-		out[1]=this.blockValues.view[1];
-		out[2]=this.blockValues.view[2];
+		if (!out) { out = vec3.create(); }
+
+		out[0] = this.blockValues.view[0];
+		out[1] = this.blockValues.view[1];
+		out[2] = this.blockValues.view[2];
+
 		return out;
 	}
 
@@ -208,18 +211,21 @@ class Camera extends Serializable {
 		@param out Instance of {vec3} (optional)
 		@return Camera world position. Instance of {vec3} */
 	getPosition(out?): any {
-		if (!out)
-			out=vec3.create();
+		if (!out) { out = vec3.create(); }
+
 		mat4.translation(out, this.blockValues.viewInverse);
+
 		return out;
 	}
 
 	/** Sets camera view matrix to position camera at the given point
 		@param position Instance of {vec3} */
 	setPosition(position): any {
-		var p = this.getPosition();
+		let p = this.getPosition();
+
 		vec3.sub(p, p, position); // inverted relative translation vector
-		var m = mat4.fromTranslation(mat4.create(), p);
+		let m = mat4.fromTranslation(mat4.create(), p);
+
 		mat4.mul(this.blockValues.view, this.blockValues.view, m);
 	}
 
@@ -227,38 +233,39 @@ class Camera extends Serializable {
 		the given point is at the center of the camera's view.
 		@param point Instance of {vec3} */
 	center(point): any {
-		var dir = this.getDirection();
-		var pos = this.getPosition();
-		var plane = new Plane();
+		let dir = this.getDirection();
+		let pos = this.getPosition();
+		let plane = new Plane();
+
 		plane.setByNormalAndPoint(dir, pos);
-		var p = plane.projectToPlane(point);
+		let p = plane.projectToPlane(point);
+
 		this.setPosition(p);
 	}
 
 	/** Fits a BoundingBox or a BoundingSphere to view.
 		@param boundingVolume Instance of {BoundingSphere} or {BoundingBox} */
 	fitToView(boundingVolume) {
-		if (!(boundingVolume instanceof BoundingVolume) || !boundingVolume.center)
-			return;
+		if (!(boundingVolume instanceof BoundingVolume) || !boundingVolume.center) { return; }
 
 		this.center(boundingVolume.center);
-		if (boundingVolume.isPoint())
-			return;
 
-		var size = 0.0;
+		if (boundingVolume.isPoint()) { return; }
+
+		let size = 0.0;
 		if (boundingVolume instanceof BoundingSphere) {
-			size = boundingVolume.radius*2.0;
-		}
-		else if (boundingVolume instanceof BoundingBox) {
+			size = boundingVolume.radius * 2.0;
+		} else if (boundingVolume instanceof BoundingBox) {
 			// Note: An alternative solution that would result in a tighter fit would be
 			// to project the AABB vertices onto the camera plane and find the width/height
 			// of the bounging rectangle for the projected vertices.
-			size = boundingVolume.getOuterSphereRadius()*2.0;
+			size = boundingVolume.getOuterSphereRadius() * 2.0;
 		}
 
-		var distance = size / Math.sin(this.getFieldOfView()/2.0) - size;
-		var dir = this.getDirection();
-		var pos = vec3.create();
+		let distance = size / Math.sin(this.getFieldOfView() / 2.0) - size;
+		let dir = this.getDirection();
+		let pos = vec3.create();
+
 		vec3.scale(dir, dir, -distance);
 		vec3.add(pos, boundingVolume.center, dir);
 		this.setPosition(pos);
@@ -266,20 +273,23 @@ class Camera extends Serializable {
 
 	replaceViewProjection(context: RenderingContext, projection: any, view: any) {
 		const gl = context.gl;
+
 		this.block.bindBuffer(context);
-		this.block.updateIndividual(context, 'projection', projection);
-		this.block.updateIndividual(context, 'view', view);
+		this.block.updateIndividual(context, "projection", projection);
+		this.block.updateIndividual(context, "view", view);
 		this.block.unbindBuffer(context);
 	}
 
 	restoreViewProjection(context: RenderingContext) {
 		const gl = context.gl;
+
 		this.block.bindBuffer(context);
-		this.block.updateIndividual(context, 'projection', this.blockValues.projection);
-		this.block.updateIndividual(context, 'view', this.blockValues.view);
+		this.block.updateIndividual(context, "projection", this.blockValues.projection);
+		this.block.updateIndividual(context, "view", this.blockValues.view);
 		this.block.unbindBuffer(context);
 	}
 }
 
 globalThis.Camera = Camera;
-export { Camera as default, RenderCallback };
+export type { RenderCallback };
+export { Camera as default };

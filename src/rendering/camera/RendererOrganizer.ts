@@ -1,13 +1,15 @@
-import Renderer from "../renderers/Renderer";
-import Material, { RendererType as Type, TransparencyType as Transparency } from "../materials/Material";
-import RenderingContext from "../RenderingContext";
-import Shader from "../shaders/Shader";
+// eslint-disable-next-line max-classes-per-file
+import type Renderer from "../renderers/Renderer";
+import type Material from "../materials/Material";
+import { RendererType as Type, TransparencyType as Transparency } from "../materials/Material";
+import type RenderingContext from "../RenderingContext";
+import type Shader from "../shaders/Shader";
 
 class View {
 	private batches: number[][][] = [];
-	public count = 0;
+	count = 0;
 
-	constructor(private filter: (renderer: Renderer) => boolean) {}
+	constructor(private readonly filter: (renderer: Renderer) => boolean) {}
 
 	batch(allRenderers: Renderer[], list: number[][][]) {
 		this.batches = [];
@@ -40,7 +42,9 @@ class View {
 		filteredRenderers: Renderer[],
 		shaderSelectAndBind = (renderer: Renderer): Shader => {
 			const s = context.selectShader(baseShader, renderer.material.definitions);
+
 			s.use();
+
 			return s;
 		},
 		materialBind = (m: Material, s: Shader) => {
@@ -49,7 +53,7 @@ class View {
 		},
 		render = (r: Renderer, s: Shader) => {
 			r.renderGeometry(context, s);
-		}
+		},
 	) {
 		for (const shaderGroup of this.batches) {
 			let shader = null;
@@ -79,19 +83,13 @@ class View {
 const g = (r: Renderer) => r.material.properties;
 
 class RendererOrganizer {
-	private views: View[] = [];
+	private readonly views: View[] = [];
 
-	public opaqueRenderers = this.addView(new View(r => g(r).type === Type.PBR));	// Include transparent renderers for the opaque parts
-	public transparentRenderers = this.addView(
-		new View(r => g(r).transparency === Transparency.Transparent && g(r).type !== Type.Custom)	// Include all but custom renderers for the transparent parts
+	opaqueRenderers = this.addView(new View(r => g(r).type === Type.PBR)); // Include transparent renderers for the opaque parts
+	transparentRenderers = this.addView(
+		new View(r => g(r).transparency === Transparency.Transparent && g(r).type === Type.PBR),
 	);
-	public unlitRenderers = this.addView(new View(r => g(r).type === Type.Unlit));	// Include transparent renderers for the opaque parts
-	public customRenderers = this.addView(new View(r => g(r).type === Type.Custom));
-
-	addView(view: View): View {
-		this.views.push(view);
-		return view;
-	}
+	customRenderers = this.addView(new View(r => g(r).type === Type.Custom));
 
 	private updateViews(allRenderers: Renderer[], list: number[][][]) {
 		for (const view of this.views) {
@@ -99,12 +97,18 @@ class RendererOrganizer {
 		}
 	}
 
+	addView(view: View): View {
+		this.views.push(view);
+
+		return view;
+	}
+
 	/** Updates Views to group renderers by shader and material.
 	 *  Call this when order or structure of allRenderers changes */
 	batch(allRenderers: Renderer[]) {
 		// TODO: Material hash instead of id
-		const shaderIndices = new Map<number, number>();	// Definitions hash -> materials
-		const materialIndices = new Map<number, number>();	// Material id -> index
+		const shaderIndices: Map<number, number> = new Map();	// Definitions hash -> materials
+		const materialIndices: Map<number, number> = new Map();	// Material id -> index
 
 		const list: number[][][] = [];	// list[Shader][Material][Renderer index]
 
@@ -115,12 +119,14 @@ class RendererOrganizer {
 				shaderIndices.set(material.definitions.hash, list.length);
 				list.push([]);
 			}
+
 			const shaderIndex = shaderIndices.get(material.definitions.hash);
 
 			if (!materialIndices.has(material.id)) {
 				materialIndices.set(material.id, list[shaderIndex].length);
 				list[shaderIndex].push([]);
 			}
+
 			const materialIndex = materialIndices.get(material.id);
 
 			list[shaderIndex][materialIndex].push(i);
@@ -131,4 +137,4 @@ class RendererOrganizer {
 }
 
 globalThis.RendererOrganizer = RendererOrganizer;
-export {RendererOrganizer as default, View};
+export { RendererOrganizer as default, View };

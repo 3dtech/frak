@@ -37,19 +37,16 @@ void main(void) {
 
 #if ALPHAMODE == ALPHAMODE_OPAQUE
 	outputColor.a = 1.0;
-#endif
-
-	fragColorMetallic = outputColor;
-
-#if ALPHAMODE == ALPHAMODE_MASK
+#elif ALPHAMODE == ALPHAMODE_MASK
 	if (outputColor.a < alphaCutoff) {
 		discard;
 	}
 	outputColor.a = 1.0;
 #elif ALPHAMODE == ALPHAMODE_BLEND
-	// Only render opaque parts of transparent geometry
-	if (outputColor.a < 0.99) {
+	if (outputColor.a < 0.01) {
 		discard;
 	}
 #endif
+
+	fragColorMetallic = outputColor;
 }
