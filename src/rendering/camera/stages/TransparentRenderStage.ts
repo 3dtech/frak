@@ -1,17 +1,17 @@
-import DirectionalLight from 'scene/lights/DirectionalLight';
-import RenderingContext from 'rendering/RenderingContext';
-import Camera from '../Camera';
-import Scene from "scene/Scene";
+import type DirectionalLight from "scene/lights/DirectionalLight";
+import type RenderingContext from "rendering/RenderingContext";
+import type Camera from "../Camera";
+import type Scene from "scene/Scene";
 import ImageBasedLight from "scene/lights/ImageBasedLight";
 import RenderStage from "./RenderStage";
-import MainRenderStage from "./MainRenderStage";
-import Shader from "rendering/shaders/Shader";
-import Engine from "engine/Engine";
+import type MainRenderStage from "./MainRenderStage";
+import type Shader from "rendering/shaders/Shader";
+import type Engine from "engine/Engine";
 import Material from "rendering/materials/Material";
 import Color from "rendering/Color";
 import DefinitionsHelper from "rendering/DefinitionsHelper";
-import { View } from "../RendererOrganizer";
-import UniformColor from '../../shaders/UniformColor';
+import type { View } from "../RendererOrganizer";
+import UniformColor from "../../shaders/UniformColor";
 
 interface ShaderCache {
 	[key: string]: Shader;
@@ -25,8 +25,8 @@ class TransparentRenderStage extends RenderStage {
 	clearWhite = new Color(1, 1, 1, 1);
 	revealMaterial: Material;
 	ppMaterial: Material;
-	emptyDefinitions = new DefinitionsHelper([], 'TR_');
-	shadowDefinitions = new DefinitionsHelper(['SHADOWS'], 'TR_');
+	emptyDefinitions = new DefinitionsHelper([], "TR_");
+	shadowDefinitions = new DefinitionsHelper(["SHADOWS"], "TR_");
 	ambientLightUniform = {
 		ambientLight: new UniformColor(new Color(0, 0, 0, 0)),
 	};
@@ -35,17 +35,17 @@ class TransparentRenderStage extends RenderStage {
 		s.bindUniforms(m.uniforms);
 	};
 	private activeAmbient = false;
-	private noAmbientUniform = {
-		ambient: new UniformColor(new Color(0, 0, 0, 0))
+	private readonly noAmbientUniform = {
+		ambient: new UniformColor(new Color(0, 0, 0, 0)),
 	};
 
 	onStart(context: RenderingContext, engine: Engine, camera: any) {
 		if (engine.options.legacyAmbient) {
-			this.emptyDefinitions.addDefinition('LEGACY_AMBIENT');
-			this.shadowDefinitions.addDefinition('LEGACY_AMBIENT');
+			this.emptyDefinitions.addDefinition("LEGACY_AMBIENT");
+			this.shadowDefinitions.addDefinition("LEGACY_AMBIENT");
 
 			this.materialBind = (m: Material, s: Shader) => {
-				const activeAmbient = Object.hasOwn(m.uniforms, 'ambient');
+				const activeAmbient = Object.hasOwn(m.uniforms, "ambient");
 				if (this.activeAmbient && !activeAmbient) {
 					s.bindUniforms(this.noAmbientUniform);
 				}
@@ -57,25 +57,25 @@ class TransparentRenderStage extends RenderStage {
 			};
 		}
 
-		for (const type of ['directional', 'ibl']) {
-			this.shaderCache[type] = engine.assetsManager.addShader('shaders/mesh.vert', `shaders/direct_${type}.frag`);
+		for (const type of ["directional", "ibl"]) {
+			this.shaderCache[type] = engine.assetsManager.addShader("shaders/mesh.vert", `shaders/direct_${type}.frag`);
 		}
 
 		this.revealMaterial = new Material(
-			engine.assetsManager.addShader('shaders/mesh.vert', 'shaders/oit_reveal.frag')
+			engine.assetsManager.addShader("shaders/mesh.vert", "shaders/oit_reveal.frag"),
 		);
 
 		this.ppMaterial = new Material(
-			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/pp_oit.frag'),
+			engine.assetsManager.addShader("shaders/uv.vert", "shaders/pp_oit.frag"),
 			{},
-			this.parent.oitSamplers
+			this.parent.oitSamplers,
 		);
 	}
 
-	/// Get the main light in the scene
-	getSingleLight(scene: Scene): {type: 'directional' | 'ibl', light: ImageBasedLight | DirectionalLight} {
+	// / Get the main light in the scene
+	getSingleLight(scene: Scene): { type: "directional" | "ibl"; light: DirectionalLight | ImageBasedLight } {
 		return {
-			type: scene.light instanceof ImageBasedLight ? 'ibl' : 'directional',
+			type: scene.light instanceof ImageBasedLight ? "ibl" : "directional",
 			light: scene.light,
 		};
 	}
@@ -86,7 +86,9 @@ class TransparentRenderStage extends RenderStage {
 	}
 
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera): any {
-		const {light, type} = this.getSingleLight(scene);
+		const {
+			light, type,
+		} = this.getSingleLight(scene);
 		if (!light) {
 			return;
 		}
@@ -98,6 +100,7 @@ class TransparentRenderStage extends RenderStage {
 		const shader = context.selectShader(this.shaderCache[type], light.shadowCasting ? this.shadowDefinitions : this.emptyDefinitions);
 
 		const gl = context.gl;
+
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
 
@@ -121,7 +124,9 @@ class TransparentRenderStage extends RenderStage {
 				this.parent.filteredRenderers,
 				r => {
 					const s = context.selectShader(shader, r.material.definitions);
+
 					s.use(light.material.uniforms);
+
 					return s;
 				},
 				materialBind,
@@ -130,7 +135,7 @@ class TransparentRenderStage extends RenderStage {
 					if (!!(camera.stencilMask & r.material.stencilLayer)) {
 						r.renderGeometry(context, s);
 					}
-				}
+				},
 			);
 		};
 
@@ -152,6 +157,10 @@ class TransparentRenderStage extends RenderStage {
 
 		gl.disable(gl.BLEND);
 		gl.depthMask(true);
+	}
+
+	onContextRestored(context: RenderingContext): void {
+		this.ppMaterial.shader.onContextRestored(context);
 	}
 }
 

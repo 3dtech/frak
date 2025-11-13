@@ -1,23 +1,23 @@
-import type { Navigator as NavigatorUA } from './UserAgentData';
-import FPS from 'engine/FPS';
-import AssetsManager from 'loading/AssetsManager';
-import Texture from 'rendering/materials/Texture';
-import Sampler from 'rendering/shaders/Sampler';
-import RenderingContext, { type Canvas } from 'rendering/RenderingContext';
-import Input from 'engine/Input';
-import FRAK, { FrakCallback, merge } from 'Helpers';
-import Scene from 'scene/Scene';
-import XRCamera from '../scene/components/XRCamera';
-import Camera from '../rendering/camera/Camera';
-import LegacyImmersiveCamera from '../scene/components/LegacyImmersiveCamera';
+import type { Navigator as NavigatorUA } from "./UserAgentData";
+import FPS from "engine/FPS";
+import AssetsManager from "loading/AssetsManager";
+import Texture from "rendering/materials/Texture";
+import Sampler from "rendering/shaders/Sampler";
+import RenderingContext, { type Canvas } from "rendering/RenderingContext";
+import Input from "engine/Input";
+import FRAK, { FrakCallback, merge } from "Helpers";
+import Scene from "scene/Scene";
+import XRCamera from "../scene/components/XRCamera";
+import Camera from "../rendering/camera/Camera";
+import LegacyImmersiveCamera from "../scene/components/LegacyImmersiveCamera";
 
-type Tonemap = 'aces' | null;
+type Tonemap = "aces" | null;
 type Filtering = 2 | 4 | 8 | 16 | false;
 
 const DEFAULT_OPTIONS = {
 	anisotropicFiltering: 4 as Filtering, // Set to integer (i.e. 2, 4, 8, 16) or false to disable
 	antialias: false,
-	assetsPath: '',
+	assetsPath: "",
 	captureScreenshot: false,
 	contextErrorCallback: undefined as (() => boolean) | undefined,
 	contextOptions: undefined as WebGLContextAttributes | undefined,
@@ -33,12 +33,12 @@ const DEFAULT_OPTIONS = {
 	showDebug: false,
 	softShadows: false,
 	ssao: false,
-	tonemap: 'aces' as Tonemap,
+	tonemap: "aces" as Tonemap,
 };
 
 type Options = typeof DEFAULT_OPTIONS;
-type XRMode = 'ar' | 'vr';
-type LegacyImmersiveMode = 'legacy-ar' | 'legacy-vr';
+type XRMode = "ar" | "vr";
+type LegacyImmersiveMode = "legacy-ar" | "legacy-vr";
 type ImmersiveMode = LegacyImmersiveMode | XRMode;
 
 /** The FRAK Web Engine */
@@ -71,16 +71,16 @@ class Engine {
 			return modes;
 		} */
 
-		if (window.hasOwnProperty('ondeviceorientationabsolute') || window.hasOwnProperty('ondeviceorientation')) {
+		if (window.hasOwnProperty("ondeviceorientationabsolute") || window.hasOwnProperty("ondeviceorientation")) {
 			if (navigator.mediaDevices) {
 				const devices = await navigator.mediaDevices.enumerateDevices();
-				const cams = devices.filter(d => d.kind === 'videoinput');
+				const cams = devices.filter(d => d.kind === "videoinput");
 				if (cams.length > 0) {
-					modes.push('legacy-ar');
+					modes.push("legacy-ar");
 				}
 			}
 
-			modes.push('legacy-vr');
+			modes.push("legacy-vr");
 
 			return modes;
 		}
@@ -89,7 +89,7 @@ class Engine {
 	}
 
 	/** @deprecated Whether the requested immersive mode is supported */
-	static async isImmersiveSupported(mode: XRMode = 'ar') {
+	static async isImmersiveSupported(mode: XRMode = "ar") {
 		return navigator.xr?.isSessionSupported(`immersive-${mode}`);
 	}
 
@@ -159,26 +159,26 @@ class Engine {
 
 		// Universal 1x1 opaque white texture
 		this.WhiteTexture = new Texture(this.context);
-		this.WhiteTexture.name = 'WhiteTexture';
+		this.WhiteTexture.name = "WhiteTexture";
 		this.WhiteTexture.mipmapped = false;
 		this.WhiteTexture.clearImage(this.context, [0xFF, 0xFF, 0xFF, 0xFF]);
-		this.WhiteTextureSampler = new Sampler('tex0', this.WhiteTexture);
-		this.DiffuseFallbackSampler = new Sampler('diffuse0', this.WhiteTexture);
+		this.WhiteTextureSampler = new Sampler("tex0", this.WhiteTexture);
+		this.DiffuseFallbackSampler = new Sampler("diffuse0", this.WhiteTexture);
 
-		document.addEventListener('visibilitychange', FrakCallback(this, this.onVisibilityChange));
+		document.addEventListener("visibilitychange", FrakCallback(this, this.onVisibilityChange));
 
 		// Register context lost and restored event handlers
-		this.context.canvas.addEventListener('webglcontextlost', FrakCallback(this, this.onContextLost), false);
-		this.context.canvas.addEventListener('webglcontextrestored', FrakCallback(this, this.onContextRestored), false);
+		this.context.canvas.addEventListener("webglcontextlost", FrakCallback(this, this.onContextLost), false);
+		this.context.canvas.addEventListener("webglcontextrestored", FrakCallback(this, this.onContextRestored), false);
 
 		if (FRAK.fullscreenEnabled) {
 			this.useUpscaling = false;
 			const fsHandler = FrakCallback(this, this.onFullscreenChange);
 
-			document.addEventListener('fullscreenchange', fsHandler);
-			document.addEventListener('webkitfullscreenchange', fsHandler);
-			document.addEventListener('mozfullscreenchange', fsHandler);
-			document.addEventListener('MSFullscreenChange', fsHandler);
+			document.addEventListener("fullscreenchange", fsHandler);
+			document.addEventListener("webkitfullscreenchange", fsHandler);
+			document.addEventListener("mozfullscreenchange", fsHandler);
+			document.addEventListener("MSFullscreenChange", fsHandler);
 		}
 
 		this.input = new Input(this, this.context.canvas);
@@ -268,15 +268,15 @@ class Engine {
 		this.queuedImmersiveFrame = session.requestAnimationFrame(draw);
 	}
 
-	private async startLegacyImmersive(mode: LegacyImmersiveMode = 'legacy-ar', _domOverlay?: Element) {
+	private async startLegacyImmersive(mode: LegacyImmersiveMode = "legacy-ar", _domOverlay?: Element) {
 		if (
 			window.DeviceOrientationEvent !== undefined &&
-			typeof (window.DeviceOrientationEvent as any).requestPermission === 'function'
+			typeof (window.DeviceOrientationEvent as any).requestPermission === "function"
 		) {
 			try {
 				const response = await (window.DeviceOrientationEvent as any).requestPermission();
-				if (response !== 'granted') {
-					console.error('Device orientation permission denied');
+				if (response !== "granted") {
+					console.error("Device orientation permission denied");
 
 					return;
 				}
@@ -287,25 +287,25 @@ class Engine {
 			}
 		}
 
-		if (mode === 'legacy-ar') {
+		if (mode === "legacy-ar") {
 			// ask for camera
 			if (navigator.mediaDevices?.getUserMedia) {
 				try {
 					const stream = await navigator.mediaDevices.getUserMedia({
-						video: { facingMode: { exact: 'environment' } },
+						video: { facingMode: { exact: "environment" } },
 						audio: false,
 					});
 
 					if (stream.getVideoTracks().length > 0) {
 						// this.arCam = stream;
-						let camOut = document.createElement('video');
+						let camOut = document.createElement("video");
 
-						camOut.setAttribute('autoplay', 'true');
+						camOut.setAttribute("autoplay", "true");
 
-						camOut.style.width = '100%';
-						camOut.style.height = '100%';
-						camOut.style.objectFit = 'cover';
-						camOut.style.position = 'absolute';
+						camOut.style.width = "100%";
+						camOut.style.height = "100%";
+						camOut.style.objectFit = "cover";
+						camOut.style.position = "absolute";
 
 						if (this.context.canvas.parentElement) {
 							this.context.canvas.parentElement.insertBefore(camOut, this.context.canvas);
@@ -324,7 +324,7 @@ class Engine {
 					console.warn(error);
 
 					// Camera probably denied, fallback to VR
-					mode = 'legacy-vr';
+					mode = "legacy-vr";
 				}
 			}
 		}
@@ -339,25 +339,25 @@ class Engine {
 
 		this.immersiveMode = mode;
 
-		this.scene.camera.renderStage.generator.setImmersive(mode === 'legacy-ar');
+		this.scene.camera.renderStage.generator.setImmersive(mode === "legacy-ar");
 
 		this.runWindow();
 
 		// this.requestFullscreen();
 	}
 
-	private async startXR(mode: XRMode = 'ar', domOverlay?: Element) {
+	private async startXR(mode: XRMode = "ar", domOverlay?: Element) {
 		const options: XRSessionInit = {
-			optionalFeatures: ['local-floor'],
-			requiredFeatures: ['local'],
+			optionalFeatures: ["local-floor"],
+			requiredFeatures: ["local"],
 		};
 
 		if (domOverlay) {
 			options.domOverlay = { root: domOverlay };
-			options.optionalFeatures.push('dom-overlay');
+			options.optionalFeatures.push("dom-overlay");
 		}
 
-		let err = 'No XR support';
+		let err = "No XR support";
 
 		try {
 			this.immersiveSession = await navigator.xr?.requestSession(
@@ -384,18 +384,18 @@ class Engine {
 		this.scene.cameraComponent = this.scene.xrCamera;
 
 		this.immersiveMode = mode;
-		this.immersiveSession.addEventListener('end', this.onExitImmersive.bind(this));
+		this.immersiveSession.addEventListener("end", this.onExitImmersive.bind(this));
 
-		this.scene.camera.renderStage.generator.setImmersive(mode === 'ar');
+		this.scene.camera.renderStage.generator.setImmersive(mode === "ar");
 
 		await this.immersiveSession.updateRenderState({
 			baseLayer: new XRWebGLLayer(this.immersiveSession, this.context.gl),
 		});
 
-		if (this.immersiveSession.enabledFeatures?.includes('local-floor')) {
-			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local-floor');
+		if (this.immersiveSession.enabledFeatures?.includes("local-floor")) {
+			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace("local-floor");
 		} else {
-			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace('local');
+			this.immersiveRefSpace = await this.immersiveSession.requestReferenceSpace("local");
 
 			// No local-floor means we're probably running on a phone, so let's guess an average phone holding height
 			this.scene.xrCamera.yOffset = 1.5;
@@ -408,7 +408,7 @@ class Engine {
 	 *
 	 */
 	onContextLost(event) {
-		console.log('FRAK: Rendering context lost');
+		console.log("FRAK: Rendering context lost");
 		event.preventDefault();
 		this.pause();
 	}
@@ -417,7 +417,7 @@ class Engine {
 	 *
 	 */
 	onContextRestored(event) {
-		console.log('FRAK: Rendering context restored');
+		console.log("FRAK: Rendering context restored");
 		this.context.engine = this;
 		this.context.restore();
 		this.run();
@@ -463,18 +463,18 @@ class Engine {
 				bottom: canvas.style.bottom,
 				width: canvas.style.width,
 				height: canvas.style.height,
-				canvasWidth: canvas.getAttribute('width'),
-				canvasHeight: canvas.getAttribute('height'),
+				canvasWidth: canvas.getAttribute("width"),
+				canvasHeight: canvas.getAttribute("height"),
 			};
 
 			// Stretch canvas to fill the entire screen
-			canvas.style.position = 'absolute';
-			canvas.style.left = '0';
-			canvas.style.right = '0';
-			canvas.style.top = '0';
-			canvas.style.bottom = '0';
-			canvas.style.width = '100%';
-			canvas.style.height = '100%';
+			canvas.style.position = "absolute";
+			canvas.style.left = "0";
+			canvas.style.right = "0";
+			canvas.style.top = "0";
+			canvas.style.bottom = "0";
+			canvas.style.width = "100%";
+			canvas.style.height = "100%";
 
 			setTimeout(() => {
 				// Set aspect ratio
@@ -483,8 +483,8 @@ class Engine {
 					const width = canvas.clientWidth;
 					const height = Math.max(1, canvas.clientHeight);
 
-					canvas.setAttribute('width', `${width}`);
-					canvas.setAttribute('height', `${height}`);
+					canvas.setAttribute("width", `${width}`);
+					canvas.setAttribute("height", `${height}`);
 				}
 			}, 2000 / this.options.requestedFPS);
 		} else {
@@ -500,14 +500,14 @@ class Engine {
 
 				// If not using upscaling then resize the RenderTarget
 				if (!this.useUpscaling) {
-					canvas.setAttribute('width', this._savedCanvasStyles.canvasWidth);
-					canvas.setAttribute('height', this._savedCanvasStyles.canvasHeight);
+					canvas.setAttribute("width", this._savedCanvasStyles.canvasWidth);
+					canvas.setAttribute("height", this._savedCanvasStyles.canvasHeight);
 				}
 
 				delete this._savedCanvasStyles;
 			}
 
-			if (this.immersiveMode?.startsWith('legacy')) {
+			if (this.immersiveMode?.startsWith("legacy")) {
 				void this.exitImmersive();
 			}
 		}
@@ -517,10 +517,6 @@ class Engine {
 	 *
 	 */
 	initCameras(program: WebGLProgram) {
-		if (this.cameraBlockProgram !== undefined) {
-			return;
-		}
-
 		this.cameraBlockProgram = program;
 		this.scene.initCameras(this.context, program);
 	}
@@ -540,15 +536,15 @@ class Engine {
 	}
 
 	/** Starts immersive mode, call `Engine.getImmersiveSupport()` first for which mode you can launch */
-	async startImmersive(cb?: () => void, mode: ImmersiveMode = 'ar', domOverlay?: Element) {
+	async startImmersive(cb?: () => void, mode: ImmersiveMode = "ar", domOverlay?: Element) {
 		this.pauseInline();
 
 		// So the callback gets called even when we fail to start immersive mode
 		this.immersiveExitCB = cb;
 
-		if (!mode.startsWith('legacy')) {
+		if (!mode.startsWith("legacy")) {
 			if (!navigator.xr) {
-				console.error('XR is not supported in this browser, did you forget to call Engine.getImmersiveSupport()?');
+				console.error("XR is not supported in this browser, did you forget to call Engine.getImmersiveSupport()?");
 
 				this.onExitImmersive();
 
@@ -561,7 +557,7 @@ class Engine {
 		}
 
 		if (!this.immersiveMode) {
-			console.error('Failed to start immersive session');
+			console.error("Failed to start immersive session");
 
 			this.onExitImmersive();
 		}
@@ -580,7 +576,7 @@ class Engine {
 		XXX: It would probably make more sense to have this callback in the Scene class.
 	*/
 	// eslint-disable-next-line class-methods-use-this
-	sceneStarted() {}
+	sceneStarted() { }
 
 	/** Stops the engine by pausing the engine and calling Scene.end() method.
 		Component.onEnd(context,engine) method will be called for all components.
@@ -616,7 +612,7 @@ class Engine {
 	/** Requests engine to go to fullscreen */
 	requestFullscreen(useUpscaling?) {
 		if (!FRAK.fullscreenEnabled) {
-			console.warn('FRAK: Fullscreen API is disabled in this browser.');
+			console.warn("FRAK: Fullscreen API is disabled in this browser.");
 
 			return;
 		}
@@ -629,7 +625,7 @@ class Engine {
 	// eslint-disable-next-line class-methods-use-this
 	exitFullscreen() {
 		if (!FRAK.fullscreenEnabled) {
-			console.warn('FRAK: Fullscreen API is disabled in this browser.');
+			console.warn("FRAK: Fullscreen API is disabled in this browser.");
 
 			return;
 		}
@@ -684,16 +680,16 @@ class Engine {
 		const maxBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
 		if (maxBuffers < 4) {
 			if (this.options.emissiveEnabled) {
-				console.warn('FRAK: Emissive rendering is not supported by this browser.');
+				console.warn("FRAK: Emissive rendering is not supported by this browser.");
 				this.options.emissiveEnabled = false;
 			}
 
 			if (this.options.legacyAmbient) {
-				console.warn('FRAK: Legacy ambient rendering is not supported by this browser.');
+				console.warn("FRAK: Legacy ambient rendering is not supported by this browser.");
 				this.options.legacyAmbient = false;
 			}
 		} else if (maxBuffers < 5 && this.options.legacyAmbient && this.options.emissiveEnabled) {
-			console.warn('FRAK: Emissive rendering is not supported by this browser.');
+			console.warn("FRAK: Emissive rendering is not supported by this browser.");
 			this.options.emissiveEnabled = false;
 		}
 	}
@@ -714,9 +710,9 @@ class Engine {
 
 		const organizer = this.scene.organizer;
 
-		console.log('=============== Statistics =====================');
+		console.log("=============== Statistics =====================");
 		console.log(`  Visible renderers (opaque/transparent): ${organizer.opaqueRenderers.count}/${organizer.transparentRenderers.count}`);
-		console.log('================================================');
+		console.log("================================================");
 	}
 
 	/**
@@ -726,34 +722,34 @@ class Engine {
 		const organizer = this.scene.organizer;
 
 		if (!this.debugCTX) {
-			const canvas = document.createElement('canvas');
+			const canvas = document.createElement("canvas");
 
 			canvas.width = this.debugWidth;
 			canvas.height = this.debugWidth / 2;
 
-			canvas.style.position = 'absolute';
-			canvas.style.top = '0';
-			canvas.style.zIndex = '100';
-			canvas.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+			canvas.style.position = "absolute";
+			canvas.style.top = "0";
+			canvas.style.zIndex = "100";
+			canvas.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
 
 			const parent = this.context.canvas.parentNode;
 
 			parent.insertBefore(canvas, parent.firstChild);
 
-			this.debugCTX = canvas.getContext('2d');
+			this.debugCTX = canvas.getContext("2d");
 		}
 
 		if (this.debugCTX && this.debugCount < 1) {
 			const ctx = this.debugCTX;
 
 			ctx.clearRect(0, 0, this.debugWidth, this.debugWidth / 2);
-			ctx.font = 'Normal 20px Arial';
-			ctx.fillStyle = 'rgba(240,240,240,0.75)';
-			ctx.fillText('FPS: ' + this.fps.getAverage().toFixed(2), 10, 20);
-			ctx.font = 'Normal 12px Arial';
-			ctx.fillText('Renderers (opaque / transparent): ' + organizer.opaqueRenderers.count + ' / ' + organizer.transparentRenderers.count, 10, 60);
+			ctx.font = "Normal 20px Arial";
+			ctx.fillStyle = "rgba(240,240,240,0.75)";
+			ctx.fillText("FPS: " + this.fps.getAverage().toFixed(2), 10, 20);
+			ctx.font = "Normal 12px Arial";
+			ctx.fillText("Renderers (opaque / transparent): " + organizer.opaqueRenderers.count + " / " + organizer.transparentRenderers.count, 10, 60);
 
-			ctx.fillText('RequestedFPS: ' + this.options.requestedFPS, this.debugWidth / 2, 45);
+			ctx.fillText("RequestedFPS: " + this.options.requestedFPS, this.debugWidth / 2, 45);
 
 			const gl = this.context.gl;
 			const renderer = gl.getParameter(gl.RENDERER);
@@ -770,11 +766,11 @@ class Engine {
 
 			for (let i = 0; i < this.debugFPS.length; i++) {
 				if (this.debugFPS[i] < 20) {
-					ctx.fillStyle = '#FF0000';
+					ctx.fillStyle = "#FF0000";
 				} else if (this.debugFPS[i] < 30) {
-					ctx.fillStyle = '#f6921e';
-				 } else {
-					ctx.fillStyle = '#00FF00';
+					ctx.fillStyle = "#f6921e";
+				} else {
+					ctx.fillStyle = "#00FF00";
 				}
 
 				ctx.fillRect(x + (i * 2), y - (this.debugFPS[i] / 60) * 20, 2, 2);
@@ -801,7 +797,7 @@ class Engine {
 	 *
 	 */
 	captureScreenshot(callback) {
-		if (typeof callback === 'function') {
+		if (typeof callback === "function") {
 			this.options.captureScreenshot = true;
 			this.onScreenshotCaptured = callback;
 		}

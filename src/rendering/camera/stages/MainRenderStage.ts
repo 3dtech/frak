@@ -140,6 +140,12 @@ class MainRenderStage extends RenderStage {
 	setImmersive(immersive: boolean) {
 		this.backgroundRenderStage.isImmersive = immersive;
 	}
+
+	onContextRestored(context: RenderingContext): void {
+		this.gbuffer.onContextRestored(context);
+		this.oitAccum.onContextRestored(context);
+		this.oitReveal.onContextRestored(context);
+	}
 }
 
 globalThis.MainRenderStage = MainRenderStage;

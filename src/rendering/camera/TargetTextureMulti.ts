@@ -1,8 +1,8 @@
-import Color from 'rendering/Color';
-import RenderTarget from 'rendering/camera/RenderTarget';
-import Texture from 'rendering/materials/Texture';
-import FRAK, { merge } from 'Helpers';
-import RenderingContext from 'rendering/RenderingContext';
+import Color from "rendering/Color";
+import RenderTarget from "rendering/camera/RenderTarget";
+import Texture from "rendering/materials/Texture";
+import FRAK, { merge } from "Helpers";
+import type RenderingContext from "rendering/RenderingContext";
 
 /** Render target with multiple draw buffers */
 class TargetTextureMulti extends RenderTarget {
@@ -19,18 +19,17 @@ class TargetTextureMulti extends RenderTarget {
 	rebuild: any;
 
 	constructor(context, size, options) {
-		var extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
-		if (!extColorFloat)
-			throw('TargetTextureFloat: Floating point COLOR textures are not supported on this system.');
+		let extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
+		if (!extColorFloat) { throw "TargetTextureFloat: Floating point COLOR textures are not supported on this system."; }
 
 		super(size);
 
 		this.options = merge({
-			dataType: 'float', // possible values: float, unsigned
-			filtering: 'linear', // possible values: linear, nearest
+			dataType: "float", // possible values: float, unsigned
+			filtering: "linear", // possible values: linear, nearest
 			depth: false,
 			stencil: false,
-			numTargets: 2
+			numTargets: 2,
 		}, options);
 
 		this.extDrawBuffers = null;
@@ -39,15 +38,14 @@ class TargetTextureMulti extends RenderTarget {
 		this.extTextureFloatLinear = null;
 		this.extTextureHalfFloatLinear = null;
 
-		if (this.options.numTargets < 1)
-			throw('TargetTextureMulti: Must have at least one color target.');
+		if (this.options.numTargets < 1) { throw "TargetTextureMulti: Must have at least one color target."; }
 
 		// Check draw buffer limits
 		this.maxColorAttachments = context.gl.getParameter(context.gl.MAX_COLOR_ATTACHMENTS);
 		this.maxDrawBuffers = context.gl.getParameter(context.gl.MAX_DRAW_BUFFERS);
 
 		if (this.options.numTargets > this.maxDrawBuffers) {
-			throw(`TargetTextureMulti: Too many targets requested. System only supports ${this.maxDrawBuffers} draw buffers.`);
+			throw `TargetTextureMulti: Too many targets requested. System only supports ${this.maxDrawBuffers} draw buffers.`;
 		}
 
 		this.targets = [];
@@ -58,7 +56,7 @@ class TargetTextureMulti extends RenderTarget {
 	}
 
 	type(): any {
-		return 'TargetTextureMulti';
+		return "TargetTextureMulti";
 	}
 
 	setSize(width, height): any {
@@ -67,34 +65,32 @@ class TargetTextureMulti extends RenderTarget {
 	}
 
 	getDataType(context): any {
-		if (this.options.dataType == 'unsigned')
-			return context.gl.UNSIGNED_BYTE;
+		if (this.options.dataType == "unsigned") { return context.gl.UNSIGNED_BYTE; }
 
 		return context.gl.FLOAT;
 	}
 
 	getInternalFormat(context): any {
-		if (this.options.dataType == 'float')
-			return context.gl.RGBA16F;
+		if (this.options.dataType == "float") { return context.gl.RGBA16F; }
+
 		return context.gl.RGBA;
 	}
 
 	getTextureFilter(context): any {
-		if (this.options.dataType == 'float') {
+		if (this.options.dataType == "float") {
 			return context.gl.LINEAR;
 		}
+
 		return context.gl.NEAREST;
 	}
 
 	createBuffer(context, filtering?, dataType?, format?): any {
-		var gl = context.gl;
-		var texture = new Texture(context);
+		let gl = context.gl;
+		let texture = new Texture(context);
 
-		if (!filtering)
-			filtering = this.getTextureFilter(context);
+		if (!filtering) { filtering = this.getTextureFilter(context); }
 
-		if (!dataType)
-			dataType = this.getDataType(context);
+		if (!dataType) { dataType = this.getDataType(context); }
 
 		if (!format) {
 			format = gl.RGBA;
@@ -108,12 +104,14 @@ class TargetTextureMulti extends RenderTarget {
 		gl.texImage2D(gl.TEXTURE_2D, 0, this.getInternalFormat(context), this.size[0], this.size[1], 0, format, dataType, null);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		texture.loaded = true;
+
 		return texture;
 	}
 
 	build(context: RenderingContext): any {
-		var i;
-		var gl = context.gl;
+		let i;
+		let gl = context.gl;
+
 		this.frameBuffer = gl.createFramebuffer();
 
 		// Setup render buffer or texture for depth
@@ -122,18 +120,18 @@ class TargetTextureMulti extends RenderTarget {
 		} else {
 			this.depth = gl.createRenderbuffer();
 			gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
-			if (this.options.stencil)
-				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]);
-			else
-				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
+
+			if (this.options.stencil) { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]); } else { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]); }
+
 			gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 		}
 
 		// Setup color attachments
-		var buffers = [];
-		var COLOR_ATTACHMENT0 = context.gl.COLOR_ATTACHMENT0;
-		for (i=0; i<this.options.numTargets; ++i) {
-			var texture = this.createBuffer(context);
+		let buffers = [];
+		let COLOR_ATTACHMENT0 = context.gl.COLOR_ATTACHMENT0;
+		for (i = 0; i < this.options.numTargets; ++i) {
+			let texture = this.createBuffer(context);
+
 			this.targets.push(texture);
 			buffers.push(COLOR_ATTACHMENT0 + i);
 		}
@@ -144,16 +142,13 @@ class TargetTextureMulti extends RenderTarget {
 		if (this.options.depth) {
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depth.glTexture, 0);
 		} else {
-			if (this.options.stencil)
-				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depth);
-			else
-				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
+			if (this.options.stencil) { gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depth); } else { gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth); }
 		}
 
 		this.checkStatus(context);
 
 		// Attach color
-		for (i=0; i<this.targets.length; ++i) {
+		for (i = 0; i < this.targets.length; ++i) {
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, this.targets[i].glTexture, 0);
 		}
 
@@ -163,33 +158,36 @@ class TargetTextureMulti extends RenderTarget {
 	}
 
 	checkStatus(context): any {
-		var gl = context.gl;
-		var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+		let gl = context.gl;
+		let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+
 		switch (status) {
 			case gl.FRAMEBUFFER_COMPLETE:
 				return true;
 			case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-				throw("TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+				throw "TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
 			case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-				throw("TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+				throw "TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
 			case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-				throw("TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+				throw "TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
 			case gl.FRAMEBUFFER_UNSUPPORTED:
-				throw("TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
+				throw "TargetTextureMulti: Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED";
+
 			default:
-				throw("TargetTextureMulti: Incomplete framebuffer: " + status);
+				throw "TargetTextureMulti: Incomplete framebuffer: " + status;
 		}
 	}
 
 	bind(context, doNotClear?, clearColor?, clearFlags?): any {
-		var gl = context.gl;
+		let gl = context.gl;
 
 		if (this.rebuild) {
 			this.rebuild = false;
 
 			// Resize color targets
-			for (var i=0; i<this.targets.length; i++) {
-				var target = this.targets[i];
+			for (let i = 0; i < this.targets.length; i++) {
+				let target = this.targets[i];
+
 				gl.bindTexture(gl.TEXTURE_2D, target.glTexture);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -208,24 +206,20 @@ class TargetTextureMulti extends RenderTarget {
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 				gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, this.size[0], this.size[1], 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
 				gl.bindTexture(gl.TEXTURE_2D, null);
-			}
-			else {
+			} else {
 				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
-				if (this.options.stencil)
-					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]);
-				else
-					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
+
+				if (this.options.stencil) { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]); } else { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]); }
+
 				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 			}
 		}
 
-		doNotClear = (doNotClear === true);
+		doNotClear = doNotClear === true;
 		clearColor = (clearColor instanceof Color) ? clearColor : false;
+
 		if (!clearColor) {
-			if (context.camera)
-				clearColor = context.camera.backgroundColor;
-			else
-				doNotClear = true;
+			if (context.camera) { clearColor = context.camera.backgroundColor; } else { doNotClear = true; }
 		}
 
 		super.bind(context);
@@ -234,15 +228,24 @@ class TargetTextureMulti extends RenderTarget {
 			gl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 			gl.clearDepth(1.0);
 
-			var flags = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
+			let flags = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
 			if (this.options.stencil) {
 				gl.clearStencil(0);
 				flags |= gl.STENCIL_BUFFER_BIT;
 			}
-			if (clearFlags)
-				flags = clearFlags;
+
+			if (clearFlags) { flags = clearFlags; }
+
 			gl.clear(flags);
 		}
+	}
+
+	onContextRestored(context: RenderingContext): void {
+		for (const target of this.targets) {
+			target.onContextRestored(context);
+		}
+
+		this.rebuild = true;
 	}
 }
 

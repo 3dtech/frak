@@ -1,12 +1,12 @@
-import Serializable from 'scene/Serializable';
-import RenderingContext from 'rendering/RenderingContext';
-import VertexShader from 'rendering/shaders/VertexShader';
-import FragmentShader from 'rendering/shaders/FragmentShader';
-import ExplicitAttributeLocations from './AttributeLocations';
-import {stringHash} from "../../Helpers";
-import ShaderDescriptor from "../../scene/descriptors/ShaderDescriptor";
+import Serializable from "scene/Serializable";
+import type RenderingContext from "rendering/RenderingContext";
+import VertexShader from "rendering/shaders/VertexShader";
+import FragmentShader from "rendering/shaders/FragmentShader";
+import ExplicitAttributeLocations from "./AttributeLocations";
+import { stringHash } from "../../Helpers";
+import type ShaderDescriptor from "../../scene/descriptors/ShaderDescriptor";
 import DefinitionsHelper from "../DefinitionsHelper";
-import BlockLocations from './BlockLocations';
+import BlockLocations from "./BlockLocations";
 
 /**
  * Used to compile and link vertex and fragment shader to a shader program.
@@ -22,7 +22,7 @@ class Shader extends Serializable {
 	failed: any;
 	uniformLocations: any;
 	bindings: any;
-	definitions = new DefinitionsHelper([], 'SH_');
+	definitions = new DefinitionsHelper([], "SH_");
 	vertexShader: VertexShader;
 	fragmentShader: FragmentShader;
 	nameHash: number;
@@ -33,7 +33,7 @@ class Shader extends Serializable {
 		@param descriptor Shader source descriptor normally passed to shader by ShadersManager to make it identifiable later [optional] */
 	constructor(context: RenderingContext, descriptor: ShaderDescriptor) {
 		if (!context) {
-			throw 'Shader: RenderingContext required';
+			throw "Shader: RenderingContext required";
 		}
 
 		super();
@@ -50,8 +50,10 @@ class Shader extends Serializable {
 
 		this.nameHash = stringHash(descriptor.vertexSource) ^ stringHash(descriptor.fragmentSource);
 		this.hash = this.nameHash;
+
 		for (const definition of descriptor.definitions) {
-			const [name, value] = definition.split(' ');
+			const [name, value] = definition.split(" ");
+
 			this.addDefinition(name, value);
 		}
 	}
@@ -61,13 +63,13 @@ class Shader extends Serializable {
 	}
 
 	included(): any {
-		return ['descriptor'];
+		return ["descriptor"];
 	}
 
 	/** Creates a fragment shader from given code and adds it to this shader program
 		@param code Shader code */
 	addVertexShader(code): any {
-		this.vertexShader=new VertexShader(this, code);
+		this.vertexShader = new VertexShader(this, code);
 
 		this.addShader(this.vertexShader);
 	}
@@ -75,7 +77,7 @@ class Shader extends Serializable {
 	/** Creates a fragment shader from given code and adds it to this shader program
 		@param code Shader code */
 	addFragmentShader(code): any {
-		this.fragmentShader=new FragmentShader(this, code);
+		this.fragmentShader = new FragmentShader(this, code);
 
 		this.addShader(this.fragmentShader);
 	}
@@ -91,7 +93,7 @@ class Shader extends Serializable {
 	addDefinition(name: string, value?: string) {
 		this.hash ^= this.definitions.hash;	// Remove old hash
 		this.definitions.addDefinition(name, value);
-		this.hash ^= this.definitions.hash	// Add new hash
+		this.hash ^= this.definitions.hash;	// Add new hash
 	}
 
 	/** Compiles and links the shader program */
@@ -100,16 +102,16 @@ class Shader extends Serializable {
 			return;
 		}
 
-		for (var i=0; i<this.shaders.length; i++) {
+		for (let i = 0; i < this.shaders.length; i++) {
 			this.shaders[i].compile(this.context, this.definitions.definitions);
 		}
 
 		this.uniformLocations = {};
 		this.linked = true;
 		this.context.gl.linkProgram(this.program);
-		var status = this.context.gl.getProgramParameter(this.program, this.context.gl.LINK_STATUS);
+		let status = this.context.gl.getProgramParameter(this.program, this.context.gl.LINK_STATUS);
 		if (!status) {
-			console.error('Shader linking failed: ', this.context.gl.getProgramInfoLog(this.program));
+			console.error("Shader linking failed: ", this.context.gl.getProgramInfoLog(this.program));
 			this.linked = false;
 			this.failed = true;
 
@@ -122,15 +124,16 @@ class Shader extends Serializable {
 
 	/** Uses the shader program. Links automatically, if not linked
 		@param uniforms Object of named uniform variables (all values must be instances of Uniform)
-		                that will be passed to shader [optional] */
+						that will be passed to shader [optional] */
 	use(uniforms?): any {
-		if(this.failed) return;
+		if (this.failed) { return; }
 
-		if(this.shaders.length<2) return;	// Don't try to use, there are not enough added subshaders (ie vertex and fragment)
+		if (this.shaders.length < 2) { return; }	// Don't try to use, there are not enough added subshaders (ie vertex and fragment)
 
-		if(!this.linked) this.link();
+		if (!this.linked) { this.link(); }
 
-		if(!this.linked) return;
+		if (!this.linked) { return; }
+
 		this.context.gl.useProgram(this.program);
 		this.bindUniforms(uniforms);
 	}
@@ -165,16 +168,16 @@ class Shader extends Serializable {
 			return;
 		}
 
-		for (var uniformName in uniforms) {
-			var uniformLocation = this.getUniformLocation(uniformName);
+		for (let uniformName in uniforms) {
+			let uniformLocation = this.getUniformLocation(uniformName);
 
 			if (uniformLocation === null || uniformLocation == -1) {
 				continue;
 			}
 
-			var uniform = uniforms[uniformName];
+			let uniform = uniforms[uniformName];
 			if (!uniform) {
-				throw 'Uniform \''+uniformName+'\' is undefined.';
+				throw "Uniform '" + uniformName + "' is undefined.";
 			}
 
 			uniform.bind(this.context, uniformLocation);
@@ -183,21 +186,21 @@ class Shader extends Serializable {
 
 	/** Binds all texture samplers.
 		@param samplers Array of named texture samplers (values must be instances
-		                of of Sampler). Eg [new Sampler("texture1", texture)] */
+						of of Sampler). Eg [new Sampler("texture1", texture)] */
 	bindSamplers(samplers): any {
 		if (!samplers || samplers.length == 0 || !this.linked) {
 			return;
 		}
 
-		var gl = this.context.gl;
-		var slotIndex = 0;
-		for (var i = 0; i < samplers.length; ++i) {
-			var sampler = samplers[i];
+		let gl = this.context.gl;
+		let slotIndex = 0;
+		for (let i = 0; i < samplers.length; ++i) {
+			let sampler = samplers[i];
 			if (!sampler) {
 				break;
 			}
 
-			var uniformLocation = this.getUniformLocation(sampler.name);
+			let uniformLocation = this.getUniformLocation(sampler.name);
 			if (uniformLocation === null || uniformLocation == -1) {
 				continue;
 			}
@@ -211,22 +214,22 @@ class Shader extends Serializable {
 
 	/** Unbinds all texture samplers.
 		@param samplers Array of named texture samplers (values must be instances
-		                of of Sampler). Eg [new Sampler("texture1", texture)] */
+						of of Sampler). Eg [new Sampler("texture1", texture)] */
 	unbindSamplers(samplers): any {
 		if (!samplers || samplers.length == 0 || !this.linked) {
 			return;
 		}
 
-		var gl = this.context.gl;
-		var slotIndex = 0;
-		for (var i = 0; i < samplers.length; ++i) {
-			var sampler = samplers[i];
+		let gl = this.context.gl;
+		let slotIndex = 0;
+		for (let i = 0; i < samplers.length; ++i) {
+			let sampler = samplers[i];
 			if (!sampler) {
 				break;
 			}
 
-			var uniformLocation = this.getUniformLocation(sampler.name);
-			if(uniformLocation === null || uniformLocation == -1) {
+			let uniformLocation = this.getUniformLocation(sampler.name);
+			if (uniformLocation === null || uniformLocation == -1) {
 				continue;
 			}
 
@@ -244,7 +247,7 @@ class Shader extends Serializable {
 		this.failed = false;
 		this.linked = false;
 
-		for (var i=0; i<this.shaders.length; ++i) {
+		for (let i = 0; i < this.shaders.length; ++i) {
 			this.shaders[i].onContextRestored(context);
 		}
 
@@ -259,7 +262,6 @@ class Shader extends Serializable {
 			}
 		}
 	}
-
 }
 
 globalThis.Shader = Shader;

@@ -1,13 +1,13 @@
-import TargetTexture from 'rendering/camera/TargetTexture';
-import Texture from 'rendering/materials/Texture';
+import TargetTexture from "rendering/camera/TargetTexture";
+import Texture from "rendering/materials/Texture";
+import type RenderingContext from "rendering/RenderingContext";
 
 class TargetTextureFloat extends TargetTexture {
 	linear: any;
 
 	constructor(sizeOrTexture, context, useDepthTexture, useNearestFiltering = true) {
-		var extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
-		if (!extColorFloat)
-			throw('TargetTextureFloat: Floating point COLOR textures are not supported on this system.');
+		let extColorFloat = context.gl.getExtension("EXT_color_buffer_float");
+		if (!extColorFloat) { throw "TargetTextureFloat: Floating point COLOR textures are not supported on this system."; }
 
 		super(sizeOrTexture, context, useDepthTexture);
 
@@ -15,7 +15,7 @@ class TargetTextureFloat extends TargetTexture {
 	}
 
 	type(): any {
-		return 'TargetTextureFloat';
+		return "TargetTextureFloat";
 	}
 
 	getDataType(context): any {
@@ -27,14 +27,16 @@ class TargetTextureFloat extends TargetTexture {
 	}
 
 	getTextureFilter(context): any {
-		if (this.linear)
-			return context.gl.LINEAR;
+		if (this.linear) { return context.gl.LINEAR; }
+
 		return context.gl.NEAREST;
 	}
 
 	build(context) {
-		var gl = context.gl;
+		let gl = context.gl;
+
 		this.frameBuffer = gl.createFramebuffer();
+
 		// Setup primary color buffer, if not provided
 		if (!this.texture) {
 			this.texture = new Texture(context);
@@ -57,8 +59,7 @@ class TargetTextureFloat extends TargetTexture {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, this.size[0], this.size[1], 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
 			gl.bindTexture(gl.TEXTURE_2D, null);
-		}
-		else {
+		} else {
 			this.depth = gl.createRenderbuffer();
 			gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
 			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
@@ -68,10 +69,10 @@ class TargetTextureFloat extends TargetTexture {
 		// Attach targets to framebuffer
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture.glTexture, 0);
+
 		if (this.useDepthTexture) {
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depth.glTexture, 0);
-		}
-		else {
+		} else {
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
 		}
 
@@ -79,6 +80,11 @@ class TargetTextureFloat extends TargetTexture {
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 		this.texture.loaded = true;
+	}
+
+	onContextRestored(context: RenderingContext): void {
+		this.texture.onContextRestored(context);
+		this.build(context);
 	}
 }
 

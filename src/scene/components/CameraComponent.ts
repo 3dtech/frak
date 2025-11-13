@@ -39,7 +39,7 @@ abstract class CameraComponent extends Component {
 		this.useCameraViewMatrix();
 
 		node.scene.cameras.push(this);
-		node.scene.cameras.sort(function(a, b) { return a.camera.order - b.camera.order; });
+		node.scene.cameras.sort(function (a, b) { return a.camera.order - b.camera.order; });
 	}
 
 	/** Called when component is removed from a node that is in the scene or
@@ -87,7 +87,7 @@ abstract class CameraComponent extends Component {
 
 	/** Sets the camera's near and far clipping planes. */
 	// eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-empty-function
-	setClipPlanes(near: number, far: number): void {}
+	setClipPlanes(near: number, far: number): void { }
 
 	/** Sets camera transform to position camera at the given point
 		@param position Instance of {vec3} */
@@ -118,7 +118,7 @@ abstract class CameraComponent extends Component {
 	fitNodeToView(node): any {
 		let bounds = new BoundingBox();
 
-		node.onEachChild(function(subnode) {
+		node.onEachChild(function (subnode) {
 			if (subnode.getComponent(MeshComponent)) {
 				let meshComponent = subnode.getComponent(MeshComponent);
 
@@ -256,6 +256,7 @@ abstract class CameraComponent extends Component {
 	 *
 	 */
 	onContextRestored(context) {
+		this.camera.renderStage.restoreContext(context);
 		this.initRenderStage(context, context.engine);
 	}
 }

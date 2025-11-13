@@ -1,6 +1,7 @@
-import RenderTarget from 'rendering/camera/RenderTarget';
-import Texture from 'rendering/materials/Texture';
-import Color from 'rendering/Color';
+import RenderTarget from "rendering/camera/RenderTarget";
+import Texture from "rendering/materials/Texture";
+import Color from "rendering/Color";
+import type RenderingContext from "rendering/RenderingContext";
 
 class TargetTexture extends RenderTarget {
 	texture: any;
@@ -10,24 +11,26 @@ class TargetTexture extends RenderTarget {
 	depth: any;
 
 	constructor(sizeOrTexture, context, useDepthTexture?, useStencilBuffer?) {
-		var size = sizeOrTexture;
+		let size = sizeOrTexture;
 		if (sizeOrTexture instanceof Texture) {
 			size = sizeOrTexture.size;
 		}
+
 		super(size);
+
 		if (sizeOrTexture instanceof Texture) {
 			this.texture = sizeOrTexture;
 		}
 
-		this.useDepthTexture = (useDepthTexture === true);
-		this.useStencilBuffer = (useStencilBuffer === true);
+		this.useDepthTexture = useDepthTexture === true;
+		this.useStencilBuffer = useStencilBuffer === true;
 		this.rebuild = false;
 
 		this.build(context);
 	}
 
 	type(): any {
-		return 'TargetTexture';
+		return "TargetTexture";
 	}
 
 	setSize(width, height): any {
@@ -48,7 +51,8 @@ class TargetTexture extends RenderTarget {
 	}
 
 	build(context): any {
-		var gl = context.gl;
+		let gl = context.gl;
+
 		this.frameBuffer = gl.createFramebuffer();
 
 		// Setup primary color buffer, if not provided
@@ -73,16 +77,14 @@ class TargetTexture extends RenderTarget {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, this.size[0], this.size[1], 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
 			gl.bindTexture(gl.TEXTURE_2D, null);
-		}
-		else {
+		} else {
 			this.depth = gl.createRenderbuffer();
 
 			if (this.useStencilBuffer) {
 				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
 				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]);
 				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-			}
-			else {
+			} else {
 				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
 				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
 				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -92,14 +94,13 @@ class TargetTexture extends RenderTarget {
 		// Attach targets to framebuffer
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture.glTexture, 0);
+
 		if (this.useDepthTexture) {
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depth.glTexture, 0);
-		}
-		else {
+		} else {
 			if (this.useStencilBuffer) {
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depth);
-			}
-			else {
+			} else {
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
 			}
 		}
@@ -107,30 +108,32 @@ class TargetTexture extends RenderTarget {
 		this.checkStatus(context);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-		this.texture.loaded=true;
+		this.texture.loaded = true;
 	}
 
 	checkStatus(context): any {
-		var gl = context.gl;
-		var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+		let gl = context.gl;
+		let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+
 		switch (status) {
 			case gl.FRAMEBUFFER_COMPLETE:
 				return true;
 			case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-				throw("TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+				throw "TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
 			case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-				throw("TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+				throw "TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
 			case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-				throw("TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+				throw "TargetTexture: Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
 			case gl.FRAMEBUFFER_UNSUPPORTED:
-				throw("TargetTexture: Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
+				throw "TargetTexture: Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED";
+
 			default:
-				throw("TargetTexture: Incomplete framebuffer: " + status);
+				throw "TargetTexture: Incomplete framebuffer: " + status;
 		}
 	}
 
 	bind(context, doNotClear?, clearColor?, clearFlags?): any {
-		var gl = context.gl;
+		let gl = context.gl;
 
 		if (this.rebuild) {
 			gl.bindTexture(gl.TEXTURE_2D, this.texture.glTexture);
@@ -150,26 +153,22 @@ class TargetTexture extends RenderTarget {
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 				gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, this.size[0], this.size[1], 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
 				gl.bindTexture(gl.TEXTURE_2D, null);
-			}
-			else {
+			} else {
 				gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
-				if (this.useStencilBuffer)
-					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]);
-				else
-					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]);
+
+				if (this.useStencilBuffer) { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.size[0], this.size[1]); } else { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.size[0], this.size[1]); }
+
 				gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 			}
 
 			this.rebuild = false;
 		}
 
-		doNotClear = (doNotClear === true);
+		doNotClear = doNotClear === true;
 		clearColor = (clearColor instanceof Color) ? clearColor : false;
+
 		if (!clearColor) {
-			if (context.camera)
-				clearColor = context.camera.backgroundColor;
-			else
-				doNotClear = true;
+			if (context.camera) { clearColor = context.camera.backgroundColor; } else { doNotClear = true; }
 		}
 
 		super.bind(context);
@@ -178,15 +177,21 @@ class TargetTexture extends RenderTarget {
 			gl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 			gl.clearDepth(1.0);
 
-			var flags = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
+			let flags = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
 			if (this.useStencilBuffer) {
 				gl.clearStencil(0);
 				flags |= gl.STENCIL_BUFFER_BIT;
 			}
-			if (clearFlags)
-				flags = clearFlags;
+
+			if (clearFlags) { flags = clearFlags; }
+
 			gl.clear(flags);
 		}
+	}
+
+	onContextRestored(context: RenderingContext): void {
+		this.texture.onContextRestored(context);
+		this.build(context);
 	}
 }
 

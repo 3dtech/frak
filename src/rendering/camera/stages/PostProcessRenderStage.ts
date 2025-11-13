@@ -1,11 +1,11 @@
-import RenderStage from './RenderStage';
-import Sampler from 'rendering/shaders/Sampler';
-import Material from 'rendering/materials/Material';
-import ScreenQuad from '../ScreenQuad';
-import TargetTextureFloat from '../TargetTextureFloat';
-import RenderingContext from 'rendering/RenderingContext';
-import Scene from 'scene/Scene';
-import Camera from '../Camera';
+import RenderStage from "./RenderStage";
+import Sampler from "rendering/shaders/Sampler";
+import Material from "rendering/materials/Material";
+import ScreenQuad from "../ScreenQuad";
+import TargetTextureFloat from "../TargetTextureFloat";
+import type RenderingContext from "rendering/RenderingContext";
+import type Scene from "scene/Scene";
+import type Camera from "../Camera";
 
 /**
  * Render-stage used to render MaterialRenderStage to a texture,
@@ -31,10 +31,10 @@ abstract class PostProcessRenderStage extends RenderStage {
 	}
 
 	setSize(width, height): any {
-		if (this.size === false)
-			this.size = vec2.create();
-		this.size[0]=width;
-		this.size[1]=height;
+		if (this.size === false) { this.size = vec2.create(); }
+
+		this.size[0] = width;
+		this.size[1] = height;
 	}
 
 	abstract getGeneratorStage(): RenderStage;
@@ -45,18 +45,20 @@ abstract class PostProcessRenderStage extends RenderStage {
 		}
 
 		this.src = new TargetTextureFloat(this.size, context, false, false);
-		this.srcSampler = new Sampler('src', this.src.texture);
+		this.srcSampler = new Sampler("src", this.src.texture);
 
 		this.dst = new TargetTextureFloat(this.size, context, false, false);
-		this.dstSampler = new Sampler('src', this.dst.texture);
+		this.dstSampler = new Sampler("src", this.dst.texture);
 
 		this.material = new Material(
+
 			// engine.assetsManager.addShaderSource("shaders/default/ScreenQuad"),
-			engine.assetsManager.addShader('shaders/uv.vert', 'shaders/quad.frag'),
+			engine.assetsManager.addShader("shaders/uv.vert", "shaders/quad.frag"),
 			{},
-			[]
+			[],
 		);
-		this.material.name = 'To Screen';
+
+		this.material.name = "To Screen";
 
 		this.screenQuad = new ScreenQuad(context);
 
@@ -73,7 +75,7 @@ abstract class PostProcessRenderStage extends RenderStage {
 	}
 
 	onPreRender(context: RenderingContext, scene: Scene, camera: Camera) {
-		var cameraTarget = camera.target;
+		let cameraTarget = camera.target;
 
 		if (cameraTarget.size[0] != this.src.size[0] || cameraTarget.size[1] != this.src.size[1]) {
 			this.setSize(cameraTarget.size[0], cameraTarget.size[1]);
@@ -98,8 +100,9 @@ abstract class PostProcessRenderStage extends RenderStage {
 	}
 
 	swapBuffers(): any {
-		var tmpTexture = this.src;
-		var tmpSampler = this.srcSampler;
+		let tmpTexture = this.src;
+		let tmpSampler = this.srcSampler;
+
 		this.src = this.dst;
 		this.srcSampler = this.dstSampler;
 		this.dst = tmpTexture;
@@ -107,13 +110,22 @@ abstract class PostProcessRenderStage extends RenderStage {
 	}
 
 	renderEffect(context, material, sampler, uniforms = {}) {
-		var gl = context.gl;
+		let gl = context.gl;
+
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.CULL_FACE);
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
 		this.screenQuad.render(context, material, sampler, uniforms);
+	}
+
+	onContextRestored(context: RenderingContext) {
+		this.src.onContextRestored(context);
+		this.dst.onContextRestored(context);
+		this.material.shader.onContextRestored(context);
+		context.engine.initCameras(this.material.shader.program);
+		this.generator.restoreContext(context);
 	}
 }
 

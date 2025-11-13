@@ -1,3 +1,5 @@
+import type RenderingContext from "../RenderingContext.js";
+
 /** Render-target class */
 class RenderTarget {
 	viewport: any;
@@ -11,7 +13,7 @@ class RenderTarget {
 	}
 
 	type(): any {
-		return 'RenderTarget';
+		return "RenderTarget";
 	}
 
 	/** Binds this rendertarget. All subsequent draw calls go to this render-target */
@@ -76,6 +78,8 @@ class RenderTarget {
 	resetViewport() {
 		this.setViewport(this.position[0], this.position[1], this.size[0], this.size[1]);
 	}
+
+	onContextRestored(context: RenderingContext) { }
 }
 
 globalThis.RenderTarget = RenderTarget;

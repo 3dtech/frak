@@ -2,6 +2,7 @@ import PostProcess from "rendering/camera/PostProcess";
 import Material from "rendering/materials/Material";
 import UniformVec2 from "rendering/shaders/UniformVec2";
 import UniformFloat from "rendering/shaders/UniformFloat";
+import type RenderingContext from "rendering/RenderingContext";
 
 /**
  * Post-processing stage used to do image space anti-aliasing.
@@ -34,6 +35,10 @@ class AntiAliasPostProcess extends PostProcess {
 
 	onPostRender(context: any, scene: any, camera: any): void {
 		camera.renderStage.renderEffect(context, this.material, camera.renderStage.srcSampler);
+	}
+
+	onContextRestored(context: RenderingContext): void {
+		this.material.shader.onContextRestored(context);
 	}
 }
 

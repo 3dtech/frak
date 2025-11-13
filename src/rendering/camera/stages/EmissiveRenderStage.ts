@@ -40,6 +40,10 @@ class EmissiveRenderStage extends PBRRenderStage {
 
 		super.onPostRender(context, scene, camera);
 	}
+
+	onContextRestored(context: RenderingContext): void {
+		this.material.shader.onContextRestored(context);
+	}
 }
 
 globalThis.EmissiveRenderStage = EmissiveRenderStage;
