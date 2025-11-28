@@ -1,4 +1,3 @@
-import type { Navigator as NavigatorUA } from "./UserAgentData";
 import FPS from "engine/FPS";
 import AssetsManager from "loading/AssetsManager";
 import Texture from "rendering/materials/Texture";
@@ -20,6 +19,7 @@ const DEFAULT_OPTIONS = {
 	assetsPath: "",
 	captureScreenshot: false,
 	contextErrorCallback: undefined as (() => boolean) | undefined,
+	contextLostCallback: undefined as (() => void) | undefined,
 	contextOptions: undefined as WebGLContextAttributes | undefined,
 	debug: false,
 	defaultRequestedFPS: 60.0, // was 60
@@ -411,6 +411,8 @@ class Engine {
 		console.log("FRAK: Rendering context lost");
 		event.preventDefault();
 		this.pause();
+
+		this.options.contextLostCallback?.();
 	}
 
 	/**
