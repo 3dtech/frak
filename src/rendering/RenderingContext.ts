@@ -59,10 +59,7 @@ class RenderingContext {
 		}
 
 		// Try to get rendering context for WebGL
-		const gl = this.canvas.getContext("webgl2", {
-			xrCompatible: true,
-			...contextOptions,
-		});
+		const gl = this.canvas.getContext("webgl2", contextOptions);
 
 		// Acquiring context failed
 		if (!gl) {
