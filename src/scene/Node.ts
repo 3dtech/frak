@@ -22,14 +22,14 @@ class Node extends Serializable {
 	/** Constructs new node */
 	constructor(name?) {
 		super();
-		this.name=name?name:"Node";
-		this.subnodes=[];
-		this.components=[];
-		this.scene=false;
-		this.parent=false;
-		this.layer=1;
-		this.tags=[];
-		this.transform=this.addComponent(new Transform());
+		this.name = name ? name : "Node";
+		this.subnodes = [];
+		this.components = [];
+		this.scene = false;
+		this.parent = false;
+		this.layer = 1;
+		this.tags = [];
+		this.transform = this.addComponent(new Transform());
 		this.localCollisionID = -1; // This is used to map nodes in the model sub-graph
 	}
 
@@ -48,23 +48,23 @@ class Node extends Serializable {
 			throw "addNode: The given node is not a subclass of EmptyNode";
 
 		this.subnodes.push(node);
-		var me=this;
-		node.parent=this;
-		node.onEachChild(function(n) { n.scene=me.scene; });
-		if(node.scene) {
-			node.onEachChildComponent(function(c) { c.onAddScene(me); c.node.onAddComponent(c); });
+		var me = this;
+		node.parent = this;
+		node.onEachChild(function (n) { n.scene = me.scene; });
+		if (node.scene) {
+			node.onEachChildComponent(function (c) { c.onAddScene(me); c.node.onAddComponent(c); });
 		}
 		node.onAdd(this);
-		if(me.scene.engine) {
-			node.onEachChildComponent(function(c) {
-				if(!c.started) {
-					if(me.scene.starting || me.scene.started===false) {
+		if (me.scene.engine) {
+			node.onEachChildComponent(function (c) {
+				if (!c.started) {
+					if (me.scene.starting || me.scene.started === false) {
 						me.scene.startingQueue.push(c);
 					}
 					else {
 						c.onLoad(me.scene.engine.assetsManager, me.scene.engine);
 						c.start(me.scene.engine.context, me.scene.engine);
-						c.started=true;
+						c.started = true;
 					}
 				}
 			});
@@ -93,7 +93,7 @@ class Node extends Serializable {
 			n.scene = false;
 		});
 		node.parent = false;
-		for (var i=0; i<this.subnodes.length; i++) {
+		for (var i = 0; i < this.subnodes.length; i++) {
 			if (this.subnodes[i] == node) {
 				this.subnodes.splice(i, 1);
 				break;
@@ -105,7 +105,7 @@ class Node extends Serializable {
 	/** Removes all subnodes of this node */
 	removeSubnodes(): any {
 		var nodes = this.subnodes.slice(0);	// Create a temporary copy of nodes list
-		for (var i=0; i<nodes.length; i++) {
+		for (var i = 0; i < nodes.length; i++) {
 			this.removeNode(nodes[i]);
 		}
 	}
@@ -132,53 +132,53 @@ class Node extends Serializable {
 
 	/** Removes component from this node */
 	removeComponent(component: Component): Component {
-		for (var c=0; c<this.components.length; c++) {
-			if (this.components[c]===component) {
+		for (var c = 0; c < this.components.length; c++) {
+			if (this.components[c] === component) {
 				this.components.splice(c, 1);
 				break;
 			}
 		}
-		if(this.scene.engine && component.started) {
+		if (this.scene.engine && component.started) {
 			component.onEnd(this.scene.engine.context, this.scene.engine);
-			component.started=false;
+			component.started = false;
 		}
-		if(this.scene) {
+		if (this.scene) {
 			component.onRemoveScene(this);
 			this.onRemoveComponent(component);
 		}
 		component.onRemove(this);
-		component.node=undefined;
+		component.node = undefined;
 		return component;
 	}
 
 	/** Removes all components of the given type */
 	removeComponentsByType(componentType): any {
-		var removed=[];
-		for (var i=0; i<this.components.length; i++) {
+		var removed = [];
+		for (var i = 0; i < this.components.length; i++) {
 			if (this.components[i] instanceof componentType) {
 				removed.push(this.components[i]);
 				this.components.splice(i, 1);
 				i--;
 			}
 		}
-		for (var i=0; i<removed.length; i++) {
-			if(this.scene.engine && removed[i].started) {
+		for (var i = 0; i < removed.length; i++) {
+			if (this.scene.engine && removed[i].started) {
 				removed[i].onEnd(this.scene.engine.context, this.scene.engine);
-				removed[i].started=false;
+				removed[i].started = false;
 			}
-			if(this.scene) {
+			if (this.scene) {
 				removed[i].onRemoveScene(this);
 				this.onRemoveComponent(removed[i]);
 			}
 			removed[i].onRemove(this);
-			removed[i].node=undefined;
+			removed[i].node = undefined;
 		}
 		return removed;
 	}
 
 	/** Returns the first component of the given type */
-	getComponent<A extends Component>(componentType: new(...args: any[]) => A): A {
-		for (var c=0; c<this.components.length; c++) {
+	getComponent<A extends Component>(componentType: new (...args: any[]) => A): A {
+		for (var c = 0; c < this.components.length; c++) {
 			if (this.components[c] instanceof componentType)
 				return this.components[c] as A;
 		}
@@ -187,12 +187,12 @@ class Node extends Serializable {
 
 	/** Returns all components of the given type */
 	getComponents(componentType): any {
-		var a=[];
-		for (var c=0; c<this.components.length; c++) {
+		var a = [];
+		for (var c = 0; c < this.components.length; c++) {
 			if (this.components[c] instanceof componentType)
 				a.push(this.components[c]);
 		}
-		if (a.length==0)
+		if (a.length == 0)
 			return false;
 		return a;
 	}
@@ -200,7 +200,7 @@ class Node extends Serializable {
 	/** Calculates relative transform of the node from it's own absolute transform
 		and the absolute transform of its parent */
 	calculateRelativeFromAbsolute(): any {
-		if(!this.parent.transform) return;
+		if (!this.parent.transform) return;
 		this.transform.calculateRelativeFromAbsolute(this.parent.transform.absolute);
 	}
 
@@ -216,10 +216,10 @@ class Node extends Serializable {
 		instance.removeComponentsByType(Transform);
 		instance.layer = this.layer;
 		instance.tags = this.tags.slice(0);
-		for (var i=0; i<this.subnodes.length; i++) {
+		for (var i = 0; i < this.subnodes.length; i++) {
 			instance.addNode(this.subnodes[i].instantiate());
 		}
-		for (var c=0; c<this.components.length; c++) {
+		for (var c = 0; c < this.components.length; c++) {
 			instance.addComponent(this.components[c].instantiate());
 		}
 		instance.transform = instance.getComponent(Transform);
@@ -229,38 +229,38 @@ class Node extends Serializable {
 	/** Enables this node and all its subnodes
 		@param onlyThisNode If true, then this function is not recursive [optional] */
 	enable(onlyThisNode): any {
-		if(onlyThisNode) this.onEachComponent(function(c) { c.enable(); } );
-		else this.onEachChildComponent(function(c) { c.enable(); } );
+		if (onlyThisNode) this.onEachComponent(function (c) { c.enable(); });
+		else this.onEachChildComponent(function (c) { c.enable(); });
 	}
 
 	/** Disable this node and all its subnodes
 		@param onlyThisNode If true, then this function is not recursive [optional] */
 	disable(onlyThisNode): any {
-		if(onlyThisNode) this.onEachComponent(function(c) { c.disable(); } );
-		else this.onEachChildComponent(function(c) { c.disable(); } );
+		if (onlyThisNode) this.onEachComponent(function (c) { c.disable(); });
+		else this.onEachChildComponent(function (c) { c.disable(); });
 	}
 
 	// --------- Events ---------
 	/** Called when this node is added to parent node */
-	onAdd(parent): any {}
+	onAdd(parent): any { }
 
 	/** Called when this node is removed from parent node */
-	onRemove(parent): any {}
+	onRemove(parent): any { }
 
 	/** Called when component is added and this node is under a scene */
 	onAddComponent(component): any {
 		this.scene.components.push(component);
 
-		if(component.onUpdate!=Component.prototype.onUpdate) this.scene.updatedComponents.push(component);
-		if(component.onPreRender!=Component.prototype.onPreRender) this.scene.preRenderedComponents.push(component);
-		if(component.onPostRender!=Component.prototype.onPostRender) this.scene.postRenderedComponents.push(component);
+		if (component.onUpdate != Component.prototype.onUpdate) this.scene.updatedComponents.push(component);
+		if (component.onPreRender != Component.prototype.onPreRender) this.scene.preRenderedComponents.push(component);
+		if (component.onPostRender != Component.prototype.onPostRender) this.scene.postRenderedComponents.push(component);
 	}
 
 	/** Called when component is removed and this node was under a scene */
 	onRemoveComponent(component): any {
 		function removeIfExists(list, component) {
-			var index=list.indexOf(component);
-			if(index!=-1) {
+			var index = list.indexOf(component);
+			if (index != -1) {
 				list.splice(index, 1);
 				return;
 			}
@@ -268,9 +268,9 @@ class Node extends Serializable {
 
 		removeIfExists(this.scene.components, component);
 
-		if(component.onUpdate!=Component.prototype.onUpdate) removeIfExists(this.scene.updatedComponents, component);
-		if(component.onPreRender!=Component.prototype.onPreRender) removeIfExists(this.scene.preRenderedComponents, component);
-		if(component.onPostRender!=Component.prototype.onPostRender) removeIfExists(this.scene.postRenderedComponents, component);
+		if (component.onUpdate != Component.prototype.onUpdate) removeIfExists(this.scene.updatedComponents, component);
+		if (component.onPreRender != Component.prototype.onPreRender) removeIfExists(this.scene.preRenderedComponents, component);
+		if (component.onPostRender != Component.prototype.onPostRender) removeIfExists(this.scene.postRenderedComponents, component);
 	}
 
 	// --------- Iterators ---------
@@ -278,7 +278,7 @@ class Node extends Serializable {
 	onEachChild(callback): any {
 		if (callback(this) === true)
 			return true;
-		for (var i=0; i<this.subnodes.length; i++) {
+		for (var i = 0; i < this.subnodes.length; i++) {
 			if (this.subnodes[i].onEachChild(callback) === true)
 				return true;
 		}
@@ -286,7 +286,7 @@ class Node extends Serializable {
 
 	/** Calls callback method on all child nodes, but not on this node */
 	onEachChildExclusive(callback): any {
-		for (var i=0; i<this.subnodes.length; i++) {
+		for (var i = 0; i < this.subnodes.length; i++) {
 			if (this.subnodes[i].onEachChild(callback) === true)
 				return true;
 		}
@@ -294,7 +294,7 @@ class Node extends Serializable {
 
 	/** Calls callback method on all child nodes, but not their children */
 	onEachDirectChild(callback): any {
-		for (var i=0; i<this.subnodes.length; i++) {
+		for (var i = 0; i < this.subnodes.length; i++) {
 			if (callback(this.subnodes[i]) === true)
 				return true;
 		}
@@ -302,7 +302,7 @@ class Node extends Serializable {
 
 	/** Calls callback method on all components of this node */
 	onEachComponent(callback): any {
-		for (var c=0; c<this.components.length; c++) {
+		for (var c = 0; c < this.components.length; c++) {
 			if (callback(this.components[c]) === true)
 				return true;
 		}
@@ -310,7 +310,7 @@ class Node extends Serializable {
 
 	/** Calls callback method on all components of this node and its child nodes */
 	onEachChildComponent(callback): any {
-		this.onEachChild(function(child) {
+		this.onEachChild(function (child) {
 			if (child.onEachComponent(callback) === true)
 				return true;
 		});
@@ -318,7 +318,7 @@ class Node extends Serializable {
 
 	/** Calls callback method on all components of child nodes, but not on this node */
 	onEachChildComponentExclusive(callback): any {
-		this.onEachChildExclusive(function(child) {
+		this.onEachChildExclusive(function (child) {
 			if (child.onEachComponent(callback) === true)
 				return true;
 		});
@@ -328,9 +328,9 @@ class Node extends Serializable {
 		@param type Type of component to be searched for
 		@return An array of components */
 	getChildComponentsOfType(type): any {
-		var result=[];
-		this.onEachChildComponent(function(c) {
-			if(c instanceof type) result.push(c);
+		var result = [];
+		this.onEachChildComponent(function (c) {
+			if (c instanceof type) result.push(c);
 		});
 		return result;
 	}
@@ -342,17 +342,17 @@ class Node extends Serializable {
 		@return {Node} at the given path or false if the target was not found */
 	find(path): any {
 		var parts = path.split("/");
-		if (parts.length==0) return false;
+		if (parts.length == 0) return false;
 		var node: any = this;
-		if (parts[0]==="") {
+		if (parts[0] === "") {
 			if (!this.scene)
 				return false;
 			node = this.scene.root;
 			parts.shift();
 		}
-		for (var i=0; i<parts.length; i++) {
+		for (var i = 0; i < parts.length; i++) {
 			node = node.findChildWithName(parts[i]);
-			if (node===false)
+			if (node === false)
 				return false;
 		}
 		return node;
@@ -362,8 +362,8 @@ class Node extends Serializable {
 		@param name The name of the subnode
 		@return Instance of {Node} or false if the target was not found */
 	findChildWithName(name): any {
-		for (var i=0; i<this.subnodes.length; i++) {
-			if (this.subnodes[i].name===name)
+		for (var i = 0; i < this.subnodes.length; i++) {
+			if (this.subnodes[i].name === name)
 				return this.subnodes[i];
 		}
 		return false;
@@ -409,7 +409,7 @@ class Node extends Serializable {
 		var subnodes = this.subnodes;
 		for (index = 0, l1 = subnodes.length; index < l1; index++) {
 			subnode = subnodes[index];
-			if(!subnode.transform) continue;
+			if (!subnode.transform) continue;
 
 			mat4.multiply(subnode.transform.absolute, absolute, subnode.transform.relative);
 			subnode.updateChildTransforms();
@@ -423,7 +423,7 @@ class Node extends Serializable {
 	/** Sets absolute position of attached transform component
 		@param position Absolute position as vec3 */
 	setAbsolutePosition(position) {
-		if(!this.parent || !this.parent.transform) {	// No parent given
+		if (!this.parent || !this.parent.transform) {	// No parent given
 			this.transform.calculateRelativeFromAbsolute();
 			return;
 		}
@@ -433,5 +433,5 @@ class Node extends Serializable {
 	}
 }
 
-(globalThis as any).Node = Node;
+globalThis.FrakNode = Node;
 export default Node;
