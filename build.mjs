@@ -83,7 +83,8 @@ let wasmPlugin = {
 
 const module = argv.includes("--module");
 for (const v of ["debug", "min"]) {
-	const OUTPUT_PATH = `builds/frak${module ? "" : `-${pkg.version}.${v}`}.js`;
+	const moduleString = v === "min" ? "" : ".debug";
+	const OUTPUT_PATH = `builds/frak${module ? moduleString : `-${pkg.version}.${v}`}.js`;
 
 	build({
 		entryPoints: ["src/entry.ts"],

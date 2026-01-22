@@ -7,6 +7,10 @@
     ".": {
       "default": "./builds/frak.js",
       "types": "./builds/frak.d.ts"
+    },
+    "./debug": {
+      "default": "./builds/frak.debug.js",
+      "types": "./builds/frak.d.ts"
     }
   },
   "directories": {
