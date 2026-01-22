@@ -9,6 +9,7 @@ import Scene from "scene/Scene";
 import XRCamera from "../scene/components/XRCamera";
 import Camera from "../rendering/camera/Camera";
 import LegacyImmersiveCamera from "../scene/components/LegacyImmersiveCamera";
+import pkg from "../../package.json";
 
 type Tonemap = "aces" | null;
 type Filtering = 2 | 4 | 8 | 16 | false;
@@ -41,10 +42,15 @@ type XRMode = "ar" | "vr";
 type LegacyImmersiveMode = "legacy-ar" | "legacy-vr";
 type ImmersiveMode = LegacyImmersiveMode | XRMode;
 
+const [major, minor, patch] = pkg.version.split(".").map(Number);
+
 /** The FRAK Web Engine */
 class Engine {
 	/** FRAK version */
-	static readonly majorVersion = 2;
+	static readonly majorVersion = major;
+	static readonly minorVersion = minor;
+	static readonly patchVersion = patch;
+	static readonly version = `${major}.${minor}.${patch}`;
 
 	/**
 	 * Tries and returns supported modes in the order: `ar`, `vr`, `legacy-ar`, `legacy-vr`.

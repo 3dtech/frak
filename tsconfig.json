@@ -2,20 +2,13 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"baseUrl": "./src",
-		"lib": [
-			"ESNext",
-			"DOM"
-		],
+		"lib": ["ESNext", "DOM"],
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"noEmit": true,
+		"resolveJsonModule": true,
 		"target": "ESNext",
 	},
-	"include": [
-		"./src/**/*.ts",
-		"./lib/*.js"
-	],
-	"exclude": [
-		"./lib/classExtend.js"
-	]
+	"include": ["./src/**/*.ts", "./lib/*.js"],
+	"exclude": ["./lib/classExtend.js"],
 }
