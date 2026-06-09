@@ -25,7 +25,7 @@ class LineRendererComponent extends RendererComponent {
 	overlay: any;
 	lines: any;
 
-	constructor(color?, width?) {
+	constructor(color?, width?, depthTested = true) {
 		super();
 
 		this.lightContribution = 0.0; // By default we do not want lighting to affect lines
@@ -52,6 +52,7 @@ class LineRendererComponent extends RendererComponent {
 		}, []);
 
 		this.material.setType(RendererType.Custom);
+		this.material.depthTested = depthTested;
 		this.overlay = false; // /< If set to true the lines are rendered in onPostRender instead of the usual pipeline
 
 		this.lines = [];

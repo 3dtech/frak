@@ -70,6 +70,7 @@ interface Uniforms {
 class Material extends Serializable {
 	boundSamplers: any;
 	stencilLayer = 1;
+	depthTested = true;
 	properties = new MaterialProperties();
 	definitions = new DefinitionsHelper([
 		"ALPHAMODE_OPAQUE 0",

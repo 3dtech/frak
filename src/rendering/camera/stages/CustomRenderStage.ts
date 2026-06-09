@@ -17,6 +17,7 @@ class CustomRenderStage extends PBRRenderStage {
 	onPostRender(context: RenderingContext, scene: Scene, camera: Camera) {
 		const gl = context.gl;
 
+		let depthTesting = true;
 		scene.organizer.customRenderers.run(
 			context,
 			null,
@@ -25,7 +26,19 @@ class CustomRenderStage extends PBRRenderStage {
 				r.material.shader.use();
 				return r.material.shader;
 			},
-			undefined,
+			(m, s) => {
+				s.bindUniforms(m.uniforms);
+				s.bindSamplers(m.samplers);
+
+				if (m.depthTested !== depthTesting) {
+					depthTesting = m.depthTested;
+					if (depthTesting) {
+						gl.enable(gl.DEPTH_TEST);
+					} else {
+						gl.disable(gl.DEPTH_TEST);
+					}
+				}
+			},
 			(r, s) => {
 				if (!!(camera.stencilMask & r.material.stencilLayer)) {
 					r.renderGeometry(context, s);
