@@ -49,13 +49,13 @@ class Transform extends Component {
 
 	/** Returns the absolute world position of this transform.
 		@return the absolute world position of this transform */
-	getPosition(out): any {
+	getPosition(out?): any {
 		if (!out)
 			out=vec3.create();
 		return mat4.translation(out, this.absolute);
 	}
 
-	getRelativePosition(out): any {
+	getRelativePosition(out?): any {
 		if (!out)
 			out=vec3.create();
 		return mat4.translation(out, this.relative);
@@ -64,7 +64,7 @@ class Transform extends Component {
 	/** Sets relative position of transform
 		@param position Position as vec3 */
 	setPosition(position): any {
-		mat4.fromRotationTranslation(this.relative, quat.fromMat4(quat.create(), this.relative), position);
+		mat4.fromRotationTranslation(this.relative, this.getRelativeRotation(), position);
 	}
 
 	/** Returns the absolute rotation of this transform.
@@ -73,6 +73,23 @@ class Transform extends Component {
 		if (!out)
 			out = quat.create();
 		return quat.fromMat4(out, this.absolute);
+	}
+
+	getRelativeRotation(out?): any {
+		if (!out)
+			out = quat.create();
+		return quat.fromMat4(out, this.relative);
+	}
+
+	setRotation(rotation): any {
+		mat4.fromRotationTranslation(this.relative, rotation, this.getRelativePosition());
+	}
+
+	setScale(scale) {
+		const translation = this.getRelativePosition();
+		const rotation = this.getRelativeRotation();
+
+		mat4.fromRotationTranslationScale(this.relative, rotation, translation, scale);
 	}
 
 	/** Translates node
